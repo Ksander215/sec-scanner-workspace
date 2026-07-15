@@ -19,22 +19,24 @@
 | # | Документ | Путь | Описание |
 |---|----------|------|----------|
 | 6 | RFC-001 | `docs/01_architecture/RFC-001_SECURITY_INTELLIGENCE_ENGINE.md` | Архитектура Security Intelligence Engine |
-| 7 | RFC Review Report | `docs/01_architecture/RFC_REVIEW_REPORT.md` | Отчёт о 4-ролевом архитектурном ревью |
+| 7 | RFC Review Report | `docs/01_architecture/RFC_REVIEW_REPORT.md` | Отчёт о 4-ролевом архитектурном ревью SIE |
+| 8 | KG-001 | `docs/01_architecture/KG-001_KNOWLEDGE_GRAPH_ARCHITECTURE.md` | Архитектура Knowledge Graph Platform |
+| 9 | KG Review Report | `docs/01_architecture/KG_ARCHITECTURE_REVIEW_REPORT.md` | Отчёт о 5-ролевом архитектурном ревью KG |
 
 ## Assets
 
 | # | Файл | Путь | Формат |
 |---|------|------|--------|
-| 8 | PROJECT_HANDOFF (PDF) | `docs/assets/pdf/PROJECT_HANDOFF.pdf` | PDF |
-| 9 | PROJECT_HANDOFF (HTML) | `docs/assets/html/PROJECT_HANDOFF.html` | HTML |
+| 10 | PROJECT_HANDOFF (PDF) | `docs/assets/pdf/PROJECT_HANDOFF.pdf` | PDF |
+| 11 | PROJECT_HANDOFF (HTML) | `docs/assets/html/PROJECT_HANDOFF.html` | HTML |
 
 ## Diagrams
 
 | # | Диаграмма | Путь | Описание |
 |---|-----------|------|----------|
-| 10 | Platform Architecture | `docs/diagrams/handoff_platform_architecture.svg` | Архитектура платформы (4 слоя) |
-| 11 | Intelligence Engine | `docs/diagrams/intelligence_engine.svg` | SIE: 6 компонентов + I/O |
-| 12 | Roadmap | `docs/diagrams/roadmap.svg` | Дорожная карта проекта |
+| 12 | Platform Architecture | `docs/diagrams/handoff_platform_architecture.svg` | Архитектура платформы (4 слоя) |
+| 13 | Intelligence Engine | `docs/diagrams/intelligence_engine.svg` | SIE: 6 компонентов + I/O |
+| 14 | Roadmap | `docs/diagrams/roadmap.svg` | Дорожная карта проекта |
 
 ## Cross-references
 
@@ -54,7 +56,9 @@ README.md
   │     └── VISION.md           ← видение продукта
   ├── docs/01_architecture/
   │     ├── RFC-001_SECURITY_INTELLIGENCE_ENGINE.md  ← архитектура SIE
-  │     └── RFC_REVIEW_REPORT.md                     ← отчёт ревью
+  │     ├── RFC_REVIEW_REPORT.md                     ← отчёт ревью SIE
+  │     ├── KG-001_KNOWLEDGE_GRAPH_ARCHITECTURE.md   ← архитектура KG
+  │     └── KG_ARCHITECTURE_REVIEW_REPORT.md         ← отчёт ревью KG
   ├── docs/assets/
   │     ├── pdf/PROJECT_HANDOFF.pdf
   │     └── html/PROJECT_HANDOFF.html

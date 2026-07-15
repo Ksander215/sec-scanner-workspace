@@ -4,6 +4,43 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/).
 
+## [0.3.0] - 2026-07-15
+
+### Added
+
+- **KG-001_KNOWLEDGE_GRAPH_ARCHITECTURE.md** — полный архитектурный RFC Knowledge Graph Platform
+  - Executive Summary, Problem Statement, Goals (9), Non Goals (7)
+  - Existing Architecture (5 ключевых ограничений)
+  - Proposed Graph Architecture (3 слоя: Ingestion, Graph Platform, Storage)
+  - Graph Domain Model (16 сущностей: GraphNode, GraphEdge, NodeIdentity, NodeMetadata, Relationship, RelationshipType, Traversal, Subgraph, GraphSnapshot, GraphVersion, GraphIndex, Query, GraphTransaction, GraphEvent)
+  - Node Types (18 типов: Application, Host, Endpoint, API, Technology, Finding, Evidence, Identity, Secret, Credential, AttackStep, Recommendation, Asset, CloudResource, Service, Container, Repository, Component)
+  - Edge Types (14 типов: USES, OWNS, CALLS, DEPENDS_ON, HOSTS, CONNECTED_TO, LEADS_TO, DISCOVERED_BY, EXPOSES, AUTHENTICATES, TRUSTS, CONTAINS, RELATED_TO, MITIGATED_BY)
+  - Graph Storage Model (Node Store, Edge Store, Adjacency List, Reverse Index, Property Index, Temporal Index, Confidence Index, Provenance Index)
+  - Traversal Engine (7 алгоритмов: BFS, DFS, Bidirectional Search, Shortest Path, Multi Path, Cycle Detection, Reachability с определением сложности)
+  - Versioning (Snapshot, Delta, Rollback, Replay, Incremental Update, Merge/Conflict Resolution)
+  - Graph Query API (11 методов: createNode, updateNode, removeNode, createEdge, removeEdge, query, traverse, shortestPath, export, snapshot, rollback)
+  - Synchronization (Pipeline->Graph, Graph->Intelligence, Graph->Explainability, Incremental Updates, Event Bus, Snapshot Events)
+  - Performance Strategy (4-уровневый Cache, Indexing, Lazy Loading, Graph Partitioning, Memory Limits, Large Graph Strategy)
+  - Security (Immutable Graph, Audit Trail, Graph Integrity, Node/Edge Validation, Serialization Safety)
+  - Failure Recovery (8 сценариев, 5 гарантий)
+  - Future Extensions (8 расширений, 6 extension points)
+  - 10 Mermaid-диаграмм (Overall Architecture, Component Diagram, Node Relationship, Traversal, Versioning Flow, Synchronization Flow, Query Flow Sequence, Storage Layout, Event Flow, Graph Lifecycle)
+  - 8 ADR (ADR-KG-001..008)
+  - 8 Open Questions
+
+- **KG_ARCHITECTURE_REVIEW_REPORT.md** — отчёт о 5-ролевом архитектурном ревью
+  - CTO Review: 3 замечания, 3 риска, 4 рекомендации
+  - Principal Graph Engineer Review: 3 замечания, 4 риска, 5 рекомендаций
+  - Distributed Systems Architect Review: 3 замечания, 4 риска, 5 рекомендаций
+  - Security Architect Review: 3 замечания, 4 риска, 5 рекомендаций
+  - Staff Backend Engineer Review: 3 замечания, 4 риска, 6 рекомендаций
+  - Итог: APPROVED WITH CONDITIONS
+
+### Updated
+
+- INDEX.md — добавлены KG-001 и KG Review Report в секцию Architecture
+- CHANGELOG.md — данный файл
+
 ## [0.2.0] - 2026-07-15
 
 ### Added
