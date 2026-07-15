@@ -2,10 +2,9 @@
  * Security Intelligence — Public API
  *
  * Entry point for the Security Intelligence domain.
- * Currently provides the Finding Normalization Engine.
+ * Provides the Finding Normalization Engine and Correlation Engine.
  *
  * Future modules (NOT yet implemented):
- * - INT-002B: Security Correlation Engine
  * - Risk Engine
  * - Attack Path Builder
  * - Recommendation Engine
@@ -70,3 +69,70 @@ export {
   // Statistics
   NormalizationStatisticsCollector,
 } from './normalization/index.ts';
+
+// ─── Correlation ─────────────────────────────────────────────
+
+export {
+  // Types
+  type CorrelationId, type CorrelationGroupId, type CorrelationEdgeId, type Timestamp as CorrelationTimestamp, type Metadata as CorrelationMetadata,
+  type CorrelationReason, type DuplicateType,
+  type CorrelationEvidence, type CorrelationEdge, type CorrelationGroup, type Correlation,
+  type CorrelationResult, type CorrelationResultStatistics, type DuplicateDetection,
+  type CorrelationConfig, type CorrelationStatistics,
+  type CorrelationRule, type CorrelationFindingInput, type CorrelationEvidenceInput,
+  type CorrelationRuleResult, type CorrelationCacheEntry,
+  type CorrelationValidationResult, type CorrelationValidationError, type CorrelationValidationWarning,
+
+  // Enums & Constants
+  brandCorrelationId, brandCorrelationGroupId, brandCorrelationEdgeId,
+  CorrelationReason, DuplicateType,
+  ALL_CORRELATION_REASONS, ALL_DUPLICATE_TYPES,
+  DEFAULT_CORRELATION_CONFIG,
+
+  // Models
+  generateCorrelationId, generateCorrelationGroupId, generateCorrelationEdgeId,
+  createCorrelationEvidence, createCorrelationEdge, createCorrelationGroup,
+  createCorrelation, createDuplicateDetection, createCorrelationResult,
+  createEmptyResultStatistics,
+  toCorrelationFindingInput,
+  correlationToJSON, correlationFromJSON,
+  correlationGroupToJSON, correlationResultToJSON,
+  correlationsEqual, correlationGroupsEqual,
+  cloneCorrelation, hashCorrelation,
+
+  // Events
+  type CorrelationEvent,
+  type CorrelationStartedEvent, type CorrelationCompletedEvent,
+  type CorrelationFailedEvent, type DuplicateDetectedEvent, type CorrelationGraphBuiltEvent,
+  type AnyCorrelationEvent, type CorrelationEventHandler,
+  createCorrelationStartedEvent, createCorrelationCompletedEvent,
+  createCorrelationFailedEvent, createDuplicateDetectedEvent,
+  createCorrelationGraphBuiltEvent,
+  CorrelationEventBus,
+
+  // Rules
+  BUILT_IN_RULES,
+  RuleRegistry,
+
+  // Deduplication
+  type DuplicateDetectionResult, type DuplicateDetectionStatistics,
+  DuplicateDetector,
+
+  // Graph
+  type CorrelationGraphSnapshot,
+  CorrelationGraph,
+
+  // Cache
+  type CacheStatistics,
+  CorrelationCache,
+
+  // KG Adapter
+  type KGAdapterResult, type KGAdapterStatistics,
+  CorrelationKGAdapter,
+
+  // Engine
+  CorrelationEngine,
+
+  // Statistics
+  CorrelationStatisticsCollector,
+} from './correlation/index.ts';
