@@ -2,6 +2,8 @@
 
 > Инженерная память проекта: накопленные решения, известные проблемы, соглашения и уроки.
 
+**Связанные документы:** [PROJECT_HANDOFF.md](./PROJECT_HANDOFF.md) | [CTO_DECISIONS.md](./CTO_DECISIONS.md) | [AI_CONTEXT.md](./AI_CONTEXT.md) | [VISION.md](./VISION.md)
+
 ## Стек технологий
 
 | Слой | Технология | Примечание |
