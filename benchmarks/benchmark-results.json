@@ -1,0 +1,246 @@
+{
+  "timestamp": "2026-07-15T00:17:13.850Z",
+  "nodeVersion": "v24.18.0",
+  "totalBenchmarks": 20,
+  "passed": 19,
+  "failed": 1,
+  "results": [
+    {
+      "stage": "1-Load",
+      "name": "10 concurrent pipelines",
+      "status": "pass",
+      "durationMs": 25,
+      "metrics": {
+        "pipelines": 10,
+        "completed": 10,
+        "failed": 0,
+        "totalMs": 24,
+        "avgMs": 2,
+        "memBeforeMB": 9.39,
+        "memAfterMB": 9.61,
+        "memDeltaMB": 0.22
+      }
+    },
+    {
+      "stage": "1-Load",
+      "name": "50 concurrent pipelines",
+      "status": "pass",
+      "durationMs": 24,
+      "metrics": {
+        "pipelines": 50,
+        "completed": 50,
+        "failed": 0,
+        "totalMs": 23,
+        "avgMs": 0,
+        "memBeforeMB": 9.8,
+        "memAfterMB": 9.81,
+        "memDeltaMB": 0.01
+      }
+    },
+    {
+      "stage": "1-Load",
+      "name": "100 concurrent pipelines",
+      "status": "pass",
+      "durationMs": 24,
+      "metrics": {
+        "pipelines": 100,
+        "completed": 100,
+        "failed": 0,
+        "totalMs": 24,
+        "avgMs": 0,
+        "memBeforeMB": 10.18,
+        "memAfterMB": 10.56,
+        "memDeltaMB": 0.38
+      }
+    },
+    {
+      "stage": "2-ArtifactStress",
+      "name": "100K URLs publish",
+      "status": "pass",
+      "durationMs": 164,
+      "metrics": {
+        "count": 100000,
+        "totalMs": 164,
+        "opsPerMs": 610,
+        "memMB": 41.33
+      }
+    },
+    {
+      "stage": "2-ArtifactStress",
+      "name": "100K URLs dedup (50K unique)",
+      "status": "pass",
+      "durationMs": 127,
+      "metrics": {
+        "published": 100000,
+        "stored": 50000,
+        "totalMs": 127,
+        "dedupSaved": 50000
+      }
+    },
+    {
+      "stage": "2-ArtifactStress",
+      "name": "Search in 100K URLs (predicate)",
+      "status": "pass",
+      "durationMs": 142,
+      "metrics": {
+        "total": 100000,
+        "matched": 50000,
+        "searchMs": 5
+      }
+    },
+    {
+      "stage": "2-ArtifactStress",
+      "name": "Snapshot + restore 100K artifacts",
+      "status": "fail",
+      "durationMs": 309,
+      "metrics": {},
+      "error": "snapshotMs is not defined"
+    },
+    {
+      "stage": "2-ArtifactStress",
+      "name": "10K Findings publish + read",
+      "status": "pass",
+      "durationMs": 34,
+      "metrics": {
+        "count": 10000,
+        "publishMs": 33,
+        "readMs": 0,
+        "total": 33,
+        "verified": true
+      }
+    },
+    {
+      "stage": "3-EventBus",
+      "name": "1000 subscribers x 100 events",
+      "status": "pass",
+      "durationMs": 3,
+      "metrics": {
+        "subscribers": 1000,
+        "events": 100,
+        "totalMs": 2,
+        "allCorrect": true,
+        "notificationsPerSec": 50000000
+      }
+    },
+    {
+      "stage": "3-EventBus",
+      "name": "Wildcard: 1000 events, 1 wildcard sub",
+      "status": "pass",
+      "durationMs": 1,
+      "metrics": {
+        "events": 1000,
+        "wildcardReceived": 1000,
+        "totalMs": 1
+      }
+    },
+    {
+      "stage": "6-RetryStorm",
+      "name": "50 parallel retryable failures (2 retries each)",
+      "status": "pass",
+      "durationMs": 3883,
+      "metrics": {
+        "stages": 50,
+        "failed": 50,
+        "totalMs": 3883,
+        "avgRetryWaitMs": 26
+      }
+    },
+    {
+      "stage": "6-RetryStorm",
+      "name": "10K error classifications",
+      "status": "pass",
+      "durationMs": 14,
+      "metrics": {
+        "count": 10000,
+        "totalMs": 14,
+        "perMs": "714.3"
+      }
+    },
+    {
+      "stage": "7-LongRunning",
+      "name": "500 pipeline cycles (memory leak)",
+      "status": "pass",
+      "durationMs": 15684,
+      "metrics": {
+        "cycles": 500,
+        "totalMs": 15683,
+        "avgMs": "31.4",
+        "memBeforeMB": 50.74,
+        "memAfterMB": 72.31,
+        "memDeltaMB": 21.57,
+        "leakSuspected": false
+      }
+    },
+    {
+      "stage": "9-Profiling",
+      "name": "Empty pipeline (0 stages)",
+      "status": "pass",
+      "durationMs": 1,
+      "metrics": {
+        "overheadMs": 0
+      }
+    },
+    {
+      "stage": "9-Profiling",
+      "name": "1-stage immediate",
+      "status": "pass",
+      "durationMs": 11,
+      "metrics": {
+        "totalMs": 11
+      }
+    },
+    {
+      "stage": "9-Profiling",
+      "name": "5-stage sequential",
+      "status": "pass",
+      "durationMs": 51,
+      "metrics": {
+        "totalMs": 51
+      }
+    },
+    {
+      "stage": "9-Profiling",
+      "name": "5-stage parallel (no deps)",
+      "status": "pass",
+      "durationMs": 11,
+      "metrics": {
+        "totalMs": 11
+      }
+    },
+    {
+      "stage": "9-Profiling",
+      "name": "10K event emissions (no subs)",
+      "status": "pass",
+      "durationMs": 10,
+      "metrics": {
+        "events": 10000,
+        "totalMs": 10,
+        "opsPerMs": 1032
+      }
+    },
+    {
+      "stage": "9-Profiling",
+      "name": "PipelineState JSON roundtrip (100 stages)",
+      "status": "pass",
+      "durationMs": 2,
+      "metrics": {
+        "stages": 100,
+        "jsonBytes": 17467,
+        "serializeMs": 0,
+        "deserializeMs": 1
+      }
+    },
+    {
+      "stage": "9-Profiling",
+      "name": "Recovery snapshot 10K artifacts + plan",
+      "status": "pass",
+      "durationMs": 16,
+      "metrics": {
+        "artifacts": 10000,
+        "createMs": 0,
+        "planMs": 0,
+        "planCompleted": true
+      }
+    }
+  ]
+}

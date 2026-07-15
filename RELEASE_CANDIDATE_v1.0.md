@@ -19,11 +19,11 @@
 
 | # | Документ | Файл | Описание |
 |---|----------|------|----------|
-| 1 | PROJECT_HANDOFF | `docs/00_governance/PROJECT_HANDOFF.md` | Полный документ передачи контекста (14 разделов, 3497 слов) |
-| 2 | AI_CONTEXT | `docs/00_governance/AI_CONTEXT.md` | Быстрый контекст для AI-агента (346 слов) |
-| 3 | ENGINEERING_MEMORY | `docs/00_governance/ENGINEERING_MEMORY.md` | Инженерная память: решения, соглашения (380 слов) |
-| 4 | CTO_DECISIONS | `docs/00_governance/CTO_DECISIONS.md` | 7 стратегических решений CTO (426 слов) |
-| 5 | VISION | `docs/00_governance/VISION.md` | Видение продукта и дифференциация (421 слов) |
+| 1 | PROJECT_HANDOFF | `docs/governance/PROJECT_HANDOFF.md` | Полный документ передачи контекста (14 разделов, 3497 слов) |
+| 2 | AI_CONTEXT | `docs/governance/AI_CONTEXT.md` | Быстрый контекст для AI-агента (346 слов) |
+| 3 | ENGINEERING_MEMORY | `docs/governance/ENGINEERING_MEMORY.md` | Инженерная память: решения, соглашения (380 слов) |
+| 4 | CTO_DECISIONS | `docs/governance/CTO_DECISIONS.md` | 7 стратегических решений CTO (426 слов) |
+| 5 | VISION | `docs/governance/VISION.md` | Видение продукта и дифференциация (421 слов) |
 
 ### Architecture & Diagrams (3 SVG)
 

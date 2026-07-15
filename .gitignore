@@ -1,48 +1,55 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-*.egg-info/
-dist/
-build/
-.eggs/
-*.egg
+# OS
+.DS_Store
+Thumbs.db
 
-# Virtual environments
-.venv/
-venv/
-env/
-
-# IDE
+# Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Secrets and credentials
+# Secrets — NEVER commit
 .env
 .env.*
 !.env.example
 *.pem
 *.key
-*.p12
-*.pfx
-
-# Temporary files
-*.tmp
-*.bak
-*.log
-*.cache
-
-# Node.js (if used for tooling)
-node_modules/
+id_ed25519
+id_ed25519.pub
+id_rsa
+id_rsa.pub
 
 # Build artifacts
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+dist/
+build/
+node_modules/
+
+# Python
+__pycache__/
 *.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary
+*.tmp
+*.bak
+*.orig
+
+# Coverage
+coverage/
+.nyc_output/
+
+# IDE
+.idea/
+*.iml
