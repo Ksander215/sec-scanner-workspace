@@ -1,5 +1,7 @@
 # PROJECT HANDOFF — Security Intelligence Platform
 
+**Связанные документы:** [AI_CONTEXT.md](./AI_CONTEXT.md) | [ENGINEERING_MEMORY.md](./ENGINEERING_MEMORY.md) | [CTO_DECISIONS.md](./CTO_DECISIONS.md) | [VISION.md](./VISION.md)
+
 ## Оглавление
 
 1. [Главная цель проекта](#1-главная-цель-проекта)

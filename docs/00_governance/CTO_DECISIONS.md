@@ -2,6 +2,8 @@
 
 > Регистр ключевых решений CTO. Эти решения имеют приоритет над любыми другими соображениями.
 
+**Связанные документы:** [PROJECT_HANDOFF.md](./PROJECT_HANDOFF.md) | [AI_CONTEXT.md](./AI_CONTEXT.md) | [ENGINEERING_MEMORY.md](./ENGINEERING_MEMORY.md) | [VISION.md](./VISION.md)
+
 ## Решение #1: AI-Native, но не LLM-зависимый
 
 **Дата:** Начало проекта
