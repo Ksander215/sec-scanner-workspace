@@ -21,8 +21,8 @@ Security Intelligence Platform — это не очередной DAST-скан�
 | EPIC-01: Discovery & Scanning | ✅ DONE |
 | TASK-201: Attack Surface Model | ✅ DONE |
 | TASK-202A-F: Intelligence Modules | ✅ DONE |
-| KG-001: Security Knowledge Graph | 🔧 IN PROGRESS |
-| EPIC-04 / INT-001: Security Intelligence Engine | 🎯 CURRENT |
+| KG-001: Security Knowledge Graph | ✅ RFC COMPLETE |
+| EPIC-04 / INT-001: Security Intelligence Engine | 📋 PENDING KG-001 APPROVAL |
 | EPIC-05+: Explainability & Dashboard | 📋 PLANNED |
 
 ## Документация
@@ -36,6 +36,15 @@ Security Intelligence Platform — это не очередной DAST-скан�
 | [ENGINEERING_MEMORY.md](./docs/00_governance/ENGINEERING_MEMORY.md) | Инженерная память: решения, соглашения, уроки |
 | [CTO_DECISIONS.md](./docs/00_governance/CTO_DECISIONS.md) | Реестр ключевых решений CTO |
 | [VISION.md](./docs/00_governance/VISION.md) | Стратегическое видение продукта |
+
+### Architecture (архитектурные RFC)
+
+| Документ | Описание |
+|----------|----------|
+| [RFC-001: SIE](./docs/01_architecture/RFC-001_SECURITY_INTELLIGENCE_ENGINE.md) | Архитектура Security Intelligence Engine |
+| [RFC-001 Review](./docs/01_architecture/RFC_REVIEW_REPORT.md) | Отчёт ревью SIE (4 роли) |
+| [KG-001: Knowledge Graph](./docs/01_architecture/KG-001_KNOWLEDGE_GRAPH_ARCHITECTURE.md) | Архитектура Knowledge Graph Platform |
+| [KG-001 Review](./docs/01_architecture/KG_ARCHITECTURE_REVIEW_REPORT.md) | Отчёт ревью KG (5 ролей) |
 
 ### Ассеты
 
