@@ -21,8 +21,8 @@ Security Intelligence Platform — это не очередной DAST-скан�
 | EPIC-01: Discovery & Scanning | ✅ DONE |
 | TASK-201: Attack Surface Model | ✅ DONE |
 | TASK-202A-F: Intelligence Modules | ✅ DONE |
-| KG-001: Security Knowledge Graph | ✅ RFC COMPLETE |
-| EPIC-04 / INT-001: Security Intelligence Engine | 📋 PENDING KG-001 APPROVAL |
+| KG-001: Security Knowledge Graph | ✅ RFC APPROVED |
+| EPIC-04 / INT-001: Security Intelligence Engine | 📋 PENDING INT-001 |
 | EPIC-05+: Explainability & Dashboard | 📋 PLANNED |
 
 ## Документация
@@ -36,6 +36,7 @@ Security Intelligence Platform — это не очередной DAST-скан�
 | [ENGINEERING_MEMORY.md](./docs/00_governance/ENGINEERING_MEMORY.md) | Инженерная память: решения, соглашения, уроки |
 | [CTO_DECISIONS.md](./docs/00_governance/CTO_DECISIONS.md) | Реестр ключевых решений CTO |
 | [VISION.md](./docs/00_governance/VISION.md) | Стратегическое видение продукта |
+| [ARCHITECTURE_BASELINE_v1.1.md](./docs/00_governance/ARCHITECTURE_BASELINE_v1.1.md) | Архитектурная база v1.1 |
 
 ### Architecture (архитектурные RFC)
 

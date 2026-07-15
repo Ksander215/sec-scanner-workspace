@@ -13,30 +13,31 @@
 | 3 | ENGINEERING_MEMORY | `docs/00_governance/ENGINEERING_MEMORY.md` | Инженерная память: решения, соглашения |
 | 4 | CTO_DECISIONS | `docs/00_governance/CTO_DECISIONS.md` | Реестр ключевых решений CTO |
 | 5 | VISION | `docs/00_governance/VISION.md` | Стратегическое видение продукта |
+| 6 | Architecture Baseline v1.1 | `docs/00_governance/ARCHITECTURE_BASELINE_v1.1.md` | Архитектурная база проекта перед INT-001 |
 
 ## Architecture
 
 | # | Документ | Путь | Описание |
 |---|----------|------|----------|
-| 6 | RFC-001 | `docs/01_architecture/RFC-001_SECURITY_INTELLIGENCE_ENGINE.md` | Архитектура Security Intelligence Engine |
-| 7 | RFC Review Report | `docs/01_architecture/RFC_REVIEW_REPORT.md` | Отчёт о 4-ролевом архитектурном ревью SIE |
-| 8 | KG-001 | `docs/01_architecture/KG-001_KNOWLEDGE_GRAPH_ARCHITECTURE.md` | Архитектура Knowledge Graph Platform |
-| 9 | KG Review Report | `docs/01_architecture/KG_ARCHITECTURE_REVIEW_REPORT.md` | Отчёт о 5-ролевом архитектурном ревью KG |
+| 7 | RFC-001 | `docs/01_architecture/RFC-001_SECURITY_INTELLIGENCE_ENGINE.md` | Архитектура Security Intelligence Engine |
+| 8 | RFC Review Report | `docs/01_architecture/RFC_REVIEW_REPORT.md` | Отчёт о 4-ролевом архитектурном ревью SIE |
+| 9 | KG-001 | `docs/01_architecture/KG-001_KNOWLEDGE_GRAPH_ARCHITECTURE.md` | Архитектура Knowledge Graph Platform |
+| 10 | KG Review Report | `docs/01_architecture/KG_ARCHITECTURE_REVIEW_REPORT.md` | Отчёт о 5-ролевом архитектурном ревью KG |
 
 ## Assets
 
 | # | Файл | Путь | Формат |
 |---|------|------|--------|
-| 10 | PROJECT_HANDOFF (PDF) | `docs/assets/pdf/PROJECT_HANDOFF.pdf` | PDF |
-| 11 | PROJECT_HANDOFF (HTML) | `docs/assets/html/PROJECT_HANDOFF.html` | HTML |
+| 11 | PROJECT_HANDOFF (PDF) | `docs/assets/pdf/PROJECT_HANDOFF.pdf` | PDF |
+| 12 | PROJECT_HANDOFF (HTML) | `docs/assets/html/PROJECT_HANDOFF.html` | HTML |
 
 ## Diagrams
 
 | # | Диаграмма | Путь | Описание |
 |---|-----------|------|----------|
-| 12 | Platform Architecture | `docs/diagrams/handoff_platform_architecture.svg` | Архитектура платформы (4 слоя) |
-| 13 | Intelligence Engine | `docs/diagrams/intelligence_engine.svg` | SIE: 6 компонентов + I/O |
-| 14 | Roadmap | `docs/diagrams/roadmap.svg` | Дорожная карта проекта |
+| 13 | Platform Architecture | `docs/diagrams/handoff_platform_architecture.svg` | Архитектура платформы (4 слоя) |
+| 14 | Intelligence Engine | `docs/diagrams/intelligence_engine.svg` | SIE: 6 компонентов + I/O |
+| 15 | Roadmap | `docs/diagrams/roadmap.svg` | Дорожная карта проекта |
 
 ## Cross-references
 
@@ -53,7 +54,8 @@ README.md
   │     ├── AI_CONTEXT.md       ← краткая выжимка
   │     ├── ENGINEERING_MEMORY  ← техническая память
   │     ├── CTO_DECISIONS.md    ← стратегические решения
-  │     └── VISION.md           ← видение продукта
+  │     ├── VISION.md           ← видение продукта
+  │     └── ARCHITECTURE_BASELINE_v1.1.md ← архитектурная база
   ├── docs/01_architecture/
   │     ├── RFC-001_SECURITY_INTELLIGENCE_ENGINE.md  ← архитектура SIE
   │     ├── RFC_REVIEW_REPORT.md                     ← отчёт ревью SIE

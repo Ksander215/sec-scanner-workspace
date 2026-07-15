@@ -4,6 +4,39 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/).
 
+## [1.1.0] - 2026-07-16
+
+### Architecture Baseline v1.1
+
+Published as `architecture-baseline-v1.1` tag. Official baseline before INT-001.
+
+#### Added
+
+- **ARCHITECTURE_BASELINE_v1.1.md** — baseline document with commit hash, approved RFCs, ADRs, completed stages, next milestone
+
+#### Repository Status
+
+- 5 commits on main branch
+- 20 files, 1.2 MB
+- 0 secrets, 0 broken links, 0 temp files
+- 7/7 audit checks PASSED
+- Tag: `architecture-baseline-v1.1`
+- Ready for INT-001
+
+#### Included
+
+- RFC-001: Security Intelligence Engine (APPROVED WITH CONDITIONS)
+- KG-001: Knowledge Graph Architecture (APPROVED WITH CONDITIONS)
+- Repository Governance (5 documents)
+- Scan Platform Foundation (TASK-201, TASK-202A-F)
+- Pipeline Architecture & Executor
+- Validation Suite
+- Release Candidate v1.0
+
+#### Next Milestone
+
+- INT-001: Knowledge Graph Core Implementation
+
 ## [0.3.0] - 2026-07-15
 
 ### Added
