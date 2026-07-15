@@ -1,0 +1,1264 @@
+     1→# RFC-001: Security Intelligence Engine (SIE)
+     2→
+     3→**Статус:** Draft  
+     4→**Дата:** 2026-07-15  
+     5→**Автор:** Chief Software Architect  
+     6→**Рецензенты:** CTO, Principal Engineer, Security Architect, Staff Backend Engineer  
+     7→**Связанные документы:** [PROJECT_HANDOFF.md](../00_governance/PROJECT_HANDOFF.md) | [CTO_DECISIONS.md](../00_governance/CTO_DECISIONS.md) | [AI_CONTEXT.md](../00_governance/AI_CONTEXT.md) | [ENGINEERING_MEMORY.md](../00_governance/ENGINEERING_MEMORY.md) | [VISION.md](../00_governance/VISION.md)
+     8→
+     9→---
+    10→
+    11→## Table of Contents
+    12→
+    13→1. [Executive Summary](#1-executive-summary)
+    14→2. [Problem Statement](#2-problem-statement)
+    15→3. [Goals](#3-goals)
+    16→4. [Non Goals](#4-non-goals)
+    17→5. [Existing Architecture](#5-existing-architecture)
+    18→6. [Proposed Architecture](#6-proposed-architecture)
+    19→7. [Component Overview](#7-component-overview)
+    20→8. [Data Flow](#8-data-flow)
+    21→9. [Domain Model](#9-domain-model)
+    22→10. [Knowledge Graph Model](#10-knowledge-graph-model)
+    23→11. [Correlation Engine](#11-correlation-engine)
+    24→12. [Risk Engine](#12-risk-engine)
+    25→13. [Attack Path Builder](#13-attack-path-builder)
+    26→14. [Recommendation Engine](#14-recommendation-engine)
+    27→15. [Explainability Contract](#15-explainability-contract)
+    28→16. [Event Model](#16-event-model)
+    29→17. [API Contract](#17-api-contract)
+    30→18. [Failure Handling](#18-failure-handling)
+    31→19. [Scalability](#19-scalability)
+    32→20. [Security Considerations](#20-security-considerations)
+    33→21. [Performance Considerations](#21-performance-considerations)
+    34→22. [Architecture Decision Records](#22-architecture-decision-records)
+    35→23. [Open Questions](#23-open-questions)
+    36→24. [Future Extensions](#24-future-extensions)
+    37→
+    38→---
+    39→
+    40→## 1. Executive Summary
+    41→
+    42→Security Intelligence Engine (SIE) -- центральный аналитический модуль платформы, превращающий структурированные данные Security Knowledge Graph в осмысленные выводы о безопасности приложения. SIE не выполняет сканирование и не обращается к сканирующим движкам напрямую. Он работает исключительно через Graph Query API, анализируя уже построенный граф знаний.
+    43→
+    44→Архитектура SIE строится на принципах детерминированности, неизменяемости, объяснимости и расширяемости. Каждый компонент engine получает данные из графа, производит вычисления и возвращает типизированный результат с полной трассировкой происхождения. Одинаковый граф всегда даёт одинаковый результат -- это фундаментальное отличие от недетерминированных AI/LLM-систем.
+    45→
+    46→SIE состоит из 11 компонентов: Finding Normalizer, Finding Correlator, Identity Resolution, Evidence Aggregator, Risk Engine, Confidence Engine, Attack Path Builder, Recommendation Engine, Knowledge Graph Adapter, Explainability Adapter и Intelligence API. Каждый компонент имеет чёткую ответственность, определённые входы и выходы, и взаимодействует с другими через внутренние контракты.
+    47→
+    48→---
+    49→
+    50→## 2. Problem Statement
+    51→
+    52→Текущая платформа успешно собирает данные из множества источников (Discovery, Browser Intelligence, HTTP Intelligence, Nuclei), но данные остаются изолированными. Каждая находка существует сама по себе, без связи с другими. Это создаёт ряд критических проблем:
+    53→
+    54→**Изоляция находок.** Nuclei обнаруживает SQL Injection на эндпоинте `/api/users`, Browser Intelligence видит, что этот эндпоинт доступен без аутентификации, а HTTP Intelligence фиксирует отсутствие rate limiting. Каждая находка верна, но их комбинация означает критический риск, который не виден при изолированном анализе.
+    55→
+    56→**Дублирование данных.** Один и тот же эндпоинт может быть обнаружен Discovery Engine, просканирован Nuclei и проанализирован Browser Intelligence. Без нормализации и дедупликации пользователь видит три записи вместо одной, что снижает доверие к результатам и затрудняет приоритизацию.
+    57→
+    58→**Отсутствие оценки риска.** CVSS-скоринг отдельных уязвимостей не учитывает контекст приложения. Уязвимость с CVSS 7.5 на административном эндпоинте за аутентификацией может быть менее критичной, чем CVSS 5.3 на публичном API, обрабатывающем чувствительные данные.
+    59→
+    60→**Нет цепочек атак.** Отдельные уязвимости могут комбинироваться в цепочки эксплуатации, ведущие от публичной точки входа к критическому активу. Без построения Attack Paths такая комбинационная угроза остаётся невидимой.
+    61→
+    62→**Нет рекомендаций.** Пользователь получает список находок, но не получает конкретных, приоритизированных рекомендаций по их устранению с учётом контекста приложения.
+    63→
+    64→---
+    65→
+    66→## 3. Goals
+    67→
+    68→1. **Агрегация и нормализация** -- объединение результатов всех движков в единую модель Finding с устранением дубликатов и разрешением идентичности
+    69→2. **Корреляция** -- выявление связей между находками, активами и доказательствами, которые невозможно обнаружить при изолированном анализе
+    70→3. **Оценка риска** -- детерминированный расчёт агрегированного риска с учётом severity, confidence, exploitability, exposure, reachability и бизнес-критичности
+    71→4. **Построение Attack Paths** -- автоматическое формирование цепочек эксплуатации от точки входа до критического актива
+    72→5. **Генерация рекомендаций** -- формирование приоритизированных, контекстных рекомендаций по устранению выявленных рисков
+    73→6. **Формирование Security Story** -- связное описание состояния безопасности приложения, объединяющее находки, корреляции, риски и рекомендации в единый нарратив
+    74→7. **Explainability Contract** -- обеспечение полной трассируемости каждого вывода для будущего Explainability Engine
+    75→8. **Zero Coupling** -- SIE не зависит от конкретных сканирующих движков и не требует изменений в TASK-201, TASK-202 и существующих API
+    76→
+    77→---
+    78→
+    79→## 4. Non Goals
+    80→
+    81→1. **Не выполнение сканирования** -- SIE не инициирует и не управляет сканированием
+    82→2. **Не LLM/ML-модуль** -- все аналитические алгоритмы детерминированы и воспроизводимы
+    83→3. **Не замена Knowledge Graph** -- SIE использует KG как источник данных, а не заменяет его
+    84→4. **Не визуализация** -- Dashboard и UI не входят в зону ответственности SIE
+    85→5. **Не Explainability Engine** -- SIE формирует данные для Explainability, но не генерирует пользовательские объяснения
+    86→6. **Не修改 существующих модулей** -- TASK-201, TASK-202, Pipeline Executor, Scan Platform Foundation остаются неизменными
+    87→7. **Не real-time processing** -- SIE работает в batch/incremental режиме, а не в streaming
+    88→8. **Не внешний API** -- Intelligence API предназначен для внутренних потребителей платформы
+    89→
+    90→---
+    91→
+    92→## 5. Existing Architecture
+    93→
+    94→```mermaid
+    95→graph TD
+    96→    subgraph "Scan Platform (TASK-201/202)"
+    97→        DE[Discovery Engine]
+    98→        BI[Browser Intelligence]
+    99→        HI[HTTP Intelligence]
+   100→        NE[Nuclei Adapter]
+   101→        AB[Artifact Bus]
+   102→        PE[Pipeline Executor]
+   103→    end
+   104→
+   105→    subgraph "Knowledge Layer (KG-001)"
+   106→        SKG[Security Knowledge Graph]
+   107→        GQA[Graph Query API]
+   108→    end
+   109→
+   110→    DE -->|artifacts| AB
+   111→    BI -->|artifacts| AB
+   112→    HI -->|artifacts| AB
+   113→    NE -->|findings| AB
+   114→    AB -->|build| SKG
+   115→    SKG --> GQA
+   116→
+   117→    style DE fill:#111827,stroke:#34d399,color:#e2e8f0
+   118→    style BI fill:#111827,stroke:#34d399,color:#e2e8f0
+   119→    style HI fill:#111827,stroke:#34d399,color:#e2e8f0
+   120→    style NE fill:#111827,stroke:#34d399,color:#e2e8f0
+   121→    style AB fill:#111827,stroke:#fbbf24,color:#e2e8f0
+   122→    style PE fill:#111827,stroke:#34d399,color:#e2e8f0
+   123→    style SKG fill:#111827,stroke:#fbbf24,color:#e2e8f0
+   124→    style GQA fill:#111827,stroke:#fbbf24,color:#e2e8f0
+   125→```
+   126→
+   127→Существующая платформа обеспечивает полный цикл сбора данных: Discovery Engine обнаруживает поверхность атаки, Browser Intelligence и HTTP Intelligence анализируют клиентскую и серверную части, Nuclei выполняет сканирование уязвимостей, все артефакты публикуются через Artifact Bus и используются для построения Security Knowledge Graph.
+   128→
+   129→**Ключевое ограничение:** SIE подключается к платформе исключительно через Graph Query API. Он не подписывается на Artifact Bus напрямую, не обращается к движкам сканирования и не зависит от Pipeline Executor. Это гарантирует zero coupling с существующими модулями.
+   130→
+   131→---
+   132→
+   133→## 6. Proposed Architecture
+   134→
+   135→```mermaid
+   136→graph TD
+   137→    SKG[Security Knowledge Graph] -->|Graph Query API| KGA[Knowledge Graph Adapter]
+   138→
+   139→    KGA --> FN[Finding Normalizer]
+   140→    FN --> FC[Finding Correlator]
+   141→    FN --> IR[Identity Resolution]
+   142→    FN --> EA[Evidence Aggregator]
+   143→
+   144→    FC --> RE[Risk Engine]
+   145→    EA --> RE
+   146→    IR --> FC
+   147→
+   148→    FC --> CE[Confidence Engine]
+   149→    RE --> CE
+   150→
+   151→    FC --> APB[Attack Path Builder]
+   152→    RE --> APB
+   153→
+   154→    RE --> RCE[Recommendation Engine]
+   155→    CE --> RCE
+   156→    APB --> RCE
+   157→
+   158→    RCE --> EXA[Explainability Adapter]
+   159→    RCE --> IAPI[Intelligence API]
+   160→
+   161→    EXA -->|Explainability Contract| EE[Explainability Engine]
+   162→
+   163→    IAPI -->|analyze| CONSUMER[Dashboard / Continuous Security]
+   164→    IAPI -->|correlate| CONSUMER
+   165→    IAPI -->|calculateRisk| CONSUMER
+   166→    IAPI -->|buildAttackPath| CONSUMER
+   167→    IAPI -->|generateRecommendations| CONSUMER
+   168→    IAPI -->|exportKnowledgeGraph| CONSUMER
+   169→    IAPI -->|getSecurityStory| CONSUMER
+   170→
+   171→    style SKG fill:#111827,stroke:#fbbf24,color:#e2e8f0
+   172→    style KGA fill:#1a2332,stroke:#38bdf8,color:#e2e8f0
+   173→    style FN fill:#111827,stroke:#38bdf8,color:#e2e8f0
+   174→    style FC fill:#111827,stroke:#38bdf8,color:#e2e8f0
+   175→    style IR fill:#111827,stroke:#38bdf8,color:#e2e8f0
+   176→    style EA fill:#111827,stroke:#38bdf8,color:#e2e8f0
+   177→    style RE fill:#111827,stroke:#f87171,color:#e2e8f0
+   178→    style CE fill:#111827,stroke:#fbbf24,color:#e2e8f0
+   179→    style APB fill:#111827,stroke:#f87171,color:#e2e8f0
+   180→    style RCE fill:#111827,stroke:#34d399,color:#e2e8f0
+   181→    style EXA fill:#111827,stroke:#06b6d4,color:#e2e8f0
+   182→    style IAPI fill:#111827,stroke:#38bdf8,color:#e2e8f0
+   183→```
+   184→
+   185→SIE представляет собой пайплайн обработки данных, в котором информация проходит последовательную трансформацию: от сырых узлов графа через нормализацию, корреляцию, оценку риска и построение атак к рекомендациям и Security Story. Каждый этап добавляет новый уровень абстракции и ценности.
+   186→
+   187→**Принцип неизменяемости:** Результат каждого компонента -- immutable-объект. Finding Normalizer создаёт NormalizedFinding, который не может быть изменён последующими компонентами. Correlator создаёт Correlation, Risk Engine создаёт RiskAssessment и т.д. Если результат нужно «обновить», создаётся новая версия с новой меткой времени.
+   188→
+   189→**Принцип детерминированности:** Все алгоритмы SIE -- чистые функции от входного графа. Один и тот же граф всегда даёт один и тот же результат. Никаких случайных чисел, никаких эвристик с порогами, зависящими от времени суток. Исключение: порядок обработки может быть недетерминирован при параллельном выполнении, но итоговый результат -- всегда детерминирован благодаря коммутативности операций агрегации.
+   190→
+   191→---
+   192→
+   193→## 7. Component Overview
+   194→
+   195→### 7.1 Finding Normalizer
+   196→
+   197→| Атрибут | Значение |
+   198→|---------|----------|
+   199→| **Назначение** | Приведение сырых находок из разных источников к единой модели NormalizedFinding |
+   200→| **Ответственность** | Нормализация severity, маппинг CWE/CVE, унификация форматов, обогащение метаданными из графа |
+   201→| **Входные данные** | Сырые Findings из Knowledge Graph (nodes типа Finding) |
+   202→| **Выходные данные** | NormalizedFinding[] -- массив унифицированных находок |
+   203→| **Взаимодействие** | Knowledge Graph Adapter (чтение), Finding Correlator (запись) |
+   204→| **Ограничения** | Не изменяет исходные данные в графе. Не удаляет дубликаты (это делает Correlator). |
+   205→
+   206→Finding Normalizer решает проблему гетерогенности данных. Каждый сканирующий движок формирует находки в собственном формате: Nuclei использует свой severity-маппинг, Browser Intelligence оперирует DOM-специфичными терминами, HTTP Intelligence работает с заголовками и TLS-параметрами. Normalizer приводит все находки к единой модели, которая становится основой для последующего анализа.
+   207→
+   208→Процесс нормализации включает: маппинг severity на единую шкалу (Critical/High/Medium/Low/Info), присвоение CWE-классификации при отсутствии, унификацию формата URL, извлечение и стандартизацию Evidence, обогащение метаданными из связанных узлов графа (Host, Endpoint, Technology), формирование единого идентификатора Finding ID на основе детерминированного хеша.
+   209→
+   210→### 7.2 Finding Correlator
+   211→
+   212→| Атрибут | Значение |
+   213→|---------|----------|
+   214→| **Назначение** | Выявление связей между находками и устранение дубликатов |
+   215→| **Ответственность** | Группировка находок по корреляционным правилам, дедупликация, формирование Correlation-объектов |
+   216→| **Входные данные** | NormalizedFinding[] из Finding Normalizer |
+   217→| **Выходные данные** | Correlation[] -- массив выявленных связей, DeduplicationResult -- информация об устранённых дубликатах |
+   218→| **Взаимодействие** | Finding Normalizer (чтение), Identity Resolution (чтение), Risk Engine (запись), Confidence Engine (запись) |
+   219→| **Ограничения** | Не изменяет NormalizedFinding. Создаёт новые Correlation-объекты. |
+   220→
+   221→Finding Correlator -- ключевой компонент, который превращает набор изолированных находок в связную модель. Корреляция выполняется по множеству измерений: URL, Host, Endpoint, CWE, CVE, Technology, Shared Evidence, Shared Identity, Shared Authentication. Правила корреляции настраиваемые и расширяемые через CorrelationRule Registry.
+   222→
+   223→### 7.3 Identity Resolution
+   224→
+   225→| Атрибут | Значение |
+   226→|---------|----------|
+   227→| **Назначение** | Разрешение идентичности -- определение, относятся ли разные находки к одному и тому же объекту |
+   228→| **Ответственность** | Слияние дублирующихся сущностей, формирование Identity Map, отслеживание Provenance |
+   229→| **Входные данные** | NormalizedFinding[], Knowledge Graph nodes |
+   230→| **Выходные данные** | IdentityMap -- маппинг Finding → Canonical Entity, MergedEntity[] |
+   231→| **Взаимодействие** | Finding Normalizer (чтение), Finding Correlator (чтение/запись) |
+   232→| **Ограничения** | Не удаляет данные. Создаёт маппинги и объединённые сущности. |
+   233→
+   234→Identity Resolution решает фундаментальную проблему: один и тот же эндпоинт может быть обнаружен тремя разными источниками с разными URL-форматами (`https://example.com/api`, `https://example.com:443/api`, `example.com/api/`). Identity Resolution определяет, что все три записи относятся к одному объекту, и создаёт единую каноническую сущность.
+   235→
+   236→### 7.4 Evidence Aggregator
+   237→
+   238→| Атрибут | Значение |
+   239→|---------|----------|
+   240→| **Назначение** | Агрегация доказательств из разных источников для каждой находки |
+   241→| **Ответственность** | Объединение Evidence, оценка качества доказательств, формирование EvidenceBundle |
+   242→| **Входные данные** | NormalizedFinding[], Knowledge Graph edges и связанные nodes |
+   243→| **Выходные данные** | EvidenceBundle[] -- агрегированные наборы доказательств с оценкой качества |
+   244→| **Взаимодействие** | Finding Normalizer (чтение), Risk Engine (запись), Confidence Engine (запись) |
+   245→| **Ограничения** | Не оценивает риск -- только собирает и классифицирует доказательства. |
+   246→
+   247→Evidence Aggregator собирает все доказательства, относящиеся к конкретной находке или группе коррелированных находок, из разных источников. Для SQL Injection на `/api/users` агрегатор соберёт: HTTP-запрос/ответ от Nuclei, DOM-снимок от Browser Intelligence, информацию об аутентификации от HTTP Intelligence, данные о технологии от Discovery.
+   248→
+   249→### 7.5 Risk Engine
+   250→
+   251→| Атрибут | Значение |
+   252→|---------|----------|
+   253→| **Назначение** | Детерминированный расчёт агрегированного риска |
+   254→| **Ответственность** | Вычисление Risk Score на основе множества параметров, формирование RiskAssessment |
+   255→| **Входные данные** | Correlation[], EvidenceBundle[], NormalizedFinding[] |
+   256→| **Выходные данные** | RiskAssessment[] -- оценка риска для каждой находки/группы |
+   257→| **Взаимодействие** | Finding Correlator (чтение), Evidence Aggregator (чтение), Confidence Engine (запись), Attack Path Builder (запись) |
+   258→| **Ограничения** | Не изменяет Finding. Создаёт независимую оценку RiskAssessment. |
+   259→
+   260→Risk Engine не заменяет CVSS -- он дополняет его контекстной информацией из графа знаний. Математическая модель риска подробно описана в разделе 12.
+   261→
+   262→### 7.6 Confidence Engine
+   263→
+   264→| Атрибут | Значение |
+   265→|---------|----------|
+   266→| **Назначение** | Расчёт достоверности каждого вывода |
+   267→| **Ответственность** | Вычисление Confidence Score на основе качества и разнообразия доказательств |
+   268→| **Входные данные** | RiskAssessment[], EvidenceBundle[], Correlation[] |
+   269→| **Выходные данные** | ConfidenceScore[] -- оценка достоверности для каждого вывода |
+   270→| **Взаимодействие** | Risk Engine (чтение), Evidence Aggregator (чтение), Recommendation Engine (запись) |
+   271→| **Ограничения** | Не влияет на Risk Score -- только оценивает уверенность в корректности вывода. |
+   272→
+   273→Confidence Engine реализует multi-factor credibility scoring: количество доказательств (Evidence Count), разнообразие источников (Source Diversity), свежесть данных (Data Freshness), согласованность доказательств (Cross-Validation), полнота покрытия (Coverage Score).
+   274→
+   275→### 7.7 Attack Path Builder
+   276→
+   277→| Атрибут | Значение |
+   278→|---------|----------|
+   279→| **Назначение** | Построение цепочек эксплуатации от точки входа до критического актива |
+   280→| **Ответственность** | Поиск путей в графе, оценка осуществимости, ранжирование по риску |
+   281→| **Входные данные** | RiskAssessment[], Knowledge Graph (nodes + edges) |
+   282→| **Выходные данные** | AttackPath[] -- массив цепочек эксплуатации с оценками |
+   283→| **Взаимодействие** | Risk Engine (чтение), Knowledge Graph Adapter (чтение), Recommendation Engine (запись) |
+   284→| **Ограничения** | Максимальная глубина поиска -- 10 шагов. Не моделирует атаки -- только анализирует существующие связи. |
+   285→
+   286→Attack Path Builder использует модифицированный алгоритм DFS/BFS для поиска путей в графе знаний. Подробное описание алгоритма -- в разделе 13.
+   287→
+   288→### 7.8 Recommendation Engine
+   289→
+   290→| Атрибут | Значение |
+   291→|---------|----------|
+   292→| **Назначение** | Генерация приоритизированных рекомендаций по устранению рисков |
+   293→| **Ответственность** | Формирование рекомендаций, дедупликация, группировка, категоризация, связь с Attack Paths |
+   294→| **Входные данные** | RiskAssessment[], AttackPath[], ConfidenceScore[] |
+   295→| **Выходные данные** | Recommendation[] -- массив рекомендаций с приоритетами |
+   296→| **Взаимодействие** | Risk Engine (чтение), Attack Path Builder (чтение), Confidence Engine (чтение), Explainability Adapter (запись) |
+   297→| **Ограничения** | Работает после Correlation. Не предлагает нерелевантные рекомендации. |
+   298→
+   299→### 7.9 Knowledge Graph Adapter
+   300→
+   301→| Атрибут | Значение |
+   302→|---------|----------|
+   303→| **Назначение** | Единственная точка доступа SIE к Security Knowledge Graph |
+   304→| **Ответственность** | Инкапсуляция Graph Query API, кэширование, преобразование данных |
+   305→| **Входные данные** | Запросы от компонентов SIE |
+   306→| **Выходные данные** | Graph Data (nodes, edges, subgraphs) |
+   307→| **Взаимодействие** | Security Knowledge Graph (чтение), все компоненты SIE (чтение) |
+   308→| **Ограничения** | Read-only. Не модифицирует граф. Единственный компонент с правом чтения графа. |
+   309→
+   310→Knowledge Graph Adapter реализует паттерн Anti-Corruption Layer: он изолирует компоненты SIE от деталей реализации Graph Query API, обеспечивая стабильный интерфейс даже при смене бэкенда графа (NetworkX → Neo4j).
+   311→
+   312→### 7.10 Explainability Adapter
+   313→
+   314→| Атрибут | Значение |
+   315→|---------|----------|
+   316→| **Назначение** | Формирование данных для Explainability Engine |
+   317→| **Ответственность** | Сбор трассировок, формирование ExplainabilityOutput, обеспечение контракта |
+   318→| **Входные данные** | Все промежуточные результаты SIE (Risk, Confidence, Correlation, AttackPath) |
+   319→| **Выходные данные** | ExplainabilityOutput -- структурированные данные для объяснения |
+   320→| **Взаимодействие** | Все компоненты SIE (чтение), Explainability Engine (запись) |
+   321→| **Ограничения** | Ничего не вычисляет. Только собирает и структурирует уже готовые данные. |
+   322→
+   323→### 7.11 Intelligence API
+   324→
+   325→| Атрибут | Значение |
+   326→|---------|----------|
+   327→| **Назначение** | Публичный интерфейс SIE для потребителей платформы |
+   328→| **Ответственность** | Оркестрация вызовов компонентов, управление сессиями анализа, кэширование |
+   329→| **Входные данные** | Запросы от Dashboard, Continuous Security, Explainability Engine |
+   330→| **Выходные данные** | IntelligenceResult -- агрегированный результат анализа |
+   331→| **Взаимодействие** | Все компоненты SIE (оркестрация), внешние потребители |
+   332→| **Ограничения** | Не содержит бизнес-логики. Только оркестрирует вызовы компонентов. |
+   333→
+   334→---
+   335→
+   336→## 8. Data Flow
+   337→
+   338→```mermaid
+   339→sequenceDiagram
+   340→    participant API as Intelligence API
+   341→    participant KGA as KG Adapter
+   342→    participant FN as Finding Normalizer
+   343→    participant IR as Identity Resolution
+   344→    participant FC as Finding Correlator
+   345→    participant EA as Evidence Aggregator
+   346→    participant RE as Risk Engine
+   347→    participant CE as Confidence Engine
+   348→    participant APB as Attack Path Builder
+   349→    participant RCE as Recommendation Engine
+   350→    participant EXA as Explainability Adapter
+   351→
+   352→    API->>KGA: Load graph data
+   353→    KGA->>KGA: Query Graph API
+   354→    KGA-->>FN: Raw Findings + Nodes
+   355→
+   356→    FN->>FN: Normalize severity, map CWE/CVE
+   357→    FN->>IR: NormalizedFinding[]
+   358→    IR->>IR: Resolve identities, merge duplicates
+   359→    IR-->>FC: IdentityMap + NormalizedFinding[]
+   360→
+   361→    FC->>FC: Apply correlation rules
+   362→    FC-->>EA: Correlation[]
+   363→    FN-->>EA: NormalizedFinding[]
+   364→    EA->>EA: Aggregate evidence per finding
+   365→    EA-->>RE: EvidenceBundle[]
+   366→
+   367→    FC-->>RE: Correlation[]
+   368→    RE->>RE: Calculate Risk Score
+   369→    RE-->>CE: RiskAssessment[]
+   370→    EA-->>CE: EvidenceBundle[]
+   371→    CE->>CE: Calculate Confidence Score
+   372→
+   373→    RE-->>APB: RiskAssessment[]
+   374→    KGA-->>APB: Graph topology
+   375→    APB->>APB: Build Attack Paths (DFS/BFS)
+   376→
+   377→    RE-->>RCE: RiskAssessment[]
+   378→    CE-->>RCE: ConfidenceScore[]
+   379→    APB-->>RCE: AttackPath[]
+   380→    RCE->>RCE: Generate Recommendations
+   381→
+   382→    RCE-->>EXA: All intermediate results
+   383→    EXA->>EXA: Structure Explainability Data
+   384→    EXA-->>API: ExplainabilityOutput
+   385→
+   386→    API-->>API: IntelligenceResult
+   387→```
+   388→
+   389→Data Flow SIE следует строгому конвейеру: данные проходят через каждый компонент последовательно, причём каждый компонент добавляет новый уровень аналитики, не изменяя результаты предыдущих этапов. Это гарантирует воспроизводимость и объяснимость всего пайплайна.
+   390→
+   391→**Pipeline Flow Diagram:**
+   392→
+   393→```mermaid
+   394→graph LR
+   395→    subgraph "Stage 1: Ingestion"
+   396→        KGA[KG Adapter] --> FN[Finding Normalizer]
+   397→    end
+   398→
+   399→    subgraph "Stage 2: Resolution"
+   400→        FN --> IR[Identity Resolution]
+   401→        IR --> FC[Finding Correlator]
+   402→    end
+   403→
+   404→    subgraph "Stage 3: Aggregation"
+   405→        FC --> EA[Evidence Aggregator]
+   406→    end
+   407→
+   408→    subgraph "Stage 4: Analysis"
+   409→        EA --> RE[Risk Engine]
+   410→        FC --> RE
+   411→        RE --> CE[Confidence Engine]
+   412→        RE --> APB[Attack Path Builder]
+   413→    end
+   414→
+   415→    subgraph "Stage 5: Output"
+   416→        CE --> RCE[Recommendation Engine]
+   417→        APB --> RCE
+   418→        RCE --> EXA[Explainability Adapter]
+   419→    end
+   420→```
+   421→
+   422→---
+   423→
+   424→## 9. Domain Model
+   425→
+   426→### 9.1 Finding
+   427→
+   428→```python
+   429→class Finding:
+   430→    id: FindingId                  # Детерминированный хеш
+   431→    title: str                     # Человекочитаемое название
+   432→    severity: Severity             # Critical | High | Medium | Low | Info
+   433→    cwe_ids: list[CweId]          # Связанные CWE
+   434→    cve_ids: list[CveId]          # Связанные CVE
+   435→    source: SourceType             # Nuclei | BrowserIntel | HttpIntel | Discovery
+   436→    raw_evidence: RawEvidence      # Исходные данные от движка
+   437→    normalized_evidence: NormalizedEvidence  # Нормализованные данные
+   438→    asset_id: AssetId             # Связанный актив
+   439→    url: Url                       # URL находки
+   440→    discovered_at: datetime        # Время обнаружения
+   441→    provenance: Provenance         # Происхождение данных
+   442→```
+   443→
+   444→**Жизненный цикл:** Created (из сканирующего движка) → Normalized (Finding Normalizer) → Correlated (Finding Correlator) → RiskAssessed (Risk Engine) → Recommended (Recommendation Engine). Finding -- immutable, каждый этап создаёт новую версию.
+   445→
+   446→### 9.2 Asset
+   447→
+   448→```python
+   449→class Asset:
+   450→    id: AssetId                    # Канонический идентификатор
+   451→    type: AssetType                # Application | Host | Endpoint | API | Service
+   452→    canonical_url: Url             # Канонический URL после Identity Resolution
+   453→    aliases: list[Url]             # Альтернативные URL (до разрешения)
+   454→    technologies: list[Technology] # Обнаруженные технологии
+   455→    business_criticality: Criticality  # Low | Medium | High | Critical
+   456→    attack_surface_score: float    # Оценка поверхности атаки
+   457→    identity_id: IdentityId        # Связанная идентичность
+   458→```
+   459→
+   460→**Жизненный цикл:** Discovered → Identified (Identity Resolution) → Enriched (Technology Detection) → RiskProfiled (Risk Engine).
+   461→
+   462→### 9.3 Evidence
+   463→
+   464→```python
+   465→class Evidence:
+   466→    id: EvidenceId
+   467→    type: EvidenceType             # HTTP | DOM | TLS | Header | Cookie | JWT | Network
+   468→    source: SourceType             # Откуда получено
+   469→    content: dict                  # Полное содержимое доказательства
+   470→    quality: EvidenceQuality       # High | Medium | Low | Unverified
+   471→    timestamp: datetime
+   472→    finding_ids: list[FindingId]   # Связанные находки
+   473→    provenance: Provenance
+   474→```
+   475→
+   476→### 9.4 Relationship
+   477→
+   478→```python
+   479→class Relationship:
+   480→    id: RelationshipId
+   481→    source_id: EntityId            # Исходная сущность
+   482→    target_id: EntityId            # Целевая сущность
+   483→    type: RelationshipType         # USES | CALLS | DEPENDS_ON | EXPOSES | LEADS_TO | ...
+   484→    weight: float                  # Вес связи (0.0–1.0)
+   485→    confidence: float              # Достоверность связи
+   486→    evidence_ids: list[EvidenceId] # Поддерживающие доказательства
+   487→    provenance: Provenance
+   488→```
+   489→
+   490→### 9.5 Risk
+   491→
+   492→```python
+   493→class Risk:
+   494→    id: RiskId
+   495→    finding_ids: list[FindingId]   # Связанные находки
+   496→    asset_ids: list[AssetId]       # Затронутые активы
+   497→    risk_score: float              # 0.0–100.0 (детерминированный)
+   498→    risk_level: RiskLevel          # Critical | High | Medium | Low | Info
+   499→    components: RiskComponents     # Детализация расчёта
+   500→    attack_paths: list[AttackPathId]  # Связанные цепочки атак
+   501→    confidence: float              # Достоверность оценки
+   502→    calculated_at: datetime
+   503→    provenance: Provenance
+   504→```
+   505→
+   506→### 9.6 AttackPath
+   507→
+   508→```python
+   509→class AttackPath:
+   510→    id: AttackPathId
+   511→    steps: list[AttackStep]        # Последовательность шагов
+   512→    entry_point: AssetId           # Точка входа
+   513→    target: AssetId                # Целевой актив
+   514→    overall_severity: Severity
+   515→    overall_risk_score: float
+   516→    feasibility: float             # Оценка осуществимости
+   517→    confidence: float
+   518→    evidence_chain: list[EvidenceId]  # Цепочка доказательств
+   519→    length: int                    # Количество шагов
+   520→```
+   521→
+   522→### 9.7 Recommendation
+   523→
+   524→```python
+   525→class Recommendation:
+   526→    id: RecommendationId
+   527→    type: RecommendationType       # Fix | Mitigate | Monitor | Accept
+   528→    priority: Priority             # P0 | P1 | P2 | P3
+   529→    title: str
+   530→    description: str
+   531→    affected_findings: list[FindingId]
+   532→    affected_attack_paths: list[AttackPathId]
+   533→    affected_assets: list[AssetId]
+   534→    category: RecommendationCategory  # Auth | Config | Patch | Network | Data
+   535→    effort: EffortLevel            # Low | Medium | High
+   536→    impact: ImpactLevel            # Low | Medium | High
+   537→    related_cwes: list[CweId]
+   538→```
+   539→
+   540→### 9.8 KnowledgeNode
+   541→
+   542→```python
+   543→class KnowledgeNode:
+   544→    id: NodeId
+   545→    type: NodeType                 # Application | Host | Endpoint | API | Finding | ...
+   546→    properties: dict               # Тип-специфичные свойства
+   547→    provenance: Provenance
+   548→    confidence: float
+   549→    created_at: datetime
+   550→    updated_at: datetime
+   551→```
+   552→
+   553→### 9.9 KnowledgeEdge
+   554→
+   555→```python
+   556→class KnowledgeEdge:
+   557→    id: EdgeId
+   558→    source_node_id: NodeId
+   559→    target_node_id: NodeId
+   560→    type: EdgeType                 # USES | CALLS | DEPENDS_ON | EXPOSES | LEADS_TO | ...
+   561→    weight: float
+   562→    confidence: float
+   563→    evidence_ids: list[EvidenceId]
+   564→    provenance: Provenance
+   565→```
+   566→
+   567→### 9.10 Correlation
+   568→
+   569→```python
+   570→class Correlation:
+   571→    id: CorrelationId
+   572→    type: CorrelationType          # SameUrl | SameHost | SameCwe | SharedEvidence | ...
+   573→    entity_ids: list[EntityId]     # Связанные сущности
+   574→    strength: float                # 0.0–1.0
+   575→    rule_id: CorrelationRuleId     # Правило, выявившее корреляцию
+   576→    evidence: CorrelationEvidence
+   577→    confidence: float
+   578→```
+   579→
+   580→### 9.11 Confidence
+   581→
+   582→```python
+   583→class Confidence:
+   584→    id: ConfidenceId
+   585→    entity_id: EntityId            # Для какой сущности
+   586→    score: float                   # 0.0–1.0
+   587→    components: ConfidenceComponents  # Детализация расчёта
+   588→    calculated_at: datetime
+   589→```
+   590→
+   591→### 9.12 SecurityStory
+   592→
+   593→```python
+   594→class SecurityStory:
+   595→    id: SecurityStoryId
+   596→    title: str                     # Связный заголовок
+   597→    summary: str                   # Краткое описание
+   598→    findings: list[FindingId]
+   599→    correlations: list[CorrelationId]
+   600→    risks: list[RiskId]
+   601→    attack_paths: list[AttackPathId]
+   602→    recommendations: list[RecommendationId]
+   603→    overall_posture: SecurityPosture  # Critical | Poor | Fair | Good | Excellent
+   604→    key_metrics: SecurityMetrics   # Агрегированные метрики
+   605→```
+   606→
+   607→---
+   608→
+   609→## 10. Knowledge Graph Model
+   610→
+   611→### 10.1 Node Types
+   612→
+   613→```mermaid
+   614→graph TD
+   615→    APP[Application] --> HOST[Host]
+   616→    HOST --> EP[Endpoint]
+   617→    HOST --> API[API]
+   618→    EP --> FIND[Finding]
+   619→    API --> FIND
+   620→    EP --> TECH[Technology]
+   621→    API --> TECH
+   622→    FIND --> EVID[Evidence]
+   623→    EP --> IDEN[Identity]
+   624→    EP --> SEC[Secret]
+   625→    FIND --> AREC[Recommendation]
+   626→    FIND --> ASTEP[AttackStep]
+   627→```
+   628→
+   629→| Node Type | Свойства | Описание |
+   630→|-----------|----------|----------|
+   631→| **Application** | name, url, tech_stack, business_criticality | Корневой узел приложения |
+   632→| **Host** | hostname, ip, os, ports, services | Сервер/контейнер |
+   633→| **Endpoint** | path, method, params, auth_required, content_type | HTTP-эндпоинт |
+   634→| **API** | path, method, params, auth, rate_limit, schema | API-эндпоинт |
+   635→| **Finding** | title, severity, cwe, cve, evidence, source | Обнаруженная уязвимость |
+   636→| **Evidence** | type, content, quality, source, timestamp | Доказательство |
+   637→| **Technology** | name, version, category, cpe, known_cves | Используемая технология |
+   638→| **Service** | name, port, protocol, version, banner | Сетевой сервис |
+   639→| **Identity** | type, value, context, auth_mechanism | Идентичность (user, token, cookie) |
+   640→| **Secret** | type, location, exposure, rotation_policy | Обнаруженный секрет |
+   641→| **AttackStep** | type, description, severity, prerequisites | Шаг в цепочке атаки |
+   642→| **Recommendation** | title, type, priority, effort, impact | Рекомендация по устранению |
+   643→
+   644→### 10.2 Edge Types
+   645→
+   646→| Edge Type | Source → Target | Семантика | Вес по умолчанию |
+   647→|-----------|----------------|-----------|-------------------|
+   648→| **USES** | Endpoint → Technology | Эндпоинт использует технологию | 0.8 |
+   649→| **CALLS** | Endpoint → Endpoint / API | Один эндпоинт вызывает другой | 0.7 |
+   650→| **DEPENDS_ON** | Service → Service | Сервис зависит от другого сервиса | 0.6 |
+   651→| **CONNECTED_TO** | Host → Host | Сетевая связность | 0.5 |
+   652→| **OWNS** | Application → Host / Service | Владение ресурсом | 1.0 |
+   653→| **EXPOSES** | Endpoint → Finding / Secret | Эндпоинт раскрывает уязвимость | 0.9 |
+   654→| **LEADS_TO** | AttackStep → AttackStep | Цепочка атаки | 0.8 |
+   655→| **AFFECTS** | Finding → Asset / Technology | Находка влияет на объект | 0.7 |
+   656→| **MITIGATED_BY** | Finding → Recommendation | Рекомендация устраняет находку | 0.8 |
+   657→
+   658→### 10.3 Правила формирования графа
+   659→
+   660→1. **Provenance First:** Каждый узел и связь содержат Provenance -- откуда получены данные, какой движок их обнаружил, когда они были обновлены
+   661→2. **Confidence Weighting:** Вес связи умножается на Confidence источника
+   662→3. **Identity Merging:** Узлы, отождествлённые Identity Resolution, сливаются с сохранением всех свойств и связей
+   663→4. **Incremental Updates:** Граф обновляется инкрементально при получении новых артефактов, без полного перестроения
+   664→5. **No Orphan Nodes:** Каждый узел должен иметь хотя бы одну связь. Изолированные узлы помечаются как Unconnected
+   665→
+   666→---
+   667→
+   668→## 11. Correlation Engine
+   669→
+   670→### 11.1 Correlation Rules
+   671→
+   672→| # | Правило | Описание | Вес | Приоритет |
+   673→|---|---------|----------|-----|-----------|
+   674→| 1 | Same URL | Находки на одном URL | 1.0 | P0 |
+   675→| 2 | Same Host | Находки на одном хосте | 0.8 | P1 |
+   676→| 3 | Same Endpoint | Находки на одном эндпоинте (с учётом метода) | 0.95 | P0 |
+   677→| 4 | Same CVE | Находки с одинаковым CVE | 0.9 | P0 |
+   678→| 5 | Same CWE | Находки с одинаковым CWE | 0.7 | P2 |
+   679→| 6 | Same Technology | Находки в одной технологии | 0.6 | P2 |
+   680→| 7 | Same Component | Находки в одном компоненте/сервисе | 0.7 | P1 |
+   681→| 8 | Shared Evidence | Находки с общими доказательствами | 0.85 | P1 |
+   682→| 9 | Shared Identity | Находки с общей идентичностью | 0.75 | P1 |
+   683→| 10 | Shared Authentication | Находки с общим механизмом аутентификации | 0.8 | P1 |
+   684→
+   685→### 11.2 Алгоритм корреляции
+   686→
+   687→```
+   688→FUNCTION correlate(findings: NormalizedFinding[]) → Correlation[]:
+   689→    correlations = []
+   690→    
+   691→    # Step 1: Группировка по правилам
+   692→    FOR EACH rule IN correlation_rules (ORDERED BY priority DESC):
+   693→        groups = GROUP findings BY rule.key_extractor
+   694→        FOR EACH group IN groups WHERE len(group) > 1:
+   695→            correlation = CREATE Correlation(
+   696→                type = rule.type,
+   697→                entity_ids = [f.id FOR f IN group],
+   698→                strength = rule.weight * compute_group_cohesion(group),
+   699→                rule_id = rule.id,
+   700→                confidence = min(f.confidence FOR f IN group)
+   701→            )
+   702→            correlations.APPEND(correlation)
+   703→    
+   704→    # Step 2: Транзитивная корреляция
+   705→    # Если A коррелирует с B, а B с C, то A косвенно коррелирует с C
+   706→    transitive = COMPUTE_TRANSITIVE_CLOSURE(correlations, max_depth=3)
+   707→    correlations.EXTEND(transitive)
+   708→    
+   709→    # Step 3: Устранение ложных совпадений
+   710→    correlations = FILTER(correlations, c => c.strength >= MIN_CORRELATION_THRESHOLD)
+   711→    correlations = DEDUPLICATE(correlations)
+   712→    
+   713→    RETURN correlations
+   714→```
+   715→
+   716→### 11.3 Устранение ложных совпадений
+   717→
+   718→1. **Минимальный порог силы:** Корреляции со strength < 0.3 отбрасываются
+   719→2. **Cross-validation:** Корреляция подтверждается, если она выявлена минимум двумя независимыми правилами
+   720→3. **Контекстная фильтрация:** Корреляции между находками на разных хостах с разной технологией помечаются как WeakCorrelation
+   721→4. **Evidence-based verification:** Корреляции без подтверждающих Evidence получают пониженный Confidence
+   722→
+   723→---
+   724→
+   725→## 12. Risk Engine
+   726→
+   727→### 12.1 Параметры оценки
+   728→
+   729→| Параметр | Диапазон | Вес | Описание |
+   730→|----------|----------|-----|----------|
+   731→| Severity | 0.0–1.0 | 0.25 | Базовая критичность уязвимости |
+   732→| Confidence | 0.0–1.0 | 0.15 | Достоверность находки |
+   733→| Exploitability | 0.0–1.0 | 0.20 | Осуществимость эксплуатации |
+   734→| Exposure | 0.0–1.0 | 0.15 | Степень раскрытия (публичный/внутренний) |
+   735→| Reachability | 0.0–1.0 | 0.10 | Достижимость от точки входа |
+   736→| Business Criticality | 0.0–1.0 | 0.10 | Бизнес-критичность затронутого актива |
+   737→| Evidence Quality | 0.0–1.0 | 0.05 | Качество доказательств |
+   738→
+   739→### 12.2 Математическая модель
+   740→
+   741→```
+   742→RiskScore = Σ(w_i x p_i) x AdjustmentFactors
+   743→
+   744→где:
+   745→  w_i -- вес параметра i
+   746→  p_i -- нормализованное значение параметра i
+   747→  AdjustmentFactors = f(correlation_count, attack_path_count)
+   748→
+   749→Детализация:
+   750→
+   751→  BaseScore = 0.25xS + 0.15xC + 0.20xE + 0.15xX + 0.10xR + 0.10xB + 0.05xQ
+   752→
+   753→  CorrelationBoost = 1.0 + min(0.3, 0.1 x log(1 + correlation_count))
+   754→  AttackPathBoost = 1.0 + min(0.4, 0.15 x attack_path_count)
+   755→
+   756→  RiskScore = clamp(BaseScore x CorrelationBoost x AttackPathBoost, 0.0, 1.0)
+   757→
+   758→  RiskLevel:
+   759→    Critical  -- RiskScore >= 0.80
+   760→    High      -- RiskScore >= 0.60
+   761→    Medium    -- RiskScore >= 0.40
+   762→    Low       -- RiskScore >= 0.20
+   763→    Info      -- RiskScore <  0.20
+   764→```
+   765→
+   766→### 12.3 Расчёт параметров
+   767→
+   768→**Exploitability** определяется на основе: доступности публичного эксплойта (CVE database), сложности эксплуатации (Access Vector, Attack Complexity из CVSS), требований к аутентификации (None → 1.0, Single → 0.6, Multi → 0.2), взаимодействия с пользователем (None → 1.0, Required → 0.5).
+   769→
+   770→**Exposure** рассчитывается как: публичный эндпоинт = 1.0, внутренний с аутентификацией = 0.4, localhost-only = 0.1.
+   771→
+   772→**Reachability** определяется через анализ графа: существует ли путь от публичного узла до данной находки. Reachability = 1.0 если публично достижимо, 0.5 если достижимо через аутентификацию, 0.1 если изолировано.
+   773→
+   774→**Business Criticality** берётся из метаданных актива: если актив помечен как Critical → 1.0, High → 0.7, Medium → 0.4, Low → 0.1.
+   775→
+   776→---
+   777→
+   778→## 13. Attack Path Builder
+   779→
+   780→### 13.1 Алгоритм
+   781→
+   782→```mermaid
+   783→graph TD
+   784→    START[Старт: Публичные эндпоинты] --> DISCOVER[Обнаружить исходящие связи]
+   785→    DISCOVER --> FILTER{Фильтр: только эксплуатируемые связи?}
+   786→    FILTER -->|Да| TRAVERSE[Обход: DFS/BFS]
+   787→    FILTER -->|Нет| PRUNE[Отсечение низковероятных путей]
+   788→    PRUNE --> TRAVERSE
+   789→    TRAVERSE --> CHECK{Целевой актив достигнут?}
+   790→    CHECK -->|Да| RECORD[Записать Attack Path]
+   791→    CHECK -->|Нет| DEPTH{Глубина < 10?}
+   792→    DEPTH -->|Да| DISCOVER
+   793→    DEPTH -->|Нет| ABORT[Прекратить обход]
+   794→    RECORD --> RANK[Ранжировать по Risk Score]
+   795→    RANK --> OUTPUT[AttackPath[]]
+   796→```
+   797→
+   798→### 13.2 Формальные правила
+   799→
+   800→1. **Точка входа** -- любой публичный узел (Exposure >= 0.8) или узел с Finding
+   801→2. **Целевой актив** -- узел с Business Criticality >= 0.7 или содержащий Secret
+   802→3. **Допустимые рёбра** -- LEADS_TO, EXPOSES, AFFECTS, USES, CALLS, DEPENDS_ON
+   803→4. **Максимальная глубина** -- 10 шагов
+   804→5. **Минимальный Confidence пути** -- средний Confidence всех рёбер >= 0.3
+   805→6. **Обнаружение циклов** -- если узел уже посещён в текущем пути, обход прекращается
+   806→
+   807→### 13.3 Приоритизация
+   808→
+   809→```
+   810→PathPriority = PathRiskScore x PathFeasibility / PathLength
+   811→
+   812→где:
+   813→  PathRiskScore = max(step.risk_score FOR step IN path)
+   814→  PathFeasibility = geometric_mean(step.feasibility FOR step IN path)
+   815→  PathLength = len(path.steps)
+   816→```
+   817→
+   818→Короткие пути с высоким риском и высокой осуществимостью получают приоритет. Длинные пути с низким риском -- низкий приоритет.
+   819→
+   820→### 13.4 Альтернативные сценарии
+   821→
+   822→Для каждой пары (entry_point, target) может существовать несколько альтернативных путей. Attack Path Builder сохраняет все найденные пути, но ранжирует их по приоритету. Альтернативные пути группируются и предоставляются как AlternativeAttackPaths в SecurityStory.
+   823→
+   824→---
+   825→
+   826→## 14. Recommendation Engine
+   827→
+   828→### 14.1 Типы рекомендаций
+   829→
+   830→| Тип | Описание | Критерий |
+   831→|-----|----------|----------|
+   832→| **Fix** | Непосредственное исправление | Для Finding с Confidence >= 0.7 |
+   833→| **Mitigate** | Смягчение последствий | Для Attack Path с Feasibility >= 0.5 |
+   834→| **Monitor** | Мониторинг изменений | Для Finding с Confidence < 0.5 |
+   835→| **Accept** | Принятие риска | Для Risk Score < 0.2 |
+   836→
+   837→### 14.2 Генерация рекомендаций
+   838→
+   839→Рекомендации генерируются на основе трёх источников: CWE Remedy Database (стандартные рекомендации для каждого CWE), Attack Path Break (разрыв цепочки атаки -- какая рекомендация разорвёт самый критический путь), и Correlation Insight (рекомендации на основе корреляций -- исправление одного корня устраняет несколько находок).
+   840→
+   841→### 14.3 Дедупликация
+   842→
+   843→Две рекомендации считаются дубликатами, если: они относятся к одному CWE, затрагивают один и тот же актив и предлагают одно и то же действие. Дубликаты сливаются с увеличением priority на один уровень.
+   844→
+   845→### 14.4 Группировка
+   846→
+   847→Рекомендации группируются по: категории (Auth, Config, Patch, Network, Data), затронутому активу, Attack Path (рекомендации, разрывающие один и тот же путь, группируются вместе), приоритету.
+   848→
+   849→### 14.5 Категоризация и приоритет
+   850→
+   851→```
+   852→Priority = P0  IF RiskScore >= 0.8 AND Confidence >= 0.7  → Immediate action
+   853→Priority = P1  IF RiskScore >= 0.6 AND Confidence >= 0.5  → Fix within sprint
+   854→Priority = P2  IF RiskScore >= 0.4 AND Confidence >= 0.4  → Plan for next sprint
+   855→Priority = P3  IF RiskScore < 0.4                          → Backlog
+   856→```
+   857→
+   858→---
+   859→
+   860→## 15. Explainability Contract
+   861→
+   862→### 15.1 Принцип
+   863→
+   864→Explainability Engine ничего не вычисляет. Он получает полностью готовую интеллектуальную модель от SIE и отвечает только за объяснение результатов в человекочитаемом формате.
+   865→
+   866→### 15.2 ExplainabilityOutput
+   867→
+   868→```python
+   869→class ExplainabilityOutput:
+   870→    # Для каждого вывода
+   871→    tracing: list[TraceStep]       # Полная трассировка вычислений
+   872→    data_sources: list[DataSource] # Какие данные использовались
+   873→    rules_applied: list[RuleRef]   # Какие правила сработали
+   874→    evidence_refs: list[EvidenceId]# Какие доказательства подтверждают
+   875→    
+   876→    # Для Attack Path
+   877→    path_explanation: list[StepExplanation]  # Объяснение каждого шага
+   878→    feasibility_reasoning: str     # Почему путь осуществим
+   879→    
+   880→    # Для Risk
+   881→    risk_breakdown: RiskComponents  # Детализация расчёта риска
+   882→    contributing_factors: list[Factor]  # Что повлияло на оценку
+   883→    
+   884→    # Для Recommendation
+   885→    recommendation_rationale: str  # Почему рекомендация предлагается
+   886→    impact_assessment: str         # Какой эффект ожидается
+   887→    attack_path_break: str         # Как рекомендация разрывает Attack Path
+   888→```
+   889→
+   890→### 15.3 Контракт с Explainability Engine
+   891→
+   892→```python
+   893→class ExplainabilityContract:
+   894→    """ + "SIE обязуется предоставить Explainability Engine:
+   895→    
+   896→    1. Полный tracing каждого вычисления
+   897→    2. Ссылки на все использованные данные (Data Sources)
+   898→    3. Ссылки на все сработавшие правила
+   899→    4. Ссылки на все подтверждающие Evidence
+   900→    5. Детализацию Risk Score с формулой и значениями
+   901→    6. Объяснение каждого шага Attack Path
+   902→    7. Обоснование каждой Recommendation
+   903→    
+   904→    Explainability Engine обязуется:
+   905→    1. Не выполнять вычисления
+   906→    2. Не модифицировать данные SIE
+   907→    3. Только форматировать и структурировать уже готовые данные
+   908→    """
+   909→```
+   910→
+   911→---
+   912→
+   913→## 16. Event Model
+   914→
+   915→### 16.1 Внутренние события SIE
+   916→
+   917→```mermaid
+   918→graph LR
+   919→    E1[AnalysisRequested] --> E2[GraphDataLoaded]
+   920→    E2 --> E3[FindingsNormalized]
+   921→    E3 --> E4[IdentitiesResolved]
+   922→    E4 --> E5[FindingsCorrelated]
+   923→    E3 --> E6[EvidenceAggregated]
+   924→    E5 --> E7[RiskCalculated]
+   925→    E6 --> E7
+   926→    E7 --> E8[ConfidenceCalculated]
+   927→    E7 --> E9[AttackPathsBuilt]
+   928→    E8 --> E10[RecommendationsGenerated]
+   929→    E9 --> E10
+   930→    E10 --> E11[AnalysisCompleted]
+   931→```
+   932→
+   933→| Событие | Producer | Consumer | Данные |
+   934→|---------|----------|----------|--------|
+   935→| AnalysisRequested | Intelligence API | KG Adapter | analysis_scope |
+   936→| GraphDataLoaded | KG Adapter | Finding Normalizer | raw_findings, graph_nodes |
+   937→| FindingsNormalized | Finding Normalizer | Identity Resolution, Finding Correlator | normalized_findings |
+   938→| IdentitiesResolved | Identity Resolution | Finding Correlator | identity_map |
+   939→| FindingsCorrelated | Finding Correlator | Risk Engine, Evidence Aggregator | correlations |
+   940→| EvidenceAggregated | Evidence Aggregator | Risk Engine, Confidence Engine | evidence_bundles |
+   941→| RiskCalculated | Risk Engine | Confidence Engine, Attack Path Builder | risk_assessments |
+   942→| ConfidenceCalculated | Confidence Engine | Recommendation Engine | confidence_scores |
+   943→| AttackPathsBuilt | Attack Path Builder | Recommendation Engine | attack_paths |
+   944→| RecommendationsGenerated | Recommendation Engine | Explainability Adapter | recommendations |
+   945→| AnalysisCompleted | Intelligence API | External | intelligence_result |
+   946→
+   947→### 16.2 События Artifact Bus
+   948→
+   949→SIE подписывается на события Artifact Bus для инкрементального анализа:
+   950→
+   951→| Событие | Действие SIE |
+   952→|---------|-------------|
+   953→| ScanCompleted | Запуск полного анализа |
+   954→| ArtifactPublished | Инкрементальный анализ затронутого подграфа |
+   955→| GraphUpdated | Перерасчёт Risk/Confidence для изменённых узлов |
+   956→
+   957→---
+   958→
+   959→## 17. API Contract
+   960→
+   961→```python
+   962→class IntelligenceAPI:
+   963→    """Публичный API Security Intelligence Engine."""
+   964→
+   965→    def analyze(scope: AnalysisScope) -> IntelligenceResult:
+   966→        """Полный анализ Security Knowledge Graph.
+   967→        
+   968→        Args:
+   969→            scope: Область анализа (full graph, subgraph, specific assets)
+   970→        
+   971→        Returns:
+   972→            IntelligenceResult с findings, risks, attack_paths, recommendations
+   973→        """
+   974→
+   975→    def correlate(findings: list[FindingId]) -> list[Correlation]:
+   976→        """Корреляция указанных находок.
+   977→        
+   978→        Args:
+   979→            findings: Список ID находок для корреляции
+   980→        
+   981→        Returns:
+   982→            Список выявленных корреляций
+   983→        """
+   984→
+   985→    def calculateRisk(
+   986→        scope: RiskScope,
+   987→        parameters: RiskParameters | None = None
+   988→    ) -> list[RiskAssessment]:
+   989→        """Расчёт агрегированного риска.
+   990→        
+   991→        Args:
+   992→            scope: Область расчёта (finding, asset, application)
+   993→            parameters: Опциональные параметры для переопределения весов
+   994→        
+   995→        Returns:
+   996→            Список оценок риска
+   997→        """
+   998→
+   999→    def buildAttackPath(
+  1000→        target: AssetId,
+  1001→        entry_points: list[AssetId] | None = None
+  1002→    ) -> list[AttackPath]:
+  1003→        """Построение цепочек эксплуатации.
+  1004→        
+  1005→        Args:
+  1006→            target: Целевой актив
+  1007→            entry_points: Опциональные точки входа (иначе -- все публичные)
+  1008→        
+  1009→        Returns:
+  1010→            Список Attack Paths, ранжированных по приоритету
+  1011→        """
+  1012→
+  1013→    def generateRecommendations(
+  1014→        findings: list[FindingId] | None = None,
+  1015→        min_priority: Priority = P3
+  1016→    ) -> list[Recommendation]:
+  1017→        """Генерация рекомендаций.
+  1018→        
+  1019→        Args:
+  1020→            findings: Опциональный фильтр по находкам
+  1021→            min_priority: Минимальный приоритет рекомендаций
+  1022→        
+  1023→        Returns:
+  1024→            Список рекомендаций, ранжированных по приоритету
+  1025→        """
+  1026→
+  1027→    def exportKnowledgeGraph(
+  1028→        format: ExportFormat = ExportFormat.GRAPHML,
+  1029→        scope: ExportScope | None = None
+  1030→    ) -> GraphExport:
+  1031→        """Экспорт графа знаний.
+  1032→        
+  1033→        Args:
+  1034→            format: Формат экспорта (GraphML, JSON, Cypher)
+  1035→            scope: Область экспорта
+  1036→        
+  1037→        Returns:
+  1038→            Экспортированные данные графа
+  1039→        """
+  1040→
+  1041→    def getSecurityStory(
+  1042→        scope: StoryScope = StoryScope.APPLICATION
+  1043→    ) -> SecurityStory:
+  1044→        """Формирование Security Story.
+  1045→        
+  1046→        Args:
+  1047→            scope: Область (application, asset, attack_path)
+  1048→        
+  1049→        Returns:
+  1050→            SecurityStory -- связное описание состояния безопасности
+  1051→        """
+  1052→```
+  1053→
+  1054→---
+  1055→
+  1056→## 18. Failure Handling
+  1057→
+  1058→### 18.1 Стратегия обработки ошибок
+  1059→
+  1060→| Сценарий | Стратегия | Поведение |
+  1061→|----------|-----------|-----------|
+  1062→| KG Adapter не может загрузить данные | Retry with backoff | 3 попытки с экспоненциальной задержкой, затем AnalysisFailed |
+  1063→| Finding Normalizer встречает неизвестный формат | Skip and log | Пропуск находки с логированием, анализ продолжается |
+  1064→| Correlation Engine timeout | Partial results | Возврат корреляций, найденных до timeout |
+  1065→| Risk Engine получает неполные данные | Degraded calculation | Расчёт с доступными параметрами, пониженный Confidence |
+  1066→| Attack Path Builder: циклы в графе | Cycle detection | Обнаружение и пропуск циклов при обходе |
+  1067→| Recommendation Engine: нет CWE | Generic recommendations | Использование generic-рекомендаций вместо CWE-specific |
+  1068→| Полный сбой компонента | Circuit breaker | После 3 последовательных сбоев -- Circuit Open, fallback на cached results |
+  1069→
+  1070→### 18.2 Гарантии
+  1071→
+  1072→1. **No Data Loss:** Сбой одного компонента не приводит к потере данных предыдущих этапов
+  1073→2. **Partial Results:** При невозможности полного анализа возвращаются частичные результаты с пометкой CompletenessLevel
+  1074→3. **Idempotency:** Повторный вызов analyze() с теми же входными данными даёт тот же результат
+  1075→4. **Auditability:** Каждый сбой логируется с полным контекстом для диагностики
+  1076→
+  1077→---
+  1078→
+  1079→## 19. Scalability
+  1080→
+  1081→### 19.1 Горизонтальное масштабирование
+  1082→
+  1083→SIE проектируется с учётом горизонтального масштабирования. Каждый компонент является stateless (состояние хранится в Knowledge Graph), что позволяет запускать несколько экземпляров одного компонента параллельно.
+  1084→
+  1085→**Finding Normalizer:** Может обрабатывать находки параллельно (каждая находка независима). Параллелизм: N workers на N finding batches.
+  1086→
+  1087→**Finding Correlator:** Требует доступа ко всем находкам для корреляции. Стратегия: Map-Reduce -- map-фаза распределяет находки по группам, reduce-фаза объединяет корреляции.
+  1088→
+  1089→**Risk Engine:** Расчёт риска для разных находок независим. Параллелизм: N workers.
+  1090→
+  1091→**Attack Path Builder:** Каждый путь строится независимо. Параллелизм: N workers для разных entry points.
+  1092→
+  1093→### 19.2 Инкрементальный анализ
+  1094→
+  1095→При обновлении графа (новые артефакты) SIE не выполняет полный повторный анализ. Вместо этого:
+  1096→
+  1097→1. Определяются затронутые подграфы (affected subgraphs)
+  1098→2. Перерасчёт выполняется только для затронутых сущностей
+  1099→3. Результаты, не затронутые изменениями, используются из кэша
+  1100→
+  1101→Это критично для Continuous Security, где анализ может выполняться ежедневно или при каждом коммите.
+  1102→
+  1103→---
+  1104→
+  1105→## 20. Security Considerations
+  1106→
+  1107→1. **Read-Only Access:** SIE имеет read-only доступ к Knowledge Graph через Knowledge Graph Adapter. Никакие изменения в графе не производятся.
+  1108→2. **No Secret Exposure:** SIE не логирует содержимое Evidence, которое может содержать секреты (JWT, cookies, API keys). Все логирование -- по ID и типу.
+  1109→3. **Deterministic Results:** Отсутствие недетерминированности исключает возможность манипуляции результатами через входные данные.
+  1110→4. **Input Validation:** Все входные данные валидируются через Pydantic-модели перед обработкой.
+  1111→5. **Audit Trail:** Каждое вычисление содержит Provenance, позволяя отследить происхождение любого вывода.
+  1112→
+  1113→---
+  1114→
+  1115→## 21. Performance Considerations
+  1116→
+  1117→### 21.1 Целевые показатели
+  1118→
+  1119→| Метрика | Целевое значение |
+  1120→|---------|-----------------|
+  1121→| Полный анализ (1000 findings) | < 30 секунд |
+  1122→| Инкрементальный анализ (10 новых findings) | < 5 секунд |
+  1123→| Attack Path Builder (граф 10K узлов) | < 10 секунд |
+  1124→| Risk Calculation (1000 findings) | < 5 секунд |
+  1125→| API Response Time (cached) | < 100 ms |
+  1126→
+  1127→### 21.2 Оптимизации
+  1128→
+  1129→1. **Кэширование:** Результаты нормализации и корреляции кэшируются. При повторном анализе используются cached results для неизменённых данных.
+  1130→2. **Batch Processing:** Finding Normalizer обрабатывает находки батчами для снижения overhead.
+  1131→3. **Lazy Loading:** Knowledge Graph Adapter загружает подграфы по требованию, а не весь граф.
+  1132→4. **Parallel Execution:** Компоненты, не зависящие друг от друга, выполняются параллельно (например, Evidence Aggregator и Identity Resolution).
+  1133→5. **Index-Based Lookup:** Graph Query API использует индексы для быстрого поиска узлов по типу, свойствам и связям.
+  1134→
+  1135→---
+  1136→
+  1137→## 22. Architecture Decision Records
+  1138→
+  1139→### ADR-INT-001: Knowledge Graph как центральная модель данных
+  1140→
+  1141→**Контекст:** SIE может читать данные напрямую из Artifact Bus или через Knowledge Graph.  
+  1142→**Решение:** SIE читает данные исключительно через Knowledge Graph.  
+  1143→**Обоснование:** Единый источник истины (CTO Decision #3). KG обеспечивает нормализацию, Identity Resolution и Provenance, которые критичны для корректного анализа. Прямое чтение из Artifact Bus привело бы к дублированию логики нормализации и потенциальной рассинхронизации данных.  
+  1144→**Последствия:** SIE зависит от доступности KG. Если KG недоступен, анализ невозможен.  
+  1145→**Статус:** ACCEPTED
+  1146→
+  1147→---
+  1148→
+  1149→### ADR-INT-002: Intelligence Engine -- immutable
+  1150→
+  1151→**Контекст:** Результаты анализа могут обновляться при получении новых данных.  
+  1152→**Решение:** Все результаты SIE -- immutable. При обновлении создаётся новая версия с новой меткой времени.  
+  1153→**Обоснование:** Immutable Architecture гарантирует аудитоспособность, воспроизводимость и отсутствие побочных эффектов (CTO Decision #7). Позволяет сравнивать результаты разных прогонов анализа.  
+  1154→**Последствия:** Увеличение объёма хранимых данных. Требуется стратегия garbage collection для устаревших версий.  
+  1155→**Статус:** ACCEPTED
+  1156→
+  1157→---
+  1158→
+  1159→### ADR-INT-003: Explainability вынесен в отдельный Adapter
+  1160→
+  1161→**Контекст:** Объяснимость результатов может быть встроена в каждый компонент SIE или вынесена отдельно.  
+  1162→**Решение:** Explainability Adapter -- отдельный компонент, который собирает данные от всех компонентов SIE и формирует ExplainabilityOutput.  
+  1163→**Обоснование:** Разделение ответственности (Single Responsibility Principle). Компоненты SIE фокусируются на анализе, а Explainability Adapter -- на структурировании данных для объяснения. Это позволяет заменять или модернизировать Explainability Engine независимо от SIE.  
+  1164→**Последствия:** Компоненты SIE должны явно предоставлять трассировочные данные через Provenance и TraceStep.  
+  1165→**Статус:** ACCEPTED
+  1166→
+  1167→---
+  1168→
+  1169→### ADR-INT-004: Recommendation Engine работает после Correlation и Risk
+  1170→
+  1171→**Контекст:** Рекомендации могут генерироваться на разных этапах анализа.  
+  1172→**Решение:** Recommendation Engine получает данные только после завершения Correlation, Risk Calculation и Attack Path Building.  
+  1173→**Обоснование:** Качественные рекомендации требуют полного контекста: какие находки коррелируют, каков их реальный риск, какие Attack Paths существуют. Генерация рекомендаций до корреляции привела бы к дублированию и неточностям.  
+  1174→**Последствия:** Recommendation Engine -- финальный этап пайплайна. Сбой на ранних этапах задерживает генерацию рекомендаций.  
+  1175→**Статус:** ACCEPTED
+  1176→
+  1177→---
+  1178→
+  1179→### ADR-INT-005: Risk Engine не изменяет Finding
+  1180→
+  1181→**Контекст:** Risk Engine может обновлять severity находок на основе контекста.  
+  1182→**Решение:** Risk Engine создаёт независимый RiskAssessment, не модифицируя исходные Finding.  
+  1183→**Обоснование:** Immutable Models (CTO Decision #7). Исходная находка сохраняет свою целостность -- пользователь видит и оригинальную severity от сканера, и контекстную оценку риска от SIE. Это предотвращает потерю информации и обеспечивает прозрачность.  
+  1184→**Последствия:** Потребители API должны использовать RiskAssessment.risk_level, а не Finding.severity для приоритизации.  
+  1185→**Статус:** ACCEPTED
+  1186→
+  1187→---
+  1188→
+  1189→### ADR-INT-006: Knowledge Graph Adapter как Anti-Corruption Layer
+  1190→
+  1191→**Контекст:** SIE может напрямую использовать Graph Query API или через адаптер.  
+  1192→**Решение:** Knowledge Graph Adapter инкапсулирует все обращения к Graph Query API, предоставляя стабильный интерфейс для компонентов SIE.  
+  1193→**Обоснование:** При смене бэкенда графа (NetworkX → Neo4j) изменения коснутся только адаптера, а не всех компонентов SIE. Это реализует паттерн Anti-Corruption Layer из DDD.  
+  1194→**Последствия:** Адаптер добавляет тонкий слой абстракции, но изолирует SIE от инфраструктурных изменений.  
+  1195→**Статус:** ACCEPTED
+  1196→
+  1197→---
+  1198→
+  1199→### ADR-INT-007: Детерминированный расчёт Confidence
+  1200→
+  1201→**Контекст:** Confidence может рассчитываться через статистические модели или детерминированные алгоритмы.  
+  1202→**Решение:** Confidence Engine использует детерминированный multi-factor scoring без вероятностных моделей.  
+  1203→**Обоснование:** CTO Decision #6 -- все аналитические компоненты детерминированы. Статистические модели (Bayesian, Monte Carlo) вносят недетерминированность, нарушая воспроизводимость результатов.  
+  1204→**Последствия:** Confidence Score -- взвешенная сумма наблюдаемых факторов, а не вероятность. Пользователи должны понимать разницу.  
+  1205→**Статус:** ACCEPTED
+  1206→
+  1207→---
+  1208→
+  1209→## 23. Open Questions
+  1210→
+  1211→1. **Версионирование графа:** Как управлять версиями Knowledge Graph при инкрементальных обновлениях? Полное перестроение vs. snapshot-изоляция?
+  1212→2. **Корреляция между приложениями:** Должен ли SIE поддерживать корреляцию находок между разными приложениями (multi-tenant)?
+  1213→3. **Настраиваемые веса Risk Engine:** Должны ли пользователи иметь возможность переопределять веса параметров Risk Score? Если да, как обеспечить воспроизводимость при разных конфигурациях?
+  1214→4. **Максимальный размер графа:** Какова верхняя граница размера Knowledge Graph, при которой SIE сохраняет приемлемую производительность? Когда нужен переход на распределённый граф (Neo4j cluster)?
+  1215→5. **Cache Invalidation:** Когда и как инвалидируются кэши SIE при обновлении графа? Стратегия TTL vs. event-driven invalidation?
+  1216→6. **External Rule Registry:** Должны ли правила корреляции и правила риска храниться в коде или во внешнем хранилище (конфигурация, БД)?
+  1217→7. **Attack Path Visualization:** Как визуализировать альтернативные Attack Paths в Dashboard? Treemap vs. Sankey vs. Graph?
+  1218→
+  1219→---
+  1220→
+  1221→## 24. Future Extensions
+  1222→
+  1223→1. **Continuous Monitoring Mode:** SIE работает в фоне, автоматически перерассчитывая анализ при обновлении графа
+  1224→2. **ML-Augmented Confidence:** Добавление ML-модели как вспомогательного источника для Confidence (не заменяя детерминированный расчёт)
+  1225→3. **Custom Rule DSL:** Предметно-ориентированный язык для написания пользовательских правил корреляции
+  1226→4. **Multi-Application Correlation:** Расширение корреляции на находки из разных приложений
+  1227→5. **Temporal Analysis:** Анализ изменений во времени -- как менялась поверхность атаки и риск
+  1228→6. **Compliance Mapping:** Автоматический маппинг находок на регуляторные требования (OWASP Top 10, PCI DSS, SOC 2)
+  1229→7. **Threat Intelligence Integration:** Подключение внешних источников threat intelligence для обогащения корреляций
+  1230→8. **Playbook Generation:** Автоматическая генерация remediation playbooks на основе Attack Paths и Recommendations
+  1231→
+  1232→---
+  1233→
+  1234→## Diagrams Index
+  1235→
+  1236→| # | Диаграмма | Тип | Раздел |
+  1237→|---|-----------|-----|--------|
+  1238→| 1 | Existing Architecture | Architecture | Section 5 |
+  1239→| 2 | Proposed Architecture (SIE) | Architecture | Section 6 |
+  1240→| 3 | Component Diagram | Component | Section 7 |
+  1241→| 4 | Sequence Diagram (Data Flow) | Sequence | Section 8 |
+  1242→| 5 | Pipeline Flow | Pipeline | Section 8 |
+  1243→| 6 | Knowledge Graph Nodes | Graph | Section 10 |
+  1244→| 7 | Attack Path Builder Algorithm | Flowchart | Section 13 |
+  1245→| 8 | Event Flow | Event | Section 16 |
+  1246→
+  1247→**Итого: 8 Mermaid-диаграмм**
+  1248→
+  1249→---
+  1250→
+  1251→## ADR Index
+  1252→
+  1253→| # | ADR | Решение | Статус |
+  1254→|---|-----|---------|--------|
+  1255→| 1 | ADR-INT-001 | Knowledge Graph как центральная модель | ACCEPTED |
+  1256→| 2 | ADR-INT-002 | Intelligence Engine immutable | ACCEPTED |
+  1257→| 3 | ADR-INT-003 | Explainability вынесен отдельно | ACCEPTED |
+  1258→| 4 | ADR-INT-004 | Recommendation после Correlation | ACCEPTED |
+  1259→| 5 | ADR-INT-005 | Risk Engine не изменяет Finding | ACCEPTED |
+  1260→| 6 | ADR-INT-006 | KG Adapter как Anti-Corruption Layer | ACCEPTED |
+  1261→| 7 | ADR-INT-007 | Детерминированный Confidence | ACCEPTED |
+  1262→
+  1263→**Итого: 7 ADR**
+  1264→
