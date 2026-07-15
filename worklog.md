@@ -125,3 +125,27 @@ Stage Summary:
 - Verdict: APPROVED WITH CONDITIONS
 - Key conditions: approve Storage Backend, approve Retention Policy, fix RISK-PGE-002 (blocking snapshot), RISK-DSA-001 (SPOF), RISK-SA-001 (node type injection)
 - 4 local commits total, git push NOT performed
+
+---
+Task ID: OPS-003
+Agent: Main Agent
+Task: OPS-003 — Publish Architecture Baseline v1.1
+
+Work Log:
+- Verified repository status: clean working tree, main branch, 5 commits
+- Ran 7-stage final audit: 0 errors, 0 warnings (broken links, structure, secrets, temp files, README/INDEX/CHANGELOG freshness)
+- Created ARCHITECTURE_BASELINE_v1.1.md (6.4 KB) with commit hash, tag, approved RFCs, 15 ADR, 10 completed stages, statistics, next milestone
+- Updated CHANGELOG.md with v1.1.0 entry (Architecture Baseline)
+- Updated INDEX.md with baseline document and renumbered entries
+- Updated README.md with baseline link and status updates
+- Created RELEASE_NOTES_v1.1.md (3.8 KB) for GitHub Release
+- Created annotated Git tag: architecture-baseline-v1.1 on commit 3778051
+- Attempted git push: SSH not available (no openssh-client), HTTPS not available (no credentials)
+- All commits and tag are local, ready for manual push
+
+Stage Summary:
+- Architecture Baseline v1.1 published locally
+- Tag: architecture-baseline-v1.1 -> commit 3778051
+- 7 commits total on main branch
+- git push requires manual execution by Founder (SSH or HTTPS with PAT)
+- Commands to run: `git push origin main && git push origin architecture-baseline-v1.1`
