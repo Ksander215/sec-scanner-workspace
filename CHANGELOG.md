@@ -4,6 +4,42 @@
 
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/).
 
+## [0.2.0] - 2026-07-15
+
+### Added
+
+- **RFC-001_SECURITY_INTELLIGENCE_ENGINE.md** — полный архитектурный RFC Security Intelligence Engine
+  - Executive Summary, Problem Statement, Goals, Non Goals
+  - Proposed Architecture (11 компонентов)
+  - Component Overview (Finding Normalizer, Correlator, Identity Resolution, Evidence Aggregator, Risk Engine, Confidence Engine, Attack Path Builder, Recommendation Engine, KG Adapter, Explainability Adapter, Intelligence API)
+  - Domain Model (12 сущностей: Finding, Asset, Evidence, Relationship, Risk, AttackPath, Recommendation, KnowledgeNode, KnowledgeEdge, Correlation, Confidence, SecurityStory)
+  - Knowledge Graph Model (12 Node Types, 9 Edge Types, правила формирования)
+  - Correlation Engine (10 правил корреляции, алгоритм, устранение ложных совпадений)
+  - Risk Engine (7 параметров, математическая модель расчёта Risk Score)
+  - Attack Path Builder (DFS/BFS алгоритм, приоритизация, альтернативные сценарии)
+  - Recommendation Engine (4 типа, генерация, дедупликация, группировка, категоризация)
+  - Explainability Contract (принцип, формат ExplainabilityOutput, контракт с EE)
+  - Event Model (11 внутренних событий, подписка на Artifact Bus)
+  - API Contract (7 публичных методов)
+  - Failure Handling (8 сценариев, гарантии)
+  - Scalability (горизонтальное масштабирование, инкрементальный анализ)
+  - 8 Mermaid-диаграмм
+  - 7 ADR (ADR-INT-001..007)
+
+- **RFC_REVIEW_REPORT.md** — отчёт о 4-ролевом архитектурном ревью
+  - CTO Review: 3 замечания, 2 риска, 3 рекомендации
+  - Principal Engineer Review: 3 замечания, 3 риска, 4 рекомендации
+  - Security Architect Review: 3 замечания, 3 риска, 4 рекомендации
+  - Staff Backend Engineer Review: 3 замечания, 3 риска, 5 рекомендации
+  - Итог: APPROVED WITH CONDITIONS
+
+- **docs/01_architecture/** — новая директория для архитектурных документов
+
+### Updated
+
+- INDEX.md — добавлена секция Architecture с RFC-001 и RFC Review Report
+- CHANGELOG.md — данный файл
+
 ## [0.1.0] - 2026-07-15
 
 ### Added
