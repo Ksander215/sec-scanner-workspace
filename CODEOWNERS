@@ -1,0 +1,35 @@
+# CODEOWNERS — Sec Scanner Workspace
+# Default: all PRs require review by Founder
+* @Ksander215
+
+# Root operational files — Engineering Manager
+/README.md @Ksander215
+/CONTRIBUTING.md @Ksander215
+/REPOSITORY_STANDARDS.md @Ksander215
+/GOVERNANCE.md @Ksander215
+/DEFINITIONS.md @Ksander215
+/LABELS.md @Ksander215
+/MILESTONES_GUIDE.md @Ksander215
+/GITHUB_PROJECTS.md @Ksander215
+/DECISION_LOG.md @Ksander215
+/CHANGELOG.md @Ksander215
+/INDEX.md @Ksander215
+/REPOSITORY_MAP.md @Ksander215
+/DOCUMENT_LIFECYCLE.md @Ksander215
+/CROSS_REFERENCE_AUDIT.md @Ksander215
+/NAVIGATION_REVIEW.md @Ksander215
+
+# GitHub configuration
+/.github/ @Ksander215
+
+# docs/ — by category owner (all default to Founder until team grows)
+/docs/00_project_os/ @Ksander215
+/docs/01_strategy/ @Ksander215
+/docs/02_architecture/ @Ksander215
+/docs/03_product/ @Ksander215
+/docs/04_execution/ @Ksander215
+/docs/05_growth/ @Ksander215
+/docs/06_decisions/ @Ksander215
+/docs/07_reviews/ @Ksander215
+/docs/08_draft/ @Ksander215
+/docs/archive/ @Ksander215
