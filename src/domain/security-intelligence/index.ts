@@ -2,10 +2,10 @@
  * Security Intelligence — Public API
  *
  * Entry point for the Security Intelligence domain.
- * Provides the Finding Normalization Engine, Correlation Engine, and Risk Engine.
+ * Provides the Finding Normalization Engine, Correlation Engine,
+ * Risk Engine, and Attack Path Builder.
  *
  * Future modules (NOT yet implemented):
- * - Attack Path Builder
  * - Recommendation Engine
  */
 
@@ -207,3 +207,101 @@ export {
   // Statistics
   RiskStatisticsCollector,
 } from './risk/index.ts';
+
+// ─── Attack Path ─────────────────────────────────────────────
+
+export {
+  // Types
+  type AttackPathId, type AttackStepId, type AttackChainId, type AttackEdgeId, type AttackNodeId,
+  type AttackObjectiveId, type AttackSimulationId, type Timestamp as AttackPathTimestamp, type Metadata as AttackPathMetadata,
+  type DiscoveryStrategy, type AttackObjectiveType, type AttackNodeType, type AttackEdgeType,
+  type AttackNode, type AttackEdge, type AttackStep, type AttackChain, type AttackObjective,
+  type AttackPath, type AttackPathRanking, type AttackPathSummary, type AttackSimulation,
+  type AttackEvidence, type AttackTechnique, type DiscoveryConstraints, type StopCondition,
+  type StopConditionType, type RankingConfig, type AttackPathEngineConfig,
+  type AttackPathStatistics, type AttackPathCacheEntry,
+  type AttackPathValidationResult, type AttackPathValidationError, type AttackPathValidationWarning,
+  type TechniqueRegistry,
+  type DiscoveryResult, type DiscoveredPath,
+  type RankingResult,
+  type SimulationConfig,
+  type ConstraintCheckResult, type ConstraintContext,
+  type ProjectionResult, type ProjectionConfig,
+  type AttackPathCacheStatistics,
+  type DiscoveryInput,
+
+  // Enums & Constants
+  brandAttackPathId, brandAttackStepId, brandAttackChainId, brandAttackEdgeId,
+  brandAttackNodeId, brandAttackObjectiveId, brandAttackSimulationId,
+  DiscoveryStrategy, AttackObjectiveType, AttackNodeType, AttackEdgeType,
+  StopConditionType,
+  ALL_DISCOVERY_STRATEGIES, ALL_ATTACK_OBJECTIVE_TYPES, ALL_ATTACK_NODE_TYPES, ALL_ATTACK_EDGE_TYPES,
+  DEFAULT_RANKING_CONFIG, DEFAULT_CONSTRAINTS, DEFAULT_ATTACK_PATH_ENGINE_CONFIG,
+
+  // Models
+  generateAttackPathId, generateAttackStepId, generateAttackChainId,
+  generateAttackEdgeId, generateAttackNodeId, generateAttackObjectiveId,
+  generateAttackSimulationId,
+  createAttackNode, createAttackEdge, createAttackStep,
+  createAttackChain, createAttackObjective, createAttackEvidence,
+  createAttackPathRanking, computeOverallRankingScore,
+  createAttackPath, createAttackPathSummary,
+  createAttackSimulation,
+  validateAttackPath,
+  attackPathToJSON, attackPathFromJSON, attackSimulationToJSON,
+  attackPathsEqual, attackNodesEqual, attackEdgesEqual, attackSimulationsEqual,
+  cloneAttackPath, hashAttackPath,
+
+  // Events
+  type PathDiscoveredEvent, type PathRankedEvent,
+  type SimulationCompletedEvent, type AttackGraphBuiltEvent,
+  type AnyAttackPathEvent, type AttackPathEventHandler,
+  createPathDiscoveredEvent, createPathRankedEvent,
+  createSimulationCompletedEvent, createAttackGraphBuiltEvent,
+  AttackPathEventBus,
+
+  // Discovery
+  KnowledgeGraphAdapter, PathDiscoveryEngine,
+
+  // Ranking
+  computeRiskScore, computePathLengthScore,
+  computeExploitAvailabilityScore, computePrivilegeEscalationScore,
+  computeLateralMovementScore, computeInternetExposureScore,
+  computeBusinessImpactScore, computeConfidenceScore,
+  PathRankingEngine,
+
+  // Techniques
+  AttackTechniqueRegistry, DEFAULT_TECHNIQUES,
+  createDefaultTechniqueRegistry,
+
+  // Objectives
+  createInitialAccessObjective, createCredentialAccessObjective,
+  createDiscoveryObjective, createLateralMovementObjective,
+  createPrivilegeEscalationObjective, createPersistenceObjective,
+  createCollectionObjective, createExfiltrationObjective,
+  createImpactObjective, createObjectiveByType,
+  getObjectivePriorities,
+
+  // Simulation
+  DEFAULT_SIMULATION_CONFIG,
+  computeStepProbability, computeCumulativeProbability,
+  identifyCriticalSteps, identifyBottlenecks,
+  identifyDetectionPoints, determineRequiredCapabilities,
+  SimulationEngine,
+
+  // Constraints
+  ConstraintsEngine,
+  createEmptyConstraintContext, updateConstraintContext,
+
+  // Projection
+  DEFAULT_PROJECTION_CONFIG, GraphProjectionEngine,
+
+  // Cache
+  AttackPathCache,
+
+  // Engine
+  AttackPathEngine,
+
+  // Statistics
+  AttackPathStatisticsCollector,
+} from './attack-path/index.ts';
