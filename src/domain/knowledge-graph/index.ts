@@ -8,7 +8,7 @@
  * import { GraphNode, NodeType, GraphNodeBuilder, NodeValidator } from './knowledge-graph/index.ts';
  * ```
  *
- * The public API is organized into 7 concerns:
+ * The public API is organized into 9 concerns:
  * 1. Types — enums, branded IDs, utility types
  * 2. Models — domain entities (GraphNode, GraphEdge, etc.)
  * 3. Errors — domain-specific error hierarchy
@@ -17,6 +17,7 @@
  * 6. Validators — domain constraint validation
  * 7. Contracts — infrastructure interfaces (no implementation)
  * 8. Adapters — external system integration interfaces
+ * 9. Traversal — graph traversal engine (BFS, DFS, paths, cycles, etc.)
  */
 
 // ─── Types ─────────────────────────────────────────────────────
@@ -112,3 +113,57 @@ export type {
 // ─── Adapters ──────────────────────────────────────────────────
 
 export type { FindingAdapter, EventPublisher } from './adapters/index.ts';
+
+// ─── Traversal ────────────────────────────────────────────────
+
+export {
+  GraphTraversalEngineImpl,
+  TraversalStrategy,
+  TerminationReasonEnum,
+  TraversalStatisticsCollector,
+  VisitedTracker,
+  PathPool,
+  createCancellationToken,
+  emptyTraversalResult,
+  emptyTraversalStatistics,
+  createTraversalStatistics,
+  notFoundPathResult,
+  createTraversalStartedEvent,
+  createTraversalCompletedEvent,
+  createTraversalCancelledEvent,
+  createPathFoundEvent,
+  createCycleDetectedEvent,
+} from './traversal/index.ts';
+
+export type {
+  TraversalOptions,
+  TraversalResult,
+  TraversalContext,
+  TraversalPath,
+  TraversalStatistics,
+  TerminationReason,
+  NodePredicate,
+  EdgePredicate,
+  NodeVisitor,
+  EdgeVisitor,
+  CancellationToken,
+  BFSOptions,
+  DFSOptions,
+  BidirectionalOptions,
+  ShortestPathOptions,
+  MultiPathOptions,
+  CycleDetectionOptions,
+  NeighborhoodOptions,
+  SubgraphOptions,
+  ReachabilityOptions,
+  PathResult,
+  Cycle,
+  ConnectedComponent,
+  TraversalEngineConfig,
+  TraversalStartedEvent,
+  TraversalCompletedEvent,
+  TraversalCancelledEvent,
+  PathFoundEvent,
+  CycleDetectedEvent,
+  AnyTraversalEvent,
+} from './traversal/index.ts';
