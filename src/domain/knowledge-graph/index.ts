@@ -8,7 +8,7 @@
  * import { GraphNode, NodeType, GraphNodeBuilder, NodeValidator } from './knowledge-graph/index.ts';
  * ```
  *
- * The public API is organized into 9 concerns:
+ * The public API is organized into 10 concerns:
  * 1. Types — enums, branded IDs, utility types
  * 2. Models — domain entities (GraphNode, GraphEdge, etc.)
  * 3. Errors — domain-specific error hierarchy
@@ -18,6 +18,7 @@
  * 7. Contracts — infrastructure interfaces (no implementation)
  * 8. Adapters — external system integration interfaces
  * 9. Traversal — graph traversal engine (BFS, DFS, paths, cycles, etc.)
+ * 10. Query — query engine (fluent builder, predicates, aggregation, optimizer)
  */
 
 // ─── Types ─────────────────────────────────────────────────────
@@ -167,3 +168,69 @@ export type {
   CycleDetectedEvent,
   AnyTraversalEvent,
 } from './traversal/index.ts';
+
+// ─── Query ─────────────────────────────────────────────────────
+
+export {
+  GraphQueryEngineImpl,
+  PredicateOperator,
+  FilterComposition,
+  AggregationOp,
+  PaginationMode,
+  SortDirection,
+  QueryTarget,
+  QueryBuilder,
+  QueryOptimizer,
+  queryOptimizer,
+  QueryStatisticsCollector,
+  QueryCache,
+  equals,
+  notEquals,
+  contains,
+  startsWith,
+  endsWith,
+  regex,
+  exists,
+  inList,
+  greaterThan,
+  lessThan,
+  gte,
+  lte,
+  negate,
+  and as queryAnd,
+  or as queryOr,
+  notFilter,
+  group as queryGroup,
+  createQueryStartedEvent,
+  createQueryCompletedEvent,
+  createQueryCancelledEvent,
+  createQueryCachedEvent,
+  buildExplainPlan,
+} from './query/index.ts';
+
+export type {
+  QueryPredicate,
+  CompositeFilter,
+  Projection,
+  AggregationSpec,
+  AggregationResult,
+  GroupBySpec,
+  GroupByResult,
+  PaginationSpec,
+  SortSpec,
+  QuerySpecification,
+  QueryPlan,
+  QueryPlanStage,
+  QueryStatistics,
+  QueryResult,
+  ExplainResult,
+  SubgraphQueryResult,
+  PathQueryResult,
+  QueryEngineConfig,
+  OptimizationResult,
+  QueryStartedEvent,
+  QueryCompletedEvent,
+  QueryCancelledEvent,
+  QueryCachedEvent,
+  AnyQueryEvent,
+} from './query/index.ts';
