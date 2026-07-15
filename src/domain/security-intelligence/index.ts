@@ -2,10 +2,9 @@
  * Security Intelligence — Public API
  *
  * Entry point for the Security Intelligence domain.
- * Provides the Finding Normalization Engine and Correlation Engine.
+ * Provides the Finding Normalization Engine, Correlation Engine, and Risk Engine.
  *
  * Future modules (NOT yet implemented):
- * - Risk Engine
  * - Attack Path Builder
  * - Recommendation Engine
  */
@@ -136,3 +135,75 @@ export {
   // Statistics
   CorrelationStatisticsCollector,
 } from './correlation/index.ts';
+
+// ─── Risk ────────────────────────────────────────────────────
+
+export {
+  // Types
+  type RiskAssessmentId, type RiskScoreId, type Timestamp as RiskTimestamp, type Metadata as RiskMetadata,
+  type RiskLevel, type RiskTrend, type RiskReason, type RiskFactorType, type AggregationScope,
+  type RiskFactor, type RiskEvidence, type RiskScore, type RiskContext,
+  type RiskAssessment, type RiskHistoryEntry, type RiskSummary,
+  type RiskFormulaConfig, type RiskEngineConfig, type RiskStatistics,
+  type RiskFactorEvaluator, type RiskFactorInput, type RiskFactorEvaluatorResult,
+  type RiskCacheEntry, type RiskValidationResult, type RiskValidationError, type RiskValidationWarning,
+
+  // Enums & Constants
+  brandRiskAssessmentId, brandRiskScoreId,
+  RiskLevel, RiskTrend, RiskReason, RiskFactorType, AggregationScope,
+  ALL_RISK_LEVELS, ALL_RISK_TRENDS, ALL_RISK_REASONS, ALL_RISK_FACTOR_TYPES, ALL_AGGREGATION_SCOPES,
+  RISK_LEVEL_ORDER, RISK_LEVEL_THRESHOLDS,
+  DEFAULT_RISK_FORMULA_CONFIG, DEFAULT_RISK_ENGINE_CONFIG,
+
+  // Models
+  generateRiskAssessmentId, generateRiskScoreId,
+  determineRiskLevel, determineRiskTrend,
+  createDefaultRiskContext, createRiskContext,
+  createRiskFactor, createRiskEvidence,
+  createRiskScore, createRiskAssessment,
+  createRiskHistoryEntry, createRiskSummary,
+  createEmptyLevelDistribution, createEmptyTrendDistribution, createEmptyFactorDistribution,
+  severityToNormalized, confidenceToNormalized,
+  riskAssessmentToJSON, riskScoreToJSON, riskAssessmentFromJSON,
+  riskAssessmentsEqual, riskScoresEqual,
+  cloneRiskAssessment, hashRiskAssessment,
+
+  // Events
+  type RiskEvent,
+  type RiskCalculatedEvent, type RiskUpdatedEvent,
+  type RiskChangedEvent, type RiskHistoryRecordedEvent,
+  type AnyRiskEvent, type RiskEventHandler,
+  createRiskCalculatedEvent, createRiskUpdatedEvent,
+  createRiskChangedEvent, createRiskHistoryRecordedEvent,
+  RiskEventBus,
+
+  // Factors
+  BUILT_IN_EVALUATORS,
+  FactorRegistry,
+
+  // Formula
+  type RiskFormulaResult,
+  RiskFormulaEngine,
+
+  // Context
+  type ContextSource, type ContextHints, type GraphNodeData,
+  HeuristicContextSource, KnowledgeGraphContextSource, ContextEngine,
+
+  // Aggregation
+  AggregationMethod,
+  RiskAggregator,
+
+  // History
+  type HistoryQuery, type HistoryStatistics,
+  RiskHistoryManager,
+
+  // Cache
+  type RiskCacheStatistics,
+  RiskCache,
+
+  // Engine
+  RiskEngine,
+
+  // Statistics
+  RiskStatisticsCollector,
+} from './risk/index.ts';
