@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>PROJECT HANDOFF — Security Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Liberation+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+@page {
+    size: 720px 1020px;
+    margin: 0;
+}
+:root {
+    --c-bg: #0a0e17;
+    --c-card: #111827;
+    --c-card2: #1a2332;
+    --c-accent: #38bdf8;
+    --c-accent2: #0ea5e9;
+    --c-accent3: #06b6d4;
+    --c-green: #34d399;
+    --c-red: #f87171;
+    --c-yellow: #fbbf24;
+    --c-text: #e2e8f0;
+    --c-text-m: #94a3b8;
+    --c-text-dim: #64748b;
+    --c-border: #1e293b;
+    --c-code-bg: #0f172a;
+}
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 720px;
+    background: var(--c-bg);
+    color: var(--c-text);
+    font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+}
+@media screen {
+    html {
+        height: auto;
+        display: flex;
+        justify-content: center;
+        background: #1a1a2e;
+    }
+    body {
+        transform-origin: top center;
+        margin: 20px auto;
+    }
+}
+
+/* ─── Cover ──────────────────────────────────── */
+.cover {
+    width: 720px;
+    height: 1020px;
+    box-sizing: border-box;
+    break-after: page;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px 70px;
+    position: relative;
+    background: linear-gradient(170deg, #0a0e17 0%, #0f1a2e 50%, #0a1628 100%);
+}
+.cover-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--c-accent);
+    margin-bottom: 48px;
+}
+.cover-title {
+    font-size: 44px;
+    font-weight: 900;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 48px;
+    max-width: 560px;
+}
+.cover-subtitle {
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--c-text-m);
+    margin-bottom: 80px;
+    max-width: 500px;
+    line-height: 1.6;
+}
+.cover-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--c-text-dim);
+    margin-top: auto;
+}
+.cover-meta span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cover-meta .label {
+    color: var(--c-accent);
+    font-weight: 500;
+    min-width: 100px;
+}
+
+/* ─── Main Content ───────────────────────────── */
+.main-content {
+    padding: 50px 65px 40px 65px;
+}
+
+/* Chapter headers */
+.chapter {
+    margin-top: 36px;
+    break-after: avoid;
+    break-inside: avoid;
+}
+.chapter:first-child {
+    margin-top: 0;
+}
+.section-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--c-accent);
+    margin-bottom: 8px;
+}
+.section-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+    line-height: 1.25;
+}
+.section-subtitle {
+    font-size: 15px;
+    color: var(--c-text-dim);
+    margin-bottom: 16px;
+    font-weight: 400;
+}
+.divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--c-accent), var(--c-border), transparent);
+    margin-bottom: 20px;
+}
+
+/* Body text */
+.body-text {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--c-text);
+    margin-bottom: 14px;
+    text-align: justify;
+}
+.body-text strong {
+    color: #fff;
+    font-weight: 600;
+}
+.body-text em {
+    color: var(--c-accent);
+    font-style: normal;
+    font-weight: 500;
+}
+
+/* Cards */
+.card {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.card-accent {
+    border-left: 3px solid var(--c-accent);
+}
+.card-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.card-header .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.badge-green {
+    background: rgba(52,211,153,0.15);
+    color: var(--c-green);
+    border: 1px solid rgba(52,211,153,0.25);
+}
+.badge-blue {
+    background: rgba(56,189,248,0.15);
+    color: var(--c-accent);
+    border: 1px solid rgba(56,189,248,0.25);
+}
+.badge-yellow {
+    background: rgba(251,191,36,0.15);
+    color: var(--c-yellow);
+    border: 1px solid rgba(251,191,36,0.25);
+}
+.badge-red {
+    background: rgba(248,113,113,0.15);
+    color: var(--c-red);
+    border: 1px solid rgba(248,113,113,0.25);
+}
+.card-body {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--c-text-m);
+}
+
+/* Status table */
+.status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.status-item {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    break-inside: avoid;
+}
+.status-item .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+}
+.status-item .desc {
+    font-size: 12px;
+    color: var(--c-text-dim);
+}
+
+/* Code blocks */
+.code-block {
+    background: var(--c-code-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    font-family: 'Liberation Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--c-text-m);
+    overflow-x: auto;
+    break-inside: avoid;
+    white-space: pre;
+}
+.code-block .keyword {
+    color: var(--c-accent);
+}
+.code-block .arrow {
+    color: var(--c-accent3);
+}
+.code-block .comment {
+    color: var(--c-text-dim);
+}
+
+/* Diagram containers */
+.diagram {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 28px 24px;
+    margin: 20px 0;
+    break-inside: avoid;
+}
+.diagram-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-accent);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+/* Flow diagram styles */
+.flow-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+}
+.flow-node {
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.25);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-accent);
+    text-align: center;
+    min-width: 120px;
+}
+.flow-node-highlight {
+    background: rgba(56,189,248,0.15);
+    border: 2px solid rgba(56,189,248,0.4);
+    border-radius: 6px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-accent);
+    text-align: center;
+    min-width: 140px;
+}
+.flow-node-dark {
+    background: rgba(6,182,212,0.08);
+    border: 1px solid rgba(6,182,212,0.25);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--c-accent3);
+    text-align: center;
+    min-width: 120px;
+}
+.flow-arrow {
+    color: var(--c-text-dim);
+    font-size: 18px;
+    line-height: 1;
+}
+.flow-arrow-down {
+    text-align: center;
+    color: var(--c-text-dim);
+    font-size: 18px;
+    margin: 2px 0;
+}
+
+/* SIE component grid */
+.sie-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 0;
+}
+.sie-component {
+    background: var(--c-card2);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    padding: 16px;
+    break-inside: avoid;
+}
+.sie-component .comp-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+}
+.sie-component .comp-desc {
+    font-size: 12px;
+    color: var(--c-text-dim);
+    line-height: 1.6;
+}
+
+/* Rule example */
+.rule-example {
+    background: var(--c-code-bg);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.rule-condition {
+    font-size: 13px;
+    color: var(--c-text-m);
+    margin-bottom: 6px;
+    font-family: 'Liberation Mono', monospace;
+    line-height: 1.5;
+}
+.rule-result {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--c-red);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--c-border);
+}
+
+/* Table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    font-size: 13px;
+    break-inside: avoid;
+}
+.data-table th {
+    background: rgba(56,189,248,0.08);
+    border: 1px solid var(--c-border);
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--c-accent);
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.data-table td {
+    border: 1px solid var(--c-border);
+    padding: 10px 14px;
+    color: var(--c-text);
+}
+.data-table tr:nth-child(even) td {
+    background: rgba(255,255,255,0.02);
+}
+
+/* TOC */
+.toc {
+    padding: 50px 65px;
+}
+.toc-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 30px;
+}
+.toc-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+    color: var(--c-text-m);
+}
+.toc-item:hover {
+    color: var(--c-accent);
+}
+.toc-section {
+    color: #fff;
+    font-weight: 500;
+}
+.toc-dots {
+    flex: 1;
+    border-bottom: 1px dotted rgba(255,255,255,0.1);
+    margin: 0 12px;
+    min-width: 30px;
+}
+
+/* Roadmap */
+.roadmap {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 20px 0;
+}
+.roadmap-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    break-inside: avoid;
+}
+.roadmap-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 32px;
+}
+.roadmap-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--c-accent);
+    background: var(--c-bg);
+    flex-shrink: 0;
+}
+.roadmap-dot-active {
+    background: var(--c-accent);
+    animation: pulse 2s infinite;
+}
+.roadmap-dot-done {
+    background: var(--c-green);
+    border-color: var(--c-green);
+}
+.roadmap-connector {
+    width: 2px;
+    height: 36px;
+    background: var(--c-border);
+}
+.roadmap-content {
+    padding-bottom: 24px;
+}
+.roadmap-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 3px;
+}
+.roadmap-desc {
+    font-size: 12px;
+    color: var(--c-text-dim);
+}
+
+/* Glossary */
+.glossary-term {
+    font-weight: 700;
+    color: var(--c-accent);
+}
+.glossary-def {
+    color: var(--c-text-m);
+}
+
+/* ADR template */
+.adr-template {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 8px;
+    padding: 22px;
+    margin-bottom: 14px;
+    break-inside: avoid;
+}
+.adr-field {
+    margin-bottom: 12px;
+}
+.adr-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--c-accent);
+    margin-bottom: 4px;
+}
+.adr-field-value {
+    font-size: 14px;
+    color: var(--c-text-m);
+    line-height: 1.6;
+}
+
+/* API list */
+.api-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+.api-item {
+    font-family: 'Liberation Mono', monospace;
+    font-size: 13px;
+    color: var(--c-accent);
+    background: var(--c-code-bg);
+    padding: 8px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--c-border);
+}
+
+/* Quote block */
+.quote-block {
+    border-left: 3px solid var(--c-accent);
+    padding: 14px 20px;
+    margin: 16px 0;
+    background: rgba(56,189,248,0.04);
+    border-radius: 0 6px 6px 0;
+    break-inside: avoid;
+}
+.quote-text {
+    font-size: 15px;
+    font-style: italic;
+    color: var(--c-text);
+    line-height: 1.7;
+}
+.quote-attr {
+    font-size: 12px;
+    color: var(--c-text-dim);
+    margin-top: 6px;
+}
+
+/* Inline list */
+.inline-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
+.inline-tag {
+    font-size: 12px;
+    padding: 4px 10px;
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.15);
+    border-radius: 4px;
+    color: var(--c-accent);
+    font-weight: 500;
+}
+
+/* Checklist */
+.checklist {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+}
+.checklist li {
+    padding: 6px 0;
+    font-size: 14px;
+    color: var(--c-text-m);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+.checklist li::before {
+    content: "✓";
+    color: var(--c-green);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* No-change list */
+.nochange-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+}
+.nochange-list li {
+    padding: 5px 0;
+    font-size: 14px;
+    color: var(--c-red);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Liberation Mono', monospace;
+    font-size: 13px;
+}
+.nochange-list li::before {
+    content: "⛔";
+    flex-shrink: 0;
+    font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- COVER -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="cover">
+    <div class="cover-tag">Project Handoff Document</div>
+    <div class="cover-title">Security Intelligence Platform</div>
+    <div class="cover-subtitle">
+        AI-Native платформа анализа безопасности веб-приложений.
+        Документ передачи контекста для нового AI-агента или команды.
+    </div>
+    <div class="cover-meta">
+        <span><span class="label">Workspace</span> v1.0</span>
+        <span><span class="label">Статус</span> Active Development</span>
+        <span><span class="label">Роль</span> Founder / Product Owner</span>
+        <span><span class="label">Архитектор</span> CTO (ChatGPT)</span>
+        <span><span class="label">Исполнитель</span> AI Staff Software Engineer</span>
+        <span><span class="label">Дата</span> 15 июля 2026</span>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- TABLE OF CONTENTS -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="toc">
+    <div class="toc-title">Оглавление</div>
+    <div class="toc-item"><span class="toc-section">1. Главная цель проекта</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">2. Архитектурные принципы</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">3. Реализованные компоненты</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">4. Архитектура платформы</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">5. Security Knowledge Graph (KG-001)</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">6. Security Intelligence Engine (EPIC-04)</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">7. SIE — Компонентная архитектура</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">8. Интеллектуальный поток</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">9. Правила корреляции и Attack Path</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">10. Ограничения и неизменяемые модули</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">11. Roadmap</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">12. Definition of Done</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">13. Глоссарий</span><span class="toc-dots"></span></div>
+    <div class="toc-item"><span class="toc-section">14. ADR шаблоны</span><span class="toc-dots"></span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<div class="main-content">
+
+<!-- ─── 1. Главная цель проекта ──────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 1</div>
+    <div class="section-title">Главная цель проекта</div>
+    <div class="section-subtitle">Стратегическое видение и позиционирование платформы</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Проект ставит перед собой амбициозную цель: создать не очередной DAST-сканер, а <strong>интеллектуальную платформу анализа безопасности веб-приложений</strong> нового поколения. Традиционные DAST-инструменты ограничены тем, что они лишь находят уязвимости, но не способны установить связи между ними, оценить реальный уровень риска и предложить объяснимые рекомендации. Данная платформа преодолевает эти ограничения через построение единой модели знаний, интеллектуальную корреляцию данных и детерминированную оценку рисков.
+    </div>
+
+    <div class="quote-block">
+        <div class="quote-text">
+            Это AI-Native Security Intelligence Platform. DAST — лишь один из источников данных. Главная ценность продукта: единая модель знаний, корреляция данных, интеллектуальная оценка риска, объяснимость выводов и непрерывный анализ безопасности.
+        </div>
+        <div class="quote-attr">— Стратегическое видение CTO</div>
+    </div>
+
+    <div class="body-text">
+        Конечное видение платформы разворачивается как последовательность слоёв, каждый из которых строится поверх предыдущего и расширяет аналитические возможности системы. От сбора данных (Discovery) через браузерную и HTTP-интеллект к построению графа знаний (Security Knowledge Graph), затем к интеллектуальному анализу (Security Intelligence Engine), объяснимости (Explainability Engine), визуализации (Dashboard) и, наконец, к непрерывному мониторингу (Continuous Security).
+    </div>
+
+    <div class="diagram">
+        <div class="diagram-title">Конвейер платформы</div>
+        <div class="flow-row">
+            <div class="flow-node">Discovery</div>
+            <div class="flow-arrow">+</div>
+            <div class="flow-node">Browser Intel</div>
+            <div class="flow-arrow">+</div>
+            <div class="flow-node">HTTP Intel</div>
+            <div class="flow-arrow">+</div>
+            <div class="flow-node">Nuclei</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight">Security Knowledge Graph</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight">Security Intelligence Engine</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-dark">Explainability Engine</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node-dark">Dashboard</div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-node-dark">Continuous Security</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight">Private Beta</div>
+        </div>
+    </div>
+
+    <div class="body-text">
+        Каждый слой в этом конвейере является независимым модулем с чётко определённым интерфейсом. Это означает, что платформа может масштабироваться горизонтально: новые источники данных подключаются через Plugin API, новые аналитические движки строятся поверх Graph API, а новые пользовательские интерфейсы работают через единый Intelligence API. Такой подход гарантирует, что расширение платформы никогда не потребует изменения её ядра.
+    </div>
+</div>
+
+<!-- ─── 2. Архитектурные принципы ────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 2</div>
+    <div class="section-title">Архитектурные принципы</div>
+    <div class="section-subtitle">Фундаментальные правила, определяющие эволюцию платформы</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Проект строится на строгих архитектурных принципах, которые обеспечивают устойчивость, предсказуемость и возможность долгосрочного развития. Эти принципы не являются декларативными пожеланиями — они формализованы и проверяются через Definition of Done для каждой задачи. Любое отклонение от принципов должно быть зафиксировано в ADR (Architecture Decision Record) с явным обоснованием.
+    </div>
+
+    <div class="status-grid">
+        <div class="status-item">
+            <div class="name" style="color:#fff">Clean Architecture</div>
+            <div class="desc">Разделение ответственности между слоями: домен, приложение, инфраструктура. Бизнес-логика не зависит от фреймворков и внешних сервисов.</div>
+        </div>
+        <div class="status-item">
+            <div class="name" style="color:#fff">DDD</div>
+            <div class="desc">Domain-Driven Design: модель строится вокруг предметной области безопасности, а не вокруг технических аспектов сканирования.</div>
+        </div>
+        <div class="status-item">
+            <div class="name" style="color:#fff">Plugin Architecture</div>
+            <div class="desc">Любой движок сканирования подключается через Plugin API. Ядро не знает о конкретных реализациях — только о контрактах.</div>
+        </div>
+        <div class="status-item">
+            <div class="name" style="color:#fff">Event Driven</div>
+            <div class="desc">Компоненты взаимодействуют через события и Artifact Bus. Это обеспечивает слабую связность и возможность асинхронной обработки.</div>
+        </div>
+        <div class="status-item">
+            <div class="name" style="color:#fff">Immutable Models</div>
+            <div class="desc">Все доменные модели неизменяемы. Результаты сканирования, артефакты и выводы не могут быть модифицированы после создания.</div>
+        </div>
+        <div class="status-item">
+            <div class="name" style="color:#fff">Engine Agnostic</div>
+            <div class="desc">Платформа не зависит от конкретного сканирующего движка. Nuclei — лишь один из возможных адаптеров; замена не влияет на ядро.</div>
+        </div>
+        <div class="status-item">
+            <div class="name" style="color:#fff">Test First</div>
+            <div class="desc">TDD-подход: тесты пишутся до или вместе с реализацией. Минимальное покрытие — 90% для каждого нового модуля.</div>
+        </div>
+        <div class="status-item">
+            <div class="name" style="color:#fff">Zero Regression</div>
+            <div class="desc">Каждое изменение верифицируется на отсутствие регрессий. Существующие 500+ тестов должны проходить без единого падения.</div>
+        </div>
+        <div class="status-item" style="grid-column: span 2;">
+            <div class="name" style="color:#fff">Documentation First</div>
+            <div class="desc">Документация создаётся параллельно с кодом. ADR, Mermaid-диаграммы, архитектурные описания — обязательные артефакты каждой задачи. Код без документации не считается завершённым.</div>
+        </div>
+    </div>
+
+    <div class="body-text">
+        Ключевое следствие этих принципов: <strong>любое расширение платформы должно происходить без изменения ядра</strong>. Это правило многократно проверено на практике — когда Nuclei Adapter, Discovery Engine, Browser Intelligence и HTTP Intelligence были созданы без единого изменения в существующих модулях. Тот же принцип применяется к Security Knowledge Graph и Security Intelligence Engine.
+    </div>
+</div>
+
+<!-- ─── 3. Реализованные компоненты ──────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 3</div>
+    <div class="section-title">Реализованные компоненты</div>
+    <div class="section-subtitle">Все завершённые EPIC и TASK с результатами</div>
+    <div class="divider"></div>
+
+    <div class="card card-accent">
+        <div class="card-header">EPIC-01: Workspace <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Полный GitHub Workspace с SSOT (Single Source of Truth), включающий 67+ документов, Repository Standards, ADR, Roadmap, Architecture и Documentation System. Это фундамент, обеспечивающий воспроизводимость и прозрачность всех архитектурных решений. Каждый документ привязан к конкретному EPIC/TASK и содержит актуальную информацию о статусе, ответственном и артефактах.
+        </div>
+    </div>
+
+    <div class="card card-accent">
+        <div class="card-header">TASK-201: Scan Platform Foundation <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Создана модульная платформа сканирования, включающая Plugin API (контракт для подключения движков), Scan Context (контекст выполнения сканирования), Scan Job (модель задачи сканирования), Engine Registry (реестр доступных движков), Scan Orchestrator (оркестратор конвейера), Domain Models (доменные модели), Event System (система событий) и Error System (система обработки ошибок). Этот набор компонентов составляет ядро платформы, поверх которого строятся все последующие модули.
+        </div>
+    </div>
+
+    <div class="card card-accent">
+        <div class="card-header">TASK-202A: Nuclei Adapter <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Создан NucleiAdapter, реализующий интерфейс ScanEnginePlugin. Поддерживает парсинг JSONL-вывода, маппинг Findings, нормализацию Severity, формирование Evidence и обработку OAST (Out-of-Band). Внесено нулевых изменений в ядро — полная изоляция через Plugin API.
+        </div>
+    </div>
+
+    <div class="card card-accent">
+        <div class="card-header">TASK-202B: Discovery Engine <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Создан движок Attack Surface Discovery на базе Katana. Поддерживает URL Discovery, Forms, JS, Assets, API и Crawl Graph. Результаты публикуются через Artifact Bus, обеспечивая доступность для всех последующих модулей без прямых зависимостей.
+        </div>
+    </div>
+
+    <div class="card card-accent">
+        <div class="card-header">TASK-202C: Browser Intelligence Engine <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Создан Browser Intelligence Layer на базе Playwright. Поддерживает DOM-анализ, SPA-обработку, JWT/Cookies/Runtime, GraphQL, WebSocket, Service Workers и Browser Pool для параллельного анализа. Это один из наиболее сложных модулей платформы, обеспечивающий глубину понимания клиентской части приложения.
+        </div>
+    </div>
+
+    <div class="card card-accent">
+        <div class="card-header">TASK-202D: HTTP Intelligence Engine <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Поддержка TLS-анализа, Headers, Cookies, HTTP Profile, Infrastructure Fingerprinting, Rate Limit, Redirects и HTTP Behaviour. Модуль формирует профиль инфраструктуры цели, который используется для корреляции и построения цепочек эксплуатации.
+        </div>
+    </div>
+
+    <div class="card card-accent">
+        <div class="card-header">TASK-202E: Pipeline Executor <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Создано Execution Core с поддержкой параллельного выполнения, retry, pause, resume, failure recovery, metrics и Artifact Bus. Pipeline Executor управляет жизненным циклом сканирования и обеспечивает целостность данных даже при сбоях отдельных шагов.
+        </div>
+    </div>
+
+    <div class="card card-accent">
+        <div class="card-header">TASK-202F: Validation <span class="badge badge-green">Complete</span></div>
+        <div class="card-body">
+            Получено 500+ тестов с покрытием 90%+ и нулевыми регрессиями. Это обеспечивает уверенность в стабильности платформы и служит гарантом того, что новые модули не сломают существующую функциональность.
+        </div>
+    </div>
+</div>
+
+<!-- ─── 4. Архитектура платформы ─────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 4</div>
+    <div class="section-title">Архитектура платформы</div>
+    <div class="section-subtitle">Текущее состояние архитектуры и поток данных</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Текущая архитектура платформы представляет собой многослойную систему, в которой данные продвигаются сверху вниз: от сбора (Discovery) через интеллектуальные слои (Browser/HTTP Intelligence) к сканированию (Nuclei), затем к артефактам (Artifact Bus) и, наконец, к исполнению (Pipeline Executor). Все модули считаются завершёнными и образуют стабильный фундамент для следующего этапа — Security Knowledge Graph.
+    </div>
+
+    <div class="diagram">
+        <div class="diagram-title">Текущая архитектура платформы</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight">Discovery Engine</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight">Attack Surface Model</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node">Browser Intelligence</div>
+            <div class="flow-node">HTTP Intelligence</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight">Nuclei Engine</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-dark">Artifact Bus</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-dark">SharedPipelineContext</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-dark">Pipeline Executor</div>
+        </div>
+    </div>
+
+    <div class="body-text">
+        Ключевая особенность этой архитектуры — полная изоляция модулей. Discovery Engine не знает о Browser Intelligence, Browser Intelligence не знает о Nuclei, а Nuclei не знает о Pipeline Executor. Все они взаимодействуют исключительно через Artifact Bus и события. Это позволяет заменять, модернизировать или добавлять любой модуль без каскадных изменений в остальных компонентах. На практике это было подтверждено при реализации всех TASK-202x — ни один модуль не потребовал изменений в уже существующем коде.
+    </div>
+</div>
+
+<!-- ─── 5. Security Knowledge Graph ──────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 5</div>
+    <div class="section-title">Security Knowledge Graph (KG-001)</div>
+    <div class="section-subtitle">Следующий фундамент платформы — модель знаний</div>
+    <div class="divider"></div>
+
+    <div class="card" style="border-left:3px solid var(--c-yellow)">
+        <div class="card-header">Статус: В реализации <span class="badge badge-yellow">KG-001</span></div>
+        <div class="card-body">
+            Security Knowledge Graph — это не база данных. Это внутренняя модель знаний платформы, которая объединяет данные из всех источников в единый граф сущностей и связей. Граф строится исключительно через Artifact Bus, без прямого обращения к движкам сканирования.
+        </div>
+    </div>
+
+    <div class="body-text">
+        KG-001 создаёт шесть ключевых компонентов: <strong>Node Model</strong> (модель узлов графа — endpoints, cookies, JWT, frameworks, findings), <strong>Edge Model</strong> (модель связей — dependency, exposure, authentication, vulnerability), <strong>Graph Builder</strong> (построитель графа из артефактов), <strong>Identity Resolution</strong> (разрешение идентичности — устранение дубликатов и слияние сущностей), <strong>Provenance</strong> (отслеживание происхождения каждого узла и связи) и <strong>Graph Query API</strong> (API для запросов к графу).
+    </div>
+
+    <div class="body-text">
+        Источниками данных для графа служат четыре уже реализованных модуля: Discovery, Browser Intelligence, HTTP Intelligence и Nuclei. Каждый из них публикует артефакты через Artifact Bus, которые Graph Builder преобразует в узлы и связи. При этом существующие движки не требуют никаких изменений — они продолжают работать как прежде, а граф лишь подписывается на их артефакты.
+    </div>
+
+    <div class="body-text">
+        <strong>Критическое ограничение:</strong> Graph строится исключительно через Artifact Bus. Никаких изменений существующих движков. Это гарантирует, что KG-001 не нарушит стабильность платформы и не потребует модификации уже протестированных компонентов. Данный принцип был успешно применён при создании всех предыдущих модулей и остаётся непреложным правилом архитектуры.
+    </div>
+</div>
+
+<!-- ─── 6. Security Intelligence Engine ──────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 6</div>
+    <div class="section-title">Security Intelligence Engine (EPIC-04)</div>
+    <div class="section-subtitle">Детерминированный слой анализа поверх Security Knowledge Graph</div>
+    <div class="divider"></div>
+
+    <div class="card" style="border-left:3px solid var(--c-red)">
+        <div class="card-header">EPIC-04 / INT-001: Текущая задача <span class="badge badge-red">В разработке</span></div>
+        <div class="card-body">
+            Создать Security Intelligence Engine (SIE) — независимый аналитический слой, который интерпретирует Security Knowledge Graph и генерирует выводы о состоянии безопасности. SIE не выполняет сканирование. Он анализирует уже построенный граф.
+        </div>
+    </div>
+
+    <div class="body-text">
+        Security Intelligence Engine — это центральный аналитический модуль платформы, который превращает сырые данные графа знаний в осмысленные выводы о безопасности. SIE работает по принципу детерминированного анализа: одни и те же входные данные всегда дают один и тот же результат. Это принципиальное архитектурное решение, которое отличает платформу от систем, полагающихся на недетерминированные AI/LLM-модели.
+    </div>
+
+    <div class="body-text">
+        Engine должен быть <strong>immutable</strong> (результаты анализа не изменяются после создания), <strong>deterministic</strong> (одинаковый граф даёт одинаковый результат), <strong>explainable</strong> (каждый вывод содержит полную трассировку: какие узлы, связи, правила и доказательства были использованы), <strong>rule-driven</strong> (анализ основан на декларативных правилах, а не на императивной логике), <strong>расширяемым</strong> (новые правила добавляются без изменения существующих) и <strong>независимым от конкретного движка</strong> (SIE работает только с Graph API).
+    </div>
+
+    <div class="quote-block">
+        <div class="quote-text">
+            Это не AI-модуль и не LLM-интеграция. Все выводы должны быть воспроизводимыми и детерминированными. Задача — создать интеллектуальный слой, который в будущем сможет использоваться Explainability Engine, Dashboard, Continuous Security и, при необходимости, дополняться LLM как вспомогательным компонентом, но не зависеть от него.
+        </div>
+        <div class="quote-attr">— Дополнительное указание CTO</div>
+    </div>
+
+    <div class="body-text">
+        SIE состоит из шести основных компонентов, каждый из которых решает конкретную аналитическую задачу: Rule Engine (декларативные правила анализа), Correlation Engine (поиск связей между сущностями), Attack Path Builder (построение цепочек эксплуатации), Risk Aggregator (агрегированная оценка риска), Confidence Calculator (оценка достоверности выводов) и Recommendation Engine (формирование рекомендаций). Все компоненты работают исключительно через Graph Query API и не обращаются к движкам сканирования напрямую.
+    </div>
+
+    <div class="body-text">
+        <strong>Intelligence Model</strong> определяет следующие типы данных: IntelligenceFinding (результат интеллектуального анализа), RiskStory (история риска — связное описание угрозы), AttackPath (цепочка эксплуатации), Correlation (выявленная связь), Recommendation (рекомендация по устранению), EvidenceBundle (набор доказательств) и IntelligenceScore (оценка интеллекта). Каждая модель строго типизирована и содержит полную трассировку происхождения.
+    </div>
+
+    <div class="body-text">
+        <strong>API SIE</strong> предоставляет шесть методов: analyze() (полный анализ графа), analyzeNode() (анализ отдельного узла), analyzeSubgraph() (анализ подграфа), buildAttackPaths() (построение цепочек эксплуатации), calculateRisk() (расчёт агрегированного риска) и generateRecommendations() (генерация рекомендаций). Все методы возвращают типизированные результаты с полной трассировкой.
+    </div>
+
+    <div class="api-list">
+        <div class="api-item">analyze() — полный анализ Security Knowledge Graph</div>
+        <div class="api-item">analyzeNode(nodeId) — анализ отдельного узла</div>
+        <div class="api-item">analyzeSubgraph(nodeIds[]) — анализ подграфа</div>
+        <div class="api-item">buildAttackPaths(targetId) — построение цепочек эксплуатации</div>
+        <div class="api-item">calculateRisk(scope) — расчёт агрегированного риска</div>
+        <div class="api-item">generateRecommendations(findings[]) — генерация рекомендаций</div>
+    </div>
+</div>
+
+<!-- ─── 7. SIE — Компонентная архитектура ────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 7</div>
+    <div class="section-title">SIE — Компонентная архитектура</div>
+    <div class="section-subtitle">Взаимодействие модулей Security Intelligence Engine</div>
+    <div class="divider"></div>
+
+    <div class="diagram">
+        <div class="diagram-title">Компонентная архитектура SIE</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight" style="min-width:280px">Security Knowledge Graph</div>
+        </div>
+        <div class="flow-arrow-down">↓ Graph Query API</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight" style="min-width:280px">Intelligence Engine Core</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:8px 0;">
+            <div class="flow-node" style="min-width:auto;padding:10px 12px;font-size:12px;">Rule Engine</div>
+            <div class="flow-node" style="min-width:auto;padding:10px 12px;font-size:12px;">Correlation Engine</div>
+            <div class="flow-node" style="min-width:auto;padding:10px 12px;font-size:12px;">Attack Path Builder</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:8px 0;">
+            <div class="flow-node" style="min-width:auto;padding:10px 12px;font-size:12px;">Risk Aggregator</div>
+            <div class="flow-node" style="min-width:auto;padding:10px 12px;font-size:12px;">Confidence Calculator</div>
+            <div class="flow-node" style="min-width:auto;padding:10px 12px;font-size:12px;">Recommendation Engine</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-dark" style="min-width:280px">Intelligence Output (Findings, Risk Stories, Attack Paths, Recommendations)</div>
+        </div>
+    </div>
+
+    <div class="sie-grid">
+        <div class="sie-component">
+            <div class="comp-name">Rule Engine</div>
+            <div class="comp-desc">Поддержка декларативных правил вида IF Condition A AND Condition B THEN Generate Intelligence. Правила типизированы и расширяемы без изменения существующих. Новые правила регистрируются через Rule Registry.</div>
+        </div>
+        <div class="sie-component">
+            <div class="comp-name">Correlation Engine</div>
+            <div class="comp-desc">Находит связи между сущностями графа: Endpoint → Cookie → JWT → Framework → Finding. Выявляет паттерны, которые невозможно обнаружить при изолированном анализе отдельных находок.</div>
+        </div>
+        <div class="sie-component">
+            <div class="comp-name">Attack Path Builder</div>
+            <div class="comp-desc">Строит возможные цепочки эксплуатации от точки входа до критического актива. Пример: Public Endpoint → Weak Auth → Admin Route → Missing CSP → Stored XSS.</div>
+        </div>
+        <div class="sie-component">
+            <div class="comp-name">Risk Aggregator</div>
+            <div class="comp-desc">Объединяет Findings, HTTP, Browser, Discovery и Nuclei данные в единую оценку риска. Учитывает не только severity отдельных находок, но и их взаимное влияние.</div>
+        </div>
+        <div class="sie-component">
+            <div class="comp-name">Confidence Calculator</div>
+            <div class="comp-desc">Для каждого вывода вычисляет Confidence Score на основе: Evidence Count (количество доказательств), Source Diversity (разнообразие источников), Data Freshness (свежесть данных).</div>
+        </div>
+        <div class="sie-component">
+            <div class="comp-name">Recommendation Engine</div>
+            <div class="comp-desc">Для каждого риска формирует рекомендации с приоритетом, влиянием и предполагаемой сложностью исправления. Рекомендации связываются с конкретными узлами графа.</div>
+        </div>
+    </div>
+
+    <div class="body-text">
+        <strong>Производительность:</strong> SIE предусматривает инкрементальный анализ (перерасчёт только изменённых частей графа), кэширование результатов, повторный анализ только затронутых подграфов и пакетную обработку. Это критично для Continuous Security, где анализ должен выполняться регулярно без полного перестроения результатов при каждом запуске.
+    </div>
+</div>
+
+<!-- ─── 8. Интеллектуальный поток ────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 8</div>
+    <div class="section-title">Интеллектуальный поток</div>
+    <div class="section-subtitle">Knowledge → Intelligence → Explainability → Action</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Фундаментальная цепочка платформы — <strong>Knowledge → Intelligence → Explainability → Action</strong> — определяет не только техническую архитектуру, но и последовательность ценности для пользователя. Каждый слой преобразует данные предыдущего в более высокую форму абстракции: сырые артефакты становятся знаниями, знания — интеллектуальными выводами, выводы — объяснимыми заключениями, а заключения — конкретными действиями.
+    </div>
+
+    <div class="diagram">
+        <div class="diagram-title">Цепочка ценности платформы</div>
+        <div class="flow-row" style="gap:20px;">
+            <div style="text-align:center;">
+                <div class="flow-node-highlight" style="min-width:130px;background:rgba(56,189,248,0.12);border-color:rgba(56,189,248,0.35);">Knowledge</div>
+                <div style="font-size:10px;color:var(--c-text-dim);margin-top:6px;">Security Knowledge Graph</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div style="text-align:center;">
+                <div class="flow-node-highlight" style="min-width:130px;background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.35);color:var(--c-accent3);">Intelligence</div>
+                <div style="font-size:10px;color:var(--c-text-dim);margin-top:6px;">Security Intelligence Engine</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div style="text-align:center;">
+                <div class="flow-node-highlight" style="min-width:130px;background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.35);color:var(--c-green);">Explainability</div>
+                <div style="font-size:10px;color:var(--c-text-dim);margin-top:6px;">Explainability Engine v2</div>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div style="text-align:center;">
+                <div class="flow-node-highlight" style="min-width:130px;background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.35);color:var(--c-yellow);">Action</div>
+                <div style="font-size:10px;color:var(--c-text-dim);margin-top:6px;">Dashboard / Continuous Security</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="body-text">
+        Каждый этап этой цепочки добавляет новый уровень абстракции и ценности. Knowledge Graph даёт структурированное представление данных, но не делает выводов. Intelligence Engine анализирует граф и генерирует выводы, но не объясняет их. Explainability Engine добавляет контекст и обоснование, но не предлагает действий. Dashboard и Continuous Security превращают объяснения в конкретные задачи и мониторинг. Именно эта цепочка — не отдельный модуль, а <strong>философия всей платформы</strong>.
+    </div>
+
+    <div class="body-text">
+        <strong>Explainability Hooks</strong> — ключевое требование к SIE. Каждый вывод должен содержать: какие узлы графа использовались, какие связи были задействованы, какие правила сработали и какие доказательства были использованы. Эта информация станет основой для Explainability Engine v2, который будет превращать технические выводы SIE в понятные человеку объяснения.
+    </div>
+</div>
+
+<!-- ─── 9. Правила корреляции и Attack Path ──────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 9</div>
+    <div class="section-title">Правила корреляции и примеры Attack Path</div>
+    <div class="section-subtitle">Декларативные правила анализа и визуализация цепочек эксплуатации</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Правила корреляции — это сердцевина Rule Engine. Они описывают паттерны, которые SIE ищет в графе знаний. Каждое правило является декларативным: оно описывает условия (WHAT), а не алгоритм поиска (HOW). Это позволяет добавлять новые правила без изменения кода Rule Engine и гарантирует воспроизводимость результатов.
+    </div>
+
+    <div class="rule-example">
+        <div class="rule-condition">IF Missing CSP AND Inline Scripts AND Admin Panel</div>
+        <div class="rule-result">THEN High XSS Exposure</div>
+    </div>
+
+    <div class="rule-example">
+        <div class="rule-condition">IF JWT Token AND Weak Cookie Settings AND No HSTS</div>
+        <div class="rule-result">THEN Authentication Weakness</div>
+    </div>
+
+    <div class="rule-example">
+        <div class="rule-condition">IF Public API Endpoint AND No Rate Limiting AND Sensitive Data Exposure</div>
+        <div class="rule-result">THEN API Abuse Risk</div>
+    </div>
+
+    <div class="rule-example">
+        <div class="rule-condition">IF Outdated Framework AND Known CVE AND Exposed Admin Interface</div>
+        <div class="rule-result">THEN Critical Exploitation Path</div>
+    </div>
+
+    <div class="body-text">
+        <strong>Пример Attack Path</strong> — цепочка эксплуатации, построенная Attack Path Builder на основе данных из Security Knowledge Graph. Каждое звено цепочки подкреплено конкретными узлами и связями в графе, а вся цепочка в целом получает оценку Confidence и Severity:
+    </div>
+
+    <div class="diagram">
+        <div class="diagram-title">Пример: Critical Attack Path</div>
+        <div class="flow-row">
+            <div class="flow-node" style="border-color:rgba(251,191,36,0.3);color:var(--c-yellow);background:rgba(251,191,36,0.08);">Public Endpoint</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node" style="border-color:rgba(251,191,36,0.3);color:var(--c-yellow);background:rgba(251,191,36,0.08);">Weak Authentication</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node" style="border-color:rgba(248,113,113,0.3);color:var(--c-red);background:rgba(248,113,113,0.08);">Admin Route</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node" style="border-color:rgba(248,113,113,0.3);color:var(--c-red);background:rgba(248,113,113,0.08);">Missing CSP</div>
+        </div>
+        <div class="flow-arrow-down">↓</div>
+        <div class="flow-row">
+            <div class="flow-node-highlight" style="border-color:rgba(248,113,113,0.5);color:var(--c-red);background:rgba(248,113,113,0.12);">Stored XSS</div>
+        </div>
+    </div>
+
+    <div class="body-text">
+        Attack Path Builder анализирует не только прямые связи, но и транзитивные зависимости. Если Endpoint A связан с Cookie B, который используется при аутентификации на Admin Route C, где отсутствует CSP D, и при этом обнаружен Stored XSS E — все эти звенья объединяются в единую цепочку с оценкой суммарного риска. При этом каждый узел цепочки сохраняет свою Provenance: откуда получена информация, когда она была обновлена, и насколько она актуальна.
+    </div>
+</div>
+
+<!-- ─── 10. Ограничения и неизменяемые модули ───────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 10</div>
+    <div class="section-title">Ограничения и неизменяемые модули</div>
+    <div class="section-subtitle">Компоненты, которые запрещено модифицировать</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Одно из ключевых архитектурных правил платформы: существуют модули, которые <strong>никогда нельзя менять</strong>. Это не рекомендация, а жёсткое ограничение, обеспечивающее стабильность и предсказуемость развития системы. Любая новая функциональность должна строиться поверх существующей архитектуры, а не внутри неё. Если существующий модуль необходимо расширить, это делается через Plugin API, Event System или новые слои абстракции.
+    </div>
+
+    <ul class="nochange-list">
+        <li>Plugin API</li>
+        <li>Engine Registry</li>
+        <li>Pipeline Executor</li>
+        <li>Scan Context</li>
+        <li>Scan Job</li>
+        <li>Security State Engine</li>
+        <li>Explainability Engine</li>
+        <li>Discovery Engine</li>
+        <li>Browser Intelligence</li>
+        <li>HTTP Intelligence</li>
+        <li>Nuclei Adapter</li>
+        <li>Security Knowledge Graph Foundation</li>
+    </ul>
+
+    <div class="body-text">
+        Это правило было проверено на практике при реализации каждого из перечисленных модулей: Nuclei Adapter был создан без изменений в Plugin API, Discovery Engine — без изменений в Scan Orchestrator, а Browser Intelligence — без изменений в Pipeline Executor. Тот же принцип применяется к Security Intelligence Engine: он строится поверх Graph API и не модифицирует Security Knowledge Graph ни при каких обстоятельствах. При необходимости изменения API, создаётся расширение поверх существующего контракта, а не модификация самого контракта.
+    </div>
+</div>
+
+<!-- ─── 11. Roadmap ──────────────────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 11</div>
+    <div class="section-title">Roadmap</div>
+    <div class="section-subtitle">Путь от текущего состояния к Private Beta</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Roadmap платформы представляет собой последовательность этапов, каждый из которых строится поверх предыдущего. Важно понимать, что это не параллельные задачи, а строго последовательные: Security Knowledge Graph является предусловием для Security Intelligence Engine, который, в свою очередь, является предусловием для Explainability Engine v2. Пропуск любого этапа нарушит целостность архитектуры.
+    </div>
+
+    <div class="roadmap">
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot roadmap-dot-done"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">EPIC-01: Workspace</div>
+                <div class="roadmap-desc">67+ документов, SSOT, Repository Standards, ADR, Roadmap</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot roadmap-dot-done"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">TASK-201: Scan Platform Foundation</div>
+                <div class="roadmap-desc">Plugin API, Scan Context, Scan Job, Engine Registry, Orchestrator, Event System</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot roadmap-dot-done"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">TASK-202A-F: Движки и валидация</div>
+                <div class="roadmap-desc">Nuclei, Discovery, Browser Intel, HTTP Intel, Pipeline, 500+ тестов</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot roadmap-dot-active"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">KG-001: Security Knowledge Graph</div>
+                <div class="roadmap-desc" style="color:var(--c-yellow)">В реализации: Node/Edge Model, Graph Builder, Identity Resolution, Provenance, Query API</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">EPIC-04: Security Intelligence Engine</div>
+                <div class="roadmap-desc">Rule Engine, Correlation, Attack Path, Risk Aggregator, Confidence, Recommendations</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">Explainability Engine v2</div>
+                <div class="roadmap-desc">Превращение технических выводов в понятные человеку объяснения</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">Dashboard</div>
+                <div class="roadmap-desc">Визуализация результатов анализа, интерактивные графики риска</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot"></div>
+                <div class="roadmap-connector"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">Continuous Security</div>
+                <div class="roadmap-desc">Непрерывный мониторинг, инкрементальный анализ, уведомления</div>
+            </div>
+        </div>
+        <div class="roadmap-item">
+            <div class="roadmap-line">
+                <div class="roadmap-dot"></div>
+            </div>
+            <div class="roadmap-content">
+                <div class="roadmap-title">Private Beta</div>
+                <div class="roadmap-desc">Ограниченный запуск для первых пользователей</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── 12. Definition of Done ───────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 12</div>
+    <div class="section-title">Definition of Done</div>
+    <div class="section-subtitle">Критерии завершённости каждой задачи</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Каждая задача в проекте должна соответствовать строгим критериям завершённости. Definition of Done не является формальностью — это контракт между разработчиком и платформой, гарантирующий качество, воспроизводимость и совместимость каждого нового компонента. Ни одна задача не может быть закрыта, пока все пункты DoD не выполнены.
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width:5%">#</th>
+                <th style="width:40%">Критерий</th>
+                <th style="width:55%">Описание</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Типизированная архитектура</td>
+                <td>Все модели, интерфейсы и типы определены и документированы. Не допускается использование any/unknown без явного обоснования.</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Mermaid-диаграммы</td>
+                <td>Компонентные, последовательные и потоковые диаграммы для каждого модуля. Визуальная документация обязательна.</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>ADR</td>
+                <td>Architecture Decision Record для каждого значимого архитектурного решения. Формат: статус, контекст, решение, последствия.</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Документация</td>
+                <td>Полная документация модуля: API, модели, ограничения, примеры использования. Обновляется синхронно с кодом.</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>90%+ покрытие тестами</td>
+                <td>Минимальное покрытие тестами нового кода — 90%. Unit, Integration и Rule-specific тесты.</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Zero Regression</td>
+                <td>Все 500+ существующих тестов проходят без единого падения. Регрессии недопустимы.</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>Совместимость с платформой</td>
+                <td>Нулевые изменения в неизменяемых модулях. Новый код работает поверх существующей архитектуры.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="body-text">
+        <strong>Дополнительные критерии для INT-001:</strong> создан полностью типизированный Security Intelligence Engine; реализован Rule Engine с расширяемой системой правил; поддерживается корреляция данных из Security Knowledge Graph; реализовано построение Attack Path; реализован расчёт Confidence и агрегированного Risk Score; доступен Recommendation Engine; обеспечено покрытие тестами не менее 90%; отсутствуют регрессии существующих компонентов.
+    </div>
+</div>
+
+<!-- ─── 13. Глоссарий ────────────────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 13</div>
+    <div class="section-title">Глоссарий</div>
+    <div class="section-subtitle">Термины и аббревиатуры проекта</div>
+    <div class="divider"></div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width:25%">Термин</th>
+                <th style="width:75%">Определение</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><span class="glossary-term">SIE</span></td><td class="glossary-def">Security Intelligence Engine — аналитический слой, интерпретирующий Security Knowledge Graph и генерирующий выводы о безопасности</td></tr>
+            <tr><td><span class="glossary-term">SKG / KG</span></td><td class="glossary-def">Security Knowledge Graph — графовая модель знаний платформы, объединяющая данные из всех источников</td></tr>
+            <tr><td><span class="glossary-term">Artifact Bus</span></td><td class="glossary-def">Шина артефактов — механизм публикации и подписки на результаты работы движков сканирования</td></tr>
+            <tr><td><span class="glossary-term">SSOT</span></td><td class="glossary-def">Single Source of Truth — единый источник правды, репозиторий всех документов и решений проекта</td></tr>
+            <tr><td><span class="glossary-term">ADR</span></td><td class="glossary-def">Architecture Decision Record — фиксация архитектурного решения с контекстом и последствиями</td></tr>
+            <tr><td><span class="glossary-term">OAST</span></td><td class="glossary-def">Out-of-Band Security Testing — техника тестирования безопасности через внешние каналы взаимодействия</td></tr>
+            <tr><td><span class="glossary-term">DAST</span></td><td class="glossary-def">Dynamic Application Security Testing — динамическое тестирование безопасности приложений</td></tr>
+            <tr><td><span class="glossary-term">DoD</span></td><td class="glossary-def">Definition of Done — критерии завершённости задачи</td></tr>
+            <tr><td><span class="glossary-term">Provenance</span></td><td class="glossary-def">Происхождение данных — отслеживание источника и цепочки трансформаций каждого узла графа</td></tr>
+            <tr><td><span class="glossary-term">Identity Resolution</span></td><td class="glossary-def">Разрешение идентичности — устранение дубликатов и слияние сущностей в графе</td></tr>
+            <tr><td><span class="glossary-term">Attack Path</span></td><td class="glossary-def">Цепочка эксплуатации — последовательность уязвимостей, ведущая от точки входа к критическому активу</td></tr>
+            <tr><td><span class="glossary-term">Confidence Score</span></td><td class="glossary-def">Оценка достоверности вывода на основе количества доказательств, разнообразия источников и свежести данных</td></tr>
+            <tr><td><span class="glossary-term">Risk Story</span></td><td class="glossary-def">Связное описание риска, объединяющее несколько находок в единую нарративную структуру</td></tr>
+            <tr><td><span class="glossary-term">Rule Registry</span></td><td class="glossary-def">Реестр правил — механизм регистрации и поиска декларативных правил анализа</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ─── 14. ADR шаблоны ──────────────────────────────────────────────── -->
+<div class="chapter">
+    <div class="section-tag">Раздел 14</div>
+    <div class="section-title">ADR шаблоны</div>
+    <div class="section-subtitle">Шаблоны Architecture Decision Records для будущих решений</div>
+    <div class="divider"></div>
+
+    <div class="body-text">
+        Architecture Decision Records (ADR) — это механизм фиксации архитектурных решений, обеспечивающий прозрачность и воспроизводимость процесса проектирования. Каждый ADR описывает не только само решение, но и контекст, в котором оно было принято, а также последствия, которые оно влечёт. Ниже представлен шаблон ADR, который должен использоваться для всех значимых архитектурных решений в проекте.
+    </div>
+
+    <div class="adr-template">
+        <div class="adr-field">
+            <div class="adr-field-label">Название</div>
+            <div class="adr-field-value">[Краткое название решения, например: "Использование декларативных правил в Rule Engine"]</div>
+        </div>
+        <div class="adr-field">
+            <div class="adr-field-label">Статус</div>
+            <div class="adr-field-value">Proposed | Accepted | Deprecated | Superseded</div>
+        </div>
+        <div class="adr-field">
+            <div class="adr-field-label">Контекст</div>
+            <div class="adr-field-value">Описание проблемы или ситуации, требующей архитектурного решения. Какие альтернативы рассматривались. Какие ограничения существуют. Какие требования должны быть удовлетворены.</div>
+        </div>
+        <div class="adr-field">
+            <div class="adr-field-label">Решение</div>
+            <div class="adr-field-value">Описание принятого решения. Почему выбрана именно эта альтернатива. Какие преимущества она даёт по сравнению с другими вариантами.</div>
+        </div>
+        <div class="adr-field">
+            <div class="adr-field-label">Последствия</div>
+            <div class="adr-field-value">Положительные: какие возможности открываются. Отрицательные: какие ограничения накладываются. Риски: что может пойти не так. Связанные ADR: на какие другие решения влияет данное решение.</div>
+        </div>
+        <div class="adr-field">
+            <div class="adr-field-label">Связанные EPIC/TASK</div>
+            <div class="adr-field-value">Ссылки на соответствующие задачи, в контексте которых было принято решение.</div>
+        </div>
+    </div>
+
+    <div class="body-text">
+        Примеры ADR, которые должны быть созданы при реализации EPIC-04: ADR-SIE-001 (Выбор декларативного формата правил), ADR-SIE-002 (Архитектура Correlation Engine), ADR-SIE-003 (Модель Attack Path), ADR-SIE-004 (Формула расчёта Confidence Score), ADR-SIE-005 (Стратегия агрегации риска), ADR-SIE-006 (Модель рекомендаций и приоритизации). Каждый из этих ADR должен быть создан до или параллельно с реализацией соответствующего компонента, а не ретроспективно.
+    </div>
+
+</div>
+
+</div> <!-- end main-content -->
+
+</body>
+</html>
