@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0e17"/>
+      <stop offset="100%" stop-color="#0f1a2e"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#64748b"/></marker>
+  </defs>
+  
+  <rect width="800" height="700" fill="url(#bg2)" rx="12"/>
+  
+  <!-- Title -->
+  <text x="400" y="38" text-anchor="middle" fill="#38bdf8" font-size="13" font-weight="600" letter-spacing="2">SIE COMPONENT ARCHITECTURE</text>
+  <text x="400" y="60" text-anchor="middle" fill="#fff" font-size="18" font-weight="800">Security Intelligence Engine</text>
+  
+  <!-- Input: SKG -->
+  <rect x="280" y="80" width="240" height="50" rx="8" fill="#0f172a" stroke="#fbbf24" stroke-opacity="0.5"/>
+  <text x="400" y="110" text-anchor="middle" fill="#fbbf24" font-size="14" font-weight="700">Security Knowledge Graph</text>
+  
+  <!-- Arrow -->
+  <line x1="400" y1="130" x2="400" y2="160" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  
+  <!-- SIE Core -->
+  <rect x="100" y="160" width="600" height="50" rx="8" fill="rgba(56,189,248,0.1)" stroke="#38bdf8" stroke-width="2"/>
+  <text x="400" y="190" text-anchor="middle" fill="#38bdf8" font-size="15" font-weight="700">Intelligence Engine Core</text>
+  
+  <!-- 6 Components -->
+  <!-- Row 1 -->
+  <rect x="50" y="240" width="220" height="90" rx="8" fill="#111827" stroke="#1e293b"/>
+  <text x="160" y="265" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="600">ADR-SIE-001</text>
+  <text x="160" y="288" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Rule Engine</text>
+  <text x="160" y="310" text-anchor="middle" fill="#94a3b8" font-size="11">Декларативные правила</text>
+  <text x="160" y="325" text-anchor="middle" fill="#94a3b8" font-size="11">над графом знаний</text>
+  
+  <rect x="290" y="240" width="220" height="90" rx="8" fill="#111827" stroke="#1e293b"/>
+  <text x="400" y="265" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="600">ADR-SIE-002</text>
+  <text x="400" y="288" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Correlation Engine</text>
+  <text x="400" y="310" text-anchor="middle" fill="#94a3b8" font-size="11">Графовый обход</text>
+  <text x="400" y="325" text-anchor="middle" fill="#94a3b8" font-size="11">для выявления связей</text>
+  
+  <rect x="530" y="240" width="220" height="90" rx="8" fill="#111827" stroke="#1e293b"/>
+  <text x="640" y="265" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="600">ADR-SIE-003</text>
+  <text x="640" y="288" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Attack Path Builder</text>
+  <text x="640" y="310" text-anchor="middle" fill="#94a3b8" font-size="11">DFS/BFS с ограничением</text>
+  <text x="640" y="325" text-anchor="middle" fill="#94a3b8" font-size="11">глубины и циклов</text>
+  
+  <!-- Row 2 -->
+  <rect x="50" y="360" width="220" height="90" rx="8" fill="#111827" stroke="#1e293b"/>
+  <text x="160" y="385" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="600">ADR-SIE-004</text>
+  <text x="160" y="408" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Risk Aggregator</text>
+  <text x="160" y="430" text-anchor="middle" fill="#94a3b8" font-size="11">Взвешенная сумма</text>
+  <text x="160" y="445" text-anchor="middle" fill="#94a3b8" font-size="11">с confidence weights</text>
+  
+  <rect x="290" y="360" width="220" height="90" rx="8" fill="#111827" stroke="#1e293b"/>
+  <text x="400" y="385" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="600">ADR-SIE-005</text>
+  <text x="400" y="408" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Confidence Calculator</text>
+  <text x="400" y="430" text-anchor="middle" fill="#94a3b8" font-size="11">Multi-factor credibility</text>
+  <text x="400" y="445" text-anchor="middle" fill="#94a3b8" font-size="11">scoring</text>
+  
+  <rect x="530" y="360" width="220" height="90" rx="8" fill="#111827" stroke="#1e293b"/>
+  <text x="640" y="385" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="600">ADR-SIE-006</text>
+  <text x="640" y="408" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">Recommendation Engine</text>
+  <text x="640" y="430" text-anchor="middle" fill="#94a3b8" font-size="11">Шаблонный генератор</text>
+  <text x="640" y="445" text-anchor="middle" fill="#94a3b8" font-size="11">рекомендаций</text>
+  
+  <!-- Arrows from components down -->
+  <line x1="160" y1="330" x2="160" y2="360" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="400" y1="330" x2="400" y2="360" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="640" y1="330" x2="640" y2="360" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4,3"/>
+  
+  <!-- Output section -->
+  <line x1="400" y1="450" x2="400" y2="490" stroke="#64748b" stroke-width="2" marker-end="url(#arr)"/>
+  
+  <rect x="100" y="490" width="600" height="50" rx="8" fill="rgba(52,211,153,0.1)" stroke="#34d399" stroke-opacity="0.5"/>
+  <text x="400" y="520" text-anchor="middle" fill="#34d399" font-size="14" font-weight="700">Intelligence Output (Det + Explainable)</text>
+  
+  <!-- Output details -->
+  <rect x="50" y="560" width="150" height="60" rx="6" fill="#111827" stroke="#1e293b"/>
+  <text x="125" y="585" text-anchor="middle" fill="#94a3b8" font-size="11">Correlated</text>
+  <text x="125" y="605" text-anchor="middle" fill="#94a3b8" font-size="11">Findings</text>
+  
+  <rect x="220" y="560" width="150" height="60" rx="6" fill="#111827" stroke="#1e293b"/>
+  <text x="295" y="585" text-anchor="middle" fill="#94a3b8" font-size="11">Attack</text>
+  <text x="295" y="605" text-anchor="middle" fill="#94a3b8" font-size="11">Paths</text>
+  
+  <rect x="390" y="560" width="150" height="60" rx="6" fill="#111827" stroke="#1e293b"/>
+  <text x="465" y="585" text-anchor="middle" fill="#94a3b8" font-size="11">Risk</text>
+  <text x="465" y="605" text-anchor="middle" fill="#94a3b8" font-size="11">Assessment</text>
+  
+  <rect x="560" y="560" width="150" height="60" rx="6" fill="#111827" stroke="#1e293b"/>
+  <text x="635" y="585" text-anchor="middle" fill="#94a3b8" font-size="11">Recommendations</text>
+  <text x="635" y="605" text-anchor="middle" fill="#94a3b8" font-size="11">&amp; Explanations</text>
+  
+  <!-- Footer -->
+  <text x="400" y="660" text-anchor="middle" fill="#64748b" font-size="12">Knowledge → Intelligence → Explainability → Action</text>
+</svg>
