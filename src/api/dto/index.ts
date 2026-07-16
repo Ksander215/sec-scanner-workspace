@@ -1,0 +1,27 @@
+export type {
+  AnalyzeRequestDTO,
+  AnalyzeResponseDTO,
+  ReportDTO,
+  RiskSummaryDTO,
+  ReportMetricsDTO,
+  FindingDTO,
+  RiskDTO,
+  RecommendationDTO,
+  CorrelationDTO,
+  AttackPathDTO,
+  ImpactDTO,
+  ExplanationDTO,
+  HealthDTO,
+  PaginatedResponse,
+  ErrorResponseDTO,
+} from './types.js';
+export {
+  mapReportToDTO,
+  mapFindingToDTO,
+  mapRiskToDTO,
+  mapRecommendationToDTO,
+  mapCorrelationToDTO,
+  mapAttackGraphToDTO,
+  mapImpactToDTO,
+  mapExplanationToDTO,
+} from './mappers.js';

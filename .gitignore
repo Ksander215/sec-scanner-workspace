@@ -41,8 +41,18 @@ desktop.ini
 *.log
 *.cache
 
-# Node.js (if used for tooling)
+# Node.js
 node_modules/
 
 # Build artifacts
 *.pyc
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Data directory (runtime data)
+data/
+
+# Config with secrets
+.si/
