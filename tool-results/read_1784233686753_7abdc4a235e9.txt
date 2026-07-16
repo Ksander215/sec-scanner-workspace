@@ -1,0 +1,940 @@
+     1→/**
+     2→ * Knowledge Graph Query Engine — Main Engine
+     3→ *
+     4→ * The GraphQueryEngineImpl is the central orchestrator for all query operations.
+     5→ * It implements the domain GraphQueryEngine contract and provides a rich API
+     6→ * for querying nodes, edges, paths, subgraphs, aggregations, and more.
+     7→ *
+     8→ * Architecture:
+     9→ * - Uses only public GraphRepository and GraphTraversalEngine APIs
+    10→ * - Delegates filtering to predicates/ and filters/ modules
+    11→ * - Delegates optimization to optimizer/ module
+    12→ * - Delegates statistics to statistics/ module
+    13→ * - Publishes events via EventPublisher (optional)
+    14→ * - Supports query caching with TTL
+    15→ *
+    16→ * Performance:
+    17→ * - Predicate pushdown reduces scan volume
+    18→ * - Type-based index shortcuts for common queries
+    19→ * - Short-circuit evaluation in composite filters
+    20→ * - Cached execution for repeated queries
+    21→ */
+    22→
+    23→import type { NodeId, EdgeId, QueryId } from '../../types/index.js';
+    24→import type { GraphNode, GraphEdge, GraphSubgraph, GraphStatistics, GraphQuery } from '../../models/index.js';
+    25→import type { GraphRepository } from '../../contracts/index.js';
+    26→import type { EventPublisher } from '../../adapters/index.js';
+    27→import type { GraphTraversalEngineImpl } from '../../traversal/engine/index.js';
+    28→import type {
+    29→  QuerySpecification,
+    30→  QueryTarget,
+    31→  QueryResult,
+    32→  QueryStatistics,
+    33→  QueryPlan,
+    34→  AggregationSpec,
+    35→  AggregationOp,
+    36→  AggregationResult,
+    37→  GroupBySpec,
+    38→  GroupByResult,
+    39→  SubgraphQueryResult,
+    40→  PathQueryResult,
+    41→  ExplainResult,
+    42→  Projection,
+    43→  SortSpec,
+    44→  PaginationSpec,
+    45→  QueryEngineConfig,
+    46→} from '../types/index.js';
+    47→import {
+    48→  QueryTarget as QT,
+    49→  SortDirection as SD,
+    50→  DEFAULT_QUERY_ENGINE_CONFIG,
+    51→  EMPTY_PROJECTION,
+    52→  DEFAULT_PAGINATION,
+    53→  emptyQueryStatistics,
+    54→  PredicateOperator,
+    55→  AggregationOp as AggOp,
+    56→} from '../types/index.js';
+    57→import { NodeType, EdgeType, brandNodeId, brandEdgeId, brandQueryId } from '../../types/index.js';
+    58→import { createGraphNode, createGraphEdge, createRelationship, createGraphSubgraph } from '../../models/index.js';
+    59→import { evaluateNodeFilter, evaluateEdgeFilter, countPredicates } from '../filters/index.js';
+    60→import { evaluateNodePredicate, evaluateEdgePredicate } from '../predicates/index.js';
+    61→import { queryOptimizer } from '../optimizer/index.js';
+    62→import { QueryStatisticsCollector, QueryCache } from '../statistics/index.js';
+    63→import { QueryBuilder } from '../builder/index.js';
+    64→import {
+    65→  createQueryStartedEvent,
+    66→  createQueryCompletedEvent,
+    67→  createQueryCancelledEvent,
+    68→  createQueryCachedEvent,
+    69→} from '../events/index.js';
+    70→import type { AnyQueryEvent } from '../events/index.js';
+    71→import { buildExplainPlan, buildQuickPlan } from '../plan/index.js';
+    72→
+    73→// ─── Engine Configuration ──────────────────────────────────────
+    74→
+    75→const DEFAULT_CONFIG: Required<QueryEngineConfig> = { ...DEFAULT_QUERY_ENGINE_CONFIG };
+    76→
+    77→// ─── GraphQueryEngineImpl ──────────────────────────────────────
+    78→
+    79→/**
+    80→ * Main implementation of the Knowledge Graph Query Engine.
+    81→ *
+    82→ * Provides a comprehensive query API that works exclusively through
+    83→ * the public GraphRepository and GraphTraversalEngine interfaces.
+    84→ */
+    85→export class GraphQueryEngineImpl {
+    86→  private readonly _repo: GraphRepository;
+    87→  private readonly _traversal: GraphTraversalEngineImpl;
+    88→  private readonly _publisher: EventPublisher | null;
+    89→  private readonly _config: Required<QueryEngineConfig>;
+    90→  private readonly _cache: QueryCache;
+    91→  private readonly _statsCollector: QueryStatisticsCollector;
+    92→
+    93→  constructor(
+    94→    repo: GraphRepository,
+    95→    traversal: GraphTraversalEngineImpl,
+    96→    publisher?: EventPublisher,
+    97→    config?: QueryEngineConfig,
+    98→  ) {
+    99→    this._repo = repo;
+   100→    this._traversal = traversal;
+   101→    this._publisher = publisher ?? null;
+   102→    this._config = { ...DEFAULT_CONFIG, ...config };
+   103→    this._cache = new QueryCache(this._config);
+   104→    this._statsCollector = new QueryStatisticsCollector();
+   105→  }
+   106→
+   107→  // ─── GraphQueryEngine Contract Methods ──────────────────────
+   108→
+   109→  /**
+   110→   * Execute a query and return matching nodes.
+   111→   * Implements the domain GraphQueryEngine contract.
+   112→   */
+   113→  async queryNodes(query: GraphQuery): Promise<readonly GraphNode[]> {
+   114→    const spec = this.domainQueryToSpec(query, QT.Nodes);
+   115→    const result = await this.executeQueryInternal<GraphNode>(spec);
+   116→    return result.rows;
+   117→  }
+   118→
+   119→  /**
+   120→   * Execute a query and return matching edges.
+   121→   * Implements the domain GraphQueryEngine contract.
+   122→   */
+   123→  async queryEdges(query: GraphQuery): Promise<readonly GraphEdge[]> {
+   124→    const spec = this.domainQueryToSpec(query, QT.Edges);
+   125→    const result = await this.executeQueryInternal<GraphEdge>(spec);
+   126→    return result.rows;
+   127→  }
+   128→
+   129→  /**
+   130→   * Execute a query and return a subgraph.
+   131→   * Implements the domain GraphQueryEngine contract.
+   132→   */
+   133→  async querySubgraph(query: GraphQuery): Promise<GraphSubgraph> {
+   134→    const nodes = await this.queryNodes(query);
+   135→    const nodeIds = new Set(nodes.map(n => n.identity.id));
+   136→    const allEdges = await this._repo.getAllEdges();
+   137→    const edges = allEdges.filter(e => nodeIds.has(e.sourceId) && nodeIds.has(e.targetId));
+   138→    return createGraphSubgraph(
+   139→      `sg_${Date.now().toString(36)}`,
+   140→      nodes,
+   141→      edges,
+   142→      { description: `Subgraph from query ${query.id}` },
+   143→    );
+   144→  }
+   145→
+   146→  /**
+   147→   * Get aggregate statistics about the graph.
+   148→   * Implements the domain GraphQueryEngine contract.
+   149→   */
+   150→  async getStatistics(): Promise<GraphStatistics> {
+   151→    const nodeCount = await this._repo.nodeCount();
+   152→    const edgeCount = await this._repo.edgeCount();
+   153→    const allNodes = await this._repo.getAllNodes();
+   154→    const allEdges = await this._repo.getAllEdges();
+   155→
+   156→    const nodeTypeDistribution: Record<string, number> = {};
+   157→    for (const node of allNodes) {
+   158→      const type = node.identity.type;
+   159→      nodeTypeDistribution[type] = (nodeTypeDistribution[type] ?? 0) + 1;
+   160→    }
+   161→
+   162→    const edgeTypeDistribution: Record<string, number> = {};
+   163→    for (const edge of allEdges) {
+   164→      const type = edge.relationship.edgeType;
+   165→      edgeTypeDistribution[type] = (edgeTypeDistribution[type] ?? 0) + 1;
+   166→    }
+   167→
+   168→    // Compute degree stats
+   169→    const degreeMap: Record<string, number> = {};
+   170→    for (const edge of allEdges) {
+   171→      degreeMap[edge.sourceId as string] = (degreeMap[edge.sourceId as string] ?? 0) + 1;
+   172→      degreeMap[edge.targetId as string] = (degreeMap[edge.targetId as string] ?? 0) + 1;
+   173→    }
+   174→    const degrees = Object.values(degreeMap);
+   175→    const avgDegree = degrees.length > 0 ? degrees.reduce((a, b) => a + b, 0) / degrees.length : 0;
+   176→    const maxDegree = degrees.length > 0 ? Math.max(...degrees) : 0;
+   177→
+   178→    return Object.freeze({
+   179→      nodeCount,
+   180→      edgeCount,
+   181→      nodeTypeDistribution: Object.freeze(nodeTypeDistribution),
+   182→      edgeTypeDistribution: Object.freeze(edgeTypeDistribution),
+   183→      avgDegree: Math.round(avgDegree * 100) / 100,
+   184→      maxDegree,
+   185→      computedAt: new Date().toISOString(),
+   186→    });
+   187→  }
+   188→
+   189→  // ─── Node Search API ────────────────────────────────────────
+   190→
+   191→  /** Find nodes matching a filter */
+   192→  async findNodes(spec: QuerySpecification): Promise<QueryResult<GraphNode>> {
+   193→    return this.executeQueryInternal<GraphNode>(spec);
+   194→  }
+   195→
+   196→  /** Find a single node by ID */
+   197→  async findNode(id: NodeId): Promise<GraphNode | undefined> {
+   198→    return this._repo.getNode(id);
+   199→  }
+   200→
+   201→  /** Find a node by ID (alias) */
+   202→  async findById(id: NodeId): Promise<GraphNode | undefined> {
+   203→    return this._repo.getNode(id);
+   204→  }
+   205→
+   206→  /** Find all nodes of a given type */
+   207→  async findByType(type: NodeType): Promise<readonly GraphNode[]> {
+   208→    const allNodes = await this._repo.getAllNodes();
+   209→    return allNodes.filter(n => n.identity.type === type);
+   210→  }
+   211→
+   212→  /** Find nodes by label */
+   213→  async findByLabel(label: string): Promise<readonly GraphNode[]> {
+   214→    const allNodes = await this._repo.getAllNodes();
+   215→    return allNodes.filter(n => n.identity.labels.includes(label));
+   216→  }
+   217→
+   218→  /** Find nodes by tag */
+   219→  async findByTag(tag: string): Promise<readonly GraphNode[]> {
+   220→    const allNodes = await this._repo.getAllNodes();
+   221→    return allNodes.filter(n => n.metadata.tags.includes(tag));
+   222→  }
+   223→
+   224→  /** Find nodes matching metadata field */
+   225→  async findByMetadata(field: string, value: string | number | boolean): Promise<readonly GraphNode[]> {
+   226→    const allNodes = await this._repo.getAllNodes();
+   227→    const obj = { [field]: value };
+   228→    return allNodes.filter(n => {
+   229→      const meta = n.metadata as unknown as Record<string, unknown>;
+   230→      return meta[field] === value;
+   231→    });
+   232→  }
+   233→
+   234→  // ─── Edge Search API ────────────────────────────────────────
+   235→
+   236→  /** Find edges matching a filter */
+   237→  async findEdges(spec: QuerySpecification): Promise<QueryResult<GraphEdge>> {
+   238→    return this.executeQueryInternal<GraphEdge>(spec);
+   239→  }
+   240→
+   241→  /** Find a single edge by ID */
+   242→  async findEdge(id: EdgeId): Promise<GraphEdge | undefined> {
+   243→    return this._repo.getEdge(id);
+   244→  }
+   245→
+   246→  /** Find edges by relationship type */
+   247→  async findByRelationship(edgeType: EdgeType): Promise<readonly GraphEdge[]> {
+   248→    const allEdges = await this._repo.getAllEdges();
+   249→    return allEdges.filter(e => e.relationship.edgeType === edgeType);
+   250→  }
+   251→
+   252→  /** Find incoming edges to a node */
+   253→  async findIncoming(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   254→    return this._repo.getEdgesTo(nodeId);
+   255→  }
+   256→
+   257→  /** Find outgoing edges from a node */
+   258→  async findOutgoing(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   259→    return this._repo.getEdgesFrom(nodeId);
+   260→  }
+   261→
+   262→  /** Find edges between two nodes */
+   263→  async findBetween(sourceId: NodeId, targetId: NodeId): Promise<readonly GraphEdge[]> {
+   264→    const fromSource = await this._repo.getEdgesFrom(sourceId);
+   265→    return fromSource.filter(e => e.targetId === targetId);
+   266→  }
+   267→
+   268→  // ─── Path Queries ───────────────────────────────────────────
+   269→
+   270→  /** Find a path between two nodes */
+   271→  async path(sourceId: NodeId, targetId: NodeId, maxDepth?: number): Promise<PathQueryResult> {
+   272→    const start = performance.now();
+   273→    const stats = new QueryStatisticsCollector();
+   274→    stats.start();
+   275→
+   276→    const pathResult = await this._traversal.shortestPath(sourceId, targetId, { maxDepth: maxDepth ?? 10 });
+   277→    stats.recordNodeScan(pathResult.found && pathResult.path ? pathResult.path.nodes.length : 0);
+   278→
+   279→    const queryId = brandQueryId(`path_${Date.now().toString(36)}`);
+   280→    return Object.freeze({
+   281→      queryId,
+   282→      found: pathResult.found,
+   283→      path: pathResult.path?.nodes ?? [],
+   284→      alternatives: pathResult.alternatives.map(a => a.nodes),
+   285→      statistics: stats.toSnapshot(),
+   286→      duration: performance.now() - start,
+   287→    });
+   288→  }
+   289→
+   290→  /** Find multiple paths between two nodes */
+   291→  async paths(sourceId: NodeId, targetId: NodeId, maxPaths: number = 5): Promise<PathQueryResult> {
+   292→    const start = performance.now();
+   293→    const stats = new QueryStatisticsCollector();
+   294→    stats.start();
+   295→
+   296→    const pathResult = await this._traversal.findPaths(sourceId, targetId, { maxPaths });
+   297→    stats.recordNodeScan(pathResult.totalPaths);
+   298→
+   299→    const queryId = brandQueryId(`paths_${Date.now().toString(36)}`);
+   300→    return Object.freeze({
+   301→      queryId,
+   302→      found: pathResult.found,
+   303→      path: pathResult.path?.nodes ?? [],
+   304→      alternatives: pathResult.alternatives.map(a => a.nodes),
+   305→      statistics: stats.toSnapshot(),
+   306→      duration: performance.now() - start,
+   307→    });
+   308→  }
+   309→
+   310→  /** Find shortest path */
+   311→  async shortestPath(sourceId: NodeId, targetId: NodeId, maxDepth?: number): Promise<PathQueryResult> {
+   312→    return this.path(sourceId, targetId, maxDepth);
+   313→  }
+   314→
+   315→  /** Check if a node is reachable from another */
+   316→  async reachable(sourceId: NodeId, targetId: NodeId): Promise<boolean> {
+   317→    return this._traversal.pathExists(sourceId, targetId);
+   318→  }
+   319→
+   320→  /** Get neighbor nodes */
+   321→  async neighbors(nodeId: NodeId, depth: number = 1): Promise<readonly GraphNode[]> {
+   322→    return this._traversal.getNeighbors(nodeId, { depth });
+   323→  }
+   324→
+   325→  // ─── Subgraph Queries ──────────────────────────────────────
+   326→
+   327→  /** Extract a subgraph from a start node */
+   328→  async subgraph(startNodeId: NodeId, maxDepth: number = 3): Promise<SubgraphQueryResult> {
+   329→    const start = performance.now();
+   330→    const stats = new QueryStatisticsCollector();
+   331→    stats.start();
+   332→
+   333→    const sg = await this._traversal.extractSubgraph(startNodeId, { maxDepth });
+   334→    stats.recordNodeScan(sg.nodes.length);
+   335→    stats.recordEdgeScan(sg.edges.length);
+   336→
+   337→    const queryId = brandQueryId(`sub_${Date.now().toString(36)}`);
+   338→    return Object.freeze({
+   339→      queryId,
+   340→      subgraph: sg,
+   341→      statistics: stats.toSnapshot(),
+   342→      duration: performance.now() - start,
+   343→    });
+   344→  }
+   345→
+   346→  /** Expand a subgraph by additional depth */
+   347→  async expand(sg: GraphSubgraph, additionalDepth: number = 1): Promise<SubgraphQueryResult> {
+   348→    const start = performance.now();
+   349→    const stats = new QueryStatisticsCollector();
+   350→    stats.start();
+   351→
+   352→    const allNewNodes = new Map<string, GraphNode>();
+   353→    const allNewEdges = new Map<string, GraphEdge>();
+   354→
+   355→    // Add existing nodes/edges
+   356→    for (const n of sg.nodes) allNewNodes.set(n.identity.id as string, n);
+   357→    for (const e of sg.edges) allNewEdges.set(e.id as string, e);
+   358→
+   359→    // Identify boundary nodes: nodes that have at least one edge going outside the subgraph
+   360→    // (i.e., nodes connected to edges where the other endpoint is NOT in the subgraph)
+   361→    const sgNodeIds = new Set(sg.nodes.map(n => n.identity.id as string));
+   362→    const boundaryNodeIds = new Set<string>();
+   363→    for (const node of sg.nodes) {
+   364→      const outEdges = await this._repo.getEdgesFrom(node.identity.id);
+   365→      for (const e of outEdges) {
+   366→        if (!sgNodeIds.has(e.targetId as string)) {
+   367→          boundaryNodeIds.add(node.identity.id as string);
+   368→          break;
+   369→        }
+   370→      }
+   371→      if (!boundaryNodeIds.has(node.identity.id as string)) {
+   372→        const inEdges = await this._repo.getEdgesTo(node.identity.id);
+   373→        for (const e of inEdges) {
+   374→          if (!sgNodeIds.has(e.sourceId as string)) {
+   375→            boundaryNodeIds.add(node.identity.id as string);
+   376→            break;
+   377→          }
+   378→        }
+   379→      }
+   380→    }
+   381→
+   382→    // Only expand from boundary nodes (much fewer than all nodes)
+   383→    for (const nodeId of boundaryNodeIds) {
+   384→      const expanded = await this._traversal.extractSubgraph(
+   385→        brandNodeId(nodeId),
+   386→        { maxDepth: additionalDepth },
+   387→      );
+   388→      for (const n of expanded.nodes) {
+   389→        if (!allNewNodes.has(n.identity.id as string)) {
+   390→          allNewNodes.set(n.identity.id as string, n);
+   391→        }
+   392→      }
+   393→      for (const e of expanded.edges) {
+   394→        if (!allNewEdges.has(e.id as string)) {
+   395→          allNewEdges.set(e.id as string, e);
+   396→        }
+   397→      }
+   398→    }
+   399→
+   400→    const nodes = [...allNewNodes.values()];
+   401→    const edges = [...allNewEdges.values()];
+   402→
+   403→    // Filter edges to only those whose endpoints are in the node set
+   404→    const nodeIds = new Set(nodes.map(n => n.identity.id));
+   405→    const validEdges = edges.filter(e => nodeIds.has(e.sourceId) && nodeIds.has(e.targetId));
+   406→
+   407→    stats.recordNodeScan(nodes.length);
+   408→    stats.recordEdgeScan(validEdges.length);
+   409→
+   410→    const result = createGraphSubgraph(
+   411→      `exp_${Date.now().toString(36)}`,
+   412→      nodes,
+   413→      validEdges,
+   414→      { description: `Expanded subgraph from ${sg.id} (${boundaryNodeIds.size} boundary nodes)` },
+   415→    );
+   416→
+   417→    const queryId = brandQueryId(`exp_${Date.now().toString(36)}`);
+   418→    return Object.freeze({
+   419→      queryId,
+   420→      subgraph: result,
+   421→      statistics: stats.toSnapshot(),
+   422→      duration: performance.now() - start,
+   423→    });
+   424→  }
+   425→
+   426→  /** Collapse a subgraph by removing leaf nodes */
+   427→  async collapse(sg: GraphSubgraph, minDegree: number = 2): Promise<SubgraphQueryResult> {
+   428→    // Compute degree for each node
+   429→    const degreeMap: Record<string, number> = {};
+   430→    for (const node of sg.nodes) {
+   431→      const id = node.identity.id as string;
+   432→      degreeMap[id] = 0;
+   433→    }
+   434→    for (const edge of sg.edges) {
+   435→      degreeMap[edge.sourceId as string] = (degreeMap[edge.sourceId as string] ?? 0) + 1;
+   436→      degreeMap[edge.targetId as string] = (degreeMap[edge.targetId as string] ?? 0) + 1;
+   437→    }
+   438→
+   439→    // Keep nodes with degree >= minDegree
+   440→    const keptNodeIds = new Set(
+   441→      Object.entries(degreeMap)
+   442→        .filter(([_, deg]) => deg >= minDegree)
+   443→        .map(([id]) => id),
+   444→    );
+   445→
+   446→    const nodes = sg.nodes.filter(n => keptNodeIds.has(n.identity.id as string));
+   447→    const edges = sg.edges.filter(e => keptNodeIds.has(e.sourceId as string) && keptNodeIds.has(e.targetId as string));
+   448→
+   449→    const result = createGraphSubgraph(
+   450→      `col_${Date.now().toString(36)}`,
+   451→      nodes,
+   452→      edges,
+   453→      { description: `Collapsed subgraph from ${sg.id}` },
+   454→    );
+   455→
+   456→    const queryId = brandQueryId(`col_${Date.now().toString(36)}`);
+   457→    return Object.freeze({
+   458→      queryId,
+   459→      subgraph: result,
+   460→      statistics: new QueryStatisticsCollector().toSnapshot(),
+   461→      duration: 0,
+   462→    });
+   463→  }
+   464→
+   465→  // ─── Query Builder ─────────────────────────────────────────
+   466→
+   467→  /** Create a new fluent query builder */
+   468→  query(): QueryBuilder {
+   469→    return new QueryBuilder(this);
+   470→  }
+   471→
+   472→  // ─── Explain ───────────────────────────────────────────────
+   473→
+   474→  /** Explain a query without executing it */
+   475→  explain(spec: QuerySpecification): ExplainResult {
+   476→    return buildExplainPlan(spec);
+   477→  }
+   478→
+   479→  // ─── Cache Management ──────────────────────────────────────
+   480→
+   481→  /** Invalidate the entire query cache */
+   482→  invalidateCache(): void {
+   483→    this._cache.clear();
+   484→  }
+   485→
+   486→  /** Get cache statistics */
+   487→  getCacheStats(): { size: number; maxEntries: number; hitRate: number } {
+   488→    return this._cache.getStats();
+   489→  }
+   490→
+   491→  // ─── Accessors ─────────────────────────────────────────────
+   492→
+   493→  /** Get the underlying repository */
+   494→  get repository(): GraphRepository {
+   495→    return this._repo;
+   496→  }
+   497→
+   498→  /** Get the traversal engine */
+   499→  get traversalEngine(): GraphTraversalEngineImpl {
+   500→    return this._traversal;
+   501→  }
+   502→
+   503→  /** Get the engine configuration */
+   504→  get config(): Readonly<Required<QueryEngineConfig>> {
+   505→    return this._config;
+   506→  }
+   507→
+   508→  // ─── Internal Execution ────────────────────────────────────
+   509→
+   510→  /**
+   511→   * Execute a query specification and return results.
+   512→   * This is the main execution pipeline.
+   513→   */
+   514→  private async executeQueryInternal<T extends GraphNode | GraphEdge>(
+   515→    spec: QuerySpecification,
+   516→  ): Promise<QueryResult<T>> {
+   517→    const stats = new QueryStatisticsCollector();
+   518→    stats.start();
+   519→
+   520→    // Publish started event
+   521→    await this.publishEvent(
+   522→      createQueryStartedEvent(spec.id as string, spec.target, {
+   523→        filterCount: spec.filter ? countPredicates(spec.filter) : 0,
+   524→        hasAggregations: spec.aggregations.length > 0,
+   525→      }),
+   526→    );
+   527→
+   528→    try {
+   529→      // Check cache
+   530→      if (spec.useCache && this._config.enableCache) {
+   531→        const cacheKey = QueryCache.makeKey(spec);
+   532→        const cached = this._cache.get<T>(cacheKey);
+   533→        if (cached) {
+   534→          stats.recordCacheHit();
+   535→          await this.publishEvent(
+   536→            createQueryCachedEvent(spec.id as string, spec.target, {
+   537→              cacheHitCount: 1,
+   538→              age: Date.now() - (cached as any)._createdAt ?? 0,
+   539→            }),
+   540→          );
+   541→          return cached;
+   542→        }
+   543→        stats.recordCacheMiss();
+   544→      }
+   545→
+   546→      // Get data from repository
+   547→      let items: (GraphNode | GraphEdge)[];
+   548→      if (spec.target === QT.Nodes) {
+   549→        items = [...(await this._repo.getAllNodes())];
+   550→        stats.recordNodeScan(items.length);
+   551→      } else {
+   552→        items = [...(await this._repo.getAllEdges())];
+   553→        stats.recordEdgeScan(items.length);
+   554→      }
+   555→
+   556→      // Apply type shortcuts
+   557→      if (spec.target === QT.Nodes && spec.nodeTypes.length > 0) {
+   558→        const typeSet = new Set(spec.nodeTypes);
+   559→        items = items.filter((item): item is GraphNode =>
+   560→          typeSet.has((item as GraphNode).identity.type),
+   561→        );
+   562→      }
+   563→      if (spec.target === QT.Edges && spec.edgeTypes.length > 0) {
+   564→        const typeSet = new Set(spec.edgeTypes);
+   565→        items = items.filter((item): item is GraphEdge =>
+   566→          typeSet.has((item as GraphEdge).relationship.edgeType),
+   567→        );
+   568→      }
+   569→
+   570→      // Apply filter
+   571→      if (spec.filter) {
+   572→        if (spec.target === QT.Nodes) {
+   573→          items = items.filter((item): item is GraphNode => {
+   574→            stats.recordPredicateEvaluated();
+   575→            return evaluateNodeFilter(spec.filter, item as GraphNode);
+   576→          });
+   577→        } else {
+   578→          items = items.filter((item): item is GraphEdge => {
+   579→            stats.recordPredicateEvaluated();
+   580→            return evaluateEdgeFilter(spec.filter, item as GraphEdge);
+   581→          });
+   582→        }
+   583→      }
+   584→
+   585→      // Apply sort
+   586→      if (spec.sort.length > 0) {
+   587→        items = this.applySort(items, spec.sort);
+   588→      }
+   589→
+   590→      // Total count before pagination
+   591→      const totalCount = items.length;
+   592→
+   593→      // Apply projection
+   594→      // (Projection is applied during result construction, not to raw items)
+   595→
+   596→      // Compute aggregations
+   597→      let aggregations: AggregationResult[] = [];
+   598→      if (spec.aggregations.length > 0) {
+   599→        aggregations = this.computeAggregations(items, spec.aggregations);
+   600→      }
+   601→
+   602→      // Compute group-by
+   603→      let groups: GroupByResult[] = [];
+   604→      if (spec.groupBy) {
+   605→        groups = this.computeGroupBy(items, spec.groupBy);
+   606→      }
+   607→
+   608→      // Apply pagination
+   609→      const paginated = this.applyPagination(items, spec.pagination);
+   610→      stats.recordReturnedRows(paginated.length);
+   611→
+   612→      const hasMore = totalCount > spec.pagination.offset + paginated.length;
+   613→      const nextCursor = hasMore
+   614→        ? Buffer.from(`${spec.pagination.offset + paginated.length}`).toString('base64')
+   615→        : null;
+   616→
+   617→      // Build result
+   618→      const result: QueryResult<T> = Object.freeze({
+   619→        queryId: spec.id,
+   620→        rows: Object.freeze(paginated as T[]),
+   621→        totalCount,
+   622→        hasMore,
+   623→        nextCursor,
+   624→        statistics: stats.toSnapshot(),
+   625→        plan: buildQuickPlan(spec),
+   626→        aggregations: Object.freeze(aggregations),
+   627→        groups: Object.freeze(groups),
+   628→        duration: stats.toSnapshot().executionTime,
+   629→      });
+   630→
+   631→      // Cache result
+   632→      if (spec.useCache && this._config.enableCache) {
+   633→        const cacheKey = QueryCache.makeKey(spec);
+   634→        this._cache.set(cacheKey, result);
+   635→      }
+   636→
+   637→      // Publish completed event
+   638→      await this.publishEvent(
+   639→        createQueryCompletedEvent(spec.id as string, spec.target, {
+   640→          returnedRows: paginated.length,
+   641→          duration: result.statistics.executionTime,
+   642→        }),
+   643→      );
+   644→
+   645→      return result;
+   646→    } catch (error) {
+   647→      await this.publishEvent(
+   648→        createQueryCancelledEvent(spec.id as string, spec.target, {
+   649→          reason: error instanceof Error ? error.message : 'Unknown error',
+   650→          duration: stats.toSnapshot().executionTime,
+   651→        }),
+   652→      );
+   653→      throw error;
+   654→    }
+   655→  }
+   656→
+   657→  // ─── Sort ──────────────────────────────────────────────────
+   658→
+   659→  private applySort(items: (GraphNode | GraphEdge)[], sorts: readonly SortSpec[]): (GraphNode | GraphEdge)[] {
+   660→    return [...items].sort((a, b) => {
+   661→      for (const sort of sorts) {
+   662→        const aVal = this.getFieldValue(a, sort.field);
+   663→        const bVal = this.getFieldValue(b, sort.field);
+   664→        const cmp = this.compareValues(aVal, bVal);
+   665→        if (cmp !== 0) {
+   666→          return sort.direction === SD.Ascending ? cmp : -cmp;
+   667→        }
+   668→      }
+   669→      return 0;
+   670→    });
+   671→  }
+   672→
+   673→  private getFieldValue(item: GraphNode | GraphEdge, field: string): unknown {
+   674→    const isNode = 'identity' in item;
+   675→    if (isNode) {
+   676→      const node = item as GraphNode;
+   677→      if (field === 'type' || field === 'identity.type') return node.identity.type;
+   678→      if (field === 'id' || field === 'identity.id') return node.identity.id;
+   679→      if (field === 'confidence' || field === 'metadata.confidence') return node.metadata.confidence;
+   680→      if (field === 'createdAt' || field === 'metadata.createdAt') return node.metadata.createdAt;
+   681→      if (field === 'updatedAt' || field === 'metadata.updatedAt') return node.metadata.updatedAt;
+   682→      // Properties
+   683→      if (field.startsWith('properties.')) {
+   684→        const propKey = field.slice('properties.'.length);
+   685→        return node.properties[propKey];
+   686→      }
+   687→      return undefined;
+   688→    } else {
+   689→      const edge = item as GraphEdge;
+   690→      if (field === 'id') return edge.id;
+   691→      if (field === 'sourceId') return edge.sourceId;
+   692→      if (field === 'targetId') return edge.targetId;
+   693→      if (field === 'edgeType' || field === 'relationship.edgeType') return edge.relationship.edgeType;
+   694→      if (field === 'strength' || field === 'relationship.strength') return edge.relationship.strength;
+   695→      if (field === 'createdAt') return edge.createdAt;
+   696→      if (field.startsWith('properties.')) {
+   697→        const propKey = field.slice('properties.'.length);
+   698→        return edge.properties[propKey];
+   699→      }
+   700→      return undefined;
+   701→    }
+   702→  }
+   703→
+   704→  private compareValues(a: unknown, b: unknown): number {
+   705→    if (a === b) return 0;
+   706→    if (a === null || a === undefined) return -1;
+   707→    if (b === null || b === undefined) return 1;
+   708→    if (typeof a === 'number' && typeof b === 'number') return a - b;
+   709→    return String(a).localeCompare(String(b));
+   710→  }
+   711→
+   712→  // ─── Pagination ────────────────────────────────────────────
+   713→
+   714→  private applyPagination<T>(
+   715→    items: T[],
+   716→    pagination: PaginationSpec,
+   717→  ): T[] {
+   718→    switch (pagination.mode) {
+   719→      case 'offset':
+   720→        return items.slice(pagination.offset, pagination.offset + pagination.limit);
+   721→      case 'cursor': {
+   722→        const offset = pagination.cursor
+   723→          ? Math.max(0, parseInt(Buffer.from(pagination.cursor, 'base64').toString(), 10) || 0)
+   724→          : 0;
+   725→        return items.slice(offset, offset + pagination.limit);
+   726→      }
+   727→      case 'page': {
+   728→        const offset = (pagination.page - 1) * pagination.limit;
+   729→        return items.slice(offset, offset + pagination.limit);
+   730→      }
+   731→      default:
+   732→        return items.slice(pagination.offset, pagination.offset + pagination.limit);
+   733→    }
+   734→  }
+   735→
+   736→  // ─── Aggregation ──────────────────────────────────────────
+   737→
+   738→  private computeAggregations(
+   739→    items: (GraphNode | GraphEdge)[],
+   740→    specs: readonly AggregationSpec[],
+   741→  ): AggregationResult[] {
+   742→    return specs.map(spec => {
+   743→      const values = items
+   744→        .map(item => this.getFieldValue(item, spec.field ?? ''))
+   745→        .filter((v): v is number => typeof v === 'number');
+   746→
+   747→      switch (spec.op) {
+   748→        case AggOp.Count:
+   749→          return Object.freeze({
+   750→            name: spec.alias ?? 'count',
+   751→            op: AggOp.Count,
+   752→            value: items.length,
+   753→          });
+   754→        case AggOp.Sum:
+   755→          return Object.freeze({
+   756→            name: spec.alias ?? `sum_${spec.field}`,
+   757→            op: AggOp.Sum,
+   758→            value: values.reduce((a, b) => a + b, 0),
+   759→          });
+   760→        case AggOp.Avg:
+   761→          return Object.freeze({
+   762→            name: spec.alias ?? `avg_${spec.field}`,
+   763→            op: AggOp.Avg,
+   764→            value: values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0,
+   765→          });
+   766→        case AggOp.Min:
+   767→          return Object.freeze({
+   768→            name: spec.alias ?? `min_${spec.field}`,
+   769→            op: AggOp.Min,
+   770→            value: values.length > 0 ? Math.min(...values) : 0,
+   771→          });
+   772→        case AggOp.Max:
+   773→          return Object.freeze({
+   774→            name: spec.alias ?? `max_${spec.field}`,
+   775→            op: AggOp.Max,
+   776→            value: values.length > 0 ? Math.max(...values) : 0,
+   777→          });
+   778→        case AggOp.Distinct: {
+   779→          const distinctValues = new Set(
+   780→            items.map(item => String(this.getFieldValue(item, spec.field ?? 'id') ?? '')),
+   781→          );
+   782→          return Object.freeze({
+   783→            name: spec.alias ?? `distinct_${spec.field}`,
+   784→            op: AggOp.Distinct,
+   785→            value: [...distinctValues],
+   786→          });
+   787→        }
+   788→        default:
+   789→          return Object.freeze({
+   790→            name: spec.alias ?? 'unknown',
+   791→            op: spec.op,
+   792→            value: 0,
+   793→          });
+   794→      }
+   795→    });
+   796→  }
+   797→
+   798→  // ─── Group By ──────────────────────────────────────────────
+   799→
+   800→  private computeGroupBy(
+   801→    items: (GraphNode | GraphEdge)[],
+   802→    groupBy: GroupBySpec,
+   803→  ): GroupByResult[] {
+   804→    const groups = new Map<string, { key: Record<string, string | number>; items: (GraphNode | GraphEdge)[] }>();
+   805→
+   806→    for (const item of items) {
+   807→      const key: Record<string, string | number> = {};
+   808→      for (const field of groupBy.fields) {
+   809→        const val = this.getFieldValue(item, field);
+   810→        if (typeof val === 'number') {
+   811→          key[field] = val;
+   812→        } else {
+   813→          key[field] = String(val ?? '');
+   814→        }
+   815→      }
+   816→      const keyStr = JSON.stringify(key);
+   817→      if (!groups.has(keyStr)) {
+   818→        groups.set(keyStr, { key, items: [] });
+   819→      }
+   820→      groups.get(keyStr)!.items.push(item);
+   821→    }
+   822→
+   823→    return [...groups.entries()].map(([_, group]) => {
+   824→      const results = this.computeAggregations(group.items, groupBy.aggregations);
+   825→      return Object.freeze({
+   826→        key: Object.freeze(group.key),
+   827→        results: Object.freeze(results),
+   828→      });
+   829→    });
+   830→  }
+   831→
+   832→  // ─── Domain Query Conversion ───────────────────────────────
+   833→
+   834→  private domainQueryToSpec(query: GraphQuery, target: QueryTarget): QuerySpecification {
+   835→    const filters: QueryPredicate[] = query.filters.map(f => ({
+   836→      field: f.field,
+   837→      operator: f.operator as PredicateOperator,
+   838→      value: f.value,
+   839→      negated: false,
+   840→    }));
+   841→
+   842→    return Object.freeze({
+   843→      id: query.id,
+   844→      target,
+   845→      filter: filters.length > 0 ? and(...filters) : null,
+   846→      projection: EMPTY_PROJECTION,
+   847→      aggregations: [],
+   848→      groupBy: null,
+   849→      pagination: { mode: 'offset' as any, limit: query.limit, offset: query.offset, cursor: null, page: 1 },
+   850→      sort: [],
+   851→      nodeTypes: [],
+   852→      edgeTypes: [],
+   853→      pathSource: null,
+   854→      pathTarget: null,
+   855→      pathMaxDepth: 10,
+   856→      subgraphStart: null,
+   857→      subgraphMaxDepth: 3,
+   858→      useCache: true,
+   859→      timeout: 30000,
+   860→      createdAt: query.createdAt,
+   861→    });
+   862→  }
+   863→
+   864→  // ─── Event Publishing ──────────────────────────────────────
+   865→
+   866→  private async publishEvent(event: AnyQueryEvent): Promise<void> {
+   867→    if (!this._publisher) return;
+   868→    try {
+   869→      await this._publisher.publish(event as any);
+   870→    } catch {
+   871→      // Event publishing failures should not affect query execution
+   872→    }
+   873→  }
+   874→}
+   875→
+   876→// ─── Re-export for Builder ────────────────────────────────────
+   877→
+   878→// Import the 'and' function from filters for domainQueryToSpec
+   879→import { and } from '../filters/index.js';
+   880→
+   881→// ─── Public Execution Functions (for Builder) ─────────────────
+   882→
+   883→/**
+   884→ * Execute a query specification through the engine.
+   885→ * Used by QueryBuilder.execute().
+   886→ */
+   887→export async function executeQuery(
+   888→  engine: GraphQueryEngineImpl,
+   889→  spec: QuerySpecification,
+   890→): Promise<QueryResult<GraphNode | GraphEdge>> {
+   891→  if (spec.target === QT.Nodes) {
+   892→    return engine.findNodes(spec);
+   893→  } else if (spec.target === QT.Edges) {
+   894→    return engine.findEdges(spec);
+   895→  } else if (spec.target === QT.Subgraph && spec.subgraphStart) {
+   896→    const sgResult = await engine.subgraph(spec.subgraphStart, spec.subgraphMaxDepth);
+   897→    return Object.freeze({
+   898→      queryId: spec.id,
+   899→      rows: sgResult.subgraph.nodes as (GraphNode | GraphEdge)[],
+   900→      totalCount: sgResult.subgraph.nodes.length,
+   901→      hasMore: false,
+   902→      nextCursor: null,
+   903→      statistics: sgResult.statistics,
+   904→      plan: null,
+   905→      aggregations: [],
+   906→      groups: [],
+   907→      duration: sgResult.duration,
+   908→    });
+   909→  } else {
+   910→    // Default to nodes
+   911→    return engine.findNodes(spec);
+   912→  }
+   913→}
+   914→
+   915→/**
+   916→ * Execute a subgraph query through the engine.
+   917→ */
+   918→export async function executeSubgraphQuery(
+   919→  engine: GraphQueryEngineImpl,
+   920→  spec: QuerySpecification,
+   921→): Promise<SubgraphQueryResult> {
+   922→  if (spec.subgraphStart) {
+   923→    return engine.subgraph(spec.subgraphStart, spec.subgraphMaxDepth);
+   924→  }
+   925→  throw new Error('Subgraph query requires a start node ID');
+   926→}
+   927→
+   928→/**
+   929→ * Execute a path query through the engine.
+   930→ */
+   931→export async function executePathQuery(
+   932→  engine: GraphQueryEngineImpl,
+   933→  spec: QuerySpecification,
+   934→): Promise<PathQueryResult> {
+   935→  if (spec.pathSource && spec.pathTarget) {
+   936→    return engine.path(spec.pathSource, spec.pathTarget, spec.pathMaxDepth);
+   937→  }
+   938→  throw new Error('Path query requires both source and target node IDs');
+   939→}
+   940→

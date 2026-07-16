@@ -1,0 +1,252 @@
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/runtime-intelligence.ts:326:        if (!(navigator as any).serviceWorker) return [];
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/runtime-intelligence.ts:327:        const regs = await (navigator as any).serviceWorker.getRegistrations();
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/runtime-intelligence.ts:331:          state: (r as any).active?.state ?? r.installing?.state ?? 'unknown',
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/runtime-intelligence.ts:505:      const bi = (globalThis as any).__bi;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:115:      if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:116:      if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:125:      } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:657:            return [{ key: 'token', value: jwt }] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:660:            return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:677:            return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:1212:          return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:1638:          browserType: 'firefox' as any,
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:1639:          browserMode: 'headful' as any,
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:1861:        const browser = new MockBrowserController('firefox' as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:1966:      const browser = (adapter as any).contextManager.getBrowser() as MockBrowserController;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:1997:      const origNewPage = (adapter as any).contextManager.newPage.bind((adapter as any).contextManager);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:1998:      (adapter as any).contextManager.newPage = async () => {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2003:            if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2004:            if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2005:            if (fn.includes('__browserIntelligenceInstalled')) return undefined as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2013:            } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2047:      const origNP = (adapter as any).contextManager.newPage.bind((adapter as any).contextManager);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2048:      (adapter as any).contextManager.newPage = async () => {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2053:            if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2054:            if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2055:            if (fn.includes('__browserIntelligenceInstalled')) return undefined as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2058:            return { isNoIndex: false, canonicalUrl: undefined, openGraph: new Map(), metaDescription: undefined } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2094:      const origNewPage2 = (adapter as any).contextManager.newPage.bind((adapter as any).contextManager);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2095:      (adapter as any).contextManager.newPage = async () => {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2100:            if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2101:            if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2102:            if (fn.includes('__browserIntelligenceInstalled')) return undefined as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2105:            return { isNoIndex: false, canonicalUrl: undefined, openGraph: new Map(), metaDescription: undefined } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2132:      const origNewPage3 = (adapter as any).contextManager.newPage.bind((adapter as any).contextManager);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2133:      (adapter as any).contextManager.newPage = async () => {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2138:            if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2139:            if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2140:            if (fn.includes('__browserIntelligenceInstalled')) return undefined as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2143:            return { isNoIndex: false, canonicalUrl: undefined, openGraph: new Map(), metaDescription: undefined } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2184:      (adapter as any).contextManager = {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2187:      (adapter as any)._initialized = true;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2330:      // Access private via (rt as any).isGraphQlCall
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2331:      const isGql = (rt as any).isGraphQlCall.bind(rt);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2655:      const origNP = (adapter as any).contextManager.newPage.bind((adapter as any).contextManager);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2656:      (adapter as any).contextManager.newPage = async () => {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2667:            if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2668:            if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2669:            if (fn.includes('__browserIntelligenceInstalled')) return undefined as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2672:            return { isNoIndex: false, canonicalUrl: undefined, openGraph: new Map(), metaDescription: undefined } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2690:      (adapter as any).contextManager.getBrowser = () => ({ isConnected: () => false });
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2691:      (adapter as any)._initialized = true;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2715:      const origNP = (adapter as any).contextManager.newPage.bind((adapter as any).contextManager);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2716:      (adapter as any).contextManager.newPage = async () => {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2729:            if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2730:            if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2731:            if (fn.includes('__browserIntelligenceInstalled')) return undefined as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2734:            return { isNoIndex: false, canonicalUrl: undefined, openGraph: new Map(), metaDescription: undefined } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2764:      const origNP = (adapter as any).contextManager.newPage.bind((adapter as any).contextManager);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2765:      (adapter as any).contextManager.newPage = async () => {
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2776:            if (fn.includes('document.querySelectorAll')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2777:            if (fn.includes('localStorage') || fn.includes('sessionStorage')) return [] as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2780:            return { isNoIndex: false, canonicalUrl: undefined, openGraph: new Map(), metaDescription: undefined } as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/__tests__/browser-intelligence.test.ts:2816:      (adapter as any).activeScans.set('job-pause-test', activeScan);
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/dom-snapshot.ts:385:          const shadowRoot = (el as any).shadowRoot;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/dom-snapshot.ts:389:              selector: (el as any).id ? `#${(el as any).id}` : el.tagName.toLowerCase(),
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/dom-snapshot.ts:472:            const customEl = el as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/dom-snapshot.ts:475:              selector: (el as any).id ? `#${(el as any).id}` : tag,
+/home/z/my-project/sec-scanner-workspace/src/engines/browser/auth-strategies.ts:571:            return (parent as any)?.action ?? undefined;
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:69:    triggerType: 'manual' as any,
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:125:    }) as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:185:    const ctx = sharedContext!.value as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:217:    const meta = apiMeta!.value as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:246:    const s = stats!.value as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:267:    expect((result.metadata!.attackSurface as any).urls).toBeDefined();
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:907:    expect((all[0].value as any).v).toBe(2); // last-write-wins
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:924:    expect((validated!.value as any).targetUrl).toBe('https://example.com');
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:944:    expect((result.metadata!.attackSurface as any).urls).toBeDefined();
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:945:    expect((result.metadata!.discoverySnapshot as any).processedUrls).toBeDefined();
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:946:    expect((result.metadata!.discoverySnapshot as any).frontierUrls).toBeDefined();
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:947:    expect((result.metadata!.stats as any).urlsTotal).toBeGreaterThan(0);
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:959:    expect((result.metadata!.attackSurface as any)).toBeDefined();
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:984:    const gqlEndpoint = (result.metadata?.attackSurface as any)?.endpoints?.find(
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:987:    const wsEndpoint = (result.metadata?.attackSurface as any)?.endpoints?.find(
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/__tests__/discovery-comprehensive.test.ts:1104:    ]) as any;
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/stage-handler.ts:45:      ?? (validatedTarget?.value as any)?.targetUrl
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/stage-handler.ts:93:        (eventBus as any).emit?.({
+/home/z/my-project/sec-scanner-workspace/src/engines/discovery/katana-adapter.ts:862:          method: (row.method as any) ?? 'GET',
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1818:    const artifact = publisher.publishTlsProfile(tlsProfile as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1836:    const artifact = publisher.publishHeaderProfile(headerProfile as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1857:    const artifact = publisher.publishCookieProfile(cookieProfile as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1875:    const artifact = publisher.publishInfrastructureProfile(infraProfile as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1887:    const artifact = publisher.publishRedirectGraph(behaviour as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1907:    const artifact = publisher.publishRateLimitProfile(rateLimit as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1927:    const artifact = publisher.publishSharedContext(data as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:1931:    expect((artifact.value as any).httpProtocol).toBe('HTTP/2');
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:2001:    const result = publisher.publishAll(data as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:2009:    publisher.publishTlsProfile({} as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:2010:    publisher.publishTlsProfile({} as any);
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:2042:      eventBus: eventBus as any,
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/__tests__/http-intelligence.test.ts:2072:      eventBus: eventBus as any,
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/stage-handler.ts:60:      ?? (validatedTarget?.value as any)?.targetUrl
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/stage-handler.ts:103:      (eventBus as any).emit?.({
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/http-types.ts:406:  httpClient: undefined as any,
+/home/z/my-project/sec-scanner-workspace/src/engines/http-intelligence/http-client.ts:694:  const { httpClient, ...clientConfig } = config ?? {} as any;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/engine/index.ts:539:              age: Date.now() - ((cached as any)._createdAt ?? 0),
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/engine/index.ts:850:      pagination: { mode: 'offset' as any, limit: query.limit, offset: query.offset, cursor: null, page: 1 },
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/engine/index.ts:870:      await this._publisher.publish(event as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:427:    expect(result.rows.every(n => (n as any).identity.type === 'Host')).toBe(true);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:453:    expect(result.rows.every(n => (n as any).identity.type !== 'Host')).toBe(true);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:476:      const c1 = (result.rows[0] as any).metadata.confidence;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:477:      const c2 = (result.rows[1] as any).metadata.confidence;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:765:      const c1 = (result.rows[0] as any).metadata.confidence;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:766:      const c2 = (result.rows[1] as any).metadata.confidence;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:777:      const c1 = (result.rows[0] as any).metadata.confidence;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:778:      const c2 = (result.rows[1] as any).metadata.confidence;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:1246:    expect(result.rows.every(n => (n as any).identity.type === 'Host')).toBe(true);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:1384:      const type = (n as any).identity.type;
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/__tests__/query-engine.test.ts:1395:    expect(result.rows.every(n => (n as any).identity.type === 'Finding')).toBe(true);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/builder/index.ts:267:    state.aggregations = [...state.aggregations, { op: 'count' as any, alias: alias ?? 'count' }];
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/builder/index.ts:274:    state.aggregations = [...state.aggregations, { op: 'sum' as any, field, alias: alias ?? `sum_${field}` }];
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/builder/index.ts:281:    state.aggregations = [...state.aggregations, { op: 'avg' as any, field, alias: alias ?? `avg_${field}` }];
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/builder/index.ts:288:    state.aggregations = [...state.aggregations, { op: 'min' as any, field, alias: alias ?? `min_${field}` }];
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/builder/index.ts:295:    state.aggregations = [...state.aggregations, { op: 'max' as any, field, alias: alias ?? `max_${field}` }];
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/query/builder/index.ts:302:    state.aggregations = [...state.aggregations, { op: 'distinct' as any, field, alias: alias ?? `distinct_${field}` }];
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/__tests__/knowledge-graph-domain.test.ts:1067:      const node = createGraphNode('n1', NodeType.Application, { properties: props as any });
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/__tests__/knowledge-graph-domain.test.ts:1156:      expect(() => createGraphNode('n1', NodeType.Application, { properties: props as any })).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/__tests__/knowledge-graph-domain.test.ts:1167:      expect(() => createGraphEdge('e1', 's1', 't1', rel, { properties: props as any })).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/traversal/engine/index.ts:583:      await this._publisher.publish(event as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:721:      operation: 1 as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:724:      data: makeNode('n1') as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:725:      timestamp: new Date().toISOString() as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:733:        operation: 1 as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:736:        data: makeNode(`n${i}`) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:737:        timestamp: new Date().toISOString() as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:868:    const txId = txManager.begin(nodes as any, edges as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:874:    txManager.begin(nodes as any, edges as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:881:    txManager.begin(nodes as any, edges as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:887:    txManager.begin(nodes as any, edges as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:1052:      operation: 1 as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:1055:      data: node as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/knowledge-graph/storage/__tests__/storage-adapter.test.ts:1056:      timestamp: new Date().toISOString() as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__benchmarks__/recommendation-benchmark.test.ts:49:    const id = `rec_bulk_${i}` as any;
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__benchmarks__/recommendation-benchmark.test.ts:62:      ruleType: 'Patch' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__benchmarks__/recommendation-benchmark.test.ts:67:      severity: i % 5 === 0 ? 'Critical' as any : 'High' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:128:    affectedAsset: createAffectedAsset({ type: 'Host' as any, identifier: 'test-host' }),
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:139:    findingId: fid as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:145:      context: { internetFacing: true, internalOnly: false, isProduction: true, isDevelopment: false, isCriticalAsset: true, authenticationChain: [], dependencyCount: 3, dependentAssetCount: 5, metadata: {} } as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:148:    trend: 'New' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:150:    scope: 'Finding' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:157:    graphNodeId: 'gn_1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:166:    graphNodeId: 'gn_2' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:174:    graphNodeId: 'gn_3' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:185:    graphEdgeId: 'ge_1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:193:    graphEdgeId: 'ge_2' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:242:    eliminatedPaths: ['ap_1' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:245:    unchangedPaths: ['ap_2' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:308:    findingIds: ['fnd_1' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:365:    expect(() => createRecommendationCost({ recommendationId: '' as any })).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:420:      affectedFindings: ['fnd_1' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:421:      affectedAttackPaths: ['ap_1' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:482:    expect(() => createRecommendation({ ruleType: RecommendationRuleType.Patch, source: RecommendationSource.CanonicalFinding, sourceId: '', title: '', description: 'test', severity: RecommendationSeverity.High, targetId: '', targetType: 'vuln', targetLabel: 'test', cost: createRecommendationCost({ recommendationId: 'x' as any }), benefit: createRecommendationBenefit({ recommendationId: 'x' as any }) })).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:1396:      affectedFindings: ['fnd_1' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/__tests__/recommendation-engine.test.ts:1397:      affectedAttackPaths: ['ap_1' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/sources/index.ts:45:    const tempRecId = 'temp' as any;
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/statistics/index.ts:129:      ruleTypeDistribution: Object.freeze({ ...this._ruleTypeDistribution }) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/statistics/index.ts:130:      sourceDistribution: Object.freeze({ ...this._sourceDistribution }) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/statistics/index.ts:131:      severityDistribution: Object.freeze({ ...this._severityDistribution }) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/recommendation/statistics/index.ts:132:      statusDistribution: Object.freeze({ ...this._statusDistribution }) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__benchmarks__/attack-path-benchmark.test.ts:48:      graphEdgeId: `edge-${i}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-engine.test.ts:1347:    expect(() => { (node as any).label = 'modified'; }).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-engine.test.ts:1355:    expect(() => { (edge as any).probability = 0.99; }).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-engine.test.ts:1361:    expect(() => { (path as any).totalRisk = 1.0; }).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-engine.test.ts:1368:    expect(() => { (sim as any).successProbability = 1.0; }).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-engine.test.ts:1378:    expect(() => { (ranking as any).overallScore = 0.99; }).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-coverage.test.ts:692:      expect(createPathDiscoveredEvent('e', 'p' as any, DiscoveryStrategy.BFS, AttackObjectiveType.Impact, 3, 0.5, 100).type).toBe('PathDiscovered');
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-coverage.test.ts:693:      expect(createPathRankedEvent('e', 'p' as any, 0.8, 1, 50).type).toBe('PathRanked');
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/__tests__/attack-path-coverage.test.ts:694:      expect(createSimulationCompletedEvent('e', 's' as any, 'p' as any, 0.6, 2, 1, 200).type).toBe('SimulationCompleted');
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/discovery/index.ts:309:    const result = await this._traversalEngine.bfs(sourceId, options as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/discovery/index.ts:321:    const result = await this._traversalEngine.dfs(sourceId, options as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/discovery/index.ts:336:      const result = await this._traversalEngine.shortestPath(sourceId, targetId, options as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/discovery/index.ts:359:        ...options as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/attack-path/discovery/index.ts:387:    const result = await this._traversalEngine.reachableNodes(sourceId, options as any);
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:35:    graphNodeId: `gn_e${id}` as any, nodeType: AttackNodeType.EntryPoint,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:37:    findingIds: [`f${id}`] as any, isEntryPoint: true,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:40:    graphNodeId: `gn_v${id}` as any, nodeType: AttackNodeType.Vulnerability,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:42:    findingIds: [`f${id}`, `f${id + 100}`] as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:45:    graphNodeId: `gn_o${id}` as any, nodeType: AttackNodeType.Objective,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:52:    graphEdgeId: `ge_a${id}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:57:    graphEdgeId: `ge_b${id}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:77:    findingId: findingId as any, score: createRiskScore({ rawScore: score, level, factors: [], evidence: [], reasons: [] }),
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__benchmarks__/impact-benchmark.test.ts:78:    scope: 'Finding' as any, scopeId: 'bench',
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:46:    graphNodeId: `gn_${Math.random().toString(36).slice(2, 8)}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:51:    findingIds: (overrides.findingIds ?? []) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:52:    assetId: (overrides.assetId ?? null) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:55:    metadata: overrides.metadata as any ?? {},
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:66:    graphEdgeId: `ge1_${Math.random().toString(36).slice(2, 8)}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:69:    metadata: { networkId: overrides.networkId } as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:73:    graphEdgeId: `ge2_${Math.random().toString(36).slice(2, 8)}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:76:    metadata: { networkId: overrides.networkId } as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:95:    findingId: findingId as any, score: createRiskScore({ rawScore: score, level, factors: [], evidence: [], reasons: [] }),
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:96:    scope: 'Finding' as any, scopeId: 'test',
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:125:      findingIds: ['f1' as any, 'f2' as any, 'f3' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:126:      dominantCategory: 'Vulnerability' as any, dominantSeverity: 'High' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:127:      correlationScore: 0.9, reasons: ['SameHost' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:199:      graphEdgeId: `ge_a` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:202:      metadata: { networkId: 'target-net' } as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:206:      graphEdgeId: `ge_b` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:209:      metadata: { networkId: 'target-net' } as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:290:    const delta = createAttackPathDelta({ scenarioId: 's1' as any, totalBefore: 0 });
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:342:      findingIds: ['f1' as any], dominantCategory: 'Vulnerability' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:343:      dominantSeverity: 'High' as any, correlationScore: 0.8, reasons: ['SameHost' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:383:      findingIds: ['f1' as any], dominantCategory: 'Vulnerability' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-coverage.test.ts:384:      dominantSeverity: 'High' as any, correlationScore: 0.8, reasons: ['SameHost' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:99:    graphNodeId: `gn_${Math.random().toString(36).slice(2, 8)}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:104:    findingIds: (overrides.findingIds ?? []) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:105:    assetId: (overrides.assetId ?? null) as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:108:    metadata: overrides.metadata as any ?? {},
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:119:    graphEdgeId: `ge1_${Math.random().toString(36).slice(2, 8)}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:121:    isLateralMovement: false, metadata: overrides.metadata as any ?? {},
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:125:    graphEdgeId: `ge2_${Math.random().toString(36).slice(2, 8)}` as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:155:    findingId: findingId as any, score: riskScore,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:156:    scope: 'Finding' as any, scopeId: 'test',
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:162:    findingIds: findingIds as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:163:    dominantCategory: 'Vulnerability' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:164:    dominantSeverity: 'High' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:166:    reasons: ['SameHost' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:197:    expect(() => createImpactScenario({ type: '' as any, targetId: 'x', targetType: 'finding' })).toThrow();
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:203:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:214:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:224:      pathId: 'p1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:237:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:238:      eliminatedPaths: ['p1' as any, 'p2' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:239:      unchangedPaths: ['p3' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:250:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:262:      assessmentId: 'a1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:263:      findingId: 'f1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:275:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:306:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:321:      scenarioId: 's1' as any, sourceType: 'x', sourceId: '',
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:328:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:534:    const badScenario = createImpactScenario({ type: 'Unknown' as any, targetId: 'x', targetType: 'finding' });
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:561:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:562:      eliminatedPaths: ['p1' as any, 'p2' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:563:      unchangedPaths: ['p3' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:571:    const delta = createAttackPathDelta({ scenarioId: 's1' as any });
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:577:      scenarioId: 's1' as any,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:578:      eliminatedPaths: ['p1' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:580:        pathId: 'p2' as any, changeType: AttackPathChangeType.Reduced,
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:584:      unchangedPaths: ['p3' as any],
+/home/z/my-project/sec-scanner-workspace/src/domain/security-intelligence/impact/__tests__/impact-engine.test.ts:677:      createRemediationCandidate({ scenarioId: 's1' as any, targetType: MitigationScenarioType.RemoveFinding, targetId: 'a', targetLabel: 'A', riskReduction: 0.3, estimatedCost: 0.1 }),
+
+[Showing results with pagination = limit: 250]

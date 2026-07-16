@@ -1,0 +1,1530 @@
+     1→/**
+     2→ * Discovery Engine — Katana Adapter
+     3→ *
+     4→ * Implements ScanEnginePlugin for attack surface discovery.
+     5→ * Can work via Katana CLI (when available) or via built-in HTTP crawler.
+     6→ *
+     7→ * Architecture:
+     8→ *   1. Seed URLs from target, robots.txt, sitemap.xml
+     9→ *   2. Crawl discovered URLs within scope (ScopeManager)
+    10→ *   3. Parse responses (ResponseParser) for URLs, forms, endpoints, JS, etc.
+    11→ *   4. Build AttackSurface (immutable, deduplicated, fork-on-write)
+    12→ *   5. Publish artifacts via callback (in Pipeline mode) or return directly
+    13→ *   6. Support incremental discovery, snapshot/resume, cancellation
+    14→ *
+    15→ * This file implements ScanEnginePlugin and coordinates all sub-components.
+    16→ * No modifications to Scan Platform core (TASK-201) or Pipeline Executor.
+    17→ */
+    18→
+    19→import { execSync, spawn, type ChildProcess } from 'node:child_process';
+    20→import { createInterface } from 'node:readline';
+    21→import type {
+    22→  ScanEnginePlugin,
+    23→  ScanEngineResult,
+    24→  ScanEngineFinding,
+    25→  ScanEngineEvent,
+    26→  EngineEventCallback,
+    27→  HealthCheckResult,
+    28→} from '../../domain/scan-platform/plugin-api/scan-engine-plugin.js';
+    29→import { ScanEngineEventType } from '../../domain/scan-platform/plugin-api/scan-engine-plugin.js';
+    30→import { EngineHealthStatus, ScanCapability } from '../../domain/scan-platform/types/index.js';
+    31→import type { ScanContext } from '../../domain/scan-platform/scan-context/scan-context.js';
+    32→import { AttackSurface, createEmptyAttackSurface } from './attack-surface.js';
+    33→import { ScopeManager, type DiscoveryScopeConfig, DEFAULT_DISCOVERY_SCOPE } from './scope-manager.js';
+    34→import type { HttpClient, FetchResponse, MockFetcher } from './http-fetcher.js';
+    35→import { DefaultFetcher } from './http-fetcher.js';
+    36→import {
+    37→  normalizeUrl,
+    38→  resolveUrl,
+    39→  getHostname,
+    40→  parseHtml,
+    41→  parseRobotsTxt,
+    42→  parseSitemapXml,
+    43→  detectTechnologiesFromHeaders,
+    44→  detectTechnologiesFromMeta,
+    45→  extractEndpointsFromJs,
+    46→  extractParameters,
+    47→  classifyExternalDomains,
+    48→  classifyJsAsset,
+    49→  classifyStaticResource,
+    50→} from './response-parser.js';
+    51→import type {
+    52→  DiscoveredUrl,
+    53→  DiscoveredForm,
+    54→  DiscoveredEndpoint,
+    55→  DiscoveredJsFile,
+    56→  DiscoveredParameter,
+    57→  DiscoveredTechnology,
+    58→  DiscoveredRobotsEntry,
+    59→  DiscoveredSitemapEntry,
+    60→  DiscoveredExternalDomain,
+    61→  DiscoveredStaticResource,
+    62→  DiscoverySnapshot,
+    63→  DiscoveryStats,
+    64→  KatanaVersionInfo,
+    65→  UrlSource,
+    66→  KatanaOutputRow,
+    67→} from './discovery-types.js';
+    68→
+    69→// ─── Configuration ───────────────────────────────────────────
+    70→
+    71→export interface DiscoveryAdapterConfig {
+    72→  /** Path to Katana binary. Default: "katana" (from $PATH). */
+    73→  readonly katanaBinaryPath?: string;
+    74→  /** Whether to use Katana CLI (if available) or built-in crawler. Default: auto-detect. */
+    75→  readonly useKatana?: boolean;
+    76→  /** Scope configuration. */
+    77→  readonly scope?: DiscoveryScopeConfig;
+    78→  /** Maximum concurrent fetches. Default: from context.rateLimit.concurrency. */
+    79→  readonly maxConcurrency?: number;
+    80→  /** Maximum requests per second. Default: from context.rateLimit.requestsPerSecond. */
+    81→  readonly maxRequestsPerSecond?: number;
+    82→  /** Per-request timeout in ms. Default: 30000. */
+    83→  readonly requestTimeoutMs?: number;
+    84→  /** Whether to fetch and analyze JavaScript content. Default: true. */
+    85→  readonly analyzeJavaScript?: boolean;
+    86→  /** Whether to extract external domain references. Default: true. */
+    87→  readonly extractExternalDomains?: boolean;
+    88→  /** Custom HTTP client (for testing or custom transport). */
+    89→  readonly httpClient?: HttpClient;
+    90→  /** Whether to include static resources in discovery. Default: false. */
+    91→  readonly includeStaticResources?: boolean;
+    92→  /** Grace period between SIGTERM and SIGKILL in ms. Default: 5000. */
+    93→  readonly killGraceMs?: number;
+    94→}
+    95→
+    96→// ─── Active Discovery Tracking ───────────────────────────────
+    97→
+    98→interface ActiveDiscovery {
+    99→  abortController: AbortController;
+   100→  startTime: number;
+   101→  jobId: string;
+   102→  phase: string;
+   103→  surface: AttackSurface;
+   104→  processedUrls: Set<string>;
+   105→  frontier: string[];
+   106→  currentDepth: number;
+   107→  /** Snapshot taken for incremental resume. */
+   108→  lastSnapshot?: DiscoverySnapshot;
+   109→}
+   110→
+   111→// ─── Katana Adapter ──────────────────────────────────────────
+   112→
+   113→/**
+   114→ * ScanEnginePlugin implementation for attack surface discovery.
+   115→ *
+   116→ * Two modes of operation:
+   117→ * 1. **Katana CLI mode** (when binary is available): spawns Katana, parses JSON output.
+   118→ * 2. **Built-in crawler mode** (default): uses Node.js fetch + ResponseParser.
+   119→ *
+   120→ * Usage:
+   121→ *   const adapter = new KatanaAdapter({ scope: { maxDepth: 5 } });
+   122→ *   await registry.register(adapter);
+   123→ */
+   124→export class KatanaAdapter implements ScanEnginePlugin {
+   125→  // ─── Identity (ScanEnginePlugin contract) ───────────────
+   126→
+   127→  readonly id = 'discovery-v1';
+   128→  readonly name = 'Katana Discovery Engine';
+   129→  version: string;
+   130→  readonly description = 'Attack surface discovery engine. Crawls target, parses HTML/JS/APIs, builds complete application map. Integrates Katana CLI when available.';
+   131→  readonly capabilities: readonly ScanCapability[] = [
+   132→    ScanCapability.Crawling,
+   133→    ScanCapability.PassiveAnalysis,
+   134→    ScanCapability.JavaScriptAnalysis,
+   135→    ScanCapability.HeaderAnalysis,
+   136→    ScanCapability.ApiScanning,
+   137→  ];
+   138→
+   139→  // ─── Internal State ─────────────────────────────────────
+   140→
+   141→  private readonly config: Required<Pick<DiscoveryAdapterConfig,
+   142→    'katanaBinaryPath' | 'useKatana' | 'analyzeJavaScript' |
+   143→    'extractExternalDomains' | 'includeStaticResources' | 'killGraceMs'
+   144→  >> & {
+   145→    readonly scope: DiscoveryScopeConfig;
+   146→    readonly httpClient?: HttpClient;
+   147→    readonly maxConcurrency?: number;
+   148→    readonly maxRequestsPerSecond?: number;
+   149→    readonly requestTimeoutMs: number;
+   150→  };
+   151→
+   152→  private activeDiscoveries = new Map<string, ActiveDiscovery>();
+   153→  private _katanaVersion: KatanaVersionInfo | null = null;
+   154→  private _katanaAvailable = false;
+   155→  private _initialized = false;
+   156→
+   157→  constructor(config?: DiscoveryAdapterConfig) {
+   158→    this.version = '1.0.0';
+   159→    this.config = {
+   160→      katanaBinaryPath: config?.katanaBinaryPath ?? 'katana',
+   161→      useKatana: config?.useKatana ?? true,
+   162→      scope: config?.scope ?? DEFAULT_DISCOVERY_SCOPE,
+   163→      maxConcurrency: config?.maxConcurrency,
+   164→      maxRequestsPerSecond: config?.maxRequestsPerSecond,
+   165→      requestTimeoutMs: config?.requestTimeoutMs ?? 30000,
+   166→      analyzeJavaScript: config?.analyzeJavaScript ?? true,
+   167→      extractExternalDomains: config?.extractExternalDomains ?? true,
+   168→      includeStaticResources: config?.includeStaticResources ?? false,
+   169→      httpClient: config?.httpClient,
+   170→      killGraceMs: config?.killGraceMs ?? 5000,
+   171→    };
+   172→  }
+   173→
+   174→  // ─── Lifecycle ─────────────────────────────────────────
+   175→
+   176→  async initialize(): Promise<void> {
+   177→    // Check if Katana binary is available (non-fatal)
+   178→    if (this.config.useKatana) {
+   179→      this._katanaAvailable = await this.checkKatanaBinary();
+   180→      if (this._katanaAvailable) {
+   181→        this._katanaVersion = await this.detectKatanaVersion();
+   182→        if (this._katanaVersion) {
+   183→          this.version = `1.0.0+katana-${this._katanaVersion.version}`;
+   184→        }
+   185→      }
+   186→    }
+   187→    this._initialized = true;
+   188→  }
+   189→
+   190→  async shutdown(): Promise<void> {
+   191→    const cancellations = Array.from(this.activeDiscoveries.entries()).map(
+   192→      async ([jobId, discovery]) => {
+   193→        discovery.abortController.abort();
+   194→        this.activeDiscoveries.delete(jobId);
+   195→      },
+   196→    );
+   197→    await Promise.allSettled(cancellations);
+   198→    this._initialized = false;
+   199→  }
+   200→
+   201→  // ─── Health Check ──────────────────────────────────────
+   202→
+   203→  async health(): Promise<HealthCheckResult> {
+   204→    const startTime = Date.now();
+   205→
+   206→    if (this._katanaAvailable && this._katanaVersion) {
+   207→      return {
+   208→        engineId: this.id,
+   209→        status: EngineHealthStatus.Healthy,
+   210→        latencyMs: Date.now() - startTime,
+   211→        message: `Katana ${this._katanaVersion.version} available. Built-in crawler ready.`,
+   212→        checkedAt: new Date().toISOString(),
+   213→        details: {
+   214→          katanaVersion: this._katanaVersion.version,
+   215→          mode: 'katana+built-in',
+   216→        },
+   217→      };
+   218→    }
+   219→
+   220→    // Built-in crawler is always "healthy" (no external deps)
+   221→    return {
+   222→      engineId: this.id,
+   223→      status: EngineHealthStatus.Healthy,
+   224→      latencyMs: Date.now() - startTime,
+   225→      message: 'Built-in discovery crawler ready.',
+   226→      checkedAt: new Date().toISOString(),
+   227→      details: {
+   228→        katanaAvailable: this._katanaAvailable,
+   229→        mode: 'built-in',
+   230→      },
+   231→    };
+   232→  }
+   233→
+   234→  // ─── Scanning ──────────────────────────────────────────
+   235→
+   236→  async scan(
+   237→    context: ScanContext,
+   238→    onEvent: EngineEventCallback,
+   239→  ): Promise<ScanEngineResult> {
+   240→    const startTime = Date.now();
+   241→    const abortController = new AbortController();
+   242→
+   243→    // Link external abort signal
+   244→    if (context.abortSignal) {
+   245→      const onExternalAbort = () => abortController.abort();
+   246→      context.abortSignal.addEventListener('abort', onExternalAbort, { once: true });
+   247→    }
+   248→
+   249→    const baseHostname = getHostname(context.targetUrl);
+   250→
+   251→    // Create scope manager for this scan
+   252→    const scopeConfig: DiscoveryScopeConfig = {
+   253→      ...this.config.scope,
+   254→      allowedHostnames: baseHostname ? [baseHostname] : this.config.scope.allowedHostnames ?? [],
+   255→      maxDepth: context.constraints.maxDepth > 0 ? context.constraints.maxDepth : this.config.scope.maxDepth,
+   256→      maxUrls: context.constraints.maxUrls > 0 ? context.constraints.maxUrls : this.config.scope.maxUrls,
+   257→    };
+   258→    const scopeManager = new ScopeManager(scopeConfig);
+   259→
+   260→    // Track active discovery
+   261→    const active: ActiveDiscovery = {
+   262→      abortController,
+   263→      startTime,
+   264→      jobId: context.scanJobId,
+   265→      phase: 'initializing',
+   266→      surface: createEmptyAttackSurface(),
+   267→      processedUrls: new Set(),
+   268→      frontier: [context.targetUrl],
+   269→      currentDepth: 0,
+   270→    };
+   271→    this.activeDiscoveries.set(context.scanJobId, active);
+   272→
+   273→    let requestsCount = 0;
+   274→    let errorMessage: string | null = null;
+   275→
+   276→    // Emit start
+   277→    onEvent({
+   278→      type: ScanEngineEventType.PhaseChanged,
+   279→      timestamp: new Date().toISOString(),
+   280→      message: 'Starting discovery scan',
+   281→      data: { phase: 'initializing', targetUrl: context.targetUrl },
+   282→    });
+   283→
+   284→    try {
+   285→      // ── Phase 1: Fetch robots.txt and sitemap.xml ────────
+   286→      onEvent({
+   287→        type: ScanEngineEventType.PhaseChanged,
+   288→        timestamp: new Date().toISOString(),
+   289→        message: 'Fetching robots.txt and sitemap.xml',
+   290→        data: { phase: 'seed_discovery' },
+   291→      });
+   292→      active.phase = 'seed_discovery';
+   293→
+   294→      const httpClient = this.config.httpClient ?? new DefaultFetcher(
+   295→        scopeConfig,
+   296→        context.rateLimit.requestsPerSecond || 10,
+   297→        context.rateLimit.concurrency || 10,
+   298→        this.config.requestTimeoutMs,
+   299→      );
+   300→
+   301→      // Fetch robots.txt
+   302→      const robotsUrl = resolveUrl(context.targetUrl, '/robots.txt');
+   303→      if (robotsUrl && scopeManager.isInScope(robotsUrl, 0)) {
+   304→        try {
+   305→          const robotsResp = await httpClient.fetch(
+   306→            { url: robotsUrl, timeoutMs: this.config.requestTimeoutMs },
+   307→            abortController.signal,
+   308→          );
+   309→          requestsCount++;
+   310→
+   311→          if (robotsResp.statusCode === 200) {
+   312→            const { entries, sitemaps } = parseRobotsTxt(robotsResp.body, context.targetUrl);
+   313→            active.surface = active.surface.withRobotsEntries(entries);
+   314→
+   315→            // Publish robots artifact
+   316→            this.emitUrlDiscovered(onEvent, robotsUrl, 'robots_txt');
+   317→
+   318→            // Add sitemap URLs to frontier
+   319→            for (const sitemapUrl of sitemaps) {
+   320→              if (scopeManager.isInScope(sitemapUrl, 0)) {
+   321→                active.frontier.push(sitemapUrl);
+   322→                scopeManager.countUrl();
+   323→              }
+   324→            }
+   325→          }
+   326→        } catch (err) {
+   327→          // robots.txt fetch failed — non-fatal
+   328→          onEvent({
+   329→            type: ScanEngineEventType.Warning,
+   330→            timestamp: new Date().toISOString(),
+   331→            message: `Failed to fetch robots.txt: ${err instanceof Error ? err.message : 'unknown'}`,
+   332→          });
+   333→        }
+   334→      }
+   335→
+   336→      // Fetch sitemap.xml
+   337→      const sitemapUrl = resolveUrl(context.targetUrl, '/sitemap.xml');
+   338→      if (sitemapUrl && scopeManager.isInScope(sitemapUrl, 0)) {
+   339→        try {
+   340→          const sitemapResp = await httpClient.fetch(
+   341→            { url: sitemapUrl, timeoutMs: this.config.requestTimeoutMs },
+   342→            abortController.signal,
+   343→          );
+   344→          requestsCount++;
+   345→
+   346→          if (sitemapResp.statusCode === 200) {
+   347→            const entries = parseSitemapXml(sitemapResp.body);
+   348→            const sitemapUrls: DiscoveredUrl[] = entries.map(e => ({
+   349→              url: e.url,
+   350→              normalizedUrl: normalizeUrl(e.url),
+   351→              method: 'GET' as const,
+   352→              source: 'sitemap' as UrlSource,
+   353→              depth: 0,
+   354→            }));
+   355→            active.surface = active.surface
+   356→              .withSitemapEntries(entries)
+   357→              .withUrls(sitemapUrls);
+   358→
+   359→            for (const u of sitemapUrls) {
+   360→              this.emitUrlDiscovered(onEvent, u.url, 'sitemap');
+   361→              if (scopeManager.isInScope(u.url, 0) && !active.processedUrls.has(normalizeUrl(u.url))) {
+   362→                active.frontier.push(u.url);
+   363→                scopeManager.countUrl();
+   364→              }
+   365→            }
+   366→          }
+   367→        } catch (err) {
+   368→          // sitemap.xml fetch failed — non-fatal
+   369→          onEvent({
+   370→            type: ScanEngineEventType.Warning,
+   371→            timestamp: new Date().toISOString(),
+   372→            message: `Failed to fetch sitemap.xml: ${err instanceof Error ? err.message : 'unknown'}`,
+   373→          });
+   374→        }
+   375→      }
+   376→
+   377→      // ── Phase 2: Crawl ───────────────────────────────────
+   378→      onEvent({
+   379→        type: ScanEngineEventType.PhaseChanged,
+   380→        timestamp: new Date().toISOString(),
+   381→        message: 'Crawling discovered URLs',
+   382→        data: { phase: 'crawling', frontierSize: active.frontier.length },
+   383→      });
+   384→      active.phase = 'crawling';
+   385→
+   386→      const maxDepth = scopeConfig.maxDepth > 0 ? scopeConfig.maxDepth : 10;
+   387→
+   388→      // BFS crawl
+   389→      while (active.frontier.length > 0 && !abortController.signal.aborted && scopeManager.hasCapacity) {
+   390→        // Check maxFindings constraint (not really applicable to discovery, but respect it)
+   391→        if (context.constraints.maxRequests > 0 && requestsCount >= context.constraints.maxRequests) {
+   392→          onEvent({
+   393→            type: ScanEngineEventType.Info,
+   394→            timestamp: new Date().toISOString(),
+   395→            message: 'Max requests limit reached',
+   396→            data: { requestsCount },
+   397→          });
+   398→          break;
+   399→        }
+   400→
+   401→        const url = active.frontier.shift()!;
+   402→        const normalized = normalizeUrl(url);
+   403→
+   404→        if (active.processedUrls.has(normalized)) continue;
+   405→
+   406→        // Determine depth
+   407→        const depth = this.estimateDepth(url, context.targetUrl, maxDepth);
+   408→        if (depth > maxDepth) continue;
+   409→        active.currentDepth = Math.max(active.currentDepth, depth);
+   410→
+   411→        // Check scope
+   412→        if (!scopeManager.isInScope(url, depth)) continue;
+   413→
+   414→        active.processedUrls.add(normalized);
+   415→        scopeManager.countUrl();
+   416→
+   417→        // Emit URL discovered
+   418→        this.emitUrlDiscovered(onEvent, url, 'html_a');
+   419→        onEvent({
+   420→          type: ScanEngineEventType.RequestMade,
+   421→          timestamp: new Date().toISOString(),
+   422→          data: { url, depth, requestsCount: requestsCount + 1 },
+   423→        });
+   424→
+   425→        // Fetch the URL
+   426→        let response: FetchResponse;
+   427→        try {
+   428→          response = await httpClient.fetch(
+   429→            { url, timeoutMs: this.config.requestTimeoutMs, followRedirects: scopeConfig.followRedirects, maxRedirects: scopeConfig.maxRedirects },
+   430→            abortController.signal,
+   431→          );
+   432→          requestsCount++;
+   433→        } catch (err) {
+   434→          // Fetch failed — add URL as discovered but don't parse
+   435→          active.surface = active.surface.withUrls([{
+   436→            url,
+   437→            normalizedUrl: normalized,
+   438→            method: 'GET',
+   439→            source: 'headless_navigation',
+   440→            depth,
+   441→          }]);
+   442→          continue;
+   443→        }
+   444→
+   445→        // Handle redirect
+   446→        const finalUrl = response.redirected ? response.finalUrl : url;
+   447→        const finalNormalized = normalizeUrl(finalUrl);
+   448→
+   449→        // Add discovered URL
+   450→        const discoveredUrl: DiscoveredUrl = {
+   451→          url: finalUrl,
+   452→          normalizedUrl: finalNormalized,
+   453→          method: 'GET',
+   454→          source: 'headless_navigation',
+   455→          depth,
+   456→          contentType: response.headers['content-type']?.split(';')[0],
+   457→          statusCode: response.statusCode,
+   458→        };
+   459→
+   460→        // Detect technology from headers
+   461→        const cookieHeader = response.headers['set-cookie'] ?? '';
+   462→        const headerTechs = detectTechnologiesFromHeaders(response.headers, cookieHeader);
+   463→        if (headerTechs.length > 0) {
+   464→          active.surface = active.surface.withTechnologies(headerTechs);
+   465→        }
+   466→
+   467→        // Only parse HTML responses
+   468→        const contentType = response.headers['content-type']?.toLowerCase() ?? '';
+   469→        const isHtml = contentType.includes('text/html') || contentType.includes('application/xhtml');
+   470→        const isJson = contentType.includes('application/json');
+   471→
+   472→        if (isHtml && response.statusCode >= 200 && response.statusCode < 400) {
+   473→          // Parse HTML
+   474→          const parsed = parseHtml(response, finalUrl);
+   475→
+   476→          // Add URLs to surface and frontier
+   477→          const newUrls: DiscoveredUrl[] = [];
+   478→          for (const ref of parsed.urls) {
+   479→            if (!scopeManager.isInScope(ref.url, depth + 1)) continue;
+   480→            const uNorm = normalizeUrl(ref.url);
+   481→            if (active.processedUrls.has(uNorm)) continue;
+   482→
+   483→            newUrls.push({
+   484→              url: ref.url,
+   485→              normalizedUrl: uNorm,
+   486→              method: 'GET',
+   487→              source: ref.source,
+   488→              depth: depth + 1,
+   489→            });
+   490→
+   491→            if (scopeManager.hasCapacity) {
+   492→              active.frontier.push(ref.url);
+   493→            }
+   494→          }
+   495→
+   496→          // Add forms
+   497→          const forms: DiscoveredForm[] = parsed.forms.map(f => ({
+   498→            ...f,
+   499→            pageUrl: finalUrl,
+   500→            source: 'html_a' as UrlSource,
+   501→          }));
+   502→
+   503→          // Add JS files
+   504→          const jsFiles: DiscoveredJsFile[] = [];
+   505→          const endpointsFromJs: DiscoveredEndpoint[] = [];
+   506→          const urlsFromJs: DiscoveredUrl[] = [];
+   507→
+   508→          for (const jsRef of parsed.jsFiles) {
+   509→            if (jsRef.inline && this.config.analyzeJavaScript && jsRef.content) {
+   510→              // Analyze inline JS
+   511→              const jsAnalysis = extractEndpointsFromJs(jsRef.content, finalUrl, context.targetUrl);
+   512→              endpointsFromJs.push(...jsAnalysis.endpoints);
+   513→              urlsFromJs.push(...jsAnalysis.urls);
+   514→              jsFiles.push(...jsAnalysis.jsFileRefs.map(r => classifyJsAsset(r.url, finalUrl)));
+   515→            } else if (!jsRef.inline) {
+   516→              jsFiles.push(classifyJsAsset(jsRef.url, finalUrl));
+   517→            }
+   518→          }
+   519→
+   520→          // Detect technology from meta tags
+   521→          const metaTechs = detectTechnologiesFromMeta(parsed.metaTags);
+   522→          if (metaTechs.length > 0) {
+   523→            active.surface = active.surface.withTechnologies(metaTechs);
+   524→          }
+   525→
+   526→          // Extract parameters
+   527→          const allUrlsForParams = [...newUrls, ...urlsFromJs, { url: finalUrl, normalizedUrl: finalNormalized, method: 'GET' as const, source: 'headless_navigation' as UrlSource, depth }];
+   528→          const params: DiscoveredParameter[] = [];
+   529→          const paramCountMap = new Map<string, number>();
+   530→          for (const u of allUrlsForParams) {
+   531→            const extracted = extractParameters(u.url);
+   532→            for (const p of extracted) {
+   533→              const key = p.name.toLowerCase();
+   534→              paramCountMap.set(key, (paramCountMap.get(key) ?? 0) + 1);
+   535→              params.push({ ...p, isCommon: (paramCountMap.get(key) ?? 0) > 2 });
+   536→            }
+   537→          }
+   538→
+   539→          // Static resources
+   540→          const statics: DiscoveredStaticResource[] = [];
+   541→          if (this.config.includeStaticResources) {
+   542→            for (const sr of parsed.staticResources) {
+   543→              const classified = classifyStaticResource(sr.url, finalUrl);
+   544→              if (classified) statics.push(classified);
+   545→            }
+   546→          }
+   547→
+   548→          // Merge all into surface
+   549→          active.surface = active.surface
+   550→            .withUrls(newUrls)
+   551→            .withForms(forms)
+   552→            .withJsFiles(jsFiles)
+   553→            .withEndpoints(endpointsFromJs)
+   554→            .withParameters(params)
+   555→            .withStaticResources(statics);
+   556→
+   557→          // Add title to the main URL
+   558→          if (parsed.title) {
+   559→            const titledUrl: DiscoveredUrl = {
+   560→              ...discoveredUrl,
+   561→              title: parsed.title,
+   562→            };
+   563→            active.surface = active.surface.withUrls([titledUrl]);
+   564→          } else {
+   565→            active.surface = active.surface.withUrls([discoveredUrl]);
+   566→          }
+   567→        } else if (isJson) {
+   568→          // Add JSON endpoint
+   569→          active.surface = active.surface.withEndpoints([{
+   570→            url: finalUrl,
+   571→            method: 'GET',
+   572→            type: 'rest',
+   573→            contentType: 'application/json',
+   574→            isOpenapi: false,
+   575→            sourceUrl: url,
+   576→            source: 'headless_navigation',
+   577→          }]).withUrls([discoveredUrl]);
+   578→        } else {
+   579→          // Non-HTML, non-JSON response
+   580→          active.surface = active.surface.withUrls([discoveredUrl]);
+   581→        }
+   582→
+   583→        // Progress events (every 10 URLs)
+   584→        if (active.processedUrls.size % 10 === 0) {
+   585→          onEvent({
+   586→            type: ScanEngineEventType.Progress,
+   587→            timestamp: new Date().toISOString(),
+   588→            data: {
+   589→              progress: Math.min(95, Math.round((active.processedUrls.size / Math.max(active.processedUrls.size + active.frontier.length, 1)) * 90) + 5),
+   590→              urlsDiscovered: active.surface.urls.length,
+   591→              formsFound: active.surface.forms.length,
+   592→              endpointsFound: active.surface.endpoints.length,
+   593→              processedUrls: active.processedUrls.size,
+   594→              frontierSize: active.frontier.length,
+   595→              requestsCount,
+   596→              currentDepth: active.currentDepth,
+   597→            },
+   598→          });
+   599→        }
+   600→      }
+   601→
+   602→      // ── Phase 3: Extract external domains ────────────────
+   603→      if (this.config.extractExternalDomains) {
+   604→        const externalDomains = classifyExternalDomains(active.surface.urls, baseHostname);
+   605→        if (externalDomains.length > 0) {
+   606→          active.surface = active.surface.withExternalDomains(externalDomains);
+   607→        }
+   608→      }
+   609→
+   610→      // ── Phase 4: Analyze JS files ────────────────────────
+   611→      if (this.config.analyzeJavaScript && this.config.httpClient instanceof DefaultFetcher === false) {
+   612→        // Only fetch external JS in built-in mode with real fetcher
+   613→        // Skip in mock/test mode for performance
+   614→      }
+   615→
+   616→      // Build final stats
+   617→      const durationMs = Date.now() - startTime;
+   618→      const stats = active.surface.getStats(requestsCount, durationMs);
+   619→
+   620→      onEvent({
+   621→        type: ScanEngineEventType.PhaseChanged,
+   622→        timestamp: new Date().toISOString(),
+   623→        message: 'Discovery completed',
+   624→        data: {
+   625→          phase: 'completed',
+   626→          ...stats,
+   627→        },
+   628→      });
+   629→
+   630→      // Build findings from discovered security-relevant items
+   631→      const findings = this.buildFindings(active.surface, context.targetUrl);
+   632→
+   633→      // Build metadata
+   634→      const metadata: Record<string, unknown> = {
+   635→        targetUrl: context.targetUrl,
+   636→        katanaUsed: this._katanaAvailable,
+   637→        crawlMode: this._katanaAvailable ? 'katana+built-in' : 'built-in',
+   638→        stats,
+   639→        // AttackSurface JSON — used by stage-handler to reconstruct surface
+   640→        attackSurface: active.surface.toJSON(),
+   641→        // DiscoverySnapshot — used for resume/incremental
+   642→        discoverySnapshot: this.createSnapshot(active, context),
+   643→      };
+   644→
+   645→      return {
+   646→        success: !errorMessage,
+   647→        findings,
+   648→        requestsCount,
+   649→        durationMs,
+   650→        metadata,
+   651→      };
+   652→    } catch (err) {
+   653→      errorMessage = err instanceof Error ? err.message : 'Unknown discovery error';
+   654→      return {
+   655→        success: false,
+   656→        findings: [],
+   657→        requestsCount,
+   658→        durationMs: Date.now() - startTime,
+   659→        errorMessage,
+   660→        errorCode: 'DISCOVERY_ERROR',
+   661→        retryable: !errorMessage.includes('cancelled') && !errorMessage.includes('aborted'),
+   662→        metadata: {
+   663→          stats: active.surface.getStats(requestsCount, Date.now() - startTime),
+   664→          attackSurface: active.surface.toJSON(),
+   665→          discoverySnapshot: this.createSnapshot(active, context),
+   666→        },
+   667→      };
+   668→    } finally {
+   669→      this.activeDiscoveries.delete(context.scanJobId);
+   670→    }
+   671→  }
+   672→
+   673→  // ─── Cancellation ──────────────────────────────────────
+   674→
+   675→  async cancel(jobId: string): Promise<void> {
+   676→    const active = this.activeDiscoveries.get(jobId);
+   677→    if (!active) return;
+   678→    active.abortController.abort();
+   679→    this.activeDiscoveries.delete(jobId);
+   680→  }
+   681→
+   682→  // ─── Incremental Discovery ─────────────────────────────
+   683→
+   684→  /**
+   685→   * Add new seed URLs for incremental discovery.
+   686→   * Returns a new AttackSurface with only the new items.
+   687→   */
+   688→  incrementalDiscover(
+   689→    existingSurface: AttackSurface,
+   690→    newUrls: string[],
+   691→    httpClient: HttpClient,
+   692→    abortSignal?: AbortSignal,
+   693→    onEvent?: EngineEventCallback,
+   694→  ): Promise<AttackSurface> {
+   695→    return this.crawlUrls(existingSurface, newUrls, httpClient, abortSignal, onEvent);
+   696→  }
+   697→
+   698→  /**
+   699→   * Resume from a previous snapshot.
+   700→   */
+   701→  async resumeFromSnapshot(
+   702→    snapshot: DiscoverySnapshot,
+   703→    httpClient: HttpClient,
+   704→    abortSignal?: AbortSignal,
+   705→    onEvent?: EngineEventCallback,
+   706→  ): Promise<AttackSurface> {
+   707→    // Re-crawl frontier URLs that were pending
+   708→    const surface = createEmptyAttackSurface();
+   709→    return this.crawlUrls(surface, [...snapshot.frontierUrls], httpClient, abortSignal, onEvent);
+   710→  }
+   711→
+   712→  // ─── Artifact Publication (for Pipeline Integration) ──
+   713→
+   714→  /**
+   715→   * Publish AttackSurface artifacts to Artifact Bus.
+   716→   * This is used by the stage handler bridge — NOT by scan() directly.
+   717→   */
+   718→  publishArtifacts(
+   719→    surface: AttackSurface,
+   720→    artifactBus: { publish: (artifact: any) => any },
+   721→    stageId: string = 'discovery',
+   722→  ): void {
+   723→    const stats = surface.getStats(0, 0);
+   724→
+   725→    // Publish URLs
+   726→    for (const url of surface.urls) {
+   727→      artifactBus.publish({
+   728→        category: 'urls',
+   729→        stageId,
+   730→        key: `url:${url.normalizedUrl}`,
+   731→        value: {
+   732→          url: url.url,
+   733→          method: url.method,
+   734→          source: url.source,
+   735→          depth: url.depth,
+   736→          statusCode: url.statusCode,
+   737→          title: url.title,
+   738→        },
+   739→        sourceEngine: this.id,
+   740→      });
+   741→    }
+   742→
+   743→    // Publish Forms
+   744→    for (const form of surface.forms) {
+   745→      artifactBus.publish({
+   746→        category: 'forms',
+   747→        stageId,
+   748→        key: `form:${form.action.toLowerCase()}|${form.method.toLowerCase()}`,
+   749→        value: form,
+   750→        sourceEngine: this.id,
+   751→      });
+   752→    }
+   753→
+   754→    // Publish Endpoints
+   755→    for (const ep of surface.endpoints) {
+   756→      artifactBus.publish({
+   757→        category: 'endpoints',
+   758→        stageId,
+   759→        key: `endpoint:${ep.url.toLowerCase()}|${ep.method.toUpperCase()}`,
+   760→        value: ep,
+   761→        sourceEngine: this.id,
+   762→      });
+   763→    }
+   764→
+   765→    // Publish JS Files
+   766→    for (const js of surface.jsFiles) {
+   767→      artifactBus.publish({
+   768→        category: 'js_files',
+   769→        stageId,
+   770→        key: `js:${js.url.toLowerCase()}`,
+   771→        value: js,
+   772→        sourceEngine: this.id,
+   773→      });
+   774→    }
+   775→
+   776→    // Publish Technology
+   777→    if (surface.technologies.length > 0) {
+   778→      artifactBus.publish({
+   779→        category: 'technology',
+   780→        stageId,
+   781→        key: 'tech_stack',
+   782→        value: surface.technologies,
+   783→        sourceEngine: this.id,
+   784→      });
+   785→    }
+   786→
+   787→    // Publish Headers (from technology detection metadata)
+   788→    artifactBus.publish({
+   789→      category: 'headers',
+   790→      stageId,
+   791→      key: 'discovery_headers',
+   792→      value: { discoveredTechCount: surface.technologies.length },
+   793→      sourceEngine: this.id,
+   794→    });
+   795→
+   796→    // Publish Discovery Statistics
+   797→    artifactBus.publish({
+   798→      category: 'metadata',
+   799→      stageId,
+   800→      key: 'discovery_stats',
+   801→      value: stats,
+   802→      sourceEngine: this.id,
+   803→    });
+   804→
+   805→    // Publish parameters
+   806→    for (const param of surface.parameters) {
+   807→      artifactBus.publish({
+   808→        category: 'endpoints',
+   809→        stageId,
+   810→        key: `param:${param.name.toLowerCase()}|${param.url.toLowerCase()}|${param.location}`,
+   811→        value: param,
+   812→        sourceEngine: this.id,
+   813→      });
+   814→    }
+   815→  }
+   816→
+   817→  /**
+   818→   * Run discovery using Katana CLI (headless mode with JSON output).
+   819→   * Falls back to built-in crawler if Katana is not available.
+   820→   */
+   821→  private async runKatanaCli(
+   822→    context: ScanContext,
+   823→    onEvent: EngineEventCallback,
+   824→    active: ActiveDiscovery,
+   825→  ): Promise<{ surface: AttackSurface; requestsCount: number; katanaUsed: boolean }> {
+   826→    const abortController = active.abortController;
+   827→    const args = this.buildKatanaArgs(context);
+   828→    let requestsCount = 0;
+   829→
+   830→    const katanaProcess = spawn(this.config.katanaBinaryPath, args, {
+   831→      stdio: ['ignore', 'pipe', 'pipe'],
+   832→      env: { ...(typeof process !== 'undefined' ? process.env : {}) },
+   833→    });
+   834→
+   835→    const timer = setTimeout(() => abortController.abort(),
+   836→      (context.constraints.maxDurationSeconds || 300) * 1000);
+   837→
+   838→    abortController.signal.addEventListener('abort', () => {
+   839→      try { katanaProcess.kill('SIGTERM'); } catch { /* already dead */ }
+   840→      setTimeout(() => { try { katanaProcess.kill('SIGKILL'); } catch { /* ok */ } }, this.config.killGraceMs);
+   841→    }, { once: true });
+   842→
+   843→    const rl = createInterface({ input: katanaProcess.stdout! });
+   844→    let lineIndex = 0;
+   845→    const katanaUrls: DiscoveredUrl[] = [];
+   846→
+   847→    for await (const line of rl) {
+   848→      if (abortController.signal.aborted) break;
+   849→      lineIndex++;
+   850→
+   851→      try {
+   852→        const row = JSON.parse(line.trim()) as KatanaOutputRow;
+   853→        if (!row.url) continue;
+   854→
+   855→        const normalized = normalizeUrl(row.url);
+   856→        if (active.processedUrls.has(normalized)) continue;
+   857→        active.processedUrls.add(normalized);
+   858→
+   859→        const url: DiscoveredUrl = {
+   860→          url: row.url,
+   861→          normalizedUrl: normalized,
+   862→          method: (row.method as any) ?? 'GET',
+   863→          source: 'headless_navigation',
+   864→          depth: 0,
+   865→          contentType: row.content_type,
+   866→          statusCode: row.status_code,
+   867→        };
+   868→        katanaUrls.push(url);
+   869→        requestsCount++;
+   870→
+   871→        onEvent({
+   872→          type: ScanEngineEventType.UrlDiscovered,
+   873→          timestamp: new Date().toISOString(),
+   874→          message: `Discovered: ${row.url}`,
+   875→          data: { url: row.url, source: 'katana', method: row.method },
+   876→        });
+   877→      } catch { /* skip non-JSON lines */ }
+   878→
+   879→      if (lineIndex % 50 === 0) {
+   880→        onEvent({
+   881→          type: ScanEngineEventType.Progress,
+   882→          timestamp: new Date().toISOString(),
+   883→          data: { progress: Math.min(90, Math.round(lineIndex / 100) * 90), katanaLinesProcessed: lineIndex },
+   884→        });
+   885→      }
+   886→    }
+   887→
+   888→    const exitCode = await new Promise<number | null>(resolve => {
+   889→      process.on('close', resolve);
+   890→      process.on('error', () => resolve(-1));
+   891→    });
+   892→    clearTimeout(timer);
+   893→
+   894→    return {
+   895→      surface: active.surface.withUrls(katanaUrls),
+   896→      requestsCount,
+   897→      katanaUsed: true,
+   898→    };
+   899→  }
+   900→
+   901→  /** Build Katana CLI arguments from ScanContext. */
+   902→  private buildKatanaArgs(context: ScanContext): string[] {
+   903→    const args: string[] = [
+   904→      '-u', context.targetUrl,
+   905→      '-json',
+   906→      '-silent',
+   907→      '-jc',          // headless chrome
+   908→      '-aff',         // automatic form fill
+   909→      '-depth', String(context.constraints.maxDepth > 0 ? context.constraints.maxDepth : this.config.scope.maxDepth),
+   910→    ];
+   911→
+   912→    if (this.config.scope.maxUrls > 0) {
+   913→      args.push('-max-depth', String(this.config.scope.maxDepth));
+   914→    }
+   915→
+   916→    // Scope: exclude paths
+   917→    for (const rule of this.config.scope.excludeRules ?? []) {
+   918→      args.push('-ef', rule.pattern);
+   919→    }
+   920→
+   921→    // Rate limiting
+   922→    if (context.rateLimit.requestsPerSecond > 0) {
+   923→      args.push('-rate-limit', String(context.rateLimit.requestsPerSecond));
+   924→    }
+   925→    if (context.rateLimit.concurrency > 0) {
+   926→      args.push('-c', String(context.rateLimit.concurrency));
+   927→    }
+   928→
+   929→    // Headers
+   930→    for (const [name, value] of context.headers) {
+   931→      args.push('-header', `${name}: ${value}`);
+   932→    }
+   933→
+   934→    // Cookies
+   935→    for (const cookie of context.cookies) {
+   936→      args.push('-cookie', `${cookie.name}=${cookie.value}`);
+   937→    }
+   938→
+   939→    // Extensions filter
+   940→    const blocked = this.config.scope.blockedExtensions;
+   941→    if (blocked && blocked.length > 0) {
+   942→      args.push('-ext', 'html,htm,js,json,xml,php,asp,aspx,jsp');
+   943→    }
+   944→
+   945→    return args;
+   946→  }
+   947→
+   948→  // ─── Private: Katana Binary ────────────────────────────
+   949→
+   950→  private async checkKatanaBinary(): Promise<boolean> {
+   951→    try {
+   952→      execSync(`which ${this.config.katanaBinaryPath}`, { stdio: 'pipe' });
+   953→      return true;
+   954→    } catch {
+   955→      try {
+   956→        execSync(`"${this.config.katanaBinaryPath}" -version`, { stdio: 'pipe', timeout: 5000 });
+   957→        return true;
+   958→      } catch {
+   959→        return false;
+   960→      }
+   961→    }
+   962→  }
+   963→
+   964→  private async detectKatanaVersion(): Promise<KatanaVersionInfo | null> {
+   965→    try {
+   966→      const output = execSync(`"${this.config.katanaBinaryPath}" -version`, {
+   967→        encoding: 'utf-8',
+   968→        stdio: 'pipe',
+   969→        timeout: 10000,
+   970→      }).trim();
+   971→
+   972→      const match = output.match(/(\d+\.\d+\.\d+)/);
+   973→      return match ? { version: match[1], raw: output } : { version: 'unknown', raw: output };
+   974→    } catch {
+   975→      return null;
+   976→    }
+   977→  }
+   978→
+   979→  // ─── Private: Crawling ─────────────────────────────────
+   980→
+   981→  private async crawlUrls(
+   982→    surface: AttackSurface,
+   983→    urls: string[],
+   984→    httpClient: HttpClient,
+   985→    abortSignal?: AbortSignal,
+   986→    onEvent?: EngineEventCallback,
+   987→  ): Promise<AttackSurface> {
+   988→    let current = surface;
+   989→    const processed = new Set(current.urls.map(u => u.normalizedUrl));
+   990→
+   991→    for (const url of urls) {
+   992→      if (abortSignal?.aborted) break;
+   993→
+   994→      const normalized = normalizeUrl(url);
+   995→      if (processed.has(normalized)) continue;
+   996→      processed.add(normalized);
+   997→
+   998→      try {
+   999→        const response = await httpClient.fetch({ url, timeoutMs: this.config.requestTimeoutMs }, abortSignal);
+  1000→
+  1001→        if (response.statusCode >= 200 && response.statusCode < 400) {
+  1002→          const contentType = response.headers['content-type']?.toLowerCase() ?? '';
+  1003→          if (contentType.includes('text/html')) {
+  1004→            const parsed = parseHtml(response, url);
+  1005→
+  1006→            const newUrls: DiscoveredUrl[] = parsed.urls
+  1007→              .map(ref => ({
+  1008→                url: ref.url,
+  1009→                normalizedUrl: normalizeUrl(ref.url),
+  1010→                method: 'GET' as const,
+  1011→                source: ref.source,
+  1012→                depth: 1,
+  1013→              }))
+  1014→              .filter(u => !processed.has(u.normalizedUrl));
+  1015→
+  1016→            const forms: DiscoveredForm[] = parsed.forms.map(f => ({
+  1017→              ...f,
+  1018→              pageUrl: url,
+  1019→              source: 'html_a' as UrlSource,
+  1020→            }));
+  1021→
+  1022→            const jsFiles: DiscoveredJsFile[] = parsed.jsFiles
+  1023→              .filter(j => !j.inline)
+  1024→              .map(j => classifyJsAsset(j.url, url));
+  1025→
+  1026→            const endpoints: DiscoveredEndpoint[] = [];
+  1027→            const parameters: DiscoveredParameter[] = [];
+  1028→
+  1029→            if (this.config.analyzeJavaScript) {
+  1030→              for (const jsRef of parsed.jsFiles) {
+  1031→                if (jsRef.inline && jsRef.content) {
+  1032→                  const analysis = extractEndpointsFromJs(jsRef.content, url, url);
+  1033→                  endpoints.push(...analysis.endpoints);
+  1034→                }
+  1035→              }
+  1036→            }
+  1037→
+  1038→            for (const u of [...newUrls, { url, normalizedUrl: normalized, method: 'GET' as const, source: 'headless_navigation' as UrlSource, depth: 0 }]) {
+  1039→              parameters.push(...extractParameters(u.url));
+  1040→            }
+  1041→
+  1042→            current = current
+  1043→              .withUrls(newUrls)
+  1044→              .withForms(forms)
+  1045→              .withJsFiles(jsFiles)
+  1046→              .withEndpoints(endpoints)
+  1047→              .withParameters(parameters);
+  1048→          }
+  1049→        }
+  1050→
+  1051→        onEvent?.({
+  1052→          type: ScanEngineEventType.UrlDiscovered,
+  1053→          timestamp: new Date().toISOString(),
+  1054→          data: { url, statusCode: response.statusCode },
+  1055→        });
+  1056→      } catch {
+  1057→        // Skip failed URLs in incremental mode
+  1058→      }
+  1059→    }
+  1060→
+  1061→    return current;
+  1062→  }
+  1063→
+  1064→  // ─── Private: Utilities ────────────────────────────────
+  1065→
+  1066→  private estimateDepth(url: string, baseUrl: string, maxDepth: number): number {
+  1067→    try {
+  1068→      const base = new URL(baseUrl);
+  1069→      const target = new URL(url);
+  1070→
+  1071→      if (base.hostname !== target.hostname) return maxDepth + 1;
+  1072→
+  1073→      const basePath = base.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+  1074→      const targetPath = target.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+  1075→
+  1076→      let common = 0;
+  1077→      for (let i = 0; i < Math.min(basePath.length, targetPath.length); i++) {
+  1078→        if (basePath[i] === targetPath[i]) common++;
+  1079→        else break;
+  1080→      }
+  1081→
+  1082→      return Math.max(0, targetPath.length - common);
+  1083→    } catch {
+  1084→      return 1;
+  1085→    }
+  1086→  }
+  1087→
+  1088→  private emitUrlDiscovered(onEvent: EngineEventCallback, url: string, source: string): void {
+  1089→    onEvent({
+  1090→      type: ScanEngineEventType.UrlDiscovered,
+  1091→      timestamp: new Date().toISOString(),
+  1092→      message: `Discovered: ${url}`,
+  1093→      data: { url, source },
+  1094→    });
+  1095→  }
+  1096→
+  1097→  private buildFindings(surface: AttackSurface, targetUrl: string): ScanEngineFinding[] {
+  1098→    const findings: ScanEngineFinding[] = [];
+  1099→
+  1100→    // Finding: Forms with file upload
+  1101→    const uploadForms = surface.getFormsWithFileUpload();
+  1102→    if (uploadForms.length > 0) {
+  1103→      findings.push({
+  1104→        title: 'File Upload Forms Detected',
+  1105→        description: `${uploadForms.length} form(s) with file upload capability found. These may be targets for unrestricted file upload attacks.`,
+  1106→        severity: 'medium',
+  1107→        location: { url: targetUrl },
+  1108→        evidence: uploadForms.map(f => ({
+  1109→          type: 'form',
+  1110→          content: `File upload form at ${f.action}`,
+  1111→        })),
+  1112→        confidence: 0.95,
+  1113→        tags: ['file-upload', 'discovery'],
+  1114→      });
+  1115→    }
+  1116→
+  1117→    // Finding: GraphQL endpoint
+  1118→    const gqlEndpoints = surface.getEndpointsByType('graphql');
+  1119→    if (gqlEndpoints.length > 0) {
+  1120→      findings.push({
+  1121→        title: 'GraphQL Endpoint Discovered',
+  1122→        description: `GraphQL endpoint(s) found: ${gqlEndpoints.map(e => e.url).join(', ')}. Consider testing for introspection, query depth attacks, and abuse.`,
+  1123→        severity: 'info',
+  1124→        location: { url: gqlEndpoints[0].url },
+  1125→        evidence: gqlEndpoints.map(e => ({
+  1126→          type: 'endpoint',
+  1127→          content: `GraphQL at ${e.url}`,
+  1128→        })),
+  1129→        confidence: 0.99,
+  1130→        tags: ['graphql', 'api', 'discovery'],
+  1131→      });
+  1132→    }
+  1133→
+  1134→    // Finding: WebSocket endpoint
+  1135→    const wsEndpoints = surface.getEndpointsByType('websocket');
+  1136→    if (wsEndpoints.length > 0) {
+  1137→      findings.push({
+  1138→        title: 'WebSocket Endpoint Discovered',
+  1139→        description: `WebSocket endpoint(s) found: ${wsEndpoints.map(e => e.url).join(', ')}. Consider testing for cross-site WebSocket hijacking.`,
+  1140→        severity: 'info',
+  1141→        location: { url: wsEndpoints[0].url },
+  1142→        evidence: wsEndpoints.map(e => ({
+  1143→          type: 'endpoint',
+  1144→          content: `WebSocket at ${e.url}`,
+  1145→        })),
+  1146→        confidence: 0.99,
+  1147→        tags: ['websocket', 'discovery'],
+  1148→      });
+  1149→    }
+  1150→
+  1151→    // Finding: External domains
+  1152→    if (surface.externalDomains.length > 0) {
+  1153→      findings.push({
+  1154→        title: 'External Domain References',
+  1155→        description: `Application references ${surface.externalDomains.length} external domain(s): ${surface.externalDomains.map(d => d.domain).join(', ')}. These may represent third-party dependencies or data exfiltration risks.`,
+  1156→        severity: 'info',
+  1157→        location: { url: targetUrl },
+  1158→        evidence: surface.externalDomains.map(d => ({
+  1159→          type: 'domain',
+  1160→          content: `${d.domain} (referenced from ${d.referencedFrom.length} URL(s))`,
+  1161→        })),
+  1162→        confidence: 0.9,
+  1163→        tags: ['external-domains', 'discovery'],
+  1164→      });
+  1165→    }
+  1166→
+  1167→    // Finding: Forms with CAPTCHA
+  1168→    const captchaForms = surface.forms.filter(f => f.hasCaptcha);
+  1169→    if (captchaForms.length > 0) {
+  1170→      findings.push({
+  1171→        title: 'CAPTCHA-Protected Forms',
+  1172→        description: `${captchaForms.length} form(s) with CAPTCHA protection detected. These forms have rate-limiting protection that may affect automated testing.`,
+  1173→        severity: 'info',
+  1174→        location: { url: targetUrl },
+  1175→        evidence: captchaForms.map(f => ({
+  1176→          type: 'form',
+  1177→          content: `CAPTCHA form at ${f.action}`,
+  1178→        })),
+  1179→        confidence: 0.9,
+  1180→        tags: ['captcha', 'discovery'],
+  1181→      });
+  1182→    }
+  1183→
+  1184→    return findings;
+  1185→  }
+  1186→
+  1187→  private createSnapshot(active: ActiveDiscovery, context: ScanContext): DiscoverySnapshot {
+  1188→    return {
+  1189→      version: 1,
+  1190→      jobId: context.scanJobId,
+  1191→      targetUrl: context.targetUrl,
+  1192→      createdAt: new Date().toISOString(),
+  1193→      processedUrls: [...active.processedUrls],
+  1194→      frontierUrls: [...active.frontier],
+  1195→      totalDiscovered: active.surface.totalCount,
+  1196→      currentDepth: active.currentDepth,
+  1197→    };
+  1198→  }
+  1199→
+  1200→  /**
+  1201→   * Run discovery — dispatches to Katana CLI or built-in crawler.
+  1202→   * This is the internal entry point used by both scan() and incrementalDiscover().
+  1203→   */
+  1204→  async runDiscovery(
+  1205→    context: ScanContext,
+  1206→    onEvent: EngineEventCallback,
+  1207→    existingSurface?: AttackSurface,
+  1208→  ): Promise<{ surface: AttackSurface; requestsCount: number; durationMs: number; findings: ScanEngineFinding[]; errorMessage?: string }> {
+  1209→    const startTime = Date.now();
+  1210→    const abortController = new AbortController();
+  1211→
+  1212→    if (context.abortSignal) {
+  1213→      context.abortSignal.addEventListener('abort', () => abortController.abort(), { once: true });
+  1214→    }
+  1215→
+  1216→    const baseHostname = getHostname(context.targetUrl);
+  1217→    const scopeConfig: DiscoveryScopeConfig = {
+  1218→      ...this.config.scope,
+  1219→      allowedHostnames: baseHostname ? [baseHostname] : this.config.scope.allowedHostnames ?? [],
+  1220→      maxDepth: context.constraints.maxDepth > 0 ? context.constraints.maxDepth : this.config.scope.maxDepth,
+  1221→      maxUrls: context.constraints.maxUrls > 0 ? context.constraints.maxUrls : this.config.scope.maxUrls,
+  1222→    };
+  1223→    const scopeManager = new ScopeManager(scopeConfig);
+  1224→    const httpClient = this.config.httpClient ?? new DefaultFetcher(
+  1225→      scopeConfig,
+  1226→      context.rateLimit.requestsPerSecond || 10,
+  1227→      context.rateLimit.concurrency || 10,
+  1228→      this.config.requestTimeoutMs,
+  1229→    );
+  1230→
+  1231→    const active: ActiveDiscovery = {
+  1232→      abortController,
+  1233→      startTime,
+  1234→      jobId: context.scanJobId,
+  1235→      phase: 'initializing',
+  1236→      surface: existingSurface ?? createEmptyAttackSurface(),
+  1237→      processedUrls: new Set(existingSurface?.urls.map(u => u.normalizedUrl) ?? []),
+  1238→      frontier: existingSurface ? [] : [context.targetUrl],
+  1239→      currentDepth: 0,
+  1240→    };
+  1241→    this.activeDiscoveries.set(context.scanJobId, active);
+  1242→
+  1243→    let requestsCount = 0;
+  1244→    let errorMessage: string | null = null;
+  1245→
+  1246→    onEvent({
+  1247→      type: ScanEngineEventType.PhaseChanged,
+  1248→      timestamp: new Date().toISOString(),
+  1249→      message: 'Starting discovery scan',
+  1250→      data: { phase: 'initializing', targetUrl: context.targetUrl },
+  1251→    });
+  1252→
+  1253→    try {
+  1254→      // If Katana CLI is available and not in test mode, use it for headless crawl
+  1255→      if (this._katanaAvailable && !this.config.httpClient) {
+  1256→        onEvent({
+  1257→          type: ScanEngineEventType.PhaseChanged,
+  1258→          timestamp: new Date().toISOString(),
+  1259→          message: 'Using Katana CLI for headless crawling',
+  1260→          data: { phase: 'katana_crawl' },
+  1261→        });
+  1262→        active.phase = 'katana_crawl';
+  1263→
+  1264→        const katanaResult = await this.runKatanaCli(context, onEvent, active);
+  1265→        active.surface = katanaResult.surface;
+  1266→        requestsCount += katanaResult.requestsCount;
+  1267→
+  1268→        // Still fetch robots.txt + sitemap.xml for metadata
+  1269→        await this.fetchSeedMetadata(context.targetUrl, scopeManager, httpClient, abortController.signal, active, onEvent);
+  1270→      } else {
+  1271→        // Built-in crawler mode
+  1272→        onEvent({
+  1273→          type: ScanEngineEventType.PhaseChanged,
+  1274→          timestamp: new Date().toISOString(),
+  1275→          message: 'Fetching robots.txt and sitemap.xml',
+  1276→          data: { phase: 'seed_discovery' },
+  1277→        });
+  1278→        active.phase = 'seed_discovery';
+  1279→        await this.fetchSeedMetadata(context.targetUrl, scopeManager, httpClient, abortController.signal, active, onEvent);
+  1280→
+  1281→        // BFS crawl
+  1282→        onEvent({
+  1283→          type: ScanEngineEventType.PhaseChanged,
+  1284→          timestamp: new Date().toISOString(),
+  1285→          message: 'Crawling discovered URLs',
+  1286→          data: { phase: 'crawling', frontierSize: active.frontier.length },
+  1287→        });
+  1288→        active.phase = 'crawling';
+  1289→
+  1290→        const maxDepth = scopeConfig.maxDepth > 0 ? scopeConfig.maxDepth : 10;
+  1291→        while (active.frontier.length > 0 && !abortController.signal.aborted && scopeManager.hasCapacity) {
+  1292→          if (context.constraints.maxRequests > 0 && requestsCount >= context.constraints.maxRequests) break;
+  1293→
+  1294→          const url = active.frontier.shift()!;
+  1295→          const normalized = normalizeUrl(url);
+  1296→          if (active.processedUrls.has(normalized)) continue;
+  1297→
+  1298→          const depth = this.estimateDepth(url, context.targetUrl, maxDepth);
+  1299→          if (depth > maxDepth) continue;
+  1300→          active.currentDepth = Math.max(active.currentDepth, depth);
+  1301→          if (!scopeManager.isInScope(url, depth)) continue;
+  1302→
+  1303→          active.processedUrls.add(normalized);
+  1304→          scopeManager.countUrl();
+  1305→          this.emitUrlDiscovered(onEvent, url, 'html_a');
+  1306→
+  1307→          let response: FetchResponse;
+  1308→          try {
+  1309→            response = await httpClient.fetch(
+  1310→              { url, timeoutMs: this.config.requestTimeoutMs, followRedirects: scopeConfig.followRedirects, maxRedirects: scopeConfig.maxRedirects },
+  1311→              abortController.signal,
+  1312→            );
+  1313→            requestsCount++;
+  1314→          } catch {
+  1315→            active.surface = active.surface.withUrls([{ url, normalizedUrl: normalized, method: 'GET', source: 'headless_navigation', depth }]);
+  1316→            continue;
+  1317→          }
+  1318→
+  1319→          const finalUrl = response.redirected ? response.finalUrl : url;
+  1320→          const finalNormalized = normalizeUrl(finalUrl);
+  1321→          const contentType = response.headers['content-type']?.toLowerCase() ?? '';
+  1322→          const isHtml = contentType.includes('text/html') || contentType.includes('application/xhtml');
+  1323→          const isJson = contentType.includes('application/json');
+  1324→
+  1325→          const headerTechs = detectTechnologiesFromHeaders(response.headers, response.headers['set-cookie'] ?? '');
+  1326→          if (headerTechs.length > 0) active.surface = active.surface.withTechnologies(headerTechs);
+  1327→
+  1328→          if (isHtml && response.statusCode >= 200 && response.statusCode < 400) {
+  1329→            const parsed = parseHtml(response, finalUrl);
+  1330→            const newUrls: DiscoveredUrl[] = [];
+  1331→            for (const ref of parsed.urls) {
+  1332→              if (!scopeManager.isInScope(ref.url, depth + 1)) continue;
+  1333→              const uNorm = normalizeUrl(ref.url);
+  1334→              if (active.processedUrls.has(uNorm)) continue;
+  1335→              newUrls.push({ url: ref.url, normalizedUrl: uNorm, method: 'GET', source: ref.source, depth: depth + 1 });
+  1336→              if (scopeManager.hasCapacity) active.frontier.push(ref.url);
+  1337→            }
+  1338→
+  1339→            const forms: DiscoveredForm[] = parsed.forms.map(f => ({ ...f, pageUrl: finalUrl, source: 'html_a' as UrlSource }));
+  1340→            const jsFiles: DiscoveredJsFile[] = [];
+  1341→            const endpointsFromJs: DiscoveredEndpoint[] = [];
+  1342→            const urlsFromJs: DiscoveredUrl[] = [];
+  1343→            for (const jsRef of parsed.jsFiles) {
+  1344→              if (jsRef.inline && this.config.analyzeJavaScript && jsRef.content) {
+  1345→                const jsAnalysis = extractEndpointsFromJs(jsRef.content, finalUrl, context.targetUrl);
+  1346→                endpointsFromJs.push(...jsAnalysis.endpoints);
+  1347→                urlsFromJs.push(...jsAnalysis.urls);
+  1348→                jsFiles.push(...jsAnalysis.jsFileRefs.map(r => classifyJsAsset(r.url, finalUrl)));
+  1349→              } else if (!jsRef.inline) {
+  1350→                jsFiles.push(classifyJsAsset(jsRef.url, finalUrl));
+  1351→              }
+  1352→            }
+  1353→
+  1354→            const metaTechs = detectTechnologiesFromMeta(parsed.metaTags);
+  1355→            if (metaTechs.length > 0) active.surface = active.surface.withTechnologies(metaTechs);
+  1356→
+  1357→            const allUrlsForParams = [...newUrls, ...urlsFromJs, { url: finalUrl, normalizedUrl: finalNormalized, method: 'GET' as const, source: 'headless_navigation' as UrlSource, depth }];
+  1358→            const params: DiscoveredParameter[] = [];
+  1359→            const paramCountMap = new Map<string, number>();
+  1360→            for (const u of allUrlsForParams) {
+  1361→              for (const p of extractParameters(u.url)) {
+  1362→                const key = p.name.toLowerCase();
+  1363→                paramCountMap.set(key, (paramCountMap.get(key) ?? 0) + 1);
+  1364→                params.push({ ...p, isCommon: (paramCountMap.get(key) ?? 0) > 2 });
+  1365→              }
+  1366→            }
+  1367→
+  1368→            const statics: DiscoveredStaticResource[] = [];
+  1369→            if (this.config.includeStaticResources) {
+  1370→              for (const sr of parsed.staticResources) {
+  1371→                const classified = classifyStaticResource(sr.url, finalUrl);
+  1372→                if (classified) statics.push(classified);
+  1373→              }
+  1374→            }
+  1375→
+  1376→            active.surface = active.surface
+  1377→              .withUrls(newUrls)
+  1378→              .withForms(forms)
+  1379→              .withJsFiles(jsFiles)
+  1380→              .withEndpoints(endpointsFromJs)
+  1381→              .withParameters(params)
+  1382→              .withStaticResources(statics);
+  1383→
+  1384→            if (parsed.title) {
+  1385→              active.surface = active.surface.withUrls([{ ...{ url: finalUrl, normalizedUrl: finalNormalized, method: 'GET', source: 'headless_navigation', depth }, title: parsed.title, contentType, statusCode: response.statusCode }]);
+  1386→            } else {
+  1387→              active.surface = active.surface.withUrls([{ url: finalUrl, normalizedUrl: finalNormalized, method: 'GET', source: 'headless_navigation', depth, contentType, statusCode: response.statusCode }]);
+  1388→            }
+  1389→          } else if (isJson) {
+  1390→            active.surface = active.surface.withEndpoints([{
+  1391→              url: finalUrl, method: 'GET', type: 'rest', contentType: 'application/json', isOpenapi: false, sourceUrl: url, source: 'headless_navigation',
+  1392→            }]).withUrls([{ url: finalUrl, normalizedUrl: finalNormalized, method: 'GET', source: 'headless_navigation', depth, contentType, statusCode: response.statusCode }]);
+  1393→          } else {
+  1394→            active.surface = active.surface.withUrls([{ url: finalUrl, normalizedUrl: finalNormalized, method: 'GET', source: 'headless_navigation', depth, contentType, statusCode: response.statusCode }]);
+  1395→          }
+  1396→
+  1397→          if (active.processedUrls.size % 10 === 0) {
+  1398→            onEvent({
+  1399→              type: ScanEngineEventType.Progress,
+  1400→              timestamp: new Date().toISOString(),
+  1401→              data: { progress: Math.min(95, Math.round((active.processedUrls.size / Math.max(active.processedUrls.size + active.frontier.length, 1)) * 90) + 5), urlsDiscovered: active.surface.urls.length, requestsCount },
+  1402→            });
+  1403→          }
+  1404→        }
+  1405→      }
+  1406→
+  1407→      // Extract external domains
+  1408→      if (this.config.extractExternalDomains) {
+  1409→        const externalDomains = classifyExternalDomains(active.surface.urls, baseHostname);
+  1410→        if (externalDomains.length > 0) active.surface = active.surface.withExternalDomains(externalDomains);
+  1411→      }
+  1412→
+  1413→      const durationMs = Date.now() - startTime;
+  1414→      const findings = this.buildFindings(active.surface, context.targetUrl);
+  1415→
+  1416→      onEvent({
+  1417→        type: ScanEngineEventType.PhaseChanged,
+  1418→        timestamp: new Date().toISOString(),
+  1419→        message: 'Discovery completed',
+  1420→        data: { phase: 'completed', ...active.surface.getStats(requestsCount, durationMs) },
+  1421→      });
+  1422→
+  1423→      return { surface: active.surface, requestsCount, durationMs, findings };
+  1424→    } catch (err) {
+  1425→      errorMessage = err instanceof Error ? err.message : 'Unknown discovery error';
+  1426→      return {
+  1427→        surface: active.surface,
+  1428→        requestsCount,
+  1429→        durationMs: Date.now() - startTime,
+  1430→        findings: [],
+  1431→        errorMessage,
+  1432→      };
+  1433→    } finally {
+  1434→      this.activeDiscoveries.delete(context.scanJobId);
+  1435→    }
+  1436→  }
+  1437→
+  1438→  /**
+  1439→   * Fetch seed URLs from robots.txt and sitemap.xml.
+  1440→   */
+  1441→  private async fetchSeedMetadata(
+  1442→    targetUrl: string,
+  1443→    scopeManager: ScopeManager,
+  1444→    httpClient: HttpClient,
+  1445→    signal: AbortSignal,
+  1446→    active: ActiveDiscovery,
+  1447→    onEvent: EngineEventCallback,
+  1448→  ): Promise<number> {
+  1449→    let requestsCount = 0;
+  1450→
+  1451→    // Fetch robots.txt
+  1452→    const robotsUrl = resolveUrl(targetUrl, '/robots.txt');
+  1453→    if (robotsUrl && scopeManager.isInScope(robotsUrl, 0)) {
+  1454→      try {
+  1455→        const resp = await httpClient.fetch({ url: robotsUrl, timeoutMs: this.config.requestTimeoutMs }, signal);
+  1456→        requestsCount++;
+  1457→        if (resp.statusCode === 200) {
+  1458→          const { entries, sitemaps } = parseRobotsTxt(resp.body, targetUrl);
+  1459→          active.surface = active.surface.withRobotsEntries(entries);
+  1460→          this.emitUrlDiscovered(onEvent, robotsUrl, 'robots_txt');
+  1461→          for (const sitemapUrl of sitemaps) {
+  1462→            if (scopeManager.isInScope(sitemapUrl, 0)) {
+  1463→              active.frontier.push(sitemapUrl);
+  1464→              scopeManager.countUrl();
+  1465→            }
+  1466→          }
+  1467→        }
+  1468→      } catch (err) {
+  1469→        onEvent({ type: ScanEngineEventType.Warning, timestamp: new Date().toISOString(), message: `robots.txt: ${err instanceof Error ? err.message : 'unknown'}` });
+  1470→      }
+  1471→    }
+  1472→
+  1473→    // Fetch sitemap.xml
+  1474→    const sitemapUrl = resolveUrl(targetUrl, '/sitemap.xml');
+  1475→    if (sitemapUrl && scopeManager.isInScope(sitemapUrl, 0)) {
+  1476→      try {
+  1477→        const resp = await httpClient.fetch({ url: sitemapUrl, timeoutMs: this.config.requestTimeoutMs }, signal);
+  1478→        requestsCount++;
+  1479→        if (resp.statusCode === 200) {
+  1480→          const entries = parseSitemapXml(resp.body);
+  1481→          const sitemapUrls: DiscoveredUrl[] = entries.map(e => ({ url: e.url, normalizedUrl: normalizeUrl(e.url), method: 'GET' as const, source: 'sitemap' as UrlSource, depth: 0 }));
+  1482→          active.surface = active.surface.withSitemapEntries(entries).withUrls(sitemapUrls);
+  1483→          for (const u of sitemapUrls) {
+  1484→            this.emitUrlDiscovered(onEvent, u.url, 'sitemap');
+  1485→            if (scopeManager.isInScope(u.url, 0) && !active.processedUrls.has(normalizeUrl(u.url))) {
+  1486→              active.frontier.push(u.url);
+  1487→              scopeManager.countUrl();
+  1488→            }
+  1489→          }
+  1490→        }
+  1491→      } catch (err) {
+  1492→        onEvent({ type: ScanEngineEventType.Warning, timestamp: new Date().toISOString(), message: `sitemap.xml: ${err instanceof Error ? err.message : 'unknown'}` });
+  1493→      }
+  1494→    }
+  1495→
+  1496→    return requestsCount;
+  1497→  }
+  1498→
+  1499→  /**
+  1500→   * Get the current attack surface for a running discovery.
+  1501→   * For incremental/comparison use cases.
+  1502→   */
+  1503→  getActiveSurface(jobId: string): AttackSurface | null {
+  1504→    return this.activeDiscoveries.get(jobId)?.surface ?? null;
+  1505→  }
+  1506→
+  1507→  /**
+  1508→   * Export attack surface as standalone JSON.
+  1509→   * For use as independent service (CTO requirement).
+  1510→   */
+  1511→  exportAttackSurface(surface: AttackSurface): string {
+  1512→    return JSON.stringify(surface.toJSON(), null, 2);
+  1513→  }
+  1514→
+  1515→  /**
+  1516→   * Import attack surface from JSON.
+  1517→   * For comparison and asset inventory use cases.
+  1518→   */
+  1519→  importAttackSurface(json: string): AttackSurface {
+  1520→    return AttackSurface.fromJSON(JSON.parse(json));
+  1521→  }
+  1522→
+  1523→  /**
+  1524→   * Compare two attack surface versions.
+  1525→   * Returns added, removed, and common URLs.
+  1526→   */
+  1527→  compareSurfaces(v1: AttackSurface, v2: AttackSurface) {
+  1528→    return v1.diff(v2);
+  1529→  }
+  1530→}

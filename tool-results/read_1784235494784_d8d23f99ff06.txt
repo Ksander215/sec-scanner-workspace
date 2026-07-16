@@ -1,0 +1,1212 @@
+     1→/**
+     2→ * Knowledge Graph Storage Adapter — NetworkX Storage Adapter
+     3→ *
+     4→ * Full implementation of GraphStorageProvider backed by an
+     5→ * in-memory graph data structure compatible with NetworkX-style
+     6→ * operations (adjacency lists, directed graphs, etc.).
+     7→ *
+     8→ * This is the MVP backend. Architecture allows future replacement
+     9→ * with Neo4j, Memgraph, JanusGraph, or TigerGraph without
+    10→ * changing any business logic.
+    11→ *
+    12→ * Performance characteristics:
+    13→ * - Node lookup: O(1) via Map + Identity index
+    14→ * - Edge lookup: O(1) via Map
+    15→ * - Adjacency: O(k) where k = degree
+    16→ * - Type queries: O(1) via NodeType/RelationshipType indexes
+    17→ * - Batch: O(n) sequential (NetworkX limitation)
+    18→ * - Snapshot: O(n+m) full copy
+    19→ *
+    20→ * No external dependencies. No files. No network.
+    21→ */
+    22→
+    23→import type { GraphNode, GraphEdge, GraphSnapshot, Metadata } from '../../models/index.js';
+    24→import {
+    25→  createGraphNode,
+    26→  graphNodeToJSON,
+    27→  graphNodeFromJSON,
+    28→} from '../../models/index.js';
+    29→import type { NodeId, EdgeId, SnapshotId, TransactionId } from '../../types/index.js';
+    30→import type {
+    31→  StorageAdapterConfig,
+    32→  StorageConnectionState,
+    33→  StorageStatistics,
+    34→  StorageHealthResult,
+    35→  StorageHealthIssue,
+    36→  StorageOperationResult,
+    37→  BatchOperationResult,
+    38→  BatchError,
+    39→  ExportOptions,
+    40→  ExportResult,
+    41→  ImportOptions,
+    42→  ImportResult,
+    43→  StorageTransactionInfo,
+    44→} from '../types/index.js';
+    45→import { DEFAULT_STORAGE_CONFIG, StorageConnectionState as ConnState } from '../types/index.js';
+    46→import type { GraphStorageProvider } from '../provider/index.js';
+    47→import { StorageIndexManager } from '../indexes/index.js';
+    48→import { StorageCacheManager } from '../cache/index.js';
+    49→import { StorageSnapshotManager } from '../snapshot/index.js';
+    50→import { StorageTransactionManager } from '../transaction/index.js';
+    51→import { exportGraph, parseImportData } from '../import-export/index.js';
+    52→import { StorageStatisticsCollector } from '../statistics/index.js';
+    53→import {
+    54→  StorageEventBus,
+    55→  createStorageConnectedEvent,
+    56→  createStorageDisconnectedEvent,
+    57→  createStorageSnapshotCreatedEvent,
+    58→  createStorageRecoveredEvent,
+    59→} from '../events/index.js';
+    60→
+    61→// ─── NetworkX Storage Adapter ─────────────────────────────────
+    62→
+    63→export class NetworkXStorageAdapter implements GraphStorageProvider {
+    64→  // ─── Core Data Structures ─────────────────────────────────
+    65→  private readonly _nodes: Map<NodeId, GraphNode> = new Map();
+    66→  private readonly _edges: Map<EdgeId, GraphEdge> = new Map();
+    67→  private readonly _adjacencyOut: Map<NodeId, Set<EdgeId>> = new Map();
+    68→  private readonly _adjacencyIn: Map<NodeId, Set<EdgeId>> = new Map();
+    69→
+    70→  // ─── Subsystems ───────────────────────────────────────────
+    71→  private readonly _indexManager: StorageIndexManager;
+    72→  private readonly _cacheManager: StorageCacheManager;
+    73→  private readonly _snapshotManager: StorageSnapshotManager;
+    74→  private readonly _transactionManager: StorageTransactionManager;
+    75→  private readonly _statisticsCollector: StorageStatisticsCollector;
+    76→  readonly eventBus: StorageEventBus;
+    77→
+    78→  // ─── State ────────────────────────────────────────────────
+    79→  private _connectionState: StorageConnectionState = ConnState.Disconnected;
+    80→  private readonly _config: StorageAdapterConfig;
+    81→
+    82→  constructor(config: Partial<StorageAdapterConfig> = {}) {
+    83→    this._config = { ...DEFAULT_STORAGE_CONFIG, ...config };
+    84→    this._indexManager = new StorageIndexManager();
+    85→    this._cacheManager = new StorageCacheManager({
+    86→      readCacheCapacity: this._config.readCacheCapacity,
+    87→      readCacheTTL: this._config.readCacheTTL,
+    88→      writeBufferThreshold: this._config.writeBufferThreshold,
+    89→    });
+    90→    this._snapshotManager = new StorageSnapshotManager(this._config.maxSnapshots);
+    91→    this._transactionManager = new StorageTransactionManager();
+    92→    this._statisticsCollector = new StorageStatisticsCollector();
+    93→    this.eventBus = new StorageEventBus();
+    94→  }
+    95→
+    96→  // ─── Identity ─────────────────────────────────────────────
+    97→
+    98→  get id(): string {
+    99→    return this._config.id;
+   100→  }
+   101→
+   102→  get adapterType(): string {
+   103→    return 'networkx';
+   104→  }
+   105→
+   106→  get connectionState(): StorageConnectionState {
+   107→    return this._connectionState;
+   108→  }
+   109→
+   110→  get config(): StorageAdapterConfig {
+   111→    return this._config;
+   112→  }
+   113→
+   114→  get isConnected(): boolean {
+   115→    return this._connectionState === ConnState.Connected;
+   116→  }
+   117→
+   118→  // ─── Lifecycle ────────────────────────────────────────────
+   119→
+   120→  async connect(): Promise<void> {
+   121→    if (this._connectionState === ConnState.Connected) return;
+   122→
+   123→    this._connectionState = ConnState.Connecting;
+   124→    try {
+   125→      // NetworkX is in-memory, no external connection needed
+   126→      this._connectionState = ConnState.Connected;
+   127→      this.eventBus.emit(createStorageConnectedEvent(this.id, this.adapterType));
+   128→    } catch (e) {
+   129→      this._connectionState = ConnState.Error;
+   130→      throw e;
+   131→    }
+   132→  }
+   133→
+   134→  async disconnect(): Promise<void> {
+   135→    if (this._connectionState === ConnState.Disconnected) return;
+   136→
+   137→    // Flush write buffer before disconnecting
+   138→    if (this._config.enableWriteBuffer && !this._cacheManager.writeBuffer.isEmpty) {
+   139→      await this.flushWriteBuffer();
+   140→    }
+   141→
+   142→    this._cacheManager.dispose();
+   143→    const wasGraceful = this._connectionState === ConnState.Connected;
+   144→    this._connectionState = ConnState.Disconnected;
+   145→    this.eventBus.emit(createStorageDisconnectedEvent(this.id, this.adapterType, wasGraceful));
+   146→  }
+   147→
+   148→  // ─── Node Persistence ─────────────────────────────────────
+   149→
+   150→  async createNode(node: GraphNode): Promise<StorageOperationResult<GraphNode>> {
+   151→    this._ensureConnected();
+   152→    this._ensureCapacity(1, 0);
+   153→    const start = performance.now();
+   154→
+   155→    try {
+   156→      if (this._nodes.has(node.identity.id)) {
+   157→        return {
+   158→          success: false,
+   159→          data: null,
+   160→          error: `Node '${node.identity.id}' already exists`,
+   161→          durationMs: performance.now() - start,
+   162→          fromCache: false,
+   163→        };
+   164→      }
+   165→
+   166→      this._nodes.set(node.identity.id, node);
+   167→      this._adjacencyOut.set(node.identity.id, new Set());
+   168→      this._adjacencyIn.set(node.identity.id, new Set());
+   169→
+   170→      if (this._config.enableIndexes) {
+   171→        this._indexManager.indexNode(node);
+   172→      }
+   173→
+   174→      this._cacheManager.readCache.setNode(node.identity.id, node);
+   175→      this._transactionManager.trackNodeCreated(node);
+   176→      this._statisticsCollector.recordWrite();
+   177→
+   178→      return {
+   179→        success: true,
+   180→        data: node,
+   181→        error: null,
+   182→        durationMs: performance.now() - start,
+   183→        fromCache: false,
+   184→      };
+   185→    } catch (e) {
+   186→      return {
+   187→        success: false,
+   188→        data: null,
+   189→        error: (e as Error).message,
+   190→        durationMs: performance.now() - start,
+   191→        fromCache: false,
+   192→      };
+   193→    }
+   194→  }
+   195→
+   196→  async updateNode(id: NodeId, properties: Metadata): Promise<StorageOperationResult<GraphNode>> {
+   197→    this._ensureConnected();
+   198→    const start = performance.now();
+   199→
+   200→    try {
+   201→      const existing = this._nodes.get(id);
+   202→      if (!existing) {
+   203→        return {
+   204→          success: false,
+   205→          data: null,
+   206→          error: `Node '${id}' not found`,
+   207→          durationMs: performance.now() - start,
+   208→          fromCache: false,
+   209→        };
+   210→      }
+   211→
+   212→      const updated = createGraphNode(
+   213→        existing.identity.id as string,
+   214→        existing.identity.type,
+   215→        {
+   216→          labels: existing.identity.labels,
+   217→          metadata: {
+   218→            createdAt: existing.metadata.createdAt,
+   219→            source: existing.metadata.source,
+   220→            confidence: existing.metadata.confidence,
+   221→            tags: existing.metadata.tags,
+   222→          },
+   223→          properties: { ...existing.properties, ...properties },
+   224→        },
+   225→      );
+   226→
+   227→      this._nodes.set(id, updated);
+   228→
+   229→      if (this._config.enableIndexes) {
+   230→        this._indexManager.reindexNode(existing, updated);
+   231→      }
+   232→
+   233→      this._cacheManager.invalidateNode(id);
+   234→      this._cacheManager.readCache.setNode(id, updated);
+   235→      this._transactionManager.trackNodeUpdated(existing, updated);
+   236→      this._statisticsCollector.recordWrite();
+   237→
+   238→      return {
+   239→        success: true,
+   240→        data: updated,
+   241→        error: null,
+   242→        durationMs: performance.now() - start,
+   243→        fromCache: false,
+   244→      };
+   245→    } catch (e) {
+   246→      return {
+   247→        success: false,
+   248→        data: null,
+   249→        error: (e as Error).message,
+   250→        durationMs: performance.now() - start,
+   251→        fromCache: false,
+   252→      };
+   253→    }
+   254→  }
+   255→
+   256→  async deleteNode(id: NodeId): Promise<StorageOperationResult<boolean>> {
+   257→    this._ensureConnected();
+   258→    const start = performance.now();
+   259→
+   260→    try {
+   261→      const node = this._nodes.get(id);
+   262→      if (!node) {
+   263→        return {
+   264→          success: false,
+   265→          data: null,
+   266→          error: `Node '${id}' not found`,
+   267→          durationMs: performance.now() - start,
+   268→          fromCache: false,
+   269→        };
+   270→      }
+   271→
+   272→      // Remove all connected edges
+   273→      const removedEdges = this._removeAllEdgesForNode(id);
+   274→
+   275→      // De-index removed edges
+   276→      if (this._config.enableIndexes) {
+   277→        for (const edge of removedEdges) {
+   278→          this._indexManager.deindexEdge(edge);
+   279→        }
+   280→        this._indexManager.deindexNode(node);
+   281→      }
+   282→
+   283→      // Remove node
+   284→      this._nodes.delete(id);
+   285→      this._adjacencyOut.delete(id);
+   286→      this._adjacencyIn.delete(id);
+   287→
+   288→      this._cacheManager.invalidateNode(id);
+   289→      for (const edge of removedEdges) {
+   290→        this._cacheManager.invalidateEdge(edge.id);
+   291→      }
+   292→      this._transactionManager.trackNodeDeleted(node);
+   293→      for (const edge of removedEdges) {
+   294→        this._transactionManager.trackEdgeDeleted(edge);
+   295→      }
+   296→      this._statisticsCollector.recordWrite();
+   297→
+   298→      return {
+   299→        success: true,
+   300→        data: true,
+   301→        error: null,
+   302→        durationMs: performance.now() - start,
+   303→        fromCache: false,
+   304→      };
+   305→    } catch (e) {
+   306→      return {
+   307→        success: false,
+   308→        data: null,
+   309→        error: (e as Error).message,
+   310→        durationMs: performance.now() - start,
+   311→        fromCache: false,
+   312→      };
+   313→    }
+   314→  }
+   315→
+   316→  async getNode(id: NodeId): Promise<StorageOperationResult<GraphNode | undefined>> {
+   317→    this._ensureConnected();
+   318→    const start = performance.now();
+   319→
+   320→    // Check read cache first
+   321→    if (this._config.enableReadCache) {
+   322→      const cached = this._cacheManager.readCache.getNode(id);
+   323→      if (cached) {
+   324→        this._statisticsCollector.recordRead();
+   325→        return {
+   326→          success: true,
+   327→          data: cached,
+   328→          error: null,
+   329→          durationMs: performance.now() - start,
+   330→          fromCache: true,
+   331→        };
+   332→      }
+   333→    }
+   334→
+   335→    const node = this._nodes.get(id);
+   336→    this._statisticsCollector.recordRead();
+   337→
+   338→    if (node && this._config.enableReadCache) {
+   339→      this._cacheManager.readCache.setNode(id, node);
+   340→    }
+   341→
+   342→    return {
+   343→      success: true,
+   344→      data: node,
+   345→      error: null,
+   346→      durationMs: performance.now() - start,
+   347→      fromCache: false,
+   348→    };
+   349→  }
+   350→
+   351→  async hasNode(id: NodeId): Promise<boolean> {
+   352→    this._ensureConnected();
+   353→    return this._nodes.has(id);
+   354→  }
+   355→
+   356→  async getAllNodes(): Promise<readonly GraphNode[]> {
+   357→    this._ensureConnected();
+   358→    return Array.from(this._nodes.values());
+   359→  }
+   360→
+   361→  async nodeCount(): Promise<number> {
+   362→    this._ensureConnected();
+   363→    return this._nodes.size;
+   364→  }
+   365→
+   366→  // ─── Node Batch Operations ────────────────────────────────
+   367→
+   368→  async batchCreateNodes(nodes: readonly GraphNode[]): Promise<BatchOperationResult> {
+   369→    this._ensureConnected();
+   370→    this._ensureCapacity(nodes.length, 0);
+   371→    const start = performance.now();
+   372→    const errors: BatchError[] = [];
+   373→    let succeeded = 0;
+   374→
+   375→    for (let i = 0; i < nodes.length; i++) {
+   376→      const node = nodes[i];
+   377→      try {
+   378→        if (this._nodes.has(node.identity.id)) {
+   379→          errors.push({ index: i, id: node.identity.id, error: 'Already exists' });
+   380→          continue;
+   381→        }
+   382→        this._nodes.set(node.identity.id, node);
+   383→        this._adjacencyOut.set(node.identity.id, new Set());
+   384→        this._adjacencyIn.set(node.identity.id, new Set());
+   385→        if (this._config.enableIndexes) this._indexManager.indexNode(node);
+   386→        this._cacheManager.readCache.setNode(node.identity.id, node);
+   387→        this._transactionManager.trackNodeCreated(node);
+   388→        succeeded++;
+   389→      } catch (e) {
+   390→        errors.push({ index: i, id: node.identity.id, error: (e as Error).message });
+   391→      }
+   392→    }
+   393→
+   394→    this._statisticsCollector.recordWrite();
+   395→    return {
+   396→      total: nodes.length,
+   397→      succeeded,
+   398→      failed: errors.length,
+   399→      errors,
+   400→      durationMs: performance.now() - start,
+   401→    };
+   402→  }
+   403→
+   404→  async batchDeleteNodes(ids: readonly NodeId[]): Promise<BatchOperationResult> {
+   405→    this._ensureConnected();
+   406→    const start = performance.now();
+   407→    const errors: BatchError[] = [];
+   408→    let succeeded = 0;
+   409→
+   410→    for (let i = 0; i < ids.length; i++) {
+   411→      const id = ids[i];
+   412→      try {
+   413→        const node = this._nodes.get(id);
+   414→        if (!node) {
+   415→          errors.push({ index: i, id, error: 'Not found' });
+   416→          continue;
+   417→        }
+   418→
+   419→        const removedEdges = this._removeAllEdgesForNode(id);
+   420→        if (this._config.enableIndexes) {
+   421→          for (const edge of removedEdges) this._indexManager.deindexEdge(edge);
+   422→          this._indexManager.deindexNode(node);
+   423→        }
+   424→        this._nodes.delete(id);
+   425→        this._adjacencyOut.delete(id);
+   426→        this._adjacencyIn.delete(id);
+   427→        this._cacheManager.invalidateNode(id);
+   428→        this._transactionManager.trackNodeDeleted(node);
+   429→        for (const edge of removedEdges) this._transactionManager.trackEdgeDeleted(edge);
+   430→        succeeded++;
+   431→      } catch (e) {
+   432→        errors.push({ index: i, id, error: (e as Error).message });
+   433→      }
+   434→    }
+   435→
+   436→    this._statisticsCollector.recordWrite();
+   437→    return {
+   438→      total: ids.length,
+   439→      succeeded,
+   440→      failed: errors.length,
+   441→      errors,
+   442→      durationMs: performance.now() - start,
+   443→    };
+   444→  }
+   445→
+   446→  // ─── Edge Persistence ─────────────────────────────────────
+   447→
+   448→  async createEdge(edge: GraphEdge): Promise<StorageOperationResult<GraphEdge>> {
+   449→    this._ensureConnected();
+   450→    this._ensureCapacity(0, 1);
+   451→    const start = performance.now();
+   452→
+   453→    try {
+   454→      if (this._edges.has(edge.id)) {
+   455→        return {
+   456→          success: false,
+   457→          data: null,
+   458→          error: `Edge '${edge.id}' already exists`,
+   459→          durationMs: performance.now() - start,
+   460→          fromCache: false,
+   461→        };
+   462→      }
+   463→
+   464→      // Verify source and target exist
+   465→      if (!this._nodes.has(edge.sourceId)) {
+   466→        return {
+   467→          success: false,
+   468→          data: null,
+   469→          error: `Source node '${edge.sourceId}' not found`,
+   470→          durationMs: performance.now() - start,
+   471→          fromCache: false,
+   472→        };
+   473→      }
+   474→      if (!this._nodes.has(edge.targetId)) {
+   475→        return {
+   476→          success: false,
+   477→          data: null,
+   478→          error: `Target node '${edge.targetId}' not found`,
+   479→          durationMs: performance.now() - start,
+   480→          fromCache: false,
+   481→        };
+   482→      }
+   483→
+   484→      this._edges.set(edge.id, edge);
+   485→
+   486→      // Update adjacency
+   487→      let outSet = this._adjacencyOut.get(edge.sourceId);
+   488→      if (!outSet) {
+   489→        outSet = new Set();
+   490→        this._adjacencyOut.set(edge.sourceId, outSet);
+   491→      }
+   492→      outSet.add(edge.id);
+   493→
+   494→      let inSet = this._adjacencyIn.get(edge.targetId);
+   495→      if (!inSet) {
+   496→        inSet = new Set();
+   497→        this._adjacencyIn.set(edge.targetId, inSet);
+   498→      }
+   499→      inSet.add(edge.id);
+   500→
+   501→      if (this._config.enableIndexes) this._indexManager.indexEdge(edge);
+   502→      this._cacheManager.readCache.setEdge(edge.id, edge);
+   503→      this._transactionManager.trackEdgeCreated(edge);
+   504→      this._statisticsCollector.recordWrite();
+   505→
+   506→      return {
+   507→        success: true,
+   508→        data: edge,
+   509→        error: null,
+   510→        durationMs: performance.now() - start,
+   511→        fromCache: false,
+   512→      };
+   513→    } catch (e) {
+   514→      return {
+   515→        success: false,
+   516→        data: null,
+   517→        error: (e as Error).message,
+   518→        durationMs: performance.now() - start,
+   519→        fromCache: false,
+   520→      };
+   521→    }
+   522→  }
+   523→
+   524→  async updateEdge(id: EdgeId, properties: Metadata): Promise<StorageOperationResult<GraphEdge>> {
+   525→    this._ensureConnected();
+   526→    const start = performance.now();
+   527→
+   528→    try {
+   529→      const existing = this._edges.get(id);
+   530→      if (!existing) {
+   531→        return {
+   532→          success: false,
+   533→          data: null,
+   534→          error: `Edge '${id}' not found`,
+   535→          durationMs: performance.now() - start,
+   536→          fromCache: false,
+   537→        };
+   538→      }
+   539→
+   540→      // Create updated edge (immutable pattern)
+   541→      const updated: GraphEdge = Object.freeze({
+   542→        ...existing,
+   543→        properties: Object.freeze({ ...existing.properties, ...properties }),
+   544→      });
+   545→
+   546→      this._edges.set(id, updated);
+   547→      this._cacheManager.invalidateEdge(id);
+   548→      this._cacheManager.readCache.setEdge(id, updated);
+   549→      this._statisticsCollector.recordWrite();
+   550→
+   551→      return {
+   552→        success: true,
+   553→        data: updated,
+   554→        error: null,
+   555→        durationMs: performance.now() - start,
+   556→        fromCache: false,
+   557→      };
+   558→    } catch (e) {
+   559→      return {
+   560→        success: false,
+   561→        data: null,
+   562→        error: (e as Error).message,
+   563→        durationMs: performance.now() - start,
+   564→        fromCache: false,
+   565→      };
+   566→    }
+   567→  }
+   568→
+   569→  async deleteEdge(id: EdgeId): Promise<StorageOperationResult<boolean>> {
+   570→    this._ensureConnected();
+   571→    const start = performance.now();
+   572→
+   573→    try {
+   574→      const edge = this._edges.get(id);
+   575→      if (!edge) {
+   576→        return {
+   577→          success: false,
+   578→          data: null,
+   579→          error: `Edge '${id}' not found`,
+   580→          durationMs: performance.now() - start,
+   581→          fromCache: false,
+   582→        };
+   583→      }
+   584→
+   585→      this._edges.delete(id);
+   586→
+   587→      // Update adjacency
+   588→      const outSet = this._adjacencyOut.get(edge.sourceId);
+   589→      if (outSet) outSet.delete(id);
+   590→      const inSet = this._adjacencyIn.get(edge.targetId);
+   591→      if (inSet) inSet.delete(id);
+   592→
+   593→      if (this._config.enableIndexes) this._indexManager.deindexEdge(edge);
+   594→      this._cacheManager.invalidateEdge(id);
+   595→      this._transactionManager.trackEdgeDeleted(edge);
+   596→      this._statisticsCollector.recordWrite();
+   597→
+   598→      return {
+   599→        success: true,
+   600→        data: true,
+   601→        error: null,
+   602→        durationMs: performance.now() - start,
+   603→        fromCache: false,
+   604→      };
+   605→    } catch (e) {
+   606→      return {
+   607→        success: false,
+   608→        data: null,
+   609→        error: (e as Error).message,
+   610→        durationMs: performance.now() - start,
+   611→        fromCache: false,
+   612→      };
+   613→    }
+   614→  }
+   615→
+   616→  async getEdge(id: EdgeId): Promise<StorageOperationResult<GraphEdge | undefined>> {
+   617→    this._ensureConnected();
+   618→    const start = performance.now();
+   619→
+   620→    if (this._config.enableReadCache) {
+   621→      const cached = this._cacheManager.readCache.getEdge(id);
+   622→      if (cached) {
+   623→        this._statisticsCollector.recordRead();
+   624→        return {
+   625→          success: true,
+   626→          data: cached,
+   627→          error: null,
+   628→          durationMs: performance.now() - start,
+   629→          fromCache: true,
+   630→        };
+   631→      }
+   632→    }
+   633→
+   634→    const edge = this._edges.get(id);
+   635→    this._statisticsCollector.recordRead();
+   636→
+   637→    if (edge && this._config.enableReadCache) {
+   638→      this._cacheManager.readCache.setEdge(id, edge);
+   639→    }
+   640→
+   641→    return {
+   642→      success: true,
+   643→      data: edge,
+   644→      error: null,
+   645→      durationMs: performance.now() - start,
+   646→      fromCache: false,
+   647→    };
+   648→  }
+   649→
+   650→  async hasEdge(id: EdgeId): Promise<boolean> {
+   651→    this._ensureConnected();
+   652→    return this._edges.has(id);
+   653→  }
+   654→
+   655→  async getAllEdges(): Promise<readonly GraphEdge[]> {
+   656→    this._ensureConnected();
+   657→    return Array.from(this._edges.values());
+   658→  }
+   659→
+   660→  async edgeCount(): Promise<number> {
+   661→    this._ensureConnected();
+   662→    return this._edges.size;
+   663→  }
+   664→
+   665→  async getEdgesFrom(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   666→    this._ensureConnected();
+   667→    const edgeIds = this._adjacencyOut.get(nodeId);
+   668→    if (!edgeIds) return [];
+   669→    const result: GraphEdge[] = [];
+   670→    for (const id of edgeIds) {
+   671→      const edge = this._edges.get(id);
+   672→      if (edge) result.push(edge);
+   673→    }
+   674→    return result;
+   675→  }
+   676→
+   677→  async getEdgesTo(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   678→    this._ensureConnected();
+   679→    const edgeIds = this._adjacencyIn.get(nodeId);
+   680→    if (!edgeIds) return [];
+   681→    const result: GraphEdge[] = [];
+   682→    for (const id of edgeIds) {
+   683→      const edge = this._edges.get(id);
+   684→      if (edge) result.push(edge);
+   685→    }
+   686→    return result;
+   687→  }
+   688→
+   689→  // ─── Edge Batch Operations ────────────────────────────────
+   690→
+   691→  async batchCreateEdges(edges: readonly GraphEdge[]): Promise<BatchOperationResult> {
+   692→    this._ensureConnected();
+   693→    this._ensureCapacity(0, edges.length);
+   694→    const start = performance.now();
+   695→    const errors: BatchError[] = [];
+   696→    let succeeded = 0;
+   697→
+   698→    for (let i = 0; i < edges.length; i++) {
+   699→      const edge = edges[i];
+   700→      try {
+   701→        if (this._edges.has(edge.id)) {
+   702→          errors.push({ index: i, id: edge.id, error: 'Already exists' });
+   703→          continue;
+   704→        }
+   705→        if (!this._nodes.has(edge.sourceId)) {
+   706→          errors.push({ index: i, id: edge.id, error: `Source '${edge.sourceId}' not found` });
+   707→          continue;
+   708→        }
+   709→        if (!this._nodes.has(edge.targetId)) {
+   710→          errors.push({ index: i, id: edge.id, error: `Target '${edge.targetId}' not found` });
+   711→          continue;
+   712→        }
+   713→
+   714→        this._edges.set(edge.id, edge);
+   715→        let outSet = this._adjacencyOut.get(edge.sourceId);
+   716→        if (!outSet) { outSet = new Set(); this._adjacencyOut.set(edge.sourceId, outSet); }
+   717→        outSet.add(edge.id);
+   718→        let inSet = this._adjacencyIn.get(edge.targetId);
+   719→        if (!inSet) { inSet = new Set(); this._adjacencyIn.set(edge.targetId, inSet); }
+   720→        inSet.add(edge.id);
+   721→        if (this._config.enableIndexes) this._indexManager.indexEdge(edge);
+   722→        this._cacheManager.readCache.setEdge(edge.id, edge);
+   723→        this._transactionManager.trackEdgeCreated(edge);
+   724→        succeeded++;
+   725→      } catch (e) {
+   726→        errors.push({ index: i, id: edge.id, error: (e as Error).message });
+   727→      }
+   728→    }
+   729→
+   730→    this._statisticsCollector.recordWrite();
+   731→    return {
+   732→      total: edges.length,
+   733→      succeeded,
+   734→      failed: errors.length,
+   735→      errors,
+   736→      durationMs: performance.now() - start,
+   737→    };
+   738→  }
+   739→
+   740→  async batchDeleteEdges(ids: readonly EdgeId[]): Promise<BatchOperationResult> {
+   741→    this._ensureConnected();
+   742→    const start = performance.now();
+   743→    const errors: BatchError[] = [];
+   744→    let succeeded = 0;
+   745→
+   746→    for (let i = 0; i < ids.length; i++) {
+   747→      const id = ids[i];
+   748→      try {
+   749→        const edge = this._edges.get(id);
+   750→        if (!edge) {
+   751→          errors.push({ index: i, id, error: 'Not found' });
+   752→          continue;
+   753→        }
+   754→        this._edges.delete(id);
+   755→        const outSet = this._adjacencyOut.get(edge.sourceId);
+   756→        if (outSet) outSet.delete(id);
+   757→        const inSet = this._adjacencyIn.get(edge.targetId);
+   758→        if (inSet) inSet.delete(id);
+   759→        if (this._config.enableIndexes) this._indexManager.deindexEdge(edge);
+   760→        this._cacheManager.invalidateEdge(id);
+   761→        this._transactionManager.trackEdgeDeleted(edge);
+   762→        succeeded++;
+   763→      } catch (e) {
+   764→        errors.push({ index: i, id, error: (e as Error).message });
+   765→      }
+   766→    }
+   767→
+   768→    this._statisticsCollector.recordWrite();
+   769→    return {
+   770→      total: ids.length,
+   771→      succeeded,
+   772→      failed: errors.length,
+   773→      errors,
+   774→      durationMs: performance.now() - start,
+   775→    };
+   776→  }
+   777→
+   778→  // ─── Snapshot Persistence ─────────────────────────────────
+   779→
+   780→  async saveSnapshot(metadata?: Metadata): Promise<GraphSnapshot> {
+   781→    this._ensureConnected();
+   782→    const nodes = Array.from(this._nodes.values());
+   783→    const edges = Array.from(this._edges.values());
+   784→    const { meta } = this._snapshotManager.saveSnapshot(nodes, edges, metadata);
+   785→
+   786→    this.eventBus.emit(createStorageSnapshotCreatedEvent(
+   787→      this.id, this.adapterType, meta.id, meta.nodeCount, meta.edgeCount,
+   788→    ));
+   789→
+   790→    return meta;
+   791→  }
+   792→
+   793→  async restoreSnapshot(snapshotId: SnapshotId): Promise<GraphSnapshot> {
+   794→    this._ensureConnected();
+   795→    const data = this._snapshotManager.restoreSnapshot(snapshotId);
+   796→
+   797→    // Clear current state
+   798→    this._nodes.clear();
+   799→    this._edges.clear();
+   800→    this._adjacencyOut.clear();
+   801→    this._adjacencyIn.clear();
+   802→    this._indexManager.clear();
+   803→    this._cacheManager.clear();
+   804→
+   805→    // Restore from snapshot data
+   806→    for (const node of data.nodes) {
+   807→      this._nodes.set(node.identity.id, node);
+   808→      this._adjacencyOut.set(node.identity.id, new Set());
+   809→      this._adjacencyIn.set(node.identity.id, new Set());
+   810→      if (this._config.enableIndexes) this._indexManager.indexNode(node);
+   811→    }
+   812→
+   813→    for (const edge of data.edges) {
+   814→      this._edges.set(edge.id, edge);
+   815→      let outSet = this._adjacencyOut.get(edge.sourceId);
+   816→      if (!outSet) { outSet = new Set(); this._adjacencyOut.set(edge.sourceId, outSet); }
+   817→      outSet.add(edge.id);
+   818→      let inSet = this._adjacencyIn.get(edge.targetId);
+   819→      if (!inSet) { inSet = new Set(); this._adjacencyIn.set(edge.targetId, inSet); }
+   820→      inSet.add(edge.id);
+   821→      if (this._config.enableIndexes) this._indexManager.indexEdge(edge);
+   822→    }
+   823→
+   824→    const meta = this._snapshotManager.getSnapshot(snapshotId)!;
+   825→
+   826→    this.eventBus.emit(createStorageRecoveredEvent(
+   827→      this.id, this.adapterType, snapshotId, data.nodes.length, data.edges.length,
+   828→    ));
+   829→
+   830→    return meta;
+   831→  }
+   832→
+   833→  async listSnapshots(): Promise<readonly GraphSnapshot[]> {
+   834→    this._ensureConnected();
+   835→    return this._snapshotManager.listSnapshots();
+   836→  }
+   837→
+   838→  // ─── Transactions ─────────────────────────────────────────
+   839→
+   840→  async beginTransaction(): Promise<TransactionId> {
+   841→    this._ensureConnected();
+   842→    if (!this._config.enableTransactions) {
+   843→      throw new Error('Transactions are disabled in this adapter configuration');
+   844→    }
+   845→    return this._transactionManager.begin(this._nodes, this._edges);
+   846→  }
+   847→
+   848→  async commitTransaction(): Promise<StorageTransactionInfo> {
+   849→    this._ensureConnected();
+   850→    return this._transactionManager.commit();
+   851→  }
+   852→
+   853→  async rollbackTransaction(): Promise<StorageTransactionInfo> {
+   854→    this._ensureConnected();
+   855→    const { info, nodeSnapshot, edgeSnapshot } = this._transactionManager.rollback();
+   856→
+   857→    // Restore from transaction snapshot
+   858→    this._nodes.clear();
+   859→    this._edges.clear();
+   860→    this._adjacencyOut.clear();
+   861→    this._adjacencyIn.clear();
+   862→    this._indexManager.clear();
+   863→    this._cacheManager.clear();
+   864→
+   865→    for (const [id, node] of nodeSnapshot) {
+   866→      this._nodes.set(id, node);
+   867→      this._adjacencyOut.set(id, new Set());
+   868→      this._adjacencyIn.set(id, new Set());
+   869→      if (this._config.enableIndexes) this._indexManager.indexNode(node);
+   870→    }
+   871→
+   872→    for (const [id, edge] of edgeSnapshot) {
+   873→      this._edges.set(id, edge);
+   874→      let outSet = this._adjacencyOut.get(edge.sourceId);
+   875→      if (!outSet) { outSet = new Set(); this._adjacencyOut.set(edge.sourceId, outSet); }
+   876→      outSet.add(edge.id);
+   877→      let inSet = this._adjacencyIn.get(edge.targetId);
+   878→      if (!inSet) { inSet = new Set(); this._adjacencyIn.set(edge.targetId, inSet); }
+   879→      inSet.add(edge.id);
+   880→      if (this._config.enableIndexes) this._indexManager.indexEdge(edge);
+   881→    }
+   882→
+   883→    return info;
+   884→  }
+   885→
+   886→  get isTransactionActive(): boolean {
+   887→    return this._transactionManager.isActive;
+   888→  }
+   889→
+   890→  // ─── Import / Export ──────────────────────────────────────
+   891→
+   892→  async exportGraph(options: ExportOptions): Promise<ExportResult> {
+   893→    this._ensureConnected();
+   894→    const nodes = Array.from(this._nodes.values());
+   895→    const edges = Array.from(this._edges.values());
+   896→    return exportGraph(nodes, edges, options);
+   897→  }
+   898→
+   899→  async importGraph(data: string, options: ImportOptions): Promise<ImportResult> {
+   900→    this._ensureConnected();
+   901→    const start = performance.now();
+   902→    const parsed = parseImportData(data, options.format);
+   903→
+   904→    if (options.mergeStrategy === 'replace') {
+   905→      // Clear current state and import fresh
+   906→      this._nodes.clear();
+   907→      this._edges.clear();
+   908→      this._adjacencyOut.clear();
+   909→      this._adjacencyIn.clear();
+   910→      this._indexManager.clear();
+   911→      this._cacheManager.clear();
+   912→    }
+   913→
+   914→    let nodesSkipped = 0;
+   915→    let edgesSkipped = 0;
+   916→
+   917→    for (const node of parsed.nodes) {
+   918→      if (options.mergeStrategy === 'skip_existing' && this._nodes.has(node.identity.id)) {
+   919→        nodesSkipped++;
+   920→        continue;
+   921→      }
+   922→
+   923→      if (options.mergeStrategy === 'merge' && this._nodes.has(node.identity.id)) {
+   924→        // Merge properties into existing node
+   925→        const existing = this._nodes.get(node.identity.id)!;
+   926→        const merged = createGraphNode(
+   927→          existing.identity.id as string,
+   928→          existing.identity.type,
+   929→          {
+   930→            labels: [...new Set([...existing.identity.labels, ...node.identity.labels])],
+   931→            metadata: existing.metadata,
+   932→            properties: { ...existing.properties, ...node.properties },
+   933→          },
+   934→        );
+   935→        this._nodes.set(node.identity.id, merged);
+   936→        if (this._config.enableIndexes) this._indexManager.reindexNode(existing, merged);
+   937→        this._cacheManager.invalidateNode(node.identity.id);
+   938→        this._cacheManager.readCache.setNode(node.identity.id, merged);
+   939→        continue;
+   940→      }
+   941→
+   942→      this._nodes.set(node.identity.id, node);
+   943→      if (!this._adjacencyOut.has(node.identity.id)) {
+   944→        this._adjacencyOut.set(node.identity.id, new Set());
+   945→      }
+   946→      if (!this._adjacencyIn.has(node.identity.id)) {
+   947→        this._adjacencyIn.set(node.identity.id, new Set());
+   948→      }
+   949→      if (this._config.enableIndexes) this._indexManager.indexNode(node);
+   950→    }
+   951→
+   952→    for (const edge of parsed.edges) {
+   953→      if (options.mergeStrategy === 'skip_existing' && this._edges.has(edge.id)) {
+   954→        edgesSkipped++;
+   955→        continue;
+   956→      }
+   957→
+   958→      if (options.mergeStrategy === 'merge' && this._edges.has(edge.id)) {
+   959→        // Merge properties into existing edge
+   960→        const existing = this._edges.get(edge.id)!;
+   961→        const merged: GraphEdge = Object.freeze({
+   962→          ...existing,
+   963→          properties: Object.freeze({ ...existing.properties, ...edge.properties }),
+   964→        });
+   965→        this._edges.set(edge.id, merged);
+   966→        this._cacheManager.invalidateEdge(edge.id);
+   967→        this._cacheManager.readCache.setEdge(edge.id, merged);
+   968→        continue;
+   969→      }
+   970→
+   971→      this._edges.set(edge.id, edge);
+   972→      let outSet = this._adjacencyOut.get(edge.sourceId);
+   973→      if (!outSet) { outSet = new Set(); this._adjacencyOut.set(edge.sourceId, outSet); }
+   974→      outSet.add(edge.id);
+   975→      let inSet = this._adjacencyIn.get(edge.targetId);
+   976→      if (!inSet) { inSet = new Set(); this._adjacencyIn.set(edge.targetId, inSet); }
+   977→      inSet.add(edge.id);
+   978→      if (this._config.enableIndexes) this._indexManager.indexEdge(edge);
+   979→    }
+   980→
+   981→    return {
+   982→      nodesImported: parsed.nodes.length - nodesSkipped,
+   983→      edgesImported: parsed.edges.length - edgesSkipped,
+   984→      nodesSkipped,
+   985→      edgesSkipped,
+   986→      errors: parsed.errors,
+   987→      durationMs: performance.now() - start,
+   988→    };
+   989→  }
+   990→
+   991→  // ─── Statistics & Health ──────────────────────────────────
+   992→
+   993→  getStatistics(): StorageStatistics {
+   994→    return this._statisticsCollector.collect({
+   995→      nodeCount: this._nodes.size,
+   996→      edgeCount: this._edges.size,
+   997→      indexManager: this._indexManager,
+   998→      readCache: this._cacheManager.readCache,
+   999→      writeBufferPending: this._cacheManager.writeBuffer.size,
+  1000→      snapshotCount: this._snapshotManager.snapshotCount,
+  1001→      activeTransactions: this._transactionManager.activeTransactionCount,
+  1002→    });
+  1003→  }
+  1004→
+  1005→  health(): StorageHealthResult {
+  1006→    const issues: StorageHealthIssue[] = [];
+  1007→
+  1008→    if (!this.isConnected) {
+  1009→      issues.push({
+  1010→        severity: 'error',
+  1011→        component: 'connection',
+  1012→        message: 'Storage adapter is not connected',
+  1013→      });
+  1014→    }
+  1015→
+  1016→    // Verify index consistency
+  1017→    if (this._config.enableIndexes) {
+  1018→      const identityIndexSize = this._indexManager.identityIndex.size;
+  1019→      if (identityIndexSize !== this._nodes.size) {
+  1020→        issues.push({
+  1021→          severity: 'warning',
+  1022→          component: 'identity_index',
+  1023→          message: `Identity index size (${identityIndexSize}) != node count (${this._nodes.size})`,
+  1024→        });
+  1025→      }
+  1026→    }
+  1027→
+  1028→    // Verify adjacency consistency
+  1029→    for (const [nodeId, outSet] of this._adjacencyOut) {
+  1030→      if (!this._nodes.has(nodeId)) {
+  1031→        issues.push({
+  1032→          severity: 'warning',
+  1033→          component: 'adjacency_out',
+  1034→          message: `Adjacency entry for non-existent node '${nodeId}'`,
+  1035→        });
+  1036→      }
+  1037→    }
+  1038→
+  1039→    return {
+  1040→      healthy: issues.filter(i => i.severity === 'error').length === 0,
+  1041→      connectionState: this._connectionState,
+  1042→      issues,
+  1043→      checkedAt: new Date().toISOString() as import('../../types/index.ts').Timestamp,
+  1044→    };
+  1045→  }
+  1046→
+  1047→  verify(): StorageHealthResult {
+  1048→    const issues: StorageHealthIssue[] = [];
+  1049→
+  1050→    // Check 1: All edge endpoints exist as nodes
+  1051→    for (const [edgeId, edge] of this._edges) {
+  1052→      if (!this._nodes.has(edge.sourceId)) {
+  1053→        issues.push({
+  1054→          severity: 'error',
+  1055→          component: 'edge_integrity',
+  1056→          message: `Edge '${edgeId}' references non-existent source '${edge.sourceId}'`,
+  1057→        });
+  1058→      }
+  1059→      if (!this._nodes.has(edge.targetId)) {
+  1060→        issues.push({
+  1061→          severity: 'error',
+  1062→          component: 'edge_integrity',
+  1063→          message: `Edge '${edgeId}' references non-existent target '${edge.targetId}'`,
+  1064→        });
+  1065→      }
+  1066→    }
+  1067→
+  1068→    // Check 2: Adjacency consistency
+  1069→    for (const [nodeId, outSet] of this._adjacencyOut) {
+  1070→      for (const edgeId of outSet) {
+  1071→        const edge = this._edges.get(edgeId);
+  1072→        if (!edge || edge.sourceId !== nodeId) {
+  1073→          issues.push({
+  1074→            severity: 'error',
+  1075→            component: 'adjacency_out',
+  1076→            message: `Adjacency out mismatch for node '${nodeId}', edge '${edgeId}'`,
+  1077→          });
+  1078→        }
+  1079→      }
+  1080→    }
+  1081→
+  1082→    for (const [nodeId, inSet] of this._adjacencyIn) {
+  1083→      for (const edgeId of inSet) {
+  1084→        const edge = this._edges.get(edgeId);
+  1085→        if (!edge || edge.targetId !== nodeId) {
+  1086→          issues.push({
+  1087→            severity: 'error',
+  1088→            component: 'adjacency_in',
+  1089→            message: `Adjacency in mismatch for node '${nodeId}', edge '${edgeId}'`,
+  1090→          });
+  1091→        }
+  1092→      }
+  1093→    }
+  1094→
+  1095→    // Check 3: Index consistency
+  1096→    if (this._config.enableIndexes) {
+  1097→      if (this._indexManager.identityIndex.size !== this._nodes.size) {
+  1098→        issues.push({
+  1099→          severity: 'warning',
+  1100→          component: 'identity_index',
+  1101→          message: 'Identity index size mismatch',
+  1102→        });
+  1103→      }
+  1104→    }
+  1105→
+  1106→    return {
+  1107→      healthy: issues.filter(i => i.severity === 'error').length === 0,
+  1108→      connectionState: this._connectionState,
+  1109→      issues,
+  1110→      checkedAt: new Date().toISOString() as import('../../types/index.ts').Timestamp,
+  1111→    };
+  1112→  }
+  1113→
+  1114→  async rebuildIndexes(): Promise<void> {
+  1115→    this._indexManager.clear();
+  1116→    for (const [, node] of this._nodes) {
+  1117→      this._indexManager.indexNode(node);
+  1118→    }
+  1119→    for (const [, edge] of this._edges) {
+  1120→      this._indexManager.indexEdge(edge);
+  1121→    }
+  1122→    this._indexManager.setRebuiltAt(new Date().toISOString() as import('../../types/index.ts').Timestamp);
+  1123→  }
+  1124→
+  1125→  // ─── Cache Management ─────────────────────────────────────
+  1126→
+  1127→  clearCache(): void {
+  1128→    this._cacheManager.clear();
+  1129→  }
+  1130→
+  1131→  async flushWriteBuffer(): Promise<BatchOperationResult> {
+  1132→    // For NetworkX adapter, write buffer is a no-op since
+  1133→    // all operations are applied immediately. But we maintain
+  1134→    // the interface for consistency with remote backends.
+  1135→    const pending = this._cacheManager.writeBuffer.size;
+  1136→    this._cacheManager.writeBuffer.clear();
+  1137→    return {
+  1138→      total: pending,
+  1139→      succeeded: pending,
+  1140→      failed: 0,
+  1141→      errors: [],
+  1142→      durationMs: 0,
+  1143→    };
+  1144→  }
+  1145→
+  1146→  // ─── Cleanup ──────────────────────────────────────────────
+  1147→
+  1148→  async clear(): Promise<void> {
+  1149→    this._nodes.clear();
+  1150→    this._edges.clear();
+  1151→    this._adjacencyOut.clear();
+  1152→    this._adjacencyIn.clear();
+  1153→    this._indexManager.clear();
+  1154→    this._cacheManager.clear();
+  1155→    // Snapshots are retained
+  1156→  }
+  1157→
+  1158→  // ─── Internal Helpers ─────────────────────────────────────
+  1159→
+  1160→  /** Remove all edges connected to a node. Returns removed edges. */
+  1161→  private _removeAllEdgesForNode(nodeId: NodeId): GraphEdge[] {
+  1162→    const removed: GraphEdge[] = [];
+  1163→
+  1164→    const outIds = this._adjacencyOut.get(nodeId);
+  1165→    if (outIds) {
+  1166→      for (const edgeId of outIds) {
+  1167→        const edge = this._edges.get(edgeId);
+  1168→        if (edge) {
+  1169→          removed.push(edge);
+  1170→          const targetIn = this._adjacencyIn.get(edge.targetId);
+  1171→          if (targetIn) targetIn.delete(edgeId);
+  1172→        }
+  1173→        this._edges.delete(edgeId);
+  1174→      }
+  1175→      outIds.clear();
+  1176→    }
+  1177→
+  1178→    const inIds = this._adjacencyIn.get(nodeId);
+  1179→    if (inIds) {
+  1180→      for (const edgeId of inIds) {
+  1181→        const edge = this._edges.get(edgeId);
+  1182→        if (edge) {
+  1183→          removed.push(edge);
+  1184→          const sourceOut = this._adjacencyOut.get(edge.sourceId);
+  1185→          if (sourceOut) sourceOut.delete(edgeId);
+  1186→        }
+  1187→        this._edges.delete(edgeId);
+  1188→      }
+  1189→      inIds.clear();
+  1190→    }
+  1191→
+  1192→    return removed;
+  1193→  }
+  1194→
+  1195→  /** Ensure the adapter is connected before operations */
+  1196→  private _ensureConnected(): void {
+  1197→    if (this._connectionState !== ConnState.Connected) {
+  1198→      throw new Error(`Storage adapter is not connected (state: ${this._connectionState})`);
+  1199→    }
+  1200→  }
+  1201→
+  1202→  /** Ensure capacity limits are not exceeded */
+  1203→  private _ensureCapacity(additionalNodes: number = 0, additionalEdges: number = 0): void {
+  1204→    if (this._config.maxNodes > 0 && this._nodes.size + additionalNodes > this._config.maxNodes) {
+  1205→      throw new Error(`Node limit exceeded: ${this._nodes.size + additionalNodes} > ${this._config.maxNodes}`);
+  1206→    }
+  1207→    if (this._config.maxEdges > 0 && this._edges.size + additionalEdges > this._config.maxEdges) {
+  1208→      throw new Error(`Edge limit exceeded: ${this._edges.size + additionalEdges} > ${this._config.maxEdges}`);
+  1209→    }
+  1210→  }
+  1211→}
+  1212→

@@ -1,0 +1,839 @@
+     1→/**
+     2→ * Knowledge Graph Runtime — InMemoryGraphRepository
+     3→ *
+     4→ * Full implementation of the GraphRepository contract plus extended
+     5→ * runtime operations: batch, find, list, clear, consistency checks,
+     6→ * statistics, and event publishing.
+     7→ *
+     8→ * All operations are synchronous under the hood (in-memory) but
+     9→ * return Promises to satisfy the async contract interface.
+    10→ *
+    11→ * Performance guarantees:
+    12→ * - lookup: O(1)
+    13→ * - create: O(1)
+    14→ * - delete: O(1) + O(degree) for edge cleanup
+    15→ * - find by type: O(1) via indexes
+    16→ * - adjacent nodes: O(k) where k = degree
+    17→ *
+    18→ * No external dependencies.
+    19→ */
+    20→
+    21→import type { GraphRepository } from '../../contracts/index.js';
+    22→import type { GraphNode, GraphEdge, GraphStatistics } from '../../models/index.js';
+    23→import type { NodeId, EdgeId, SnapshotId } from '../../types/index.js';
+    24→import {
+    25→  DuplicateNodeError,
+    26→  DuplicateEdgeError,
+    27→  GraphValidationError,
+    28→  SelfReferenceError,
+    29→} from '../../errors/index.js';
+    30→import { createGraphStatistics } from '../../models/index.js';
+    31→import { createNodeCreatedEvent, createNodeUpdatedEvent, createNodeDeletedEvent, createEdgeCreatedEvent, createEdgeDeletedEvent, createSnapshotCreatedEvent } from '../../events/index.js';
+    32→import type { AnyGraphDomainEvent, EventPublisher } from '../../adapters/index.js';
+    33→import { InternalStorage } from '../storage/index.js';
+    34→import { IndexManager } from '../indexes/index.js';
+    35→import { CacheManager } from '../cache/index.js';
+    36→import { SnapshotEngine } from '../snapshot/index.js';
+    37→import { TransactionManager, ChangeSet } from '../transaction/index.js';
+    38→import type { SnapshotDiff } from '../snapshot/index.js';
+    39→
+    40→// ─── Extended Repository Interface ──────────────────────────
+    41→
+    42→/**
+    43→ * Extended repository interface beyond the base GraphRepository contract.
+    44→ * These methods are specific to the in-memory runtime implementation.
+    45→ */
+    46→export interface ExtendedRepositoryOperations {
+    47→  // Batch operations
+    48→  addNodes(nodes: readonly GraphNode[]): Promise<void>;
+    49→  addEdges(edges: readonly GraphEdge[]): Promise<void>;
+    50→  removeNodes(ids: readonly NodeId[]): Promise<void>;
+    51→  removeEdges(ids: readonly EdgeId[]): Promise<void>;
+    52→  replaceNodes(nodes: readonly GraphNode[]): Promise<void>;
+    53→  replaceEdges(edges: readonly GraphEdge[]): Promise<void>;
+    54→
+    55→  // Find operations (leverage indexes)
+    56→  findNodesByType(type: string): Promise<readonly GraphNode[]>;
+    57→  findEdgesByType(type: string): Promise<readonly GraphEdge[]>;
+    58→  findNodesByLabel(label: string): Promise<readonly GraphNode[]>;
+    59→  findNodesBySource(source: string): Promise<readonly GraphNode[]>;
+    60→  findNodesByTag(tag: string): Promise<readonly GraphNode[]>;
+    61→
+    62→  // List operations
+    63→  listNodes(limit?: number, offset?: number): Promise<readonly GraphNode[]>;
+    64→  listEdges(limit?: number, offset?: number): Promise<readonly GraphEdge[]>;
+    65→
+    66→  // Clear
+    67→  clear(): Promise<void>;
+    68→
+    69→  // Statistics
+    70→  getStatistics(): Promise<GraphStatistics>;
+    71→
+    72→  // Consistency
+    73→  checkConsistency(): Promise<ConsistencyReport>;
+    74→
+    75→  // Snapshot operations (delegated to SnapshotEngine)
+    76→  createSnapshot(metadata?: Record<string, string | number | boolean | null>): Promise<import('../../models/index.ts').GraphSnapshot>;
+    77→  restoreSnapshot(snapshotId: SnapshotId): Promise<import('../../models/index.ts').GraphSnapshot>;
+    78→  diffSnapshots(fromId: SnapshotId, toId: SnapshotId): Promise<SnapshotDiff>;
+    79→  listSnapshots(): readonly import('../../models/index.ts').GraphSnapshot[];
+    80→
+    81→  // Transaction operations (delegated to TransactionManager)
+    82→  beginTransaction(): TransactionId;
+    83→  commitTransaction(): ChangeSet;
+    84→  rollbackTransaction(): void;
+    85→  abortAllTransactions(): void;
+    86→  get transactionDepth(): number;
+    87→  get isTransactionActive(): boolean;
+    88→
+    89→  // Cache
+    90→  getCacheStats(): CacheStatsReport;
+    91→  invalidateCache(): void;
+    92→}
+    93→
+    94→// ─── Consistency Report ─────────────────────────────────────
+    95→
+    96→export interface ConsistencyReport {
+    97→  readonly valid: boolean;
+    98→  readonly danglingEdges: number;
+    99→  readonly duplicateNodeIds: number;
+   100→  readonly duplicateEdgeIds: number;
+   101→  readonly selfReferences: number;
+   102→  readonly invalidNodeReferences: number;
+   103→  readonly duplicateRelationships: number;
+   104→  readonly issues: readonly ConsistencyIssue[];
+   105→}
+   106→
+   107→export interface ConsistencyIssue {
+   108→  readonly severity: 'error' | 'warning';
+   109→  readonly code: string;
+   110→  readonly message: string;
+   111→  readonly details?: Record<string, unknown>;
+   112→}
+   113→
+   114→// ─── Cache Stats Report ─────────────────────────────────────
+   115→
+   116→export interface CacheStatsReport {
+   117→  readonly nodeCacheSize: number;
+   118→  readonly edgeCacheSize: number;
+   119→  readonly traversalCacheSize: number;
+   120→  readonly nodeCacheHitRate: number;
+   121→  readonly nodeCacheCapacity: number;
+   122→  readonly edgeCacheCapacity: number;
+   123→  readonly traversalCacheCapacity: number;
+   124→}
+   125→
+   126→// ─── InMemoryGraphRepository ────────────────────────────────
+   127→
+   128→/**
+   129→ * In-memory implementation of GraphRepository with extended operations.
+   130→ *
+   131→ * Architecture:
+   132→ * - InternalStorage: core Maps and adjacency indexes
+   133→ * - IndexManager: type/identity/metadata indexes
+   134→ * - CacheManager: LRU caches for hot data
+   135→ * - SnapshotEngine: point-in-time snapshots
+   136→ * - TransactionManager: ACID-like transactions
+   137→ * - EventPublisher: domain event publishing (injected)
+   138→ */
+   139→export class InMemoryGraphRepository implements GraphRepository, ExtendedRepositoryOperations {
+   140→  private readonly _storage: InternalStorage;
+   141→  private readonly _indexManager: IndexManager;
+   142→  private readonly _cacheManager: CacheManager;
+   143→  private readonly _snapshotEngine: SnapshotEngine;
+   144→  private readonly _transactionManager: TransactionManager;
+   145→  private readonly _eventPublisher: EventPublisher | null;
+   146→  private readonly _pendingEvents: AnyGraphDomainEvent[] = [];
+   147→
+   148→  constructor(options: {
+   149→    eventPublisher?: EventPublisher;
+   150→    nodeCacheCapacity?: number;
+   151→    edgeCacheCapacity?: number;
+   152→    traversalCacheCapacity?: number;
+   153→  } = {}) {
+   154→    this._storage = new InternalStorage();
+   155→    this._indexManager = new IndexManager();
+   156→    this._cacheManager = new CacheManager({
+   157→      nodeCacheCapacity: options.nodeCacheCapacity,
+   158→      edgeCacheCapacity: options.edgeCacheCapacity,
+   159→      traversalCacheCapacity: options.traversalCacheCapacity,
+   160→    });
+   161→    this._snapshotEngine = new SnapshotEngine(this._storage, this._indexManager);
+   162→    this._transactionManager = new TransactionManager(
+   163→      this._storage,
+   164→      this._indexManager,
+   165→      this._cacheManager,
+   166→    );
+   167→    this._eventPublisher = options.eventPublisher ?? null;
+   168→  }
+   169→
+   170→  // ─── GraphRepository Contract (async) ────────────────────
+   171→
+   172→  async addNode(node: GraphNode): Promise<void> {
+   173→    this.createNode(node);
+   174→  }
+   175→
+   176→  async getNode(id: NodeId): Promise<GraphNode | undefined> {
+   177→    return this.readNode(id);
+   178→  }
+   179→
+   180→  async removeNode(id: NodeId): Promise<boolean> {
+   181→    return this.deleteNode(id);
+   182→  }
+   183→
+   184→  async updateNodeProperties(id: NodeId, properties: Record<string, unknown>): Promise<GraphNode> {
+   185→    return this.updateNode(id, properties);
+   186→  }
+   187→
+   188→  async addEdge(edge: GraphEdge): Promise<void> {
+   189→    this.createEdge(edge);
+   190→  }
+   191→
+   192→  async getEdge(id: EdgeId): Promise<GraphEdge | undefined> {
+   193→    return this.readEdge(id);
+   194→  }
+   195→
+   196→  async removeEdge(id: EdgeId): Promise<boolean> {
+   197→    return this.deleteEdge(id);
+   198→  }
+   199→
+   200→  async getEdgesFrom(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   201→    // Check cache first
+   202→    const cached = this._cacheManager.traversalCache.get(nodeId, 'out');
+   203→    if (cached) return cached;
+   204→
+   205→    const edges = this._storage.getOutgoingEdges(nodeId);
+   206→    this._cacheManager.traversalCache.set(nodeId, 'out', edges);
+   207→    return edges;
+   208→  }
+   209→
+   210→  async getEdgesTo(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   211→    const cached = this._cacheManager.traversalCache.get(nodeId, 'in');
+   212→    if (cached) return cached;
+   213→
+   214→    const edges = this._storage.getIncomingEdges(nodeId);
+   215→    this._cacheManager.traversalCache.set(nodeId, 'in', edges);
+   216→    return edges;
+   217→  }
+   218→
+   219→  async getAllNodes(): Promise<readonly GraphNode[]> {
+   220→    return Array.from(this._storage.nodes.values());
+   221→  }
+   222→
+   223→  async getAllEdges(): Promise<readonly GraphEdge[]> {
+   224→    return Array.from(this._storage.edges.values());
+   225→  }
+   226→
+   227→  async nodeCount(): Promise<number> {
+   228→    return this._storage.nodeCount;
+   229→  }
+   230→
+   231→  async edgeCount(): Promise<number> {
+   232→    return this._storage.edgeCount;
+   233→  }
+   234→
+   235→  async hasNode(id: NodeId): Promise<boolean> {
+   236→    return this._storage.hasNode(id);
+   237→  }
+   238→
+   239→  async hasEdge(id: EdgeId): Promise<boolean> {
+   240→    return this._storage.hasEdge(id);
+   241→  }
+   242→
+   243→  // ─── Synchronous CRUD Operations ─────────────────────────
+   244→
+   245→  /** Create a node. Throws DuplicateNodeError if ID exists. */
+   246→  createNode(node: GraphNode): void {
+   247→    if (this._storage.hasNode(node.identity.id)) {
+   248→      throw new DuplicateNodeError(node.identity.id as string);
+   249→    }
+   250→    this._storage.setNode(node.identity.id, node);
+   251→    this._indexManager.indexNode(node);
+   252→    this._cacheManager.nodeCache.set(node.identity.id, node);
+   253→    this._transactionManager.trackNodeCreated(node);
+   254→    this._emitEvent(createNodeCreatedEvent(
+   255→      node.identity.id as string,
+   256→      node.identity.type,
+   257→      node.identity.labels,
+   258→    ));
+   259→  }
+   260→
+   261→  /** Read a node by ID. O(1). */
+   262→  readNode(id: NodeId): GraphNode | undefined {
+   263→    // Check cache first
+   264→    const cached = this._cacheManager.nodeCache.get(id);
+   265→    if (cached) {
+   266→      this._cacheManager.nodeCache.recordHit();
+   267→      return cached;
+   268→    }
+   269→    this._cacheManager.nodeCache.recordMiss();
+   270→
+   271→    const node = this._storage.getNode(id);
+   272→    if (node) {
+   273→      this._cacheManager.nodeCache.set(id, node);
+   274→    }
+   275→    return node;
+   276→  }
+   277→
+   278→  /** Update a node's properties. Returns the updated node. */
+   279→  updateNode(id: NodeId, properties: Record<string, unknown>): GraphNode {
+   280→    const oldNode = this._storage.getNode(id);
+   281→    if (!oldNode) {
+   282→      throw new GraphValidationError(`Node '${id}' not found`, { nodeId: id });
+   283→    }
+   284→
+   285→    // Create updated node with new properties merged
+   286→    const updatedNode: GraphNode = Object.freeze({
+   287→      ...oldNode,
+   288→      properties: Object.freeze({
+   289→        ...oldNode.properties,
+   290→        ...properties,
+   291→      }),
+   292→      metadata: Object.freeze({
+   293→        ...oldNode.metadata,
+   294→        updatedAt: new Date().toISOString(),
+   295→      }),
+   296→    });
+   297→
+   298→    this._storage.setNode(id, updatedNode);
+   299→    this._indexManager.reindexNode(oldNode, updatedNode);
+   300→    this._cacheManager.invalidateNode(id);
+   301→    this._cacheManager.nodeCache.set(id, updatedNode);
+   302→    this._transactionManager.trackNodeUpdated(oldNode, updatedNode);
+   303→
+   304→    // Build changes record for event
+   305→    const changes: Record<string, { old: unknown; new: unknown }> = {};
+   306→    for (const key of Object.keys(properties)) {
+   307→      changes[key] = {
+   308→        old: oldNode.properties[key],
+   309→        new: properties[key],
+   310→      };
+   311→    }
+   312→    this._emitEvent(createNodeUpdatedEvent(id as string, changes));
+   313→
+   314→    return updatedNode;
+   315→  }
+   316→
+   317→  /** Delete a node by ID. Also removes all connected edges. Returns true if deleted. */
+   318→  deleteNode(id: NodeId): boolean {
+   319→    const node = this._storage.getNode(id);
+   320→    if (!node) return false;
+   321→
+   322→    // Remove all connected edges first
+   323→    const removedEdges = this._storage.removeAllEdgesForNode(id);
+   324→
+   325→    // De-index removed edges
+   326→    for (const edge of removedEdges) {
+   327→      this._indexManager.deindexEdge(edge);
+   328→      this._cacheManager.invalidateEdge(edge);
+   329→      this._transactionManager.trackEdgeDeleted(edge);
+   330→      this._emitEvent(createEdgeDeletedEvent(
+   331→        edge.id as string,
+   332→        edge.sourceId as string,
+   333→        edge.targetId as string,
+   334→        edge.relationship.edgeType,
+   335→      ));
+   336→    }
+   337→
+   338→    // Remove node
+   339→    this._storage.deleteNode(id);
+   340→    this._indexManager.deindexNode(node);
+   341→    this._cacheManager.invalidateNode(id);
+   342→    this._transactionManager.trackNodeDeleted(node);
+   343→
+   344→    this._emitEvent(createNodeDeletedEvent(
+   345→      id as string,
+   346→      node.identity.type,
+   347→    ));
+   348→
+   349→    return true;
+   350→  }
+   351→
+   352→  /** Create an edge. Validates source/target exist and no self-reference. */
+   353→  createEdge(edge: GraphEdge): void {
+   354→    if (this._storage.hasEdge(edge.id)) {
+   355→      throw new DuplicateEdgeError(edge.id as string);
+   356→    }
+   357→
+   358→    if (edge.sourceId === edge.targetId) {
+   359→      throw new SelfReferenceError(edge.sourceId as string, edge.relationship.edgeType);
+   360→    }
+   361→
+   362→    // Validate source and target nodes exist
+   363→    if (!this._storage.hasNode(edge.sourceId)) {
+   364→      throw new GraphValidationError(
+   365→        `Edge source node '${edge.sourceId}' does not exist`,
+   366→        { edgeId: edge.id, sourceId: edge.sourceId },
+   367→      );
+   368→    }
+   369→    if (!this._storage.hasNode(edge.targetId)) {
+   370→      throw new GraphValidationError(
+   371→        `Edge target node '${edge.targetId}' does not exist`,
+   372→        { edgeId: edge.id, targetId: edge.targetId },
+   373→      );
+   374→    }
+   375→
+   376→    this._storage.setEdge(edge.id, edge);
+   377→    this._indexManager.indexEdge(edge);
+   378→    this._cacheManager.edgeCache.set(edge.id, edge);
+   379→    this._transactionManager.trackEdgeCreated(edge);
+   380→    this._emitEvent(createEdgeCreatedEvent(
+   381→      edge.id as string,
+   382→      edge.sourceId as string,
+   383→      edge.targetId as string,
+   384→      edge.relationship.edgeType,
+   385→    ));
+   386→  }
+   387→
+   388→  /** Read an edge by ID. O(1). */
+   389→  readEdge(id: EdgeId): GraphEdge | undefined {
+   390→    const cached = this._cacheManager.edgeCache.get(id);
+   391→    if (cached) return cached;
+   392→
+   393→    const edge = this._storage.getEdge(id);
+   394→    if (edge) {
+   395→      this._cacheManager.edgeCache.set(id, edge);
+   396→    }
+   397→    return edge;
+   398→  }
+   399→
+   400→  /** Delete an edge by ID. Returns true if deleted. */
+   401→  deleteEdge(id: EdgeId): boolean {
+   402→    const edge = this._storage.getEdge(id);
+   403→    if (!edge) return false;
+   404→
+   405→    this._storage.deleteEdge(id);
+   406→    this._indexManager.deindexEdge(edge);
+   407→    this._cacheManager.invalidateEdge(edge);
+   408→    this._transactionManager.trackEdgeDeleted(edge);
+   409→    this._emitEvent(createEdgeDeletedEvent(
+   410→      id as string,
+   411→      edge.sourceId as string,
+   412→      edge.targetId as string,
+   413→      edge.relationship.edgeType,
+   414→    ));
+   415→
+   416→    return true;
+   417→  }
+   418→
+   419→  // ─── Batch Operations ────────────────────────────────────
+   420→
+   421→  async addNodes(nodes: readonly GraphNode[]): Promise<void> {
+   422→    // Validate all first — no partial inserts
+   423→    for (const node of nodes) {
+   424→      if (this._storage.hasNode(node.identity.id)) {
+   425→        throw new DuplicateNodeError(node.identity.id as string);
+   426→      }
+   427→    }
+   428→    for (const node of nodes) {
+   429→      this.createNode(node);
+   430→    }
+   431→  }
+   432→
+   433→  async addEdges(edges: readonly GraphEdge[]): Promise<void> {
+   434→    // Validate all first — no partial inserts
+   435→    for (const edge of edges) {
+   436→      if (this._storage.hasEdge(edge.id)) {
+   437→        throw new DuplicateEdgeError(edge.id as string);
+   438→      }
+   439→      if (edge.sourceId === edge.targetId) {
+   440→        throw new SelfReferenceError(edge.sourceId as string, edge.relationship.edgeType);
+   441→      }
+   442→    }
+   443→    for (const edge of edges) {
+   444→      this.createEdge(edge);
+   445→    }
+   446→  }
+   447→
+   448→  async removeNodes(ids: readonly NodeId[]): Promise<void> {
+   449→    for (const id of ids) {
+   450→      this.deleteNode(id);
+   451→    }
+   452→  }
+   453→
+   454→  async removeEdges(ids: readonly EdgeId[]): Promise<void> {
+   455→    for (const id of ids) {
+   456→      this.deleteEdge(id);
+   457→    }
+   458→  }
+   459→
+   460→  async replaceNodes(nodes: readonly GraphNode[]): Promise<void> {
+   461→    // Replace is upsert — delete existing then add new
+   462→    for (const node of nodes) {
+   463→      if (this._storage.hasNode(node.identity.id)) {
+   464→        this.deleteNode(node.identity.id);
+   465→      }
+   466→      this.createNode(node);
+   467→    }
+   468→  }
+   469→
+   470→  async replaceEdges(edges: readonly GraphEdge[]): Promise<void> {
+   471→    for (const edge of edges) {
+   472→      if (this._storage.hasEdge(edge.id)) {
+   473→        this.deleteEdge(edge.id);
+   474→      }
+   475→      this.createEdge(edge);
+   476→    }
+   477→  }
+   478→
+   479→  // ─── Find Operations (via indexes) ───────────────────────
+   480→
+   481→  async findNodesByType(type: string): Promise<readonly GraphNode[]> {
+   482→    const nodeIds = this._indexManager.nodeTypeIndex.getByType(type);
+   483→    const result: GraphNode[] = [];
+   484→    for (const id of nodeIds) {
+   485→      const node = this._storage.getNode(id);
+   486→      if (node) result.push(node);
+   487→    }
+   488→    return result;
+   489→  }
+   490→
+   491→  async findEdgesByType(type: string): Promise<readonly GraphEdge[]> {
+   492→    const edgeIds = this._indexManager.edgeTypeIndex.getByType(type);
+   493→    const result: GraphEdge[] = [];
+   494→    for (const id of edgeIds) {
+   495→      const edge = this._storage.getEdge(id);
+   496→      if (edge) result.push(edge);
+   497→    }
+   498→    return result;
+   499→  }
+   500→
+   501→  async findNodesByLabel(label: string): Promise<readonly GraphNode[]> {
+   502→    const nodeIds = this._indexManager.identityIndex.findByLabel(label);
+   503→    const result: GraphNode[] = [];
+   504→    for (const id of nodeIds) {
+   505→      const node = this._storage.getNode(id);
+   506→      if (node) result.push(node);
+   507→    }
+   508→    return result;
+   509→  }
+   510→
+   511→  async findNodesBySource(source: string): Promise<readonly GraphNode[]> {
+   512→    const nodeIds = this._indexManager.metadataIndex.findBySource(source);
+   513→    const result: GraphNode[] = [];
+   514→    for (const id of nodeIds) {
+   515→      const node = this._storage.getNode(id);
+   516→      if (node) result.push(node);
+   517→    }
+   518→    return result;
+   519→  }
+   520→
+   521→  async findNodesByTag(tag: string): Promise<readonly GraphNode[]> {
+   522→    const nodeIds = this._indexManager.metadataIndex.findByTag(tag);
+   523→    const result: GraphNode[] = [];
+   524→    for (const id of nodeIds) {
+   525→      const node = this._storage.getNode(id);
+   526→      if (node) result.push(node);
+   527→    }
+   528→    return result;
+   529→  }
+   530→
+   531→  // ─── List Operations ─────────────────────────────────────
+   532→
+   533→  async listNodes(limit: number = 100, offset: number = 0): Promise<readonly GraphNode[]> {
+   534→    const all = Array.from(this._storage.nodes.values());
+   535→    return all.slice(offset, offset + limit);
+   536→  }
+   537→
+   538→  async listEdges(limit: number = 100, offset: number = 0): Promise<readonly GraphEdge[]> {
+   539→    const all = Array.from(this._storage.edges.values());
+   540→    return all.slice(offset, offset + limit);
+   541→  }
+   542→
+   543→  // ─── Clear ───────────────────────────────────────────────
+   544→
+   545→  async clear(): Promise<void> {
+   546→    this._storage.clear();
+   547→    this._indexManager.clear();
+   548→    this._cacheManager.clear();
+   549→    this._snapshotEngine.clear();
+   550→  }
+   551→
+   552→  // ─── Statistics ──────────────────────────────────────────
+   553→
+   554→  async getStatistics(): Promise<GraphStatistics> {
+   555→    const nodeCount = this._storage.nodeCount;
+   556→    const edgeCount = this._storage.edgeCount;
+   557→
+   558→    // Build type distributions
+   559→    const nodeTypeDistribution: Record<string, number> = {};
+   560→    for (const [type, count] of this._indexManager.nodeTypeIndex.getDistribution()) {
+   561→      nodeTypeDistribution[type] = count;
+   562→    }
+   563→
+   564→    const edgeTypeDistribution: Record<string, number> = {};
+   565→    for (const [type, count] of this._indexManager.edgeTypeIndex.getDistribution()) {
+   566→      edgeTypeDistribution[type] = count;
+   567→    }
+   568→
+   569→    // Compute degree statistics
+   570→    let totalDegree = 0;
+   571→    let maxDegree = 0;
+   572→    for (const [nodeId] of this._storage.nodes) {
+   573→      const outDegree = this._storage.getOutgoingEdgeIds(nodeId).size;
+   574→      const inDegree = this._storage.getIncomingEdgeIds(nodeId).size;
+   575→      const degree = outDegree + inDegree;
+   576→      totalDegree += degree;
+   577→      if (degree > maxDegree) maxDegree = degree;
+   578→    }
+   579→
+   580→    const avgDegree = nodeCount > 0 ? totalDegree / nodeCount : 0;
+   581→
+   582→    return createGraphStatistics(nodeCount, edgeCount, {
+   583→      nodeTypeDistribution,
+   584→      edgeTypeDistribution,
+   585→      avgDegree,
+   586→      maxDegree,
+   587→    });
+   588→  }
+   589→
+   590→  // ─── Consistency Checks ──────────────────────────────────
+   591→
+   592→  async checkConsistency(): Promise<ConsistencyReport> {
+   593→    const issues: ConsistencyIssue[] = [];
+   594→    let danglingEdges = 0;
+   595→    let duplicateNodeIds = 0;
+   596→    let duplicateEdgeIds = 0;
+   597→    let selfReferences = 0;
+   598→    let invalidNodeReferences = 0;
+   599→    let duplicateRelationships = 0;
+   600→
+   601→    // Check for duplicate node IDs
+   602→    const seenNodeIds = new Set<string>();
+   603→    for (const [id] of this._storage.nodes) {
+   604→      if (seenNodeIds.has(id)) {
+   605→        duplicateNodeIds++;
+   606→        issues.push({
+   607→          severity: 'error',
+   608→          code: 'DUPLICATE_NODE_ID',
+   609→          message: `Duplicate node ID: '${id}'`,
+   610→          details: { nodeId: id },
+   611→        });
+   612→      }
+   613→      seenNodeIds.add(id);
+   614→    }
+   615→
+   616→    // Check for duplicate edge IDs
+   617→    const seenEdgeIds = new Set<string>();
+   618→    for (const [id] of this._storage.edges) {
+   619→      if (seenEdgeIds.has(id)) {
+   620→        duplicateEdgeIds++;
+   621→        issues.push({
+   622→          severity: 'error',
+   623→          code: 'DUPLICATE_EDGE_ID',
+   624→          message: `Duplicate edge ID: '${id}'`,
+   625→          details: { edgeId: id },
+   626→        });
+   627→      }
+   628→      seenEdgeIds.add(id);
+   629→    }
+   630→
+   631→    // Check for dangling edges (source or target node doesn't exist)
+   632→    for (const [, edge] of this._storage.edges) {
+   633→      if (!this._storage.hasNode(edge.sourceId)) {
+   634→        danglingEdges++;
+   635→        issues.push({
+   636→          severity: 'error',
+   637→          code: 'DANGLING_EDGE_SOURCE',
+   638→          message: `Edge '${edge.id}' source node '${edge.sourceId}' does not exist`,
+   639→          details: { edgeId: edge.id, sourceId: edge.sourceId },
+   640→        });
+   641→      }
+   642→      if (!this._storage.hasNode(edge.targetId)) {
+   643→        danglingEdges++;
+   644→        issues.push({
+   645→          severity: 'error',
+   646→          code: 'DANGLING_EDGE_TARGET',
+   647→          message: `Edge '${edge.id}' target node '${edge.targetId}' does not exist`,
+   648→          details: { edgeId: edge.id, targetId: edge.targetId },
+   649→        });
+   650→      }
+   651→
+   652→      // Self-reference check
+   653→      if (edge.sourceId === edge.targetId) {
+   654→        selfReferences++;
+   655→        issues.push({
+   656→          severity: 'error',
+   657→          code: 'SELF_REFERENCE',
+   658→          message: `Edge '${edge.id}' references same node as source and target`,
+   659→          details: { edgeId: edge.id, nodeId: edge.sourceId },
+   660→        });
+   661→      }
+   662→    }
+   663→
+   664→    // Check for invalid node references in adjacency indexes
+   665→    for (const [nodeId] of this._storage.nodes) {
+   666→      const outIds = this._storage.getOutgoingEdgeIds(nodeId);
+   667→      for (const edgeId of outIds) {
+   668→        if (!this._storage.hasEdge(edgeId)) {
+   669→          invalidNodeReferences++;
+   670→          issues.push({
+   671→            severity: 'warning',
+   672→            code: 'INVALID_ADJACENCY_REFERENCE',
+   673→            message: `Node '${nodeId}' outgoing adjacency references non-existent edge '${edgeId}'`,
+   674→            details: { nodeId, edgeId },
+   675→          });
+   676→        }
+   677→      }
+   678→    }
+   679→
+   680→    // Check for duplicate relationships (same source, target, edgeType)
+   681→    const relationshipKeys = new Set<string>();
+   682→    for (const [, edge] of this._storage.edges) {
+   683→      const key = `${edge.sourceId}:${edge.targetId}:${edge.relationship.edgeType}`;
+   684→      if (relationshipKeys.has(key)) {
+   685→        duplicateRelationships++;
+   686→        issues.push({
+   687→          severity: 'warning',
+   688→          code: 'DUPLICATE_RELATIONSHIP',
+   689→          message: `Duplicate relationship: ${key}`,
+   690→          details: { edgeId: edge.id, key },
+   691→        });
+   692→      }
+   693→      relationshipKeys.add(key);
+   694→    }
+   695→
+   696→    const valid = issues.filter(i => i.severity === 'error').length === 0;
+   697→
+   698→    return Object.freeze({
+   699→      valid,
+   700→      danglingEdges,
+   701→      duplicateNodeIds,
+   702→      duplicateEdgeIds,
+   703→      selfReferences,
+   704→      invalidNodeReferences,
+   705→      duplicateRelationships,
+   706→      issues: Object.freeze([...issues]),
+   707→    });
+   708→  }
+   709→
+   710→  // ─── Snapshot Operations ─────────────────────────────────
+   711→
+   712→  async createSnapshot(metadata?: Record<string, string | number | boolean | null>): Promise<import('../../models/index.ts').GraphSnapshot> {
+   713→    const snapshot = this._snapshotEngine.createSnapshot(metadata);
+   714→    this._emitEvent(createSnapshotCreatedEvent(
+   715→      snapshot.id as string,
+   716→      snapshot.nodeCount,
+   717→      snapshot.edgeCount,
+   718→    ));
+   719→    return snapshot;
+   720→  }
+   721→
+   722→  async restoreSnapshot(snapshotId: SnapshotId): Promise<import('../../models/index.ts').GraphSnapshot> {
+   723→    return this._snapshotEngine.restoreSnapshot(snapshotId);
+   724→  }
+   725→
+   726→  async diffSnapshots(fromId: SnapshotId, toId: SnapshotId): Promise<SnapshotDiff> {
+   727→    return this._snapshotEngine.diffSnapshots(fromId, toId);
+   728→  }
+   729→
+   730→  listSnapshots(): readonly import('../../models/index.ts').GraphSnapshot[] {
+   731→    return this._snapshotEngine.listSnapshots();
+   732→  }
+   733→
+   734→  // ─── Transaction Operations ──────────────────────────────
+   735→
+   736→  beginTransaction(): import('../../types/index.ts').TransactionId {
+   737→    return this._transactionManager.begin();
+   738→  }
+   739→
+   740→  commitTransaction(): ChangeSet {
+   741→    const changeSet = this._transactionManager.commit();
+   742→    // Publish all accumulated events
+   743→    this._flushEvents();
+   744→    return changeSet;
+   745→  }
+   746→
+   747→  rollbackTransaction(): void {
+   748→    this._transactionManager.rollback();
+   749→    // Clear pending events since we rolled back
+   750→    this._pendingEvents.length = 0;
+   751→  }
+   752→
+   753→  abortAllTransactions(): void {
+   754→    this._transactionManager.abort();
+   755→    this._pendingEvents.length = 0;
+   756→  }
+   757→
+   758→  get transactionDepth(): number {
+   759→    return this._transactionManager.depth;
+   760→  }
+   761→
+   762→  get isTransactionActive(): boolean {
+   763→    return this._transactionManager.isActive;
+   764→  }
+   765→
+   766→  // ─── Cache Operations ───────────────────────────────────
+   767→
+   768→  getCacheStats(): CacheStatsReport {
+   769→    const stats = this._cacheManager.getStats();
+   770→    return Object.freeze({
+   771→      nodeCacheSize: stats.nodeCacheSize,
+   772→      edgeCacheSize: stats.edgeCacheSize,
+   773→      traversalCacheSize: stats.traversalCacheSize,
+   774→      nodeCacheHitRate: stats.nodeCacheHitRate,
+   775→      nodeCacheCapacity: this._cacheManager.nodeCache.capacity,
+   776→      edgeCacheCapacity: this._cacheManager.edgeCache.capacity,
+   777→      traversalCacheCapacity: this._cacheManager.traversalCache.capacity,
+   778→    });
+   779→  }
+   780→
+   781→  invalidateCache(): void {
+   782→    this._cacheManager.clear();
+   783→  }
+   784→
+   785→  // ─── Extended Statistics ─────────────────────────────────
+   786→
+   787→  get snapshotCount(): number {
+   788→    return this._snapshotEngine.snapshotCount;
+   789→  }
+   790→
+   791→  get transactionCount(): number {
+   792→    return this._transactionManager.totalTransactionCount;
+   793→  }
+   794→
+   795→  get committedTransactionCount(): number {
+   796→    return this._transactionManager.committedCount;
+   797→  }
+   798→
+   799→  get memoryUsage(): number {
+   800→    return this._storage.memoryUsage;
+   801→  }
+   802→
+   803→  // ─── Internal Event Management ──────────────────────────
+   804→
+   805→  /** Queue an event for publishing. If in a transaction, defer until commit. */
+   806→  private _emitEvent(event: AnyGraphDomainEvent): void {
+   807→    if (this._transactionManager.isActive) {
+   808→      // Defer event publishing until transaction commit
+   809→      this._pendingEvents.push(event);
+   810→    } else {
+   811→      // Publish immediately
+   812→      this._publishEventNow(event);
+   813→    }
+   814→  }
+   815→
+   816→  /** Publish all pending events (called at transaction commit). */
+   817→  private _flushEvents(): void {
+   818→    if (this._eventPublisher && this._pendingEvents.length > 0) {
+   819→      const events = [...this._pendingEvents];
+   820→      this._pendingEvents.length = 0;
+   821→      this._eventPublisher.publishAll(events).catch(() => {
+   822→        // Event publishing failure should not break the repository
+   823→        // In production, this would go to a dead letter queue
+   824→      });
+   825→    } else {
+   826→      this._pendingEvents.length = 0;
+   827→    }
+   828→  }
+   829→
+   830→  /** Publish a single event immediately. */
+   831→  private _publishEventNow(event: AnyGraphDomainEvent): void {
+   832→    if (this._eventPublisher) {
+   833→      this._eventPublisher.publish(event).catch(() => {
+   834→        // Event publishing failure should not break the repository
+   835→      });
+   836→    }
+   837→  }
+   838→}
+   839→

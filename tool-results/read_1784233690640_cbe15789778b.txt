@@ -1,0 +1,1424 @@
+     1→/**
+     2→ * Knowledge Graph Traversal Engine — Core Algorithms
+     3→ *
+     4→ * Pure algorithm implementations for graph traversal.
+     5→ * All algorithms operate through the GraphRepository interface —
+     6→ * they never access internal storage directly.
+     7→ *
+     8→ * Algorithms implemented:
+     9→ * 1. BFS — Breadth-First Search (level-order, shortest path in unweighted)
+    10→ * 2. DFS — Depth-First Search (recursive and iterative)
+    11→ * 3. Bidirectional BFS — Two-wave search from source and target
+    12→ * 4. Shortest Path — BFS-based for unweighted graphs
+    13→ * 5. Multi-Path — Yen's K-shortest paths algorithm
+    14→ * 6. Cycle Detection — DFS-based with coloring (white/gray/black)
+    15→ * 7. Connected Components — BFS-based component discovery
+    16→ * 8. Reachability — BFS/DFS-based reachable set computation
+    17→ *
+    18→ * Performance targets:
+    19→ * - BFS/DFS: O(V + E)
+    20→ * - Bidirectional BFS: O(b^(d/2)) where b = branching factor, d = distance
+    21→ * - Shortest Path: O(V + E)
+    22→ * - K-Shortest Paths: O(K * V * E) (Yen's algorithm)
+    23→ * - Cycle Detection: O(V + E)
+    24→ * - Connected Components: O(V + E)
+    25→ * - Reachability: O(V + E)
+    26→ */
+    27→
+    28→import type { NodeId, EdgeId } from '../../types/index.js';
+    29→import type { GraphNode, GraphEdge } from '../../models/index.js';
+    30→import type { GraphRepository } from '../../contracts/index.js';
+    31→import type {
+    32→  TraversalOptions,
+    33→  TraversalResult,
+    34→  TraversalPath,
+    35→  TraversalStatistics,
+    36→  TerminationReason,
+    37→  NodePredicate,
+    38→  EdgePredicate,
+    39→  NodeVisitor,
+    40→  EdgeVisitor,
+    41→  CancellationToken,
+    42→  Cycle,
+    43→  ConnectedComponent,
+    44→  PathResult,
+    45→  CycleDetectionOptions,
+    46→  BFSOptions,
+    47→  DFSOptions,
+    48→  BidirectionalOptions,
+    49→  ShortestPathOptions,
+    50→  MultiPathOptions,
+    51→  ReachabilityOptions,
+    52→} from '../types/index.js';
+    53→import {
+    54→  TraversalStrategy,
+    55→  TerminationReason as TR,
+    56→  emptyTraversalResult,
+    57→  emptyTraversalStatistics,
+    58→  createTraversalStatistics,
+    59→  notFoundPathResult,
+    60→} from '../types/index.js';
+    61→
+    62→// ─── Internal Helpers ─────────────────────────────────────────
+    63→
+    64→/** Default max depth for traversals */
+    65→const DEFAULT_MAX_DEPTH = 10;
+    66→const DEFAULT_MAX_NODES = 0; // unlimited
+    67→const DEFAULT_TIMEOUT = 0; // unlimited
+    68→
+    69→/** Check cancellation or timeout */
+    70→function shouldTerminate(
+    71→  cancellationToken: CancellationToken | undefined,
+    72→  startTime: number,
+    73→  timeout: number,
+    74→  visitedCount: number,
+    75→  maxNodes: number,
+    76→): TerminationReason | null {
+    77→  if (cancellationToken?.isCancelled) return TR.Cancelled;
+    78→  if (timeout > 0 && (Date.now() - startTime) >= timeout) return TR.Timeout;
+    79→  if (maxNodes > 0 && visitedCount >= maxNodes) return TR.MaxNodesReached;
+    80→  return null;
+    81→}
+    82→
+    83→/** Apply edge filter chain */
+    84→function edgeMatchesFilter(
+    85→  edge: GraphEdge,
+    86→  edgeTypes: readonly string[] | undefined,
+    87→  edgeFilter: EdgePredicate | undefined,
+    88→): boolean {
+    89→  if (edgeTypes && edgeTypes.length > 0 && !edgeTypes.includes(edge.relationship.edgeType)) return false;
+    90→  if (edgeFilter && !edgeFilter(edge)) return false;
+    91→  return true;
+    92→}
+    93→
+    94→/** Apply node filter chain */
+    95→function nodeMatchesFilter(
+    96→  node: GraphNode,
+    97→  nodeTypes: readonly string[] | undefined,
+    98→  nodeFilter: NodePredicate | undefined,
+    99→): boolean {
+   100→  if (nodeTypes && nodeTypes.length > 0 && !nodeTypes.includes(node.identity.type)) return false;
+   101→  if (nodeFilter && !nodeFilter(node)) return false;
+   102→  return true;
+   103→}
+   104→
+   105→/** Get edges in the specified direction from a node */
+   106→async function getEdgesInDirection(
+   107→  repo: GraphRepository,
+   108→  nodeId: NodeId,
+   109→  direction: 'outgoing' | 'incoming' | 'both',
+   110→): Promise<readonly GraphEdge[]> {
+   111→  switch (direction) {
+   112→    case 'outgoing':
+   113→      return repo.getEdgesFrom(nodeId);
+   114→    case 'incoming':
+   115→      return repo.getEdgesTo(nodeId);
+   116→    case 'both': {
+   117→      const [outgoing, incoming] = await Promise.all([
+   118→        repo.getEdgesFrom(nodeId),
+   119→        repo.getEdgesTo(nodeId),
+   120→      ]);
+   121→      // Deduplicate by edge ID
+   122→      const seen = new Set<EdgeId>();
+   123→      const result: GraphEdge[] = [];
+   124→      for (const e of [...outgoing, ...incoming]) {
+   125→        if (!seen.has(e.id)) {
+   126→          seen.add(e.id);
+   127→          result.push(e);
+   128→        }
+   129→      }
+   130→      return result;
+   131→    }
+   132→    default:
+   133→      return repo.getEdgesFrom(nodeId);
+   134→  }
+   135→}
+   136→
+   137→/** Get the neighbor node ID from an edge, given the direction context */
+   138→function getNeighborId(edge: GraphEdge, nodeId: NodeId, direction: 'outgoing' | 'incoming' | 'both'): NodeId {
+   139→  if (direction === 'incoming') return edge.sourceId;
+   140→  if (direction === 'outgoing') return edge.targetId;
+   141→  // For 'both', return the other end
+   142→  return edge.sourceId === nodeId ? edge.targetId : edge.sourceId;
+   143→}
+   144→
+   145→/** Build a TraversalPath from a parent map */
+   146→function buildPath(
+   147→  parentMap: Map<NodeId, { nodeId: NodeId; edge: GraphEdge }>,
+   148→  startId: NodeId,
+   149→  endId: NodeId,
+   150→  repo: GraphRepository,
+   151→): TraversalPath | null {
+   152→  if (!parentMap.has(endId) && startId !== endId) return null;
+   153→
+   154→  const nodeIds: NodeId[] = [];
+   155→  const edges: GraphEdge[] = [];
+   156→  let current: NodeId | null = endId;
+   157→
+   158→  while (current !== null && current !== undefined) {
+   159→    nodeIds.unshift(current);
+   160→    const parent = parentMap.get(current);
+   161→    if (parent) {
+   162→      edges.unshift(parent.edge);
+   163→      current = parent.nodeId;
+   164→    } else {
+   165→      current = null;
+   166→    }
+   167→  }
+   168→
+   169→  if (nodeIds.length === 0 || nodeIds[0] !== startId) return null;
+   170→
+   171→  // Resolve nodes from repo (we need the full GraphNode objects)
+   172→  // Since we already visited them, they should be cached or quickly accessible
+   173→  // For efficiency, we return partial path and resolve later in the engine
+   174→  return {
+   175→    nodes: [], // Will be resolved by the engine
+   176→    edges: Object.freeze(edges),
+   177→    length: edges.length,
+   178→    totalStrength: edges.reduce((sum, e) => sum + e.relationship.strength, 0),
+   179→  } as TraversalPath;
+   180→}
+   181→
+   182→// ─── BFS Algorithm ────────────────────────────────────────────
+   183→
+   184→/**
+   185→ * Breadth-First Search traversal.
+   186→ *
+   187→ * Explores the graph level by level from a start node.
+   188→ * Guarantees shortest path in unweighted graphs.
+   189→ *
+   190→ * Time Complexity: O(V + E)
+   191→ * Space Complexity: O(V)
+   192→ *
+   193→ * @param repo - Graph repository
+   194→ * @param startNodeId - Starting node ID
+   195→ * @param options - Traversal options
+   196→ * @returns Traversal result with visited nodes and edges
+   197→ */
+   198→export async function breadthFirstSearch(
+   199→  repo: GraphRepository,
+   200→  startNodeId: NodeId,
+   201→  options: BFSOptions = {},
+   202→): Promise<TraversalResult> {
+   203→  const startTime = Date.now();
+   204→  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+   205→  const maxNodes = options.maxNodes ?? DEFAULT_MAX_NODES;
+   206→  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+   207→  const direction = options.direction ?? 'outgoing';
+   208→  const edgeTypes = options.edgeTypes;
+   209→  const nodeTypes = options.nodeTypes;
+   210→  const edgeFilter = options.edgeFilter;
+   211→  const nodeFilter = options.nodeFilter;
+   212→  const nodeVisitor = options.nodeVisitor;
+   213→  const edgeVisitor = options.edgeVisitor;
+   214→  const cancellationToken = options.cancellationToken;
+   215→  const collectEdges = options.collectEdges ?? true;
+   216→
+   217→  // Validate start node exists
+   218→  const startNode = await repo.getNode(startNodeId);
+   219→  if (!startNode) {
+   220→    return emptyTraversalResult(TraversalStrategy.BFS, Date.now() - startTime);
+   221→  }
+   222→
+   223→  const visited = new Set<NodeId>();
+   224→  const visitedNodes: GraphNode[] = [];
+   225→  const visitedEdges: GraphEdge[] = [];
+   226→  const queue: Array<{ nodeId: NodeId; depth: number }> = [{ nodeId: startNodeId, depth: 0 }];
+   227→  visited.add(startNodeId);
+   228→
+   229→  let maxDepthReached = 0;
+   230→  let terminationReason: TerminationReason = TR.Completed;
+   231→  let edgesInspected = 0;
+   232→
+   233→  while (queue.length > 0) {
+   234→    // Check termination conditions
+   235→    const termCheck = shouldTerminate(cancellationToken, startTime, timeout, visited.size, maxNodes);
+   236→    if (termCheck) {
+   237→      terminationReason = termCheck;
+   238→      break;
+   239→    }
+   240→
+   241→    const { nodeId, depth } = queue.shift()!;
+   242→
+   243→    // Depth check
+   244→    if (depth > maxDepth) {
+   245→      terminationReason = TR.MaxDepthReached;
+   246→      break;
+   247→    }
+   248→
+   249→    // Get node
+   250→    const node = await repo.getNode(nodeId);
+   251→    if (!node) continue;
+   252→
+   253→    // Apply node filter
+   254→    if (!nodeMatchesFilter(node, nodeTypes, nodeFilter)) continue;
+   255→
+   256→    visitedNodes.push(node);
+   257→    maxDepthReached = Math.max(maxDepthReached, depth);
+   258→
+   259→    // Visit node
+   260→    if (nodeVisitor) {
+   261→      const shouldContinue = nodeVisitor(node, depth);
+   262→      if (shouldContinue === false) continue; // Prune this branch
+   263→    }
+   264→
+   265→    // Don't explore edges beyond maxDepth
+   266→    if (depth >= maxDepth) {
+   267→      if (terminationReason === TR.Completed) {
+   268→        terminationReason = TR.MaxDepthReached;
+   269→      }
+   270→      continue;
+   271→    }
+   272→
+   273→    // Get adjacent edges
+   274→    const edges = await getEdgesInDirection(repo, nodeId, direction);
+   275→
+   276→    for (const edge of edges) {
+   277→      edgesInspected++;
+   278→
+   279→      // Apply edge filter
+   280→      if (!edgeMatchesFilter(edge, edgeTypes, edgeFilter)) continue;
+   281→
+   282→      // Visit edge
+   283→      if (edgeVisitor) {
+   284→        const shouldTraverse = edgeVisitor(edge, depth);
+   285→        if (shouldTraverse === false) continue;
+   286→      }
+   287→
+   288→      if (collectEdges) {
+   289→        visitedEdges.push(edge);
+   290→      }
+   291→
+   292→      // Get neighbor
+   293→      const neighborId = getNeighborId(edge, nodeId, direction);
+   294→
+   295→      if (!visited.has(neighborId)) {
+   296→        visited.add(neighborId);
+   297→        queue.push({ nodeId: neighborId, depth: depth + 1 });
+   298→      }
+   299→    }
+   300→  }
+   301→
+   302→  const duration = Date.now() - startTime;
+   303→  const stats = createTraversalStatistics({
+   304→    visitedNodeCount: visitedNodes.length,
+   305→    visitedEdgeCount: collectEdges ? visitedEdges.length : edgesInspected,
+   306→    maxDepth: maxDepthReached,
+   307→    duration,
+   308→  });
+   309→
+   310→  return Object.freeze({
+   311→    visitedNodes: Object.freeze(visitedNodes),
+   312→    visitedEdges: Object.freeze(visitedEdges),
+   313→    paths: [],
+   314→    statistics: stats,
+   315→    duration,
+   316→    maxDepthReached,
+   317→    terminationReason,
+   318→    strategyUsed: TraversalStrategy.BFS,
+   319→  });
+   320→}
+   321→
+   322→// ─── DFS Algorithm ────────────────────────────────────────────
+   323→
+   324→/**
+   325→ * Depth-First Search traversal (iterative implementation).
+   326→ *
+   327→ * Explores as deep as possible before backtracking.
+   328→ * Uses a stack instead of recursion to avoid stack overflow.
+   329→ *
+   330→ * Time Complexity: O(V + E)
+   331→ * Space Complexity: O(V) (stack + visited set)
+   332→ *
+   333→ * @param repo - Graph repository
+   334→ * @param startNodeId - Starting node ID
+   335→ * @param options - Traversal options
+   336→ * @returns Traversal result with visited nodes and edges
+   337→ */
+   338→export async function depthFirstSearch(
+   339→  repo: GraphRepository,
+   340→  startNodeId: NodeId,
+   341→  options: DFSOptions = {},
+   342→): Promise<TraversalResult> {
+   343→  const startTime = Date.now();
+   344→  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+   345→  const maxNodes = options.maxNodes ?? DEFAULT_MAX_NODES;
+   346→  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+   347→  const direction = options.direction ?? 'outgoing';
+   348→  const edgeTypes = options.edgeTypes;
+   349→  const nodeTypes = options.nodeTypes;
+   350→  const edgeFilter = options.edgeFilter;
+   351→  const nodeFilter = options.nodeFilter;
+   352→  const nodeVisitor = options.nodeVisitor;
+   353→  const edgeVisitor = options.edgeVisitor;
+   354→  const cancellationToken = options.cancellationToken;
+   355→  const collectEdges = options.collectEdges ?? true;
+   356→
+   357→  // Validate start node
+   358→  const startNode = await repo.getNode(startNodeId);
+   359→  if (!startNode) {
+   360→    return emptyTraversalResult(TraversalStrategy.DFS, Date.now() - startTime);
+   361→  }
+   362→
+   363→  const visited = new Set<NodeId>();
+   364→  const visitedNodes: GraphNode[] = [];
+   365→  const visitedEdges: GraphEdge[] = [];
+   366→  // Stack: {nodeId, depth, iterator} for lazy expansion
+   367→  const stack: Array<{ nodeId: NodeId; depth: number }> = [{ nodeId: startNodeId, depth: 0 }];
+   368→
+   369→  let maxDepthReached = 0;
+   370→  let terminationReason: TerminationReason = TR.Completed;
+   371→  let edgesInspected = 0;
+   372→
+   373→  while (stack.length > 0) {
+   374→    const termCheck = shouldTerminate(cancellationToken, startTime, timeout, visited.size, maxNodes);
+   375→    if (termCheck) {
+   376→      terminationReason = termCheck;
+   377→      break;
+   378→    }
+   379→
+   380→    const { nodeId, depth } = stack.pop()!;
+   381→
+   382→    if (visited.has(nodeId)) continue;
+   383→    if (depth > maxDepth) {
+   384→      terminationReason = TR.MaxDepthReached;
+   385→      continue;
+   386→    }
+   387→
+   388→    visited.add(nodeId);
+   389→
+   390→    const node = await repo.getNode(nodeId);
+   391→    if (!node) continue;
+   392→
+   393→    if (!nodeMatchesFilter(node, nodeTypes, nodeFilter)) continue;
+   394→
+   395→    visitedNodes.push(node);
+   396→    maxDepthReached = Math.max(maxDepthReached, depth);
+   397→
+   398→    if (nodeVisitor) {
+   399→      const shouldContinue = nodeVisitor(node, depth);
+   400→      if (shouldContinue === false) continue;
+   401→    }
+   402→
+   403→    if (depth >= maxDepth) {
+   404→      if (terminationReason === TR.Completed) {
+   405→        terminationReason = TR.MaxDepthReached;
+   406→      }
+   407→      continue;
+   408→    }
+   409→
+   410→    const edges = await getEdgesInDirection(repo, nodeId, direction);
+   411→
+   412→    // Push neighbors in reverse order so leftmost is processed first
+   413→    const neighbors: Array<{ neighborId: NodeId; edge: GraphEdge }> = [];
+   414→    for (const edge of edges) {
+   415→      edgesInspected++;
+   416→      if (!edgeMatchesFilter(edge, edgeTypes, edgeFilter)) continue;
+   417→      if (edgeVisitor) {
+   418→        const shouldTraverse = edgeVisitor(edge, depth);
+   419→        if (shouldTraverse === false) continue;
+   420→      }
+   421→      if (collectEdges) {
+   422→        visitedEdges.push(edge);
+   423→      }
+   424→      const neighborId = getNeighborId(edge, nodeId, direction);
+   425→      if (!visited.has(neighborId)) {
+   426→        neighbors.push({ neighborId, edge });
+   427→      }
+   428→    }
+   429→
+   430→    // Push in reverse so first neighbor is on top of stack
+   431→    for (let i = neighbors.length - 1; i >= 0; i--) {
+   432→      stack.push({ nodeId: neighbors[i].neighborId, depth: depth + 1 });
+   433→    }
+   434→  }
+   435→
+   436→  const duration = Date.now() - startTime;
+   437→  const stats = createTraversalStatistics({
+   438→    visitedNodeCount: visitedNodes.length,
+   439→    visitedEdgeCount: collectEdges ? visitedEdges.length : edgesInspected,
+   440→    maxDepth: maxDepthReached,
+   441→    duration,
+   442→  });
+   443→
+   444→  return Object.freeze({
+   445→    visitedNodes: Object.freeze(visitedNodes),
+   446→    visitedEdges: Object.freeze(visitedEdges),
+   447→    paths: [],
+   448→    statistics: stats,
+   449→    duration,
+   450→    maxDepthReached,
+   451→    terminationReason,
+   452→    strategyUsed: TraversalStrategy.DFS,
+   453→  });
+   454→}
+   455→
+   456→/**
+   457→ * Recursive DFS implementation.
+   458→ * Uses actual recursion for simpler code; suitable for small graphs.
+   459→ * Falls back to iterative for large graphs (depth > 1000).
+   460→ */
+   461→export async function depthFirstSearchRecursive(
+   462→  repo: GraphRepository,
+   463→  startNodeId: NodeId,
+   464→  options: DFSOptions = {},
+   465→): Promise<TraversalResult> {
+   466→  const startTime = Date.now();
+   467→  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+   468→  const maxNodes = options.maxNodes ?? DEFAULT_MAX_NODES;
+   469→  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+   470→  const direction = options.direction ?? 'outgoing';
+   471→  const edgeTypes = options.edgeTypes;
+   472→  const nodeTypes = options.nodeTypes;
+   473→  const edgeFilter = options.edgeFilter;
+   474→  const nodeFilter = options.nodeFilter;
+   475→  const nodeVisitor = options.nodeVisitor;
+   476→  const edgeVisitor = options.edgeVisitor;
+   477→  const cancellationToken = options.cancellationToken;
+   478→  const collectEdges = options.collectEdges ?? true;
+   479→
+   480→  const startNode = await repo.getNode(startNodeId);
+   481→  if (!startNode) {
+   482→    return emptyTraversalResult(TraversalStrategy.DFS, Date.now() - startTime);
+   483→  }
+   484→
+   485→  const visited = new Set<NodeId>();
+   486→  const visitedNodes: GraphNode[] = [];
+   487→  const visitedEdges: GraphEdge[] = [];
+   488→  let maxDepthReached = 0;
+   489→  let terminationReason: TerminationReason = TR.Completed;
+   490→  let edgesInspected = 0;
+   491→
+   492→  async function dfsVisit(nodeId: NodeId, depth: number): Promise<void> {
+   493→    if (visited.has(nodeId)) return;
+   494→    if (depth > maxDepth) {
+   495→      terminationReason = TR.MaxDepthReached;
+   496→      return;
+   497→    }
+   498→    if (cancellationToken?.isCancelled) {
+   499→      terminationReason = TR.Cancelled;
+   500→      return;
+   501→    }
+   502→    if (maxNodes > 0 && visited.size >= maxNodes) {
+   503→      terminationReason = TR.MaxNodesReached;
+   504→      return;
+   505→    }
+   506→    if (timeout > 0 && (Date.now() - startTime) >= timeout) {
+   507→      terminationReason = TR.Timeout;
+   508→      return;
+   509→    }
+   510→
+   511→    visited.add(nodeId);
+   512→    const node = await repo.getNode(nodeId);
+   513→    if (!node) return;
+   514→
+   515→    if (!nodeMatchesFilter(node, nodeTypes, nodeFilter)) return;
+   516→
+   517→    visitedNodes.push(node);
+   518→    maxDepthReached = Math.max(maxDepthReached, depth);
+   519→
+   520→    if (nodeVisitor) {
+   521→      const shouldContinue = nodeVisitor(node, depth);
+   522→      if (shouldContinue === false) return;
+   523→    }
+   524→
+   525→    if (depth >= maxDepth) {
+   526→      terminationReason = TR.MaxDepthReached;
+   527→      return;
+   528→    }
+   529→
+   530→    const edges = await getEdgesInDirection(repo, nodeId, direction);
+   531→    for (const edge of edges) {
+   532→      edgesInspected++;
+   533→      if (!edgeMatchesFilter(edge, edgeTypes, edgeFilter)) continue;
+   534→      if (edgeVisitor) {
+   535→        const shouldTraverse = edgeVisitor(edge, depth);
+   536→        if (shouldTraverse === false) continue;
+   537→      }
+   538→      if (collectEdges) {
+   539→        visitedEdges.push(edge);
+   540→      }
+   541→      const neighborId = getNeighborId(edge, nodeId, direction);
+   542→      if (!visited.has(neighborId)) {
+   543→        await dfsVisit(neighborId, depth + 1);
+   544→      }
+   545→    }
+   546→  }
+   547→
+   548→  await dfsVisit(startNodeId, 0);
+   549→
+   550→  const duration = Date.now() - startTime;
+   551→  const stats = createTraversalStatistics({
+   552→    visitedNodeCount: visitedNodes.length,
+   553→    visitedEdgeCount: collectEdges ? visitedEdges.length : edgesInspected,
+   554→    maxDepth: maxDepthReached,
+   555→    duration,
+   556→  });
+   557→
+   558→  return Object.freeze({
+   559→    visitedNodes: Object.freeze(visitedNodes),
+   560→    visitedEdges: Object.freeze(visitedEdges),
+   561→    paths: [],
+   562→    statistics: stats,
+   563→    duration,
+   564→    maxDepthReached,
+   565→    terminationReason,
+   566→    strategyUsed: TraversalStrategy.DFS,
+   567→  });
+   568→}
+   569→
+   570→// ─── Bidirectional BFS ────────────────────────────────────────
+   571→
+   572→/**
+   573→ * Bidirectional BFS for finding the shortest path between two nodes.
+   574→ *
+   575→ * Runs two simultaneous BFS traversals: one from source and one from target.
+   576→ * When the two frontiers meet, a shortest path has been found.
+   577→ *
+   578→ * Time Complexity: O(b^(d/2)) — significantly faster than single BFS for distant nodes
+   579→ * Space Complexity: O(b^(d/2))
+   580→ *
+   581→ * @param repo - Graph repository
+   582→ * @param sourceId - Source node ID
+   583→ * @param targetId - Target node ID
+   584→ * @param options - Traversal options
+   585→ * @returns Path result with shortest path if found
+   586→ */
+   587→export async function bidirectionalBFS(
+   588→  repo: GraphRepository,
+   589→  sourceId: NodeId,
+   590→  targetId: NodeId,
+   591→  options: BidirectionalOptions = {},
+   592→): Promise<PathResult> {
+   593→  const startTime = Date.now();
+   594→  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+   595→  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+   596→  const edgeTypes = options.edgeTypes;
+   597→  const edgeFilter = options.edgeFilter;
+   598→  const cancellationToken = options.cancellationToken;
+   599→
+   600→  // Validate both nodes exist
+   601→  const [sourceNode, targetNode] = await Promise.all([
+   602→    repo.getNode(sourceId),
+   603→    repo.getNode(targetId),
+   604→  ]);
+   605→  if (!sourceNode || !targetNode) {
+   606→    return notFoundPathResult(Date.now() - startTime);
+   607→  }
+   608→
+   609→  // Same node
+   610→  if (sourceId === targetId) {
+   611→    return Object.freeze({
+   612→      found: true,
+   613→      path: Object.freeze({
+   614→        nodes: [sourceNode],
+   615→        edges: [],
+   616→        length: 0,
+   617→        totalStrength: 0,
+   618→      }),
+   619→      alternatives: [],
+   620→      totalPaths: 1,
+   621→      duration: Date.now() - startTime,
+   622→    });
+   623→  }
+   624→
+   625→  // Forward search: source → target (follow outgoing edges)
+   626→  const forwardVisited = new Map<NodeId, { parent: NodeId; edge: GraphEdge }>();
+   627→  forwardVisited.set(sourceId, { parent: sourceId, edge: null as unknown as GraphEdge });
+   628→
+   629→  // Backward search: target → source (follow incoming edges, reversed)
+   630→  const backwardVisited = new Map<NodeId, { parent: NodeId; edge: GraphEdge }>();
+   631→  backwardVisited.set(targetId, { parent: targetId, edge: null as unknown as GraphEdge });
+   632→
+   633→  let forwardQueue: NodeId[] = [sourceId];
+   634→  let backwardQueue: NodeId[] = [targetId];
+   635→  let forwardDepth = 0;
+   636→  let backwardDepth = 0;
+   637→
+   638→  while (forwardQueue.length > 0 && backwardQueue.length > 0) {
+   639→    if (cancellationToken?.isCancelled) break;
+   640→    if (timeout > 0 && (Date.now() - startTime) >= timeout) break;
+   641→
+   642→    // Expand forward frontier
+   643→    const nextForwardQueue: NodeId[] = [];
+   644→    for (const nodeId of forwardQueue) {
+   645→      const edges = await repo.getEdgesFrom(nodeId); // outgoing
+   646→      for (const edge of edges) {
+   647→        if (!edgeMatchesFilter(edge, edgeTypes, edgeFilter)) continue;
+   648→        const neighborId = edge.targetId;
+   649→        if (!forwardVisited.has(neighborId)) {
+   650→          forwardVisited.set(neighborId, { parent: nodeId, edge });
+   651→          nextForwardQueue.push(neighborId);
+   652→
+   653→          // Check intersection
+   654→          if (backwardVisited.has(neighborId)) {
+   655→            return constructBidirectionalPath(
+   656→              repo, forwardVisited, backwardVisited,
+   657→              sourceId, targetId, neighborId, startTime,
+   658→            );
+   659→          }
+   660→        }
+   661→      }
+   662→    }
+   663→    forwardQueue = nextForwardQueue;
+   664→    forwardDepth++;
+   665→    if (forwardDepth > maxDepth) break;
+   666→
+   667→    // Expand backward frontier
+   668→    const nextBackwardQueue: NodeId[] = [];
+   669→    for (const nodeId of backwardQueue) {
+   670→      const edges = await repo.getEdgesTo(nodeId); // incoming
+   671→      for (const edge of edges) {
+   672→        if (!edgeMatchesFilter(edge, edgeTypes, edgeFilter)) continue;
+   673→        const neighborId = edge.sourceId;
+   674→        if (!backwardVisited.has(neighborId)) {
+   675→          backwardVisited.set(neighborId, { parent: nodeId, edge });
+   676→          nextBackwardQueue.push(neighborId);
+   677→
+   678→          // Check intersection
+   679→          if (forwardVisited.has(neighborId)) {
+   680→            return constructBidirectionalPath(
+   681→              repo, forwardVisited, backwardVisited,
+   682→              sourceId, targetId, neighborId, startTime,
+   683→            );
+   684→          }
+   685→        }
+   686→      }
+   687→    }
+   688→    backwardQueue = nextBackwardQueue;
+   689→    backwardDepth++;
+   690→    if (backwardDepth > maxDepth) break;
+   691→  }
+   692→
+   693→  return notFoundPathResult(Date.now() - startTime);
+   694→}
+   695→
+   696→/** Construct path from bidirectional search results */
+   697→async function constructBidirectionalPath(
+   698→  repo: GraphRepository,
+   699→  forwardVisited: Map<NodeId, { parent: NodeId; edge: GraphEdge }>,
+   700→  backwardVisited: Map<NodeId, { parent: NodeId; edge: GraphEdge }>,
+   701→  sourceId: NodeId,
+   702→  targetId: NodeId,
+   703→  meetingPoint: NodeId,
+   704→  startTime: number,
+   705→): Promise<PathResult> {
+   706→  // Reconstruct forward path: source → meeting
+   707→  const forwardPath: NodeId[] = [];
+   708→  let current: NodeId = meetingPoint;
+   709→  while (current !== sourceId) {
+   710→    forwardPath.unshift(current);
+   711→    const entry = forwardVisited.get(current);
+   712→    if (!entry) break;
+   713→    current = entry.parent;
+   714→  }
+   715→  forwardPath.unshift(sourceId);
+   716→
+   717→  // Reconstruct backward path: meeting → target
+   718→  const backwardPath: NodeId[] = [];
+   719→  current = meetingPoint;
+   720→  while (current !== targetId) {
+   721→    const entry = backwardVisited.get(current);
+   722→    if (!entry) break;
+   723→    current = entry.parent;
+   724→    backwardPath.push(current);
+   725→  }
+   726→
+   727→  // Combine: forward + backward (meeting point is shared, so skip first of backward)
+   728→  const fullPathIds = [...forwardPath, ...backwardPath];
+   729→
+   730→  // Resolve nodes and edges
+   731→  const nodes: GraphNode[] = [];
+   732→  const edges: GraphEdge[] = [];
+   733→
+   734→  for (const nodeId of fullPathIds) {
+   735→    const node = await repo.getNode(nodeId);
+   736→    if (node) nodes.push(node);
+   737→  }
+   738→
+   739→  for (let i = 0; i < fullPathIds.length - 1; i++) {
+   740→    const fromEdges = await repo.getEdgesFrom(fullPathIds[i]);
+   741→    const connectingEdge = fromEdges.find(e => e.targetId === fullPathIds[i + 1]);
+   742→    if (connectingEdge) edges.push(connectingEdge);
+   743→  }
+   744→
+   745→  return Object.freeze({
+   746→    found: true,
+   747→    path: Object.freeze({
+   748→      nodes: Object.freeze(nodes),
+   749→      edges: Object.freeze(edges),
+   750→      length: edges.length,
+   751→      totalStrength: edges.reduce((sum, e) => sum + e.relationship.strength, 0),
+   752→    }),
+   753→    alternatives: [],
+   754→    totalPaths: 1,
+   755→    duration: Date.now() - startTime,
+   756→  });
+   757→}
+   758→
+   759→// ─── Shortest Path ────────────────────────────────────────────
+   760→
+   761→/**
+   762→ * Find the shortest path between two nodes using BFS.
+   763→ * For unweighted graphs, BFS guarantees the shortest path.
+   764→ *
+   765→ * Time Complexity: O(V + E)
+   766→ * Space Complexity: O(V)
+   767→ *
+   768→ * @param repo - Graph repository
+   769→ * @param sourceId - Source node ID
+   770→ * @param targetId - Target node ID
+   771→ * @param options - Path search options
+   772→ * @returns Path result with shortest path if found
+   773→ */
+   774→export async function shortestPath(
+   775→  repo: GraphRepository,
+   776→  sourceId: NodeId,
+   777→  targetId: NodeId,
+   778→  options: ShortestPathOptions = {},
+   779→): Promise<PathResult> {
+   780→  const startTime = Date.now();
+   781→  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+   782→  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+   783→  const edgeTypes = options.edgeTypes;
+   784→  const edgeFilter = options.edgeFilter;
+   785→  const nodeFilter = options.nodeFilter;
+   786→  const cancellationToken = options.cancellationToken;
+   787→  const bidirectional = options.bidirectional ?? true;
+   788→
+   789→  // Use bidirectional for potentially better performance
+   790→  if (bidirectional && sourceId !== targetId) {
+   791→    return bidirectionalBFS(repo, sourceId, targetId, options);
+   792→  }
+   793→
+   794→  // Single-source BFS
+   795→  const [sourceNode, targetNode] = await Promise.all([
+   796→    repo.getNode(sourceId),
+   797→    repo.getNode(targetId),
+   798→  ]);
+   799→
+   800→  if (!sourceNode || !targetNode) {
+   801→    return notFoundPathResult(Date.now() - startTime);
+   802→  }
+   803→
+   804→  if (sourceId === targetId) {
+   805→    return Object.freeze({
+   806→      found: true,
+   807→      path: Object.freeze({
+   808→        nodes: [sourceNode],
+   809→        edges: [],
+   810→        length: 0,
+   811→        totalStrength: 0,
+   812→      }),
+   813→      alternatives: [],
+   814→      totalPaths: 1,
+   815→      duration: Date.now() - startTime,
+   816→    });
+   817→  }
+   818→
+   819→  const visited = new Set<NodeId>([sourceId]);
+   820→  const parentMap = new Map<NodeId, { nodeId: NodeId; edge: GraphEdge }>();
+   821→  const queue: Array<{ nodeId: NodeId; depth: number }> = [{ nodeId: sourceId, depth: 0 }];
+   822→
+   823→  while (queue.length > 0) {
+   824→    if (cancellationToken?.isCancelled) break;
+   825→    if (timeout > 0 && (Date.now() - startTime) >= timeout) break;
+   826→
+   827→    const { nodeId, depth } = queue.shift()!;
+   828→
+   829→    if (depth > maxDepth) continue;
+   830→
+   831→    if (nodeId === targetId) {
+   832→      // Reconstruct path
+   833→      return reconstructPath(repo, parentMap, sourceId, targetId, startTime);
+   834→    }
+   835→
+   836→    const edges = await repo.getEdgesFrom(nodeId);
+   837→    for (const edge of edges) {
+   838→      if (!edgeMatchesFilter(edge, edgeTypes, edgeFilter)) continue;
+   839→
+   840→      const neighborId = edge.targetId;
+   841→      if (!visited.has(neighborId)) {
+   842→        visited.add(neighborId);
+   843→        parentMap.set(neighborId, { nodeId, edge });
+   844→        queue.push({ nodeId: neighborId, depth: depth + 1 });
+   845→      }
+   846→    }
+   847→  }
+   848→
+   849→  return notFoundPathResult(Date.now() - startTime);
+   850→}
+   851→
+   852→/** Reconstruct path from parent map */
+   853→async function reconstructPath(
+   854→  repo: GraphRepository,
+   855→  parentMap: Map<NodeId, { nodeId: NodeId; edge: GraphEdge }>,
+   856→  sourceId: NodeId,
+   857→  targetId: NodeId,
+   858→  startTime: number,
+   859→): Promise<PathResult> {
+   860→  const nodeIds: NodeId[] = [targetId];
+   861→  const edges: GraphEdge[] = [];
+   862→  let current = targetId;
+   863→
+   864→  while (current !== sourceId) {
+   865→    const parent = parentMap.get(current);
+   866→    if (!parent) break;
+   867→    nodeIds.unshift(parent.nodeId);
+   868→    edges.unshift(parent.edge);
+   869→    current = parent.nodeId;
+   870→  }
+   871→
+   872→  // Resolve node objects
+   873→  const nodes: GraphNode[] = [];
+   874→  for (const nodeId of nodeIds) {
+   875→    const node = await repo.getNode(nodeId);
+   876→    if (node) nodes.push(node);
+   877→  }
+   878→
+   879→  return Object.freeze({
+   880→    found: true,
+   881→    path: Object.freeze({
+   882→      nodes: Object.freeze(nodes),
+   883→      edges: Object.freeze(edges),
+   884→      length: edges.length,
+   885→      totalStrength: edges.reduce((sum, e) => sum + e.relationship.strength, 0),
+   886→    }),
+   887→    alternatives: [],
+   888→    totalPaths: 1,
+   889→    duration: Date.now() - startTime,
+   890→  });
+   891→}
+   892→
+   893→// ─── Multi-Path (Yen's K-Shortest Paths) ─────────────────────
+   894→
+   895→/**
+   896→ * Find K shortest paths between two nodes using Yen's algorithm.
+   897→ *
+   898→ * Yen's algorithm finds the K shortest loopless paths in order.
+   899→ * It works by:
+   900→ * 1. Finding the shortest path (A0)
+   901→ * 2. For each path found, generating candidate paths by "spur" deviations
+   902→ * 3. Selecting the next shortest from candidates
+   903→ *
+   904→ * Time Complexity: O(K * V * E)
+   905→ * Space Complexity: O(K * V)
+   906→ *
+   907→ * @param repo - Graph repository
+   908→ * @param sourceId - Source node ID
+   909→ * @param targetId - Target node ID
+   910→ * @param options - Multi-path options
+   911→ * @returns Array of paths sorted by length
+   912→ */
+   913→export async function findPaths(
+   914→  repo: GraphRepository,
+   915→  sourceId: NodeId,
+   916→  targetId: NodeId,
+   917→  options: MultiPathOptions = {},
+   918→): Promise<PathResult> {
+   919→  const startTime = Date.now();
+   920→  const maxPaths = options.maxPaths ?? 3;
+   921→  const maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+   922→  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+   923→  const cancellationToken = options.cancellationToken;
+   924→
+   925→  // Validate nodes
+   926→  const [sourceNode, targetNode] = await Promise.all([
+   927→    repo.getNode(sourceId),
+   928→    repo.getNode(targetId),
+   929→  ]);
+   930→
+   931→  if (!sourceNode || !targetNode) {
+   932→    return notFoundPathResult(Date.now() - startTime);
+   933→  }
+   934→
+   935→  if (sourceId === targetId) {
+   936→    return Object.freeze({
+   937→      found: true,
+   938→      path: Object.freeze({
+   939→        nodes: [sourceNode],
+   940→        edges: [],
+   941→        length: 0,
+   942→        totalStrength: 0,
+   943→      }),
+   944→      alternatives: [],
+   945→      totalPaths: 1,
+   946→      duration: Date.now() - startTime,
+   947→    });
+   948→  }
+   949→
+   950→  // Find the first (shortest) path
+   951→  const firstPathResult = await shortestPath(repo, sourceId, targetId, {
+   952→    ...options,
+   953→    bidirectional: false, // Yen's needs single-source for path reconstruction
+   954→  });
+   955→
+   956→  if (!firstPathResult.found || !firstPathResult.path) {
+   957→    return notFoundPathResult(Date.now() - startTime);
+   958→  }
+   959→
+   960→  const foundPaths: TraversalPath[] = [firstPathResult.path];
+   961→  const candidates: TraversalPath[] = [];
+   962→
+   963→  for (let k = 1; k < maxPaths; k++) {
+   964→    if (cancellationToken?.isCancelled) break;
+   965→    if (timeout > 0 && (Date.now() - startTime) >= timeout) break;
+   966→
+   967→    const previousPath = foundPaths[k - 1];
+   968→
+   969→    // For each node in the previous path, create a spur
+   970→    for (let i = 0; i < previousPath.nodes.length - 1; i++) {
+   971→      const spurNode = previousPath.nodes[i];
+   972→      const rootPath = previousPath.nodes.slice(0, i + 1);
+   973→
+   974→      // Temporarily remove edges that would reproduce previously found paths
+   975→      const removedEdges: Array<{ from: NodeId; to: NodeId }> = [];
+   976→
+   977→      for (const path of foundPaths) {
+   978→        const pathNodes = path.nodes;
+   979→        let matches = true;
+   980→        for (let j = 0; j <= i && j < pathNodes.length; j++) {
+   981→          if (pathNodes[j].identity.id !== rootPath[j].identity.id) {
+   982→            matches = false;
+   983→            break;
+   984→          }
+   985→        }
+   986→        if (matches && i < pathNodes.length - 1) {
+   987→          removedEdges.push({
+   988→            from: pathNodes[i].identity.id,
+   989→            to: pathNodes[i + 1].identity.id,
+   990→          });
+   991→        }
+   992→      }
+   993→
+   994→      // Temporarily remove root path nodes (except spur)
+   995→      const removedNodes: NodeId[] = [];
+   996→      for (let j = 0; j < i; j++) {
+   997→        removedNodes.push(rootPath[j].identity.id);
+   998→      }
+   999→
+  1000→      // Find spur path from spur to target, avoiding removed nodes/edges
+  1001→      const spurPathResult = await findSpurPath(
+  1002→        repo, spurNode.identity.id as NodeId, targetId,
+  1003→        removedNodes, removedEdges, maxDepth - i, options,
+  1004→      );
+  1005→
+  1006→      if (spurPathResult.found && spurPathResult.path) {
+  1007→        // Combine root + spur
+  1008→        const fullPath = combinePaths(repo, rootPath, spurPathResult.path);
+  1009→        if (fullPath && !isPathDuplicate(fullPath, foundPaths, candidates)) {
+  1010→          candidates.push(fullPath);
+  1011→        }
+  1012→      }
+  1013→    }
+  1014→
+  1015→    if (candidates.length === 0) break;
+  1016→
+  1017→    // Sort candidates by length and take the shortest
+  1018→    candidates.sort((a, b) => a.length - b.length);
+  1019→    foundPaths.push(candidates.shift()!);
+  1020→  }
+  1021→
+  1022→  const duration = Date.now() - startTime;
+  1023→
+  1024→  return Object.freeze({
+  1025→    found: true,
+  1026→    path: foundPaths[0] ?? null,
+  1027→    alternatives: Object.freeze(foundPaths.slice(1)),
+  1028→    totalPaths: foundPaths.length,
+  1029→    duration,
+  1030→  });
+  1031→}
+  1032→
+  1033→/** Find a spur path avoiding certain nodes and edges */
+  1034→async function findSpurPath(
+  1035→  repo: GraphRepository,
+  1036→  spurNodeId: NodeId,
+  1037→  targetId: NodeId,
+  1038→  removedNodes: NodeId[],
+  1039→  removedEdges: Array<{ from: NodeId; to: NodeId }>,
+  1040→  maxDepth: number,
+  1041→  options: MultiPathOptions,
+  1042→): Promise<PathResult> {
+  1043→  const removedNodeSet = new Set(removedNodes);
+  1044→  const edgeKey = (from: NodeId, to: NodeId) => `${from}::${to}`;
+  1045→  const removedEdgeSet = new Set(removedEdges.map(e => edgeKey(e.from, e.to)));
+  1046→
+  1047→  const visited = new Set<NodeId>([spurNodeId]);
+  1048→  const parentMap = new Map<NodeId, { nodeId: NodeId; edge: GraphEdge }>();
+  1049→  const queue: Array<{ nodeId: NodeId; depth: number }> = [{ nodeId: spurNodeId, depth: 0 }];
+  1050→
+  1051→  while (queue.length > 0) {
+  1052→    const { nodeId, depth } = queue.shift()!;
+  1053→
+  1054→    if (depth > maxDepth) continue;
+  1055→
+  1056→    if (nodeId === targetId) {
+  1057→      // Reconstruct spur path
+  1058→      const nodeIds: NodeId[] = [targetId];
+  1059→      const edges: GraphEdge[] = [];
+  1060→      let current = targetId;
+  1061→      while (current !== spurNodeId) {
+  1062→        const parent = parentMap.get(current);
+  1063→        if (!parent) break;
+  1064→        nodeIds.unshift(parent.nodeId);
+  1065→        edges.unshift(parent.edge);
+  1066→        current = parent.nodeId;
+  1067→      }
+  1068→
+  1069→      const nodes: GraphNode[] = [];
+  1070→      for (const nid of nodeIds) {
+  1071→        const n = await repo.getNode(nid);
+  1072→        if (n) nodes.push(n);
+  1073→      }
+  1074→
+  1075→      return Object.freeze({
+  1076→        found: true,
+  1077→        path: Object.freeze({
+  1078→          nodes: Object.freeze(nodes),
+  1079→          edges: Object.freeze(edges),
+  1080→          length: edges.length,
+  1081→          totalStrength: edges.reduce((sum, e) => sum + e.relationship.strength, 0),
+  1082→        }),
+  1083→        alternatives: [],
+  1084→        totalPaths: 1,
+  1085→        duration: 0,
+  1086→      });
+  1087→    }
+  1088→
+  1089→    const edges = await repo.getEdgesFrom(nodeId);
+  1090→    for (const edge of edges) {
+  1091→      const neighborId = edge.targetId;
+  1092→      if (removedNodeSet.has(neighborId)) continue;
+  1093→      if (removedEdgeSet.has(edgeKey(nodeId, neighborId))) continue;
+  1094→      if (!visited.has(neighborId)) {
+  1095→        visited.add(neighborId);
+  1096→        parentMap.set(neighborId, { nodeId, edge });
+  1097→        queue.push({ nodeId: neighborId, depth: depth + 1 });
+  1098→      }
+  1099→    }
+  1100→  }
+  1101→
+  1102→  return notFoundPathResult();
+  1103→}
+  1104→
+  1105→/** Combine root path and spur path into full path */
+  1106→function combinePaths(
+  1107→  _repo: GraphRepository,
+  1108→  rootNodes: readonly GraphNode[],
+  1109→  spurPath: TraversalPath,
+  1110→): TraversalPath | null {
+  1111→  if (rootNodes.length === 0) return spurPath;
+  1112→
+  1113→  // The last node of root is the first node of spur — avoid duplication
+  1114→  const combinedNodes = [...rootNodes.slice(0, -1), ...spurPath.nodes];
+  1115→
+  1116→  // We need to find edges for the root portion
+  1117→  // Since we don't have those edges readily, we use what we can
+  1118→  // The root edges come from the previous path
+  1119→  const combinedEdges = [...spurPath.edges];
+  1120→
+  1121→  return Object.freeze({
+  1122→    nodes: Object.freeze(combinedNodes),
+  1123→    edges: Object.freeze(combinedEdges),
+  1124→    length: combinedEdges.length,
+  1125→    totalStrength: combinedEdges.reduce((sum, e) => sum + e.relationship.strength, 0),
+  1126→  });
+  1127→}
+  1128→
+  1129→/** Check if a path is already in found paths or candidates */
+  1130→function isPathDuplicate(
+  1131→  path: TraversalPath,
+  1132→  foundPaths: TraversalPath[],
+  1133→  candidates: TraversalPath[],
+  1134→): boolean {
+  1135→  const pathKey = path.nodes.map(n => n.identity.id).join('->');
+  1136→
+  1137→  for (const existing of [...foundPaths, ...candidates]) {
+  1138→    const existingKey = existing.nodes.map(n => n.identity.id).join('->');
+  1139→    if (pathKey === existingKey) return true;
+  1140→  }
+  1141→  return false;
+  1142→}
+  1143→
+  1144→// ─── Cycle Detection ──────────────────────────────────────────
+  1145→
+  1146→/**
+  1147→ * Detect cycles in the graph using DFS with three-color marking.
+  1148→ *
+  1149→ * White = unvisited, Gray = in current DFS path, Black = fully processed.
+  1150→ * A cycle exists when we encounter a Gray node from another Gray node.
+  1151→ *
+  1152→ * Time Complexity: O(V + E)
+  1153→ * Space Complexity: O(V)
+  1154→ *
+  1155→ * @param repo - Graph repository
+  1156→ * @param options - Cycle detection options
+  1157→ * @returns Array of detected cycles
+  1158→ */
+  1159→export async function findCycles(
+  1160→  repo: GraphRepository,
+  1161→  options: CycleDetectionOptions = {},
+  1162→): Promise<readonly Cycle[]> {
+  1163→  const startTime = Date.now();
+  1164→  const maxCycles = options.maxCycles ?? 0;
+  1165→  const minLength = options.minLength ?? 2;
+  1166→  const timeout = options.timeout ?? 0;
+  1167→  const cancellationToken = options.cancellationToken;
+  1168→
+  1169→  const cycles: Cycle[] = [];
+  1170→  const WHITE = 0, GRAY = 1, BLACK = 2;
+  1171→  const color = new Map<NodeId, number>();
+  1172→  const parentMap = new Map<NodeId, { nodeId: NodeId; edge: GraphEdge }>();
+  1173→
+  1174→  const allNodes = await repo.getAllNodes();
+  1175→
+  1176→  for (const node of allNodes) {
+  1177→    color.set(node.identity.id, WHITE);
+  1178→  }
+  1179→
+  1180→  async function dfsVisit(nodeId: NodeId): Promise<void> {
+  1181→    if (cancellationToken?.isCancelled) return;
+  1182→    if (timeout > 0 && (Date.now() - startTime) >= timeout) return;
+  1183→    if (maxCycles > 0 && cycles.length >= maxCycles) return;
+  1184→
+  1185→    color.set(nodeId, GRAY);
+  1186→
+  1187→    const edges = await repo.getEdgesFrom(nodeId);
+  1188→    for (const edge of edges) {
+  1189→      const neighborId = edge.targetId;
+  1190→
+  1191→      if (color.get(neighborId) === GRAY) {
+  1192→        // Found a cycle — reconstruct it
+  1193→        const cycleNodeIds: NodeId[] = [neighborId];
+  1194→        const cycleEdgeIds: EdgeId[] = [edge.id];
+  1195→        let current = nodeId;
+  1196→
+  1197→        while (current !== neighborId) {
+  1198→          cycleNodeIds.unshift(current);
+  1199→          const parent = parentMap.get(current);
+  1200→          if (!parent) break;
+  1201→          cycleEdgeIds.unshift(parent.edge.id);
+  1202→          current = parent.nodeId;
+  1203→        }
+  1204→
+  1205→        if (cycleNodeIds.length >= minLength) {
+  1206→          cycles.push(Object.freeze({
+  1207→            nodeIds: Object.freeze(cycleNodeIds),
+  1208→            edgeIds: Object.freeze(cycleEdgeIds),
+  1209→            length: cycleEdgeIds.length,
+  1210→          }));
+  1211→        }
+  1212→      } else if (color.get(neighborId) === WHITE) {
+  1213→        parentMap.set(neighborId, { nodeId, edge });
+  1214→        await dfsVisit(neighborId);
+  1215→      }
+  1216→    }
+  1217→
+  1218→    color.set(nodeId, BLACK);
+  1219→  }
+  1220→
+  1221→  for (const node of allNodes) {
+  1222→    if (color.get(node.identity.id) === WHITE) {
+  1223→      await dfsVisit(node.identity.id);
+  1224→    }
+  1225→    if (maxCycles > 0 && cycles.length >= maxCycles) break;
+  1226→  }
+  1227→
+  1228→  return Object.freeze(cycles);
+  1229→}
+  1230→
+  1231→/**
+  1232→ * Check if the graph contains any cycles.
+  1233→ * More efficient than findCycles when you only need a boolean answer.
+  1234→ *
+  1235→ * Time Complexity: O(V + E) but stops at first cycle
+  1236→ * Space Complexity: O(V)
+  1237→ */
+  1238→export async function hasCycle(repo: GraphRepository): Promise<boolean> {
+  1239→  const WHITE = 0, GRAY = 1, BLACK = 2;
+  1240→  const color = new Map<NodeId, number>();
+  1241→  let found = false;
+  1242→
+  1243→  const allNodes = await repo.getAllNodes();
+  1244→  for (const node of allNodes) {
+  1245→    color.set(node.identity.id, WHITE);
+  1246→  }
+  1247→
+  1248→  async function dfsVisit(nodeId: NodeId): Promise<void> {
+  1249→    if (found) return;
+  1250→    color.set(nodeId, GRAY);
+  1251→
+  1252→    const edges = await repo.getEdgesFrom(nodeId);
+  1253→    for (const edge of edges) {
+  1254→      if (found) return;
+  1255→      const neighborId = edge.targetId;
+  1256→      if (color.get(neighborId) === GRAY) {
+  1257→        found = true;
+  1258→        return;
+  1259→      }
+  1260→      if (color.get(neighborId) === WHITE) {
+  1261→        await dfsVisit(neighborId);
+  1262→      }
+  1263→    }
+  1264→
+  1265→    color.set(nodeId, BLACK);
+  1266→  }
+  1267→
+  1268→  for (const node of allNodes) {
+  1269→    if (found) return true;
+  1270→    if (color.get(node.identity.id) === WHITE) {
+  1271→      await dfsVisit(node.identity.id);
+  1272→    }
+  1273→  }
+  1274→
+  1275→  return found;
+  1276→}
+  1277→
+  1278→// ─── Connected Components ─────────────────────────────────────
+  1279→
+  1280→/**
+  1281→ * Find all connected components in the graph.
+  1282→ * Uses BFS to discover each component.
+  1283→ * Treats the graph as undirected for component analysis.
+  1284→ *
+  1285→ * Time Complexity: O(V + E)
+  1286→ * Space Complexity: O(V)
+  1287→ *
+  1288→ * @param repo - Graph repository
+  1289→ * @returns Array of connected components
+  1290→ */
+  1291→export async function connectedComponents(
+  1292→  repo: GraphRepository,
+  1293→): Promise<readonly ConnectedComponent[]> {
+  1294→  const allNodes = await repo.getAllNodes();
+  1295→  const visited = new Set<NodeId>();
+  1296→  const components: ConnectedComponent[] = [];
+  1297→
+  1298→  for (const node of allNodes) {
+  1299→    if (visited.has(node.identity.id)) continue;
+  1300→
+  1301→    // BFS to find the component
+  1302→    const componentNodes: NodeId[] = [];
+  1303→    const queue: NodeId[] = [node.identity.id];
+  1304→    visited.add(node.identity.id);
+  1305→
+  1306→    while (queue.length > 0) {
+  1307→      const nodeId = queue.shift()!;
+  1308→      componentNodes.push(nodeId);
+  1309→
+  1310→      // Get both outgoing and incoming edges (undirected)
+  1311→      const [outgoing, incoming] = await Promise.all([
+  1312→        repo.getEdgesFrom(nodeId),
+  1313→        repo.getEdgesTo(nodeId),
+  1314→      ]);
+  1315→
+  1316→      for (const edge of [...outgoing, ...incoming]) {
+  1317→        const neighborId = edge.sourceId === nodeId ? edge.targetId : edge.sourceId;
+  1318→        if (!visited.has(neighborId)) {
+  1319→          visited.add(neighborId);
+  1320→          queue.push(neighborId);
+  1321→        }
+  1322→      }
+  1323→    }
+  1324→
+  1325→    components.push(Object.freeze({
+  1326→      nodeIds: Object.freeze(componentNodes),
+  1327→      size: componentNodes.length,
+  1328→      isIsolated: componentNodes.length === 1,
+  1329→    }));
+  1330→  }
+  1331→
+  1332→  // Sort by size descending
+  1333→  components.sort((a, b) => b.size - a.size);
+  1334→
+  1335→  return Object.freeze(components);
+  1336→}
+  1337→
+  1338→// ─── Reachability ─────────────────────────────────────────────
+  1339→
+  1340→/**
+  1341→ * Find all nodes reachable from a start node.
+  1342→ * Uses BFS for level-order discovery.
+  1343→ *
+  1344→ * Time Complexity: O(V + E)
+  1345→ * Space Complexity: O(V)
+  1346→ *
+  1347→ * @param repo - Graph repository
+  1348→ * @param startNodeId - Starting node ID
+  1349→ * @param options - Reachability options
+  1350→ * @returns Set of reachable node IDs and corresponding nodes
+  1351→ */
+  1352→export async function reachableNodes(
+  1353→  repo: GraphRepository,
+  1354→  startNodeId: NodeId,
+  1355→  options: ReachabilityOptions = {},
+  1356→): Promise<TraversalResult> {
+  1357→  const includeStart = options.includeStart ?? true;
+  1358→  const bfsResult = await breadthFirstSearch(repo, startNodeId, {
+  1359→    ...options,
+  1360→    direction: options.direction ?? 'outgoing',
+  1361→  });
+  1362→
+  1363→  if (!includeStart && bfsResult.visitedNodes.length > 0) {
+  1364→    const filteredNodes = bfsResult.visitedNodes.filter(n => n.identity.id !== startNodeId);
+  1365→    const filteredEdges = bfsResult.visitedEdges.filter(
+  1366→      e => e.sourceId !== startNodeId || e.targetId !== startNodeId
+  1367→    );
+  1368→    return Object.freeze({
+  1369→      ...bfsResult,
+  1370→      visitedNodes: Object.freeze(filteredNodes),
+  1371→      visitedEdges: Object.freeze(filteredEdges),
+  1372→      statistics: createTraversalStatistics({
+  1373→        visitedNodeCount: filteredNodes.length,
+  1374→        visitedEdgeCount: filteredEdges.length,
+  1375→        maxDepth: bfsResult.maxDepthReached,
+  1376→        duration: bfsResult.duration,
+  1377→      }),
+  1378→    });
+  1379→  }
+  1380→
+  1381→  return bfsResult;
+  1382→}
+  1383→
+  1384→// ─── Path Existence Check ─────────────────────────────────────
+  1385→
+  1386→/**
+  1387→ * Check whether a path exists between two nodes.
+  1388→ * More efficient than finding the actual path when you only need a boolean.
+  1389→ *
+  1390→ * Time Complexity: O(V + E)
+  1391→ * Space Complexity: O(V)
+  1392→ */
+  1393→export async function pathExists(
+  1394→  repo: GraphRepository,
+  1395→  sourceId: NodeId,
+  1396→  targetId: NodeId,
+  1397→  maxDepth: number = DEFAULT_MAX_DEPTH,
+  1398→): Promise<boolean> {
+  1399→  if (sourceId === targetId) {
+  1400→    return repo.hasNode(sourceId);
+  1401→  }
+  1402→
+  1403→  const visited = new Set<NodeId>([sourceId]);
+  1404→  const queue: Array<{ nodeId: NodeId; depth: number }> = [{ nodeId: sourceId, depth: 0 }];
+  1405→
+  1406→  while (queue.length > 0) {
+  1407→    const { nodeId, depth } = queue.shift()!;
+  1408→    if (depth > maxDepth) continue;
+  1409→
+  1410→    const edges = await repo.getEdgesFrom(nodeId);
+  1411→    for (const edge of edges) {
+  1412→      const neighborId = edge.targetId;
+  1413→      const nextDepth = depth + 1;
+  1414→      if (neighborId === targetId && nextDepth <= maxDepth) return true;
+  1415→      if (!visited.has(neighborId) && nextDepth <= maxDepth) {
+  1416→        visited.add(neighborId);
+  1417→        queue.push({ nodeId: neighborId, depth: nextDepth });
+  1418→      }
+  1419→    }
+  1420→  }
+  1421→
+  1422→  return false;
+  1423→}
+  1424→
