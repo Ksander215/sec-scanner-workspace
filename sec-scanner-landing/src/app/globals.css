@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #050507;
+  --color-foreground: #e8e8ed;
+  --color-surface: #0d0d12;
+  --color-surface-2: #14141c;
+  --color-surface-3: #1c1c28;
+  --color-border: #1e1e2e;
+  --color-border-light: #2a2a3d;
+  --color-muted: #6b6b80;
+  --color-muted-2: #8888a0;
+  --color-accent: #00ff88;
+  --color-accent-hover: #00e67a;
+  --color-accent-muted: rgba(0, 255, 136, 0.1);
+  --color-accent-border: rgba(0, 255, 136, 0.2);
+  --color-cyan: #00d4ff;
+  --color-cyan-muted: rgba(0, 212, 255, 0.1);
+  --color-amber: #ffb800;
+  --color-amber-muted: rgba(255, 184, 0, 0.1);
+  --color-red: #ff4444;
+  --color-red-muted: rgba(255, 68, 68, 0.1);
+  --color-purple: #a855f7;
+  --color-purple-muted: rgba(168, 85, 247, 0.1);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-light) transparent;
+}
+
+::selection {
+  background-color: rgba(0, 255, 136, 0.2);
+  color: #fff;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Glow effects */
+.glow-accent {
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15), 0 0 60px rgba(0, 255, 136, 0.05);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.15), 0 0 60px rgba(0, 212, 255, 0.05);
+}
+
+/* Grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Gradient text */
+.text-gradient-accent {
+  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-warm {
+  background: linear-gradient(135deg, #ffb800 0%, #ff6b35 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated gradient border */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.animated-border {
+  --angle: 0deg;
+  border: 1px solid;
+  border-image: linear-gradient(var(--angle), #00ff88, #00d4ff, #a855f7, #00ff88) 1;
+  animation: rotate-border 4s linear infinite;
+}
+
+@keyframes rotate-border {
+  to { --angle: 360deg; }
+}
+
+/* Pulse animation */
+@keyframes pulse-accent {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-accent {
+  animation: pulse-accent 2s ease-in-out infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Scan line */
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.scan-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00ff88, transparent);
+  animation: scan 8s linear infinite;
+  opacity: 0.3;
+}
+
+/* Terminal blink */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
