@@ -1,77 +1,124 @@
 site_name: Security Intelligence Platform
-site_description: AI-Native Security Intelligence Platform Documentation
+site_description: AI-Native Security Intelligence Platform — Enterprise Documentation
 site_url: https://si-platform.dev/docs
 repo_url: https://github.com/Ksander215/sec-scanner-workspace
 repo_name: Ksander215/sec-scanner-workspace
+edit_uri: blob/main/docs/
 
 theme:
   name: material
   language: en
+  custom_dir: overrides
   palette:
     - scheme: default
       primary: indigo
-      accent: indigo
+      accent: blue
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
       primary: indigo
-      accent: indigo
+      accent: blue
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
     - navigation.instant
     - navigation.tracking
     - navigation.tabs
     - navigation.sections
     - navigation.expand
+    - navigation.indexes
+    - navigation.top
     - search.suggest
     - search.highlight
     - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/shield-lock
 
 nav:
   - Home: index.md
-  - Getting Started:
-      - Installation: getting-started/installation.md
-      - Quick Start: getting-started/quick-start.md
-      - Configuration: getting-started/configuration.md
   - Architecture:
-      - Overview: architecture/overview.md
-      - Domain Layer: architecture/domain.md
-      - Pipeline: architecture/pipeline.md
-      - Knowledge Graph: architecture/knowledge-graph.md
-  - API Reference:
-      - REST API: api/rest.md
-      - WebSocket: api/websocket.md
-      - Authentication: api/auth.md
+      - architecture/Architecture.md
+  - Modules:
+      - INT-001 Normalization: modules/INT-001.md
+      - INT-002 Correlation: modules/INT-002.md
+      - INT-003 Knowledge Graph: modules/INT-003.md
+      - INT-004 Risk Assessment: modules/INT-004.md
+      - INT-005 Attack Paths: modules/INT-005.md
+      - INT-006 Impact Analysis: modules/INT-006.md
+      - INT-007 Recommendations: modules/INT-007.md
+      - INT-008 Explainability: modules/INT-008.md
+      - INT-009 Orchestrator: modules/INT-009.md
+      - INT-010 Persistence: modules/INT-010.md
+      - INT-011 Distributed Platform: modules/INT-011.md
+      - INT-012 AI Layer: modules/INT-012.md
+      - INT-013 Enterprise: modules/INT-013.md
+      - INT-014 Threat Intelligence: modules/INT-014.md
+      - INT-015 Detection Engineering: modules/INT-015.md
+      - INT-016 Attack Simulation: modules/INT-016.md
+      - INT-017 Data Lake: modules/INT-017.md
+      - INT-018 Analytics: modules/INT-018.md
+      - INT-019 Cloud: modules/INT-019.md
+      - INT-020 Platform 2.0: modules/INT-020.md
+  - API:
+      - REST API: api/REST_API.md
   - CLI:
-      - Commands: cli/commands.md
-      - Configuration: cli/config.md
-      - Output Formats: cli/output-formats.md
+      - cli/CLI.md
+  - SDK:
+      - sdk/SDK.md
   - Plugins:
-      - Plugin SDK: plugins/sdk.md
-      - Extension Points: plugins/extension-points.md
-  - Deployment:
-      - Docker: deployment/docker.md
-      - Kubernetes: deployment/kubernetes.md
-      - Production: deployment/production.md
-  - Contributing:
-      - Guidelines: contributing/guidelines.md
-      - Architecture Review: contributing/architecture-review.md
+      - plugins/PLUGIN_DEVELOPMENT.md
+  - ADRs:
+      - ADR-001 TypeScript: adr/ADR-001.md
+      - ADR-002 Fastify: adr/ADR-002.md
+      - ADR-003 Pipeline: adr/ADR-003.md
+      - ADR-004 Union-Find: adr/ADR-004.md
+      - ADR-005 Builder Pattern: adr/ADR-005.md
+      - ADR-006 JSON Persistence: adr/ADR-006.md
+      - ADR-007 Zod Validation: adr/ADR-007.md
+      - ADR-008 Event-Driven: adr/ADR-008.md
+      - ADR-009 Circuit Breaker: adr/ADR-009.md
+      - ADR-010 Saga Pattern: adr/ADR-010.md
+      - ADR-011 LLM Router: adr/ADR-011.md
+      - ADR-012 Plugin System: adr/ADR-012.md
+      - ADR-013 Multi-Tenancy: adr/ADR-013.md
+      - ADR-014 Feature Flags: adr/ADR-014.md
+      - ADR-015 Zero-Dep SDK: adr/ADR-015.md
+  - FAQ: FAQ.md
+  - Troubleshooting: TROUBLESHOOTING.md
 
 plugins:
-  - search
+  - search:
+      lang: en
   - mermaid2:
       arguments:
-        theme: default
+        theme: |
+          { "theme": "base", "themeVariables": { "primaryColor": "#3f51b5" } }
+  - git-revision-date-localized:
+      type: date
+  - minify:
+      minify_html: true
 
 markdown_extensions:
   - admonition
-  - codehilite
+  - attr_list
   - footnotes
+  - md_in_html
   - meta
   - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
@@ -79,6 +126,19 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
   - tables
   - toc:
       permalink: true
+      toc_depth: 3
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Ksander215/sec-scanner-workspace
+  version:
+    provider: mike
+
+extra_css:
+  - stylesheets/extra.css

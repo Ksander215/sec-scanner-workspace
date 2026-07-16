@@ -1,0 +1,69 @@
+# Sigma Rule: Suspicious PowerShell Download Cradle
+#
+# Detects common PowerShell download-and-execute patterns often used
+# in initial access and execution stages of an attack.
+#
+# Usage:
+#   Import via DetectionEngine:
+#     engine.importSigmaRule(parsedYaml);
+#
+#   Or load via CLI:
+#     si analyze --sigma-rule examples/custom-rule/sigma-rule.yaml scan-results.json
+
+title: Suspicious PowerShell Download Cradle
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+status: production
+description: >
+  Detects PowerShell commands that download content from the internet
+  using WebClient, Invoke-WebRequest, or Start-BitsTransfer, which
+  are commonly used in download cradles for malware delivery.
+author: Security Intelligence Team
+date: 2024-03-15
+modified: 2024-06-01
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.command_and_control
+  - attack.t1105
+  - attack.initial_access
+  - attack.t1190
+logsource:
+  category: process_creation
+  product: windows
+  service: security
+detection:
+  selection_webclient:
+    CommandLine|contains:
+      - 'New-Object System.Net.WebClient'
+      - 'Net.WebClient'
+      - '.DownloadFile('
+      - '.DownloadString('
+  selection_iwr:
+    CommandLine|contains|all:
+      - 'Invoke-WebRequest'
+      - '-Uri'
+  selection_bits:
+    CommandLine|contains:
+      - 'Start-BitsTransfer'
+      - 'Import-BitsTransfer'
+  selection_iex:
+    CommandLine|contains:
+      - 'IEX'
+      - 'Invoke-Expression'
+  selection_suspicious_urls:
+    CommandLine|contains:
+      - 'http://'
+      - 'https://'
+      - '.onion/'
+  condition: >
+    (selection_webclient or selection_iwr or selection_bits)
+    and selection_suspicious_urls
+level: high
+falsepositives:
+  - Legitimate software installation scripts
+  - IT automation tools (Ansible, Chef, DSC)
+  - Package managers (Chocolatey, scoop)
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/techniques/T1105/
+  - https://learn.microsoft.com/powershell/

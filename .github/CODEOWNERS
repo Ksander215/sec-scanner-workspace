@@ -1,0 +1,52 @@
+# CODEOWNERS — Security Intelligence Platform
+# These owners will be automatically requested for review when their files are changed.
+
+# Default owners for everything
+* @Ksander215
+
+# Domain layer
+/src/domain/ @Ksander215
+
+# API layer
+/src/api/ @Ksander215
+
+# CLI
+/src/cli/ @Ksander215
+
+# Infrastructure modules
+/src/infrastructure/event-bus/ @Ksander215
+/src/infrastructure/brokers/ @Ksander215
+/src/infrastructure/distributed-pipeline/ @Ksander215
+/src/infrastructure/saga/ @Ksander215
+/src/infrastructure/scheduler/ @Ksander215
+/src/infrastructure/cluster/ @Ksander215
+/src/infrastructure/multi-tenancy/ @Ksander215
+/src/infrastructure/streaming/ @Ksander215
+/src/infrastructure/ai/ @Ksander215
+/src/infrastructure/enterprise/ @Ksander215
+/src/infrastructure/threat-intel/ @Ksander215
+/src/infrastructure/detection/ @Ksander215
+/src/infrastructure/attack-sim/ @Ksander215
+/src/infrastructure/data-lake/ @Ksander215
+/src/infrastructure/analytics/ @Ksander215
+/src/infrastructure/cloud/ @Ksander215
+/src/infrastructure/platform/ @Ksander215
+/src/infrastructure/plugins/ @Ksander215
+/src/infrastructure/auth/ @Ksander215
+/src/infrastructure/config/ @Ksander215
+/src/infrastructure/observability/ @Ksander215
+
+# SDKs
+/sdk/ @Ksander215
+
+# Deployment
+/Dockerfile @Ksander215
+/docker-compose.yml @Ksander215
+/helm/ @Ksander215
+/deploy/ @Ksander215
+
+# Documentation
+/docs/ @Ksander215
+/README.md @Ksander215
+/CONTRIBUTING.md @Ksander215
+/SECURITY.md @Ksander215
