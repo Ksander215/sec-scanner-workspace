@@ -1,186 +1,66 @@
-# API Stability Report — INT-004 Attack Path Builder
+# API_STABILITY_REPORT_INT-004.5 — Attack Impact Analysis Engine
 
-Дата: 2026-07-16
-Модуль: `src/domain/security-intelligence/attack-path/`
+## Статус API по категориям
 
-## Статусы
+### ✅ Stable — Публичный API, обратная совместимость гарантируется
 
-- **Stable** — API не изменится в обратно-несовместимом manner в ближайших релизах
-- **Experimental** — API может измениться; используйте с осторожностью
-- **Internal** — Не предназначен для внешнего использования; может измениться без уведомления
+| API | Модуль | Описание |
+|-----|--------|----------|
+| `ImpactAnalysisEngine.analyze()` | engine | Основной метод анализа воздействия |
+| `ImpactAnalysisEngine.simulate()` | engine | Симуляция сценария митигации |
+| `ImpactAnalysisEngine.compare()` | engine | Сравнение двух анализов |
+| `ImpactAnalysisEngine.rank()` | engine | Ранжирование кандидатов на ремедиацию |
+| `ImpactAnalysisEngine.statistics()` | engine | Статистика работы движка |
+| `ImpactAnalysisEngine.reset()` | engine | Сброс состояния |
+| `ImpactAnalysisEngine.analyzeBatch()` | engine | Пакетный анализ |
+| `createImpactScenario()` | models | Создание сценария |
+| `createMitigationEffect()` | models | Создание эффекта митигации |
+| `createAttackPathDelta()` | models | Создание дельты путей |
+| `createRiskDelta()` | models | Создание дельты риска |
+| `createSecurityScoreDelta()` | models | Создание дельты security score |
+| `createDependencyImpact()` | models | Создание зависимости |
+| `createRemediationCandidate()` | models | Создание кандидата ремедиации |
+| `createImpactAnalysis()` | models | Создание полного анализа |
+| `computeSecurityScore()` | models | Вычисление security score из риска |
+| `computeSecurityGrade()` | models | Вычисление security grade из score |
+| `impactAnalysisToJSON()` | models | Сериализация |
+| `impactAnalysisFromJSON()` | models | Десериализация с валидацией |
+| `MitigationScenarioType` | types | Enum — 8 типов сценариев |
+| `AttackPathChangeType` | types | Enum — 4 типа изменений |
+| `RemediationRankingStrategy` | types | Enum — 4 стратегии ранжирования |
+| `SecurityGrade` | types | Enum — A/B/C/D/F |
+| `DEFAULT_IMPACT_ENGINE_CONFIG` | types | Конфигурация по умолчанию |
+| `ImpactEventBus` | events | Шина событий |
+| `ImpactCache` | cache | LRU + TTL кэш |
 
----
+### 🧪 Experimental — API может измениться в следующих версиях
 
-## Public API
+| API | Модуль | Описание | Риск |
+|-----|--------|----------|------|
+| `evaluateScenario()` | scenarios | Прямой вызов сценарного обработчика | Факторы митигации могут стать конфигурируемыми |
+| `computeGraphDelta()` | graph-delta | Вычисление graph delta | Может потребоваться интеграция с KG API |
+| `computeConnectivityScore()` | graph-delta | Вычисление score связности | Формула может измениться |
+| `computeRemediationScore()` | models | Композитный score ремедиации | Веса могут быть калиброваны |
+| `computeRecommendationImpact()` | recommendation | Вычисление метрик рекомендаций | Зависит от TD-01 |
+| `computeAttackSurfaceReduction()` | delta | Вычисление сокращения поверхности | Формула может стать нелинейной |
+| `ImpactAnalysisEngine.cacheStatistics` | engine | Статистика кэша | Может быть заменён на метод |
+| `ImpactAnalysisEngine.eventBus` | engine | Доступ к EventBus | Может быть заменён на subscription API |
 
-### AttackPathEngine (Stable)
+### 🔒 Internal — Не предназначен для внешнего использования
 
-| Метод | Статус | Описание |
-|-------|--------|----------|
-| `discover(input)` | **Stable** | Обнаружение attack paths от source к objective |
-| `discoverAll(input)` | **Stable** | Обнаружение всех возможных путей для всех objective types |
-| `rank(paths)` | **Stable** | Ранжирование путей по детерминированной формуле |
-| `simulate(path)` | **Stable** | Детерминированная симуляция attack path |
-| `project(path)` | **Stable** | Проекция пути на подграф Knowledge Graph |
-| `statistics()` | **Stable** | Статистика движка |
-| `summarize(paths)` | **Stable** | Сводка по обнаруженным путям |
-| `discoverBatch(inputs)` | **Stable** | Batch-обработка discovery запросов |
-| `techniqueRegistry` | **Stable** | Реестр MITRE ATT&CK техник |
-| `rankingEngine` | **Stable** | Движок ранжирования |
-| `simulationEngine` | **Stable** | Движок симуляции |
-| `cacheStatistics` | **Stable** | Статистика кэша |
-| `eventBus` | **Stable** | Шина событий |
-| `reset()` | **Stable** | Сброс состояния движка |
+| API | Модуль | Описание |
+|-----|--------|----------|
+| `ScenarioEvaluationResult` | scenarios | Внутренний тип результата оценки сценария |
+| `GraphDelta` | graph-delta | Внутренний тип graph delta |
+| `GraphNodeChange` | graph-delta | Внутренний тип изменения узла |
+| `GraphEdgeChange` | graph-delta | Внутренний тип изменения ребра |
+| `GraphComponentChange` | graph-delta | Внутренний тип изменения компонента |
+| `ImpactStatisticsCollector` | statistics | Внутренний коллектор статистики |
+| `brandImpactAnalysisId()` | types | Брендирование ID (внутреннее) |
+| Все `*Input` интерфейсы | models | Входные типы для фабрик |
 
----
+## Правила совместимости
 
-### Domain Models (Stable)
-
-| Модель | Статус | Описание |
-|--------|--------|----------|
-| `AttackPath` | **Stable** | Полный attack path от entry point до objective |
-| `AttackStep` | **Stable** | Один шаг в attack path |
-| `AttackChain` | **Stable** | Цепочка attack steps |
-| `AttackEdge` | **Stable** | Ребро attack graph |
-| `AttackNode` | **Stable** | Узел attack graph |
-| `AttackObjective` | **Stable** | Цель атаки (MITRE ATT&CK tactic) |
-| `AttackEvidence` | **Stable** | Доказательство, подтверждающее путь |
-| `AttackPathSummary` | **Stable** | Сводка по всем обнаруженным путям |
-| `AttackSimulation` | **Stable** | Результат детерминированной симуляции |
-| `AttackPathRanking` | **Stable** | Рейтинг attack path |
-
----
-
-### Enums (Stable)
-
-| Enum | Статус | Описание |
-|------|--------|----------|
-| `DiscoveryStrategy` | **Stable** | BFS, DFS, ShortestPath, MultiPath, Reachability |
-| `AttackObjectiveType` | **Stable** | 9 MITRE ATT&CK-aligned objectives |
-| `AttackNodeType` | **Stable** | 10 типов узлов attack graph |
-| `AttackEdgeType` | **Stable** | 10 типов рёбер attack graph |
-| `StopConditionType` | **Stable** | Типы условий остановки |
-
----
-
-### Configuration (Stable)
-
-| Config | Статус | Описание |
-|--------|--------|----------|
-| `AttackPathEngineConfig` | **Stable** | Конфигурация движка |
-| `RankingConfig` | **Stable** | Веса факторов ранжирования |
-| `DiscoveryConstraints` | **Stable** | Ограничения discovery |
-| `SimulationConfig` | **Experimental** | Конфигурация симуляции (параметры штрафов) |
-| `ProjectionConfig` | **Experimental** | Конфигурация проекции |
-
----
-
-### Factory Functions (Stable)
-
-| Функция | Статус |
-|---------|--------|
-| `createAttackNode()` | **Stable** |
-| `createAttackEdge()` | **Stable** |
-| `createAttackStep()` | **Stable** |
-| `createAttackChain()` | **Stable** |
-| `createAttackObjective()` | **Stable** |
-| `createAttackEvidence()` | **Stable** |
-| `createAttackPathRanking()` | **Stable** |
-| `createAttackPath()` | **Stable** |
-| `createAttackPathSummary()` | **Stable** |
-| `createAttackSimulation()` | **Stable** |
-
----
-
-### Events (Stable)
-
-| Event | Статус |
-|-------|--------|
-| `PathDiscoveredEvent` | **Stable** |
-| `PathRankedEvent` | **Stable** |
-| `SimulationCompletedEvent` | **Stable** |
-| `AttackGraphBuiltEvent` | **Stable** |
-| `AttackPathEventBus` | **Stable** |
-
----
-
-### Objective Factory Functions (Stable)
-
-| Функция | Статус |
-|---------|--------|
-| `createInitialAccessObjective()` | **Stable** |
-| `createCredentialAccessObjective()` | **Stable** |
-| `createDiscoveryObjective()` | **Stable** |
-| `createLateralMovementObjective()` | **Stable** |
-| `createPrivilegeEscalationObjective()` | **Stable** |
-| `createPersistenceObjective()` | **Stable** |
-| `createCollectionObjective()` | **Stable** |
-| `createExfiltrationObjective()` | **Stable** |
-| `createImpactObjective()` | **Stable** |
-| `createObjectiveByType()` | **Stable** |
-
----
-
-### Ranking Score Functions (Stable)
-
-| Функция | Статус |
-|---------|--------|
-| `computeRiskScore()` | **Stable** |
-| `computePathLengthScore()` | **Stable** |
-| `computeExploitAvailabilityScore()` | **Stable** |
-| `computePrivilegeEscalationScore()` | **Stable** |
-| `computeLateralMovementScore()` | **Stable** |
-| `computeInternetExposureScore()` | **Stable** |
-| `computeBusinessImpactScore()` | **Stable** |
-| `computeConfidenceScore()` | **Stable** |
-| `computeOverallRankingScore()` | **Stable** |
-
----
-
-### Simulation Functions (Stable)
-
-| Функция | Статус |
-|---------|--------|
-| `computeStepProbability()` | **Stable** |
-| `computeCumulativeProbability()` | **Stable** |
-| `identifyCriticalSteps()` | **Stable** |
-| `identifyBottlenecks()` | **Stable** |
-| `identifyDetectionPoints()` | **Stable** |
-| `determineRequiredCapabilities()` | **Stable** |
-
----
-
-### Internal APIs (Internal)
-
-| Компонент | Статус | Описание |
-|-----------|--------|----------|
-| `KnowledgeGraphAdapter` | **Internal** | Адаптер KG → Attack Graph; не предназначен для прямого использования |
-| `PathDiscoveryEngine` | **Internal** | Внутренний движок discovery; используйте AttackPathEngine.discover() |
-| `ConstraintsEngine` | **Internal** | Внутренний движок constraints; управляется через DiscoveryConstraints |
-| `AttackPathStatisticsCollector` | **Internal** | Внутренний коллектор статистики |
-| `AttackTechniqueRegistry` | **Stable** | Реестр техник; расширяемый через register() |
-
----
-
-### Cache (Internal)
-
-| Компонент | Статус |
-|-----------|--------|
-| `AttackPathCache` | **Internal** |
-
----
-
-### Serialization (Stable)
-
-| Функция | Статус |
-|---------|--------|
-| `attackPathToJSON()` | **Stable** |
-| `attackPathFromJSON()` | **Stable** |
-| `attackSimulationToJSON()` | **Stable** |
-
----
-
-## Версионирование
-
-- **Formula version**: `1.0.0` — включена в cache keys для инвалидации
-- **Breaking changes** требуют обновления `formulaVersion` в конфигурации
+1. **Stable API**: Изменения только через additive evolution. Breaking changes требуют major version bump.
+2. **Experimental API**: Может измениться между minor versions. Клиенты должны ожидать изменений.
+3. **Internal API**: Не использовать вне модуля. Может быть удалён или реорганизован без предупреждения.

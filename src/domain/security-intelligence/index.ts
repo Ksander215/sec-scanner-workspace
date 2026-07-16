@@ -3,10 +3,12 @@
  *
  * Entry point for the Security Intelligence domain.
  * Provides the Finding Normalization Engine, Correlation Engine,
- * Risk Engine, and Attack Path Builder.
+ * Risk Engine, Attack Path Builder, and Impact Analysis Engine.
  *
  * Future modules (NOT yet implemented):
  * - Recommendation Engine
+ * - Explainability Engine
+ * - Security Score Engine
  */
 
 // ─── Normalization ───────────────────────────────────────────
@@ -305,3 +307,83 @@ export {
   // Statistics
   AttackPathStatisticsCollector,
 } from './attack-path/index.ts';
+
+// ─── Impact Analysis ─────────────────────────────────────────
+
+export {
+  // Types
+  type ImpactAnalysisId, type ImpactScenarioId, type MitigationEffectId,
+  type AttackPathDeltaId, type RiskDeltaId, type SecurityScoreDeltaId,
+  type DependencyImpactId, type RemediationCandidateId,
+  type Timestamp as ImpactTimestamp, type Metadata as ImpactMetadata,
+  type ImpactAnalysis, type ImpactScenario, type MitigationEffect,
+  type AttackPathDelta, type AttackPathDeltaDetail,
+  type RiskDelta, type RiskAssessmentDelta,
+  type SecurityScoreDelta, type DependencyImpact, type RemediationCandidate,
+  type ImpactEngineConfig, type ImpactStatistics,
+  type AnalysisInput, type ComparisonInput, type ComparisonResult,
+  type ImpactCacheStatistics, type ImpactCacheEntry,
+
+  // Enums & Constants
+  MitigationScenarioType, AttackPathChangeType, RemediationRankingStrategy, SecurityGrade,
+  ALL_MITIGATION_SCENARIO_TYPES, ALL_ATTACK_PATH_CHANGE_TYPES,
+  ALL_REMEDIATION_RANKING_STRATEGIES, ALL_SECURITY_GRADES,
+  DEFAULT_IMPACT_ENGINE_CONFIG,
+
+  // Brands
+  brandImpactAnalysisId, brandImpactScenarioId, brandMitigationEffectId,
+  brandAttackPathDeltaId, brandRiskDeltaId, brandSecurityScoreDeltaId,
+  brandDependencyImpactId, brandRemediationCandidateId,
+
+  // Models
+  generateImpactAnalysisId, generateImpactScenarioId,
+  generateMitigationEffectId, generateAttackPathDeltaId,
+  generateRiskDeltaId, generateSecurityScoreDeltaId,
+  generateDependencyImpactId, generateRemediationCandidateId,
+  createImpactScenario, createMitigationEffect,
+  createAttackPathDelta, createAttackPathDeltaDetail,
+  createRiskDelta, createRiskAssessmentDelta,
+  createSecurityScoreDelta, computeSecurityGrade, computeSecurityScore,
+  createDependencyImpact, createRemediationCandidate,
+  computeRemediationScore, createImpactAnalysis,
+  impactAnalysisToJSON, impactAnalysisFromJSON,
+  impactAnalysesEqual, impactScenariosEqual, remediationCandidatesEqual,
+  cloneImpactAnalysis, hashImpactAnalysis,
+
+  // Scenarios
+  evaluateScenario,
+  createRemoveFindingScenario, createPatchVulnerabilityScenario,
+  createNetworkIsolationScenario, createRemoveCorrelationScenario,
+  createRemoveAssetScenario, createDisableServiceScenario,
+  createCloseEndpointScenario, createRotateCredentialScenario,
+
+  // Delta
+  computeAttackPathDelta, computeAttackSurfaceReduction,
+
+  // Risk Delta
+  computeRiskDelta, computeOverallRisk,
+
+  // Graph Delta
+  computeGraphDelta, computeConnectivityScore,
+
+  // Recommendation
+  computeRecommendationImpact, rankRemediationCandidates,
+  compareRemediationCandidates,
+
+  // Events
+  type ImpactAnalysisStartedEvent, type ImpactCalculatedEvent,
+  type ScenarioCompletedEvent, type RecommendationRankedEvent,
+  type AnyImpactEvent, type ImpactEventHandler,
+  createImpactAnalysisStartedEvent, createImpactCalculatedEvent,
+  createScenarioCompletedEvent, createRecommendationRankedEvent,
+  ImpactEventBus,
+
+  // Cache
+  ImpactCache,
+
+  // Statistics
+  ImpactStatisticsCollector,
+
+  // Engine
+  ImpactAnalysisEngine,
+} from './impact/index.ts';

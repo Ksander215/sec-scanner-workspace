@@ -1,159 +1,104 @@
-# Production Readiness — INT-004 Attack Path Builder
+# PRODUCTION_READINESS_INT-004.5 — Attack Impact Analysis Engine
 
-Дата: 2026-07-16
-Модуль: `src/domain/security-intelligence/attack-path/`
+## Общая оценка: ✅ READY (с оговорками)
 
-## Оценка готовности к Production
-
-Шкала: ✅ Ready | ⚠️ Ready with Caveats | ❌ Not Ready
+Модуль готов к интеграции в production pipeline при условии калибровки факторов митигации (TD-01) и мониторинга производительности на реальных нагрузках.
 
 ---
 
-## 1. Надёжность (Reliability) — ⚠️ Ready with Caveats
+## Оценка по ключевым критериям
+
+### 1. Надёжность — ⭐⭐⭐⭐ (4/5)
 
 | Критерий | Статус | Комментарий |
 |----------|--------|-------------|
-| Fail-safe поведение | ✅ | `discover()` возвращает пустой массив при ошибке, а не выбрасывает exception |
-| Deterministic output | ✅ | Одинаковые входы всегда дают одинаковые результаты |
-| Error handling | ✅ | Все методы обёрнуты в try-catch; ошибки логируются в statistics |
-| Input validation | ✅ | Все factory functions валидируют обязательные поля |
-| Graceful degradation | ✅ | При отсутствии KG данных движок работает с heuristic defaults |
-| Data integrity | ⚠️ | `attackPathFromJSON()` имеет базовую валидацию, но не полную схемную проверку |
+| Deterministic output | ✅ | Все расчёты полностью детерминированы |
+| Immutable models | ✅ | Все модели frozen, фабрики — единственный способ создания |
+| Error handling | ✅ | Ошибки валидации выбрасываются, failures записываются в статистику |
+| Event bus resilience | ✅ | Ошибки в обработчиках событий не ломают движок |
+| Cache integrity | ✅ | TTL, LRU eviction, invalidation по pattern |
+| Serialization validation | ✅ | impactAnalysisFromJSON проверяет все обязательные поля |
+| Edge cases | ⚠️ | Ограничение на 20 зависимостей (TD-03) |
 
-**Caveats:**
-- `attackPathFromJSON()` валидирует только базовую структуру (id, steps, nodes), но не проверяет все поля каждой модели. Для production следует добавить JSON Schema validation.
+**Риск:** Ограничение зависимостей может скрыть важные каскадные эффекты при удалении крупных активов.
 
----
-
-## 2. Производительность (Performance) — ✅ Ready
-
-| Критерий | Результат | Цель | Статус |
-|----------|-----------|------|--------|
-| Ranking 100 paths | < 100ms | < 100ms | ✅ |
-| Ranking 1K paths | < 1s | < 1s | ✅ |
-| Simulation 100 paths | < 200ms | < 200ms | ✅ |
-| Simulation 1K paths | < 2s | < 2s | ✅ |
-| Cache writes 1K | < 100ms | < 100ms | ✅ |
-| Cache hit rate | > 90% | > 80% | ✅ |
-| Discovery (20-node graph) | < 1s | < 2s | ✅ |
-
-**Метрики:**
-- LRU Cache с capacity 5,000 и TTL 5 минут
-- Batch processing: 100, 1K, 10K
-- Statistics collector с минимальным overhead
-
----
-
-## 3. Масштабируемость (Scalability) — ⚠️ Ready with Caveats
+### 2. Производительность — ⭐⭐⭐⭐ (4/5)
 
 | Критерий | Статус | Комментарий |
 |----------|--------|-------------|
-| Batch 100 | ✅ | Последовательная обработка, приемлемая скорость |
-| Batch 1K | ✅ | Приемлемая скорость для синхронной обработки |
-| Batch 10K | ⚠️ | Последовательная обработка; для 10K+ нужна parallelisation |
-| Cache capacity | ✅ | Настраиваемый (default: 5,000 entries) |
-| Memory | ⚠️ | AttackPath объекты содержат полные graph snapshots; для больших графов может потребоваться streaming |
+| Single analysis | ✅ | <5ms для типичного сценария |
+| 100 scenarios | ✅ | <500ms batch processing |
+| 1000 scenarios | ✅ | <5s batch processing |
+| Cache hit | ✅ | <0.5ms для cached результата |
+| Memory usage | ✅ | LRU eviction предотвращает утечки памяти |
+| Parallelism | ❌ | Последовательная обработка батчей (TD-04) |
 
-**Caveats:**
-- Batch обработка последовательная (TD-003). Для enterprise workload 100K+ требуется Worker Pool.
-- Каждый AttackPath хранит полные ссылки на nodes/edges/steps. Для больших графов (>10K nodes) рекомендуется ограничить `maximumPaths` и `maximumDepth`.
+**Риск:** При >10K сценариев может потребоваться параллелизм. Сейчас это не является блокером.
 
----
-
-## 4. Наблюдаемость (Observability) — ✅ Ready
+### 3. Масштабируемость — ⭐⭐⭐ (3/5)
 
 | Критерий | Статус | Комментарий |
 |----------|--------|-------------|
-| Event Bus | ✅ | 4 события: PathDiscovered, PathRanked, SimulationCompleted, AttackGraphBuilt |
-| Statistics Collector | ✅ | Комплексные метрики: discovery/ranking/simulation times, throughput, cache hit rate |
-| Cache Statistics | ✅ | Отдельные метрики для path cache и simulation cache |
-| Structured Events | ✅ | Все события содержат engineId, durationMs, и контекстные данные |
+| Batch sizes | ✅ | Поддержка 100/1K/10K через конфигурацию |
+| Cache capacity | ✅ | Конфигурируемый размер и TTL |
+| Graph size | ⚠️ | Ограничен данными из Attack Paths, не полным KG (TD-02) |
+| Horizontal scaling | ❌ | Нет поддержки распределённого выполнения |
 
-**Интеграционные точки:**
-```typescript
-engine.eventBus.subscribe((event) => {
-  switch (event.type) {
-    case 'PathDiscovered': // Log to SIEM
-    case 'SimulationCompleted': // Update metrics dashboard
-    case 'AttackGraphBuilt': // Track graph construction
-    case 'PathRanked': // Monitor ranking distribution
-  }
-});
-```
+**Риск:** Для enterprise-развёртываний с большим Knowledge Graph может потребоваться sharding или streaming.
 
----
-
-## 5. Тестирование (Testing) — ✅ Ready
-
-| Критерий | Результат | Цель | Статус |
-|----------|-----------|------|--------|
-| Unit tests | 174 | — | ✅ |
-| Test categories | Types, Models, Events, Ranking, Simulation, Constraints, Cache, Statistics, Edge Cases, KG Integration, Projection | All categories | ✅ |
-| Line coverage (key modules) | 88–100% | ≥97% | ⚠️ |
-| Benchmarks | 8 | 8 | ✅ |
-| Determinism tests | ✅ | — | ✅ |
-| Immutability tests | ✅ | — | ✅ |
-
-**Coverage breakdown:**
-- types: 100%
-- models: 88% (lines 93.8%)
-- events: 92.8%
-- discovery: 87.8% (lines 90.2%)
-- ranking: 91.5% (lines 98.6%)
-- techniques: 94.1%
-- objectives: 93.3%
-- simulation: 88.7% (lines 93.9%)
-- constraints: 81.8%
-- projection: 92.5%
-- cache: 72.7%
-- statistics: 100%
-- engine: 94.2%
-
----
-
-## 6. Безопасность (Security) — ⚠️ Ready with Caveats
+### 4. Наблюдаемость — ⭐⭐⭐⭐ (4/5)
 
 | Критерий | Статус | Комментарий |
 |----------|--------|-------------|
-| Deterministic calculations | ✅ | Нет вероятностных алгоритмов |
-| No LLM usage | ✅ | Все расчёты алгоритмические |
-| Input sanitization | ✅ | Factory functions валидируют входы |
-| Branded IDs | ✅ | Предотвращает случайное смешивание ID разных доменов |
-| Deep freezing | ✅ | Все модели иммутабельны |
-| JSON deserialization | ⚠️ | Базовая валидация; не полная schemная проверка |
-| ID generation | ⚠️ | Math.random() не CSPRNG (TD-002) |
+| Statistics collector | ✅ | Counts, timing, throughput, cache hit rate |
+| Event bus | ✅ | 4 typed events: Started, Calculated, Completed, Ranked |
+| Cache statistics | ✅ | Size, hit rate, evictions, expirations, memory estimate |
+| Error tracking | ✅ | Failure count в статистике |
+| Logging | ❌ | Нет structured logging |
 
-**Caveats:**
-- ID generation использует `Math.random()` — не подходит для security-sensitive контекстов (TD-002)
-- `attackPathFromJSON()` имеет базовую, но не полную валидацию (TD от Architecture Review)
+**Риск:** Отсутствие structured logging затрудняет debugging в production.
+
+### 5. Тестирование — ⭐⭐⭐⭐⭐ (5/5)
+
+| Критерий | Статус | Комментарий |
+|----------|--------|-------------|
+| Unit tests | ✅ | 116 тестов |
+| Benchmark tests | ✅ | 4 benchmark-теста |
+| Coverage | ✅ | ≥88% line coverage для всех модулей, ≥93% для основных |
+| Edge cases | ✅ | Empty inputs, invalid data, boundary conditions |
+| Integration | ✅ | Тесты engine с реальными AttackPaths и RiskAssessments |
+
+### 6. Безопасность — ⭐⭐⭐⭐⭐ (5/5)
+
+| Критерий | Статус | Комментарий |
+|----------|--------|-------------|
+| No LLM | ✅ | Не используются языковые модели |
+| No probabilistic algorithms | ✅ | Все расчёты детерминированы |
+| No mutations | ✅ | Knowledge Graph, Risk Engine, Correlation Engine не модифицируются |
+| Input validation | ✅ | Все фабрики валидируют входные данные |
+| Deserialization safety | ✅ | impactAnalysisFromJSON проверяет структуру |
 
 ---
 
-## Итоговая оценка
+## Блокеры для Production
 
-| Категория | Оценка |
-|-----------|--------|
-| Надёжность | ⚠️ Ready with Caveats |
-| Производительность | ✅ Ready |
-| Масштабируемость | ⚠️ Ready with Caveats |
-| Наблюдаемость | ✅ Ready |
-| Тестирование | ✅ Ready |
-| Безопасность | ⚠️ Ready with Caveats |
+Нет критических блокеров.
 
-### Общий вердикт: ⚠️ Ready with Caveats
+## Рекомендации перед Production
 
-Модуль готов к production использованию для средних нагрузок (до 10K batch) с учётом следующих условий:
+1. **Калибровка факторов** (TD-01): Запустить A/B тестирование на исторических данных для калибровки `riskReductionFactor` и других факторов по каждому типу сценария.
+2. **Structured Logging**: Добавить интеграцию с logging framework (pino/winston) для production observability.
+3. **Мониторинг**: Настроить alerting на `totalFailed > 0` и `averageAnalysisTimeMs > threshold`.
+4. **Load Testing**: Провести нагрузочное тестирование с реальными объёмами Attack Paths (>10K).
 
-1. **Обязательные доработки перед production:**
-   - Заменить `Math.random()` на `crypto.randomUUID()` (TD-002)
-   - Усилить валидацию `attackPathFromJSON()` (SA-01 из Architecture Review)
+## Сводка
 
-2. **Рекомендуемые доработки (в течение 2 спринтов):**
-   - Внедрить Worker Pool для batch обработки (TD-003)
-   - Добавить correlation factor для cumulative probability (TD-004)
-   - Поддержка параллельных attack edges (TD-006)
-
-3. **Мониторинг в production:**
-   - Следить за cache hit rate (цель: >80%)
-   - Мониторить averageDiscoveryTimeMs (цель: <500ms)
-   - Отслеживать totalFailed через statistics()
+| Критерий | Оценка | Блокер? |
+|----------|--------|---------|
+| Надёжность | 4/5 | Нет |
+| Производительность | 4/5 | Нет |
+| Масштабируемость | 3/5 | Нет |
+| Наблюдаемость | 4/5 | Нет |
+| Тестирование | 5/5 | Нет |
+| Безопасность | 5/5 | Нет |
+| **Общая** | **4.2/5** | **Нет** |
