@@ -149,3 +149,34 @@ Stage Summary:
 - 7 commits total on main branch
 - git push requires manual execution by Founder (SSH or HTTPS with PAT)
 - Commands to run: `git push origin main && git push origin architecture-baseline-v1.1`
+
+---
+Task ID: INT-001-through-INT-009
+Agent: Main Agent
+Task: Implement Security Intelligence Platform — INT-001 through INT-009 (Domain, Orchestrator, Persistence, REST API, CLI)
+
+Work Log:
+- Scaffolded TypeScript project (package.json, tsconfig.json) in sec-scanner-workspace
+- Implemented INT-001 Normalization (NormalizationEngine, RawFinding→SecurityFinding mapping)
+- Implemented INT-002 Correlation (CorrelationEngine, Union-Find grouping, default rules)
+- Implemented INT-003 Knowledge Graph (KnowledgeGraphBuilder, BFS traversal, statistics)
+- Implemented INT-004 Risk Assessment (RiskEngine, 5-factor weighted scoring, correlation multiplier)
+- Implemented INT-004.5 Attack Path (AttackPathBuilder, host-grouped path discovery)
+- Implemented INT-004.5 Impact (ImpactEngine, 6-dimension assessment)
+- Implemented INT-005 Recommendation (RecommendationEngine, remediation plans)
+- Implemented INT-006 Explainability (ExplainabilityEngine, multi-type explanations)
+- Implemented INT-006.5 Orchestrator (SecurityIntelligenceEngine, 9-stage pipeline, events, progress, cancellation, SecurityIntelligenceBuilder)
+- Implemented INT-007 Persistence Layer (PersistenceEngine, JsonPersistenceProvider, 8 repository interfaces, snapshots, PersistenceBuilder)
+- Implemented INT-008 REST API Platform (SecurityIntelligenceApiBuilder, Fastify server, 12 route groups, DTO layer, Zod validation, middleware, AuthProvider, Prometheus metrics, health endpoints)
+- Implemented INT-009 CLI (Commander-based, 10 command groups, dual-mode embedded/remote, 6 output formats, progress renderer, config management)
+- Updated .gitignore for TypeScript/Node.js
+
+Stage Summary:
+- 71 TypeScript source files created across 3 layers (domain, api, cli)
+- Domain: 8 modules (normalization, correlation, knowledge-graph, risk, attack-path, impact, recommendation, explainability)
+- Orchestrator: 9-stage pipeline engine with builder pattern
+- Persistence: JSON provider with 8 repository interfaces and snapshot engine
+- REST API: 12 route groups, DTO mappers, Zod validation, auth, health, Prometheus metrics
+- CLI: 10 command groups (analyze, reports, findings, risk, attack, recommend, explain, snapshot, config, server)
+- Dual-mode: embedded (local engine) and remote (REST API client)
+- 6 output formats: table, json, yaml, csv, jsonl, markdown
