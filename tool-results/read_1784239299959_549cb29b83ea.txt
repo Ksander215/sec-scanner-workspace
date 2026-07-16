@@ -1,0 +1,687 @@
+     1→/**
+     2→ * PostgreSQL Persistence Provider
+     3→ *
+     4→ * Production-grade implementation of PersistenceProvider backed by PostgreSQL.
+     5→ * Features: connection pool, prepared statements, transactions, migrations,
+     6→ * indexes, optimistic locking.
+     7→ */
+     8→
+     9→import type { SecurityIntelligenceReport } from '../../../domain/security-intelligence/orchestrator/types.js';
+    10→import type { SecurityFinding } from '../../../domain/security-intelligence/normalization/types.js';
+    11→import type { RiskAssessment } from '../../../domain/security-intelligence/risk/types.js';
+    12→import type { Correlation, CorrelationGroup } from '../../../domain/security-intelligence/correlation/types.js';
+    13→import type { AttackGraph } from '../../../domain/security-intelligence/attack-path/types.js';
+    14→import type { Recommendation } from '../../../domain/security-intelligence/recommendation/types.js';
+    15→import type { Explanation } from '../../../domain/security-intelligence/explainability/types.js';
+    16→import type {
+    17→  PersistenceProvider,
+    18→  StorageBackend,
+    19→  PersistenceEvent,
+    20→  PersistenceEventHandler,
+    21→  StorageStatistics,
+    22→  SnapshotMetadata,
+    23→} from '../../../domain/security-intelligence/persistence/types.js';
+    24→import type {
+    25→  ReportRepository,
+    26→  FindingRepository,
+    27→  RiskRepository,
+    28→  CorrelationRepository,
+    29→  AttackPathRepository,
+    30→  RecommendationRepository,
+    31→  ExplainabilityRepository,
+    32→  SnapshotRepository,
+    33→} from '../../../domain/security-intelligence/persistence/repository.js';
+    34→import type { PostgresConfig, PoolStats } from './types.js';
+    35→import { DEFAULT_POSTGRES_CONFIG } from './types.js';
+    36→import { OptimisticLockError } from './types.js';
+    37→import { MIGRATIONS } from './migrations.js';
+    38→import pg from 'pg';
+    39→
+    40→// ─── PostgreSQL Provider ──────────────────────────────────────
+    41→
+    42→export class PostgresPersistenceProvider implements PersistenceProvider {
+    43→  readonly type: StorageBackend = 'postgres';
+    44→  private pool!: pg.Pool;
+    45→  private config: Required<Omit<PostgresConfig, 'connectionString' | 'ssl'>> & { connectionString: string; ssl: PostgresConfig['ssl'] };
+    46→  private eventHandlers: PersistenceEventHandler[] = [];
+    47→  private initialized = false;
+    48→
+    49→  constructor(config: PostgresConfig) {
+    50→    this.config = {
+    51→      connectionString: config.connectionString,
+    52→      ssl: config.ssl,
+    53→      maxPoolSize: config.maxPoolSize ?? DEFAULT_POSTGRES_CONFIG.maxPoolSize,
+    54→      idleTimeoutMs: config.idleTimeoutMs ?? DEFAULT_POSTGRES_CONFIG.idleTimeoutMs,
+    55→      connectionTimeoutMs: config.connectionTimeoutMs ?? DEFAULT_POSTGRES_CONFIG.connectionTimeoutMs,
+    56→      schema: config.schema ?? DEFAULT_POSTGRES_CONFIG.schema,
+    57→      autoMigrate: config.autoMigrate ?? DEFAULT_POSTGRES_CONFIG.autoMigrate,
+    58→      applicationName: config.applicationName ?? DEFAULT_POSTGRES_CONFIG.applicationName,
+    59→    };
+    60→  }
+    61→
+    62→  // ─── Lifecycle ────────────────────────────────────────────
+    63→
+    64→  async initialize(): Promise<void> {
+    65→    this.pool = new pg.Pool({
+    66→      connectionString: this.config.connectionString,
+    67→      max: this.config.maxPoolSize,
+    68→      idleTimeoutMillis: this.config.idleTimeoutMs,
+    69→      connectionTimeoutMillis: this.config.connectionTimeoutMs,
+    70→      ssl: this.config.ssl as pg.ConnectionConfig['ssl'],
+    71→      application_name: this.config.applicationName,
+    72→    });
+    73→
+    74→    // Test connection
+    75→    const client = await this.pool.connect();
+    76→    try {
+    77→      await client.query('SELECT 1');
+    78→    } finally {
+    79→      client.release();
+    80→    }
+    81→
+    82→    // Run migrations if configured
+    83→    if (this.config.autoMigrate) {
+    84→      await this.runMigrations();
+    85→    }
+    86→
+    87→    this.initialized = true;
+    88→    this.emit('persistence:initialized', {});
+    89→  }
+    90→
+    91→  async shutdown(): Promise<void> {
+    92→    if (this.pool) {
+    93→      await this.pool.end();
+    94→    }
+    95→    this.initialized = false;
+    96→  }
+    97→
+    98→  async isHealthy(): Promise<boolean> {
+    99→    if (!this.pool) return false;
+   100→    try {
+   101→      const client = await this.pool.connect();
+   102→      try {
+   103→        await client.query('SELECT 1');
+   104→        return true;
+   105→      } finally {
+   106→        client.release();
+   107→      }
+   108→    } catch {
+   109→      return false;
+   110→    }
+   111→  }
+   112→
+   113→  onEvent(handler: PersistenceEventHandler): void {
+   114→    this.eventHandlers.push(handler);
+   115→  }
+   116→
+   117→  // ─── Repository Accessors ─────────────────────────────────
+   118→
+   119→  getReportRepository(): ReportRepository {
+   120→    return new PostgresReportRepository(this);
+   121→  }
+   122→
+   123→  getFindingRepository(): FindingRepository {
+   124→    return new PostgresFindingRepository(this);
+   125→  }
+   126→
+   127→  getRiskRepository(): RiskRepository {
+   128→    return new PostgresRiskRepository(this);
+   129→  }
+   130→
+   131→  getCorrelationRepository(): CorrelationRepository {
+   132→    return new PostgresCorrelationRepository(this);
+   133→  }
+   134→
+   135→  getAttackPathRepository(): AttackPathRepository {
+   136→    return new PostgresAttackPathRepository(this);
+   137→  }
+   138→
+   139→  getRecommendationRepository(): RecommendationRepository {
+   140→    return new PostgresRecommendationRepository(this);
+   141→  }
+   142→
+   143→  getExplainabilityRepository(): ExplainabilityRepository {
+   144→    return new PostgresExplainabilityRepository(this);
+   145→  }
+   146→
+   147→  getSnapshotRepository(): SnapshotRepository {
+   148→    return new PostgresSnapshotRepository(this);
+   149→  }
+   150→
+   151→  // ─── Statistics ───────────────────────────────────────────
+   152→
+   153→  async getStatistics(): Promise<StorageStatistics> {
+   154→    const result = await this.pool.query(`
+   155→      SELECT
+   156→        (SELECT COUNT(*) FROM si_platform.reports) as total_reports,
+   157→        (SELECT COUNT(*) FROM si_platform.findings) as total_findings,
+   158→        (SELECT COUNT(*) FROM si_platform.snapshots) as total_snapshots,
+   159→        (SELECT COALESCE(SUM(pg_total_relation_size('si_platform.' || tablename)), 0)
+   160→         FROM pg_tables WHERE schemaname = 'si_platform') as total_size,
+   161→        (SELECT MIN(timestamp) FROM si_platform.reports) as oldest,
+   162→        (SELECT MAX(timestamp) FROM si_platform.reports) as newest
+   163→    `);
+   164→
+   165→    const row = result.rows[0];
+   166→    return {
+   167→      totalReports: parseInt(row.total_reports) || 0,
+   168→      totalFindings: parseInt(row.total_findings) || 0,
+   169→      totalSnapshots: parseInt(row.total_snapshots) || 0,
+   170→      storageSizeBytes: parseInt(row.total_size) || 0,
+   171→      oldestReport: row.oldest ? new Date(row.oldest) : undefined,
+   172→      newestReport: row.newest ? new Date(row.newest) : undefined,
+   173→      byBackend: {
+   174→        json: { count: 0, sizeBytes: 0 },
+   175→        sqlite: { count: 0, sizeBytes: 0 },
+   176→        postgres: { count: parseInt(row.total_reports) || 0, sizeBytes: parseInt(row.total_size) || 0 },
+   177→        neo4j: { count: 0, sizeBytes: 0 },
+   178→        redis: { count: 0, sizeBytes: 0 },
+   179→      },
+   180→    };
+   181→  }
+   182→
+   183→  // ─── Migrations ───────────────────────────────────────────
+   184→
+   185→  async runMigrations(): Promise<void> {
+   186→    for (const migration of MIGRATIONS) {
+   187→      await this.pool.query('BEGIN');
+   188→      try {
+   189→        // Check if already applied
+   190→        const check = await this.pool.query(
+   191→          'SELECT version FROM si_platform.migrations WHERE version = $1',
+   192→          [migration.version],
+   193→        );
+   194→        if (check.rows.length > 0) continue;
+   195→
+   196→        // Apply migration
+   197→        await this.pool.query(migration.up);
+   198→
+   199→        // Record migration
+   200→        const checksum = this.simpleChecksum(migration.up);
+   201→        await this.pool.query(
+   202→          'INSERT INTO si_platform.migrations (version, description, checksum, applied_at) VALUES ($1, $2, $3, NOW())',
+   203→          [migration.version, migration.description, checksum],
+   204→        );
+   205→
+   206→        await this.pool.query('COMMIT');
+   207→      } catch (err) {
+   208→        await this.pool.query('ROLLBACK');
+   209→        throw new Error(`Migration ${migration.version} failed: ${err instanceof Error ? err.message : String(err)}`);
+   210→      }
+   211→    }
+   212→  }
+   213→
+   214→  /** Simple checksum for migration verification */
+   215→  private simpleChecksum(sql: string): string {
+   216→    let hash = 0;
+   217→    const normalized = sql.replace(/\s+/g, ' ').trim();
+   218→    for (let i = 0; i < normalized.length; i++) {
+   219→      hash = ((hash << 5) - hash + normalized.charCodeAt(i)) | 0;
+   220→    }
+   221→    return Math.abs(hash).toString(16);
+   222→  }
+   223→
+   224→  // ─── Internal Helpers ─────────────────────────────────────
+   225→
+   226→  /** Get the connection pool (for repositories to use) */
+   227→  getPool(): pg.Pool {
+   228→    return this.pool;
+   229→  }
+   230→
+   231→  /** Get the schema name */
+   232→  getSchema(): string {
+   233→    return this.config.schema;
+   234→  }
+   235→
+   236→  /** Get pool statistics */
+   237→  async getPoolStats(): Promise<PoolStats> {
+   238→    return {
+   239→      totalConnections: this.pool.totalCount,
+   240→      idleConnections: this.pool.idleCount,
+   241→      waitingRequests: this.pool.waitingCount,
+   242→    };
+   243→  }
+   244→
+   245→  emit(type: PersistenceEvent['type'], data: Record<string, unknown>): void {
+   246→    const event: PersistenceEvent = { type, timestamp: new Date(), data };
+   247→    for (const handler of this.eventHandlers) {
+   248→      try { handler(event); } catch { /* ignore */ }
+   249→    }
+   250→  }
+   251→}
+   252→
+   253→// ─── Abstract Base Repository ─────────────────────────────────
+   254→
+   255→abstract class PostgresBaseRepository {
+   256→  protected provider: PostgresPersistenceProvider;
+   257→
+   258→  constructor(provider: PostgresPersistenceProvider) {
+   259→    this.provider = provider;
+   260→  }
+   261→
+   262→  protected get pool(): pg.Pool {
+   263→    return this.provider.getPool();
+   264→  }
+   265→
+   266→  protected get schema(): string {
+   267→    return this.provider.getSchema();
+   268→  }
+   269→
+   270→  /** Execute a query within a transaction */
+   271→  protected async withTransaction<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {
+   272→    const client = await this.pool.connect();
+   273→    try {
+   274→      await client.query('BEGIN');
+   275→      const result = await fn(client);
+   276→      await client.query('COMMIT');
+   277→      return result;
+   278→    } catch (err) {
+   279→      await client.query('ROLLBACK');
+   280→      throw err;
+   281→    } finally {
+   282→      client.release();
+   283→    }
+   284→  }
+   285→}
+   286→
+   287→// ─── Report Repository ────────────────────────────────────────
+   288→
+   289→class PostgresReportRepository extends PostgresBaseRepository implements ReportRepository {
+   290→  async save(report: SecurityIntelligenceReport): Promise<string> {
+   291→    await this.withTransaction(async (client) => {
+   292→      // Upsert report
+   293→      await client.query(
+   294→        `INSERT INTO ${this.schema}.reports (id, run_id, timestamp, findings_count, data, version)
+   295→         VALUES ($1, $2, $3, $4, $5, 1)
+   296→         ON CONFLICT (id) DO UPDATE SET
+   297→           run_id = EXCLUDED.run_id,
+   298→           timestamp = EXCLUDED.timestamp,
+   299→           findings_count = EXCLUDED.findings_count,
+   300→           data = EXCLUDED.data,
+   301→           version = ${this.schema}.reports.version + 1,
+   302→           updated_at = NOW()`,
+   303→        [report.id, report.runId, report.timestamp, report.findings.length, JSON.stringify(report)],
+   304→      );
+   305→    });
+   306→    this.provider.emit('persistence:report-saved', { reportId: report.id });
+   307→    return report.id;
+   308→  }
+   309→
+   310→  async load(id: string): Promise<SecurityIntelligenceReport | null> {
+   311→    const result = await this.pool.query(
+   312→      `SELECT data FROM ${this.schema}.reports WHERE id = $1`,
+   313→      [id],
+   314→    );
+   315→    if (result.rows.length === 0) return null;
+   316→    this.provider.emit('persistence:report-loaded', { reportId: id });
+   317→    return this.deserializeReport(result.rows[0].data);
+   318→  }
+   319→
+   320→  async delete(id: string): Promise<boolean> {
+   321→    const result = await this.pool.query(
+   322→      `DELETE FROM ${this.schema}.reports WHERE id = $1`,
+   323→      [id],
+   324→    );
+   325→    if (result.rowCount && result.rowCount > 0) {
+   326→      this.provider.emit('persistence:report-deleted', { reportId: id });
+   327→      return true;
+   328→    }
+   329→    return false;
+   330→  }
+   331→
+   332→  async list(options?: { limit?: number; offset?: number }): Promise<Array<{ id: string; timestamp: Date; findingsCount: number }>> {
+   333→    const limit = options?.limit ?? 100;
+   334→    const offset = options?.offset ?? 0;
+   335→    const result = await this.pool.query(
+   336→      `SELECT id, timestamp, findings_count FROM ${this.schema}.reports ORDER BY timestamp DESC LIMIT $1 OFFSET $2`,
+   337→      [limit, offset],
+   338→    );
+   339→    return result.rows.map(row => ({
+   340→      id: row.id,
+   341→      timestamp: new Date(row.timestamp),
+   342→      findingsCount: row.findings_count,
+   343→    }));
+   344→  }
+   345→
+   346→  async getSummary(id: string): Promise<Record<string, unknown> | null> {
+   347→    const result = await this.pool.query(
+   348→      `SELECT data->'metrics' as metrics, data->'riskSummary' as risk_summary,
+   349→              data->'normalization' as normalization, findings_count
+   350→       FROM ${this.schema}.reports WHERE id = $1`,
+   351→      [id],
+   352→    );
+   353→    if (result.rows.length === 0) return null;
+   354→    const row = result.rows[0];
+   355→    return {
+   356→      id,
+   357→      metrics: row.metrics,
+   358→      riskSummary: row.risk_summary,
+   359→      normalization: row.normalization,
+   360→      findingsCount: row.findings_count,
+   361→    };
+   362→  }
+   363→
+   364→  private deserializeReport(data: unknown): SecurityIntelligenceReport {
+   365→    const raw = typeof data === 'string' ? JSON.parse(data) : data;
+   366→    return {
+   367→      ...raw,
+   368→      timestamp: new Date(raw.timestamp),
+   369→      findings: (raw.findings ?? []).map((f: Record<string, unknown>) => ({
+   370→        ...f,
+   371→        timestamp: new Date(f.timestamp as string),
+   372→        normalizedAt: new Date(f.normalizedAt as string),
+   373→      })),
+   374→    } as SecurityIntelligenceReport;
+   375→  }
+   376→}
+   377→
+   378→// ─── Finding Repository ───────────────────────────────────────
+   379→
+   380→class PostgresFindingRepository extends PostgresBaseRepository implements FindingRepository {
+   381→  async save(findings: SecurityFinding[], reportId: string): Promise<void> {
+   382→    await this.withTransaction(async (client) => {
+   383→      for (const f of findings) {
+   384→        await client.query(
+   385→          `INSERT INTO ${this.schema}.findings (
+   386→            id, report_id, source, source_id, name, description, severity, category,
+   387→            confidence, host, port, protocol, path, evidence, metadata, fingerprint,
+   388→            tags, cvss_vector, cvss_score, cwe, cve, references, timestamp, normalized_at
+   389→          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
+   390→          ON CONFLICT (id) DO UPDATE SET
+   391→            severity = EXCLUDED.severity, category = EXCLUDED.category,
+   392→            confidence = EXCLUDED.confidence, version = ${this.schema}.findings.version + 1,
+   393→            updated_at = NOW()`,
+   394→          [
+   395→            f.id, reportId, f.source, f.sourceId, f.name, f.description,
+   396→            f.severity, f.category, f.confidence, f.host, f.port ?? null,
+   397→            f.protocol ?? null, f.path ?? null, JSON.stringify(f.evidence),
+   398→            JSON.stringify(f.metadata), f.fingerprint, f.tags,
+   399→            f.cvssVector ?? null, f.cvssScore ?? null, f.cwe ?? [], f.cve ?? [],
+   400→            f.references, f.timestamp, f.normalizedAt,
+   401→          ],
+   402→        );
+   403→      }
+   404→    });
+   405→  }
+   406→
+   407→  async findByReport(reportId: string): Promise<SecurityFinding[]> {
+   408→    const result = await this.pool.query(
+   409→      `SELECT * FROM ${this.schema}.findings WHERE report_id = $1 ORDER BY timestamp`,
+   410→      [reportId],
+   411→    );
+   412→    return result.rows.map(this.mapFinding);
+   413→  }
+   414→
+   415→  async findById(id: string): Promise<SecurityFinding | null> {
+   416→    const result = await this.pool.query(
+   417→      `SELECT * FROM ${this.schema}.findings WHERE id = $1`,
+   418→      [id],
+   419→    );
+   420→    return result.rows.length > 0 ? this.mapFinding(result.rows[0]) : null;
+   421→  }
+   422→
+   423→  async search(query: string, options?: { limit?: number; offset?: number }): Promise<SecurityFinding[]> {
+   424→    const limit = options?.limit ?? 100;
+   425→    const offset = options?.offset ?? 0;
+   426→    const result = await this.pool.query(
+   427→      `SELECT * FROM ${this.schema}.findings
+   428→       WHERE to_tsvector('english', coalesce(name,'') || ' ' || coalesce(description,'') || ' ' || coalesce(host,''))
+   429→             @@ plainto_tsquery($1)
+   430→       ORDER BY timestamp DESC LIMIT $2 OFFSET $3`,
+   431→      [query, limit, offset],
+   432→    );
+   433→    return result.rows.map(this.mapFinding);
+   434→  }
+   435→
+   436→  async deleteByReport(reportId: string): Promise<number> {
+   437→    const result = await this.pool.query(
+   438→      `DELETE FROM ${this.schema}.findings WHERE report_id = $1`,
+   439→      [reportId],
+   440→    );
+   441→    return result.rowCount ?? 0;
+   442→  }
+   443→
+   444→  private mapFinding(row: Record<string, unknown>): SecurityFinding {
+   445→    return {
+   446→      id: row.id as string,
+   447→      source: row.source as string,
+   448→      sourceId: row.source_id as string,
+   449→      name: row.name as string,
+   450→      description: row.description as string,
+   451→      severity: row.severity as SecurityFinding['severity'],
+   452→      category: row.category as SecurityFinding['category'],
+   453→      confidence: row.confidence as SecurityFinding['confidence'],
+   454→      host: row.host as string,
+   455→      port: row.port as number | undefined,
+   456→      protocol: row.protocol as string | undefined,
+   457→      path: row.path as string | undefined,
+   458→      evidence: typeof row.evidence === 'string' ? JSON.parse(row.evidence) : row.evidence as Record<string, unknown>,
+   459→      metadata: typeof row.metadata === 'string' ? JSON.parse(row.metadata) : row.metadata as Record<string, unknown>,
+   460→      timestamp: new Date(row.timestamp as string),
+   461→      normalizedAt: new Date(row.normalized_at as string),
+   462→      fingerprint: row.fingerprint as string,
+   463→      tags: row.tags as string[],
+   464→      cvssVector: row.cvss_vector as string | undefined,
+   465→      cvssScore: row.cvss_score as number | undefined,
+   466→      cwe: row.cwe as string[],
+   467→      cve: row.cve as string[],
+   468→      references: row.references as string[],
+   469→    };
+   470→  }
+   471→}
+   472→
+   473→// ─── Risk Repository ──────────────────────────────────────────
+   474→
+   475→class PostgresRiskRepository extends PostgresBaseRepository implements RiskRepository {
+   476→  async save(risks: RiskAssessment[], reportId: string): Promise<void> {
+   477→    await this.withTransaction(async (client) => {
+   478→      for (const r of risks) {
+   479→        const id = (r as Record<string, unknown>).id ?? crypto.randomUUID();
+   480→        await client.query(
+   481→          `INSERT INTO ${this.schema}.risks (id, report_id, score, level, data)
+   482→           VALUES ($1, $2, $3, $4, $5)
+   483→           ON CONFLICT (id) DO UPDATE SET
+   484→             score = EXCLUDED.score, level = EXCLUDED.level,
+   485→             data = EXCLUDED.data, version = ${this.schema}.risks.version + 1`,
+   486→          [id, reportId, r.score, (r as Record<string, unknown>).level ?? 'medium', JSON.stringify(r)],
+   487→        );
+   488→      }
+   489→    });
+   490→  }
+   491→
+   492→  async findByReport(reportId: string): Promise<RiskAssessment[]> {
+   493→    const result = await this.pool.query(
+   494→      `SELECT data FROM ${this.schema}.risks WHERE report_id = $1 ORDER BY score DESC`,
+   495→      [reportId],
+   496→    );
+   497→    return result.rows.map(r => JSON.parse(r.data));
+   498→  }
+   499→
+   500→  async findTop(limit: number): Promise<RiskAssessment[]> {
+   501→    const result = await this.pool.query(
+   502→      `SELECT data FROM ${this.schema}.risks ORDER BY score DESC LIMIT $1`,
+   503→      [limit],
+   504→    );
+   505→    return result.rows.map(r => JSON.parse(r.data));
+   506→  }
+   507→}
+   508→
+   509→// ─── Correlation Repository ───────────────────────────────────
+   510→
+   511→class PostgresCorrelationRepository extends PostgresBaseRepository implements CorrelationRepository {
+   512→  async save(correlations: Correlation[], groups: CorrelationGroup[], reportId: string): Promise<void> {
+   513→    await this.withTransaction(async (client) => {
+   514→      for (const c of correlations) {
+   515→        const id = (c as Record<string, unknown>).id ?? crypto.randomUUID();
+   516→        await client.query(
+   517→          `INSERT INTO ${this.schema}.correlations (id, report_id, correlation_type, data)
+   518→           VALUES ($1, $2, $3, $4)
+   519→           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+   520→          [id, reportId, (c as Record<string, unknown>).type ?? '', JSON.stringify(c)],
+   521→        );
+   522→      }
+   523→      for (const g of groups) {
+   524→        const id = (g as Record<string, unknown>).id ?? crypto.randomUUID();
+   525→        await client.query(
+   526→          `INSERT INTO ${this.schema}.correlation_groups (id, report_id, name, data)
+   527→           VALUES ($1, $2, $3, $4)
+   528→           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+   529→          [id, reportId, g.name ?? '', JSON.stringify(g)],
+   530→        );
+   531→      }
+   532→    });
+   533→  }
+   534→
+   535→  async findByReport(reportId: string): Promise<{ correlations: Correlation[]; groups: CorrelationGroup[] }> {
+   536→    const [corrResult, groupResult] = await Promise.all([
+   537→      this.pool.query(`SELECT data FROM ${this.schema}.correlations WHERE report_id = $1`, [reportId]),
+   538→      this.pool.query(`SELECT data FROM ${this.schema}.correlation_groups WHERE report_id = $1`, [reportId]),
+   539→    ]);
+   540→    return {
+   541→      correlations: corrResult.rows.map(r => JSON.parse(r.data)),
+   542→      groups: groupResult.rows.map(r => JSON.parse(r.data)),
+   543→    };
+   544→  }
+   545→}
+   546→
+   547→// ─── Attack Path Repository ───────────────────────────────────
+   548→
+   549→class PostgresAttackPathRepository extends PostgresBaseRepository implements AttackPathRepository {
+   550→  async save(graph: AttackGraph, reportId: string): Promise<void> {
+   551→    const id = (graph as Record<string, unknown>).id ?? crypto.randomUUID();
+   552→    await this.pool.query(
+   553→      `INSERT INTO ${this.schema}.attack_paths (id, report_id, data)
+   554→       VALUES ($1, $2, $3)
+   555→       ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, version = ${this.schema}.attack_paths.version + 1`,
+   556→      [id, reportId, JSON.stringify(graph)],
+   557→    );
+   558→  }
+   559→
+   560→  async findByReport(reportId: string): Promise<AttackGraph | null> {
+   561→    const result = await this.pool.query(
+   562→      `SELECT data FROM ${this.schema}.attack_paths WHERE report_id = $1 LIMIT 1`,
+   563→      [reportId],
+   564→    );
+   565→    return result.rows.length > 0 ? JSON.parse(result.rows[0].data) : null;
+   566→  }
+   567→}
+   568→
+   569→// ─── Recommendation Repository ────────────────────────────────
+   570→
+   571→class PostgresRecommendationRepository extends PostgresBaseRepository implements RecommendationRepository {
+   572→  async save(recommendations: Recommendation[], reportId: string): Promise<void> {
+   573→    await this.withTransaction(async (client) => {
+   574→      for (const r of recommendations) {
+   575→        const id = (r as Record<string, unknown>).id ?? crypto.randomUUID();
+   576→        await client.query(
+   577→          `INSERT INTO ${this.schema}.recommendations (id, report_id, priority, data)
+   578→           VALUES ($1, $2, $3, $4)
+   579→           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, priority = EXCLUDED.priority`,
+   580→          [id, reportId, (r as Record<string, unknown>).priority ?? 'medium', JSON.stringify(r)],
+   581→        );
+   582→      }
+   583→    });
+   584→  }
+   585→
+   586→  async findByReport(reportId: string): Promise<Recommendation[]> {
+   587→    const result = await this.pool.query(
+   588→      `SELECT data FROM ${this.schema}.recommendations WHERE report_id = $1`,
+   589→      [reportId],
+   590→    );
+   591→    return result.rows.map(r => JSON.parse(r.data));
+   592→  }
+   593→}
+   594→
+   595→// ─── Explainability Repository ────────────────────────────────
+   596→
+   597→class PostgresExplainabilityRepository extends PostgresBaseRepository implements ExplainabilityRepository {
+   598→  async save(explanations: Explanation[], reportId: string): Promise<void> {
+   599→    await this.withTransaction(async (client) => {
+   600→      for (const e of explanations) {
+   601→        const id = (e as Record<string, unknown>).id ?? crypto.randomUUID();
+   602→        await client.query(
+   603→          `INSERT INTO ${this.schema}.explanations (id, report_id, target_id, data)
+   604→           VALUES ($1, $2, $3, $4)
+   605→           ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+   606→          [id, reportId, e.targetId ?? '', JSON.stringify(e)],
+   607→        );
+   608→      }
+   609→    });
+   610→  }
+   611→
+   612→  async findByReport(reportId: string): Promise<Explanation[]> {
+   613→    const result = await this.pool.query(
+   614→      `SELECT data FROM ${this.schema}.explanations WHERE report_id = $1`,
+   615→      [reportId],
+   616→    );
+   617→    return result.rows.map(r => JSON.parse(r.data));
+   618→  }
+   619→
+   620→  async findByTarget(targetId: string): Promise<Explanation | null> {
+   621→    const result = await this.pool.query(
+   622→      `SELECT data FROM ${this.schema}.explanations WHERE target_id = $1 LIMIT 1`,
+   623→      [targetId],
+   624→    );
+   625→    return result.rows.length > 0 ? JSON.parse(result.rows[0].data) : null;
+   626→  }
+   627→}
+   628→
+   629→// ─── Snapshot Repository ──────────────────────────────────────
+   630→
+   631→class PostgresSnapshotRepository extends PostgresBaseRepository implements SnapshotRepository {
+   632→  async create(reportId: string, data: Buffer, description?: string): Promise<SnapshotMetadata> {
+   633→    const snapshotId = crypto.randomUUID();
+   634→    const metadata: SnapshotMetadata = {
+   635→      id: snapshotId,
+   636→      reportId,
+   637→      createdAt: new Date(),
+   638→      size: data.length,
+   639→      format: 'json',
+   640→      description: description ?? `Snapshot of report ${reportId}`,
+   641→    };
+   642→
+   643→    await this.pool.query(
+   644→      `INSERT INTO ${this.schema}.snapshots (id, report_id, description, size, format, data)
+   645→       VALUES ($1, $2, $3, $4, $5, $6)`,
+   646→      [snapshotId, reportId, metadata.description, metadata.size, metadata.format, data],
+   647→    );
+   648→
+   649→    this.provider.emit('persistence:snapshot-created', { snapshotId, reportId });
+   650→    return metadata;
+   651→  }
+   652→
+   653→  async restore(snapshotId: string): Promise<SecurityIntelligenceReport> {
+   654→    const result = await this.pool.query(
+   655→      `SELECT data FROM ${this.schema}.snapshots WHERE id = $1`,
+   656→      [snapshotId],
+   657→    );
+   658→    if (result.rows.length === 0) {
+   659→      throw new Error(`Snapshot ${snapshotId} not found`);
+   660→    }
+   661→    const buffer = result.rows[0].data as Buffer;
+   662→    return JSON.parse(buffer.toString('utf-8'));
+   663→  }
+   664→
+   665→  async list(): Promise<SnapshotMetadata[]> {
+   666→    const result = await this.pool.query(
+   667→      `SELECT id, report_id, description, size, format, created_at FROM ${this.schema}.snapshots ORDER BY created_at DESC`,
+   668→    );
+   669→    return result.rows.map(row => ({
+   670→      id: row.id,
+   671→      reportId: row.report_id,
+   672→      createdAt: new Date(row.created_at),
+   673→      size: row.size,
+   674→      format: row.format as SnapshotMetadata['format'],
+   675→      description: row.description,
+   676→    }));
+   677→  }
+   678→
+   679→  async delete(id: string): Promise<boolean> {
+   680→    const result = await this.pool.query(
+   681→      `DELETE FROM ${this.schema}.snapshots WHERE id = $1`,
+   682→      [id],
+   683→    );
+   684→    return (result.rowCount ?? 0) > 0;
+   685→  }
+   686→}
+   687→

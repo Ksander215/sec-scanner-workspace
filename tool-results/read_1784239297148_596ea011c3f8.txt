@@ -1,0 +1,774 @@
+     1→     1→/**
+     2→     2→ * Neo4j Knowledge Graph Storage Adapter
+     3→     3→ *
+     4→     4→ * Production implementation of GraphStorageProvider backed by Neo4j.
+     5→     5→ * Features: session management, transactions, Cypher queries,
+     6→     6→ * indexes, traversal, shortest path.
+     7→     7→ */
+     8→     8→
+     9→     9→import neo4j, { type Driver, type Session, type ManagedTransaction, type Result, type Integer } from 'neo4j-driver';
+    10→    10→import type { GraphNode, GraphEdge, GraphSnapshot, Metadata } from '../../../domain/knowledge-graph/models/index.js';
+    11→    11→import type { NodeId, EdgeId, SnapshotId, TransactionId } from '../../../domain/knowledge-graph/types/index.js';
+    12→    12→import type {
+    13→    13→  StorageAdapterConfig,
+    14→    14→  StorageConnectionState,
+    15→    15→  StorageStatistics,
+    16→    16→  StorageHealthResult,
+    17→    17→  StorageOperationResult,
+    18→    18→  BatchOperationResult,
+    19→    19→  ExportOptions,
+    20→    20→  ExportResult,
+    21→    21→  ImportOptions,
+    22→    22→  ImportResult,
+    23→    23→  StorageTransactionInfo,
+    24→    24→} from '../../../domain/knowledge-graph/storage/types/index.js';
+    25→    25→import { DEFAULT_STORAGE_CONFIG, StorageConnectionState as ConnState } from '../../../domain/knowledge-graph/storage/types/index.js';
+    26→    26→import type { GraphStorageProvider } from '../../../domain/knowledge-graph/storage/provider/index.js';
+    27→    27→
+    28→    28→// ─── Configuration ────────────────────────────────────────────
+    29→    29→
+    30→    30→export interface Neo4jConfig {
+    31→    31→  /** Bolt URL (bolt://host:7687) */
+    32→    32→  uri: string;
+    33→    33→  /** Username */
+    34→    34→  username: string;
+    35→    35→  /** Password */
+    36→    36→  password: string;
+    37→    37→  /** Database name (default: neo4j) */
+    38→    38→  database?: string;
+    39→    39→  /** Max connection pool size */
+    40→    40→  maxPoolSize?: number;
+    41→    41→  /** Connection timeout in ms */
+    42→    42→  connectionTimeoutMs?: number;
+    43→    43→  /** Max transaction retry time in ms */
+    44→    44→  maxTransactionRetryTimeMs?: number;
+    45→    45→}
+    46→    46→
+    47→    47→// ─── Neo4j Storage Adapter ────────────────────────────────────
+    48→    48→
+    49→    49→export class Neo4jStorageAdapter implements GraphStorageProvider {
+    50→    50→  private driver!: Driver;
+    51→    51→  private _connectionState: StorageConnectionState = ConnState.Disconnected;
+    52→    52→  private readonly _config: StorageAdapterConfig;
+    53→    53→  private readonly neo4jConfig: Neo4jConfig;
+    54→    54→  private activeTransaction: { sessionId: string; tx: ManagedTransaction } | null = null;
+    55→    55→
+    56→    56→  constructor(neo4jConfig: Neo4jConfig, config: Partial<StorageAdapterConfig> = {}) {
+    57→    57→    this._config = { ...DEFAULT_STORAGE_CONFIG, ...config };
+    58→    58→    this.neo4jConfig = neo4jConfig;
+    59→    59→  }
+    60→    60→
+    61→    61→  // ─── Identity ─────────────────────────────────────────────
+    62→    62→
+    63→    63→  get id(): string { return this._config.id; }
+    64→    64→  get adapterType(): string { return 'neo4j'; }
+    65→    65→  get connectionState(): StorageConnectionState { return this._connectionState; }
+    66→    66→  get config(): StorageAdapterConfig { return this._config; }
+    67→    67→  get isConnected(): boolean { return this._connectionState === ConnState.Connected; }
+    68→    68→  get isTransactionActive(): boolean { return this.activeTransaction !== null; }
+    69→    69→
+    70→    70→  // ─── Lifecycle ────────────────────────────────────────────
+    71→    71→
+    72→    72→  async connect(): Promise<void> {
+    73→    73→    this.driver = neo4j.driver(
+    74→    74→      this.neo4jConfig.uri,
+    75→    75→      neo4j.auth.basic(this.neo4jConfig.username, this.neo4jConfig.password),
+    76→    76→      {
+    77→    77→        maxConnectionPoolSize: this.neo4jConfig.maxPoolSize ?? 50,
+    78→    78→        connectionTimeout: this.neo4jConfig.connectionTimeoutMs ?? 30_000,
+    79→    79→        maxTransactionRetryTime: this.neo4jConfig.maxTransactionRetryTimeMs ?? 30_000,
+    80→    80→      },
+    81→    81→    );
+    82→    82→
+    83→    83→    // Verify connectivity
+    84→    84→    await this.driver.verifyConnectivity();
+    85→    85→
+    86→    86→    // Create indexes and constraints
+    87→    87→    await this.createSchema();
+    88→    88→
+    89→    89→    this._connectionState = ConnState.Connected;
+    90→    90→  }
+    91→    91→
+    92→    92→  async disconnect(): Promise<void> {
+    93→    93→    if (this.driver) {
+    94→    94→      await this.driver.close();
+    95→    95→    }
+    96→    96→    this._connectionState = ConnState.Disconnected;
+    97→    97→  }
+    98→    98→
+    99→    99→  /** Create indexes and constraints for optimal performance */
+   100→   100→  private async createSchema(): Promise<void> {
+   101→   101→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   102→   102→    try {
+   103→   103→      // Unique constraint on node ID
+   104→   104→      await session.run(
+   105→   105→        `CREATE CONSTRAINT si_node_id IF NOT EXISTS FOR (n:SIData) REQUIRE n.nodeId IS UNIQUE`,
+   106→   106→      );
+   107→   107→      // Unique constraint on edge ID
+   108→   108→      await session.run(
+   109→   109→        `CREATE CONSTRAINT si_edge_id IF NOT EXISTS FOR ()-[r:SI_EDGE]-() REQUIRE r.edgeId IS UNIQUE`,
+   110→   110→      );
+   111→   111→      // Index on node type
+   112→   112→      await session.run(
+   113→   113→        `CREATE INDEX si_node_type IF NOT EXISTS FOR (n:SIData) ON (n.nodeType)`,
+   114→   114→      );
+   115→   115→      // Index on node source
+   116→   116→      await session.run(
+   117→   117→        `CREATE INDEX si_node_source IF NOT EXISTS FOR (n:SIData) ON (n.source)`,
+   118→   118→      );
+   119→   119→      // Full-text index on labels
+   120→   120→      await session.run(
+   121→   121→        `CREATE FULLTEXT INDEX si_node_labels IF NOT EXISTS FOR (n:SIData) ON EACH [n.labels_text]`,
+   122→   122→      ).catch(() => {/* fulltext index may already exist */});
+   123→   123→    } finally {
+   124→   124→      await session.close();
+   125→   125→    }
+   126→   126→  }
+   127→   127→
+   128→   128→  // ─── Node Operations ─────────────────────────────────────
+   129→   129→
+   130→   130→  async createNode(node: GraphNode): Promise<StorageOperationResult<GraphNode>> {
+   131→   131→    try {
+   132→   132→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   133→   133→      try {
+   134→   134→        const props = this.nodeToProps(node);
+   135→   135→        const result = await session.run(
+   136→   136→          `CREATE (n:SIData $props) RETURN n`,
+   137→   137→          { props },
+   138→   138→        );
+   139→   139→        if (result.records.length > 0) {
+   140→   140→          return { success: true, data: node };
+   141→   141→        }
+   142→   142→        return { success: false, error: 'Failed to create node' };
+   143→   143→      } finally {
+   144→   144→        await session.close();
+   145→   145→      }
+   146→   146→    } catch (err) {
+   147→   147→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   148→   148→    }
+   149→   149→  }
+   150→   150→
+   151→   151→  async updateNode(id: NodeId, properties: Metadata): Promise<StorageOperationResult<GraphNode>> {
+   152→   152→    try {
+   153→   153→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   154→   154→      try {
+   155→   155→        const result = await session.run(
+   156→   156→          `MATCH (n:SIData {nodeId: $id}) SET n += $props, n.updatedAt = datetime() RETURN n`,
+   157→   157→          { id: id as string, props: { ...properties, _serialized: JSON.stringify(properties) } },
+   158→   158→        );
+   159→   159→        if (result.records.length > 0) {
+   160→   160→          const node = this.propsToNode(result.records[0].get('n').properties);
+   161→   161→          return { success: true, data: node };
+   162→   162→        }
+   163→   163→        return { success: false, error: `Node '${id}' not found` };
+   164→   164→      } finally {
+   165→   165→        await session.close();
+   166→   166→      }
+   167→   167→    } catch (err) {
+   168→   168→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   169→   169→    }
+   170→   170→  }
+   171→   171→
+   172→   172→  async deleteNode(id: NodeId): Promise<StorageOperationResult<boolean>> {
+   173→   173→    try {
+   174→   174→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   175→   175→      try {
+   176→   176→        // Delete node and all its relationships
+   177→   177→        const result = await session.run(
+   178→   178→          `MATCH (n:SIData {nodeId: $id}) DETACH DELETE n RETURN count(n) as deleted`,
+   179→   179→          { id: id as string },
+   180→   180→        );
+   181→   181→        const deleted = result.records[0]?.get('deleted') as Integer;
+   182→   182→        return { success: true, data: deleted.toNumber() > 0 };
+   183→   183→      } finally {
+   184→   184→        await session.close();
+   185→   185→      }
+   186→   186→    } catch (err) {
+   187→   187→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   188→   188→    }
+   189→   189→  }
+   190→   190→
+   191→   191→  async getNode(id: NodeId): Promise<StorageOperationResult<GraphNode | undefined>> {
+   192→   192→    try {
+   193→   193→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   194→   194→      try {
+   195→   195→        const result = await session.run(
+   196→   196→          `MATCH (n:SIData {nodeId: $id}) RETURN n`,
+   197→   197→          { id: id as string },
+   198→   198→        );
+   199→   199→        if (result.records.length > 0) {
+   200→   200→          const node = this.propsToNode(result.records[0].get('n').properties);
+   201→   201→          return { success: true, data: node };
+   202→   202→        }
+   203→   203→        return { success: true, data: undefined };
+   204→   204→      } finally {
+   205→   205→        await session.close();
+   206→   206→      }
+   207→   207→    } catch (err) {
+   208→   208→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   209→   209→    }
+   210→   210→  }
+   211→   211→
+   212→   212→  async hasNode(id: NodeId): Promise<boolean> {
+   213→   213→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   214→   214→    try {
+   215→   215→      const result = await session.run(
+   216→   216→        `MATCH (n:SIData {nodeId: $id}) RETURN count(n) > 0 AS exists`,
+   217→   217→        { id: id as string },
+   218→   218→      );
+   219→   219→      return result.records[0]?.get('exists') as boolean;
+   220→   220→    } finally {
+   221→   221→      await session.close();
+   222→   222→    }
+   223→   223→  }
+   224→   224→
+   225→   225→  async getAllNodes(): Promise<readonly GraphNode[]> {
+   226→   226→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   227→   227→    try {
+   228→   228→      const result = await session.run(`MATCH (n:SIData) RETURN n`);
+   229→   229→      return result.records.map(r => this.propsToNode(r.get('n').properties));
+   230→   230→    } finally {
+   231→   231→      await session.close();
+   232→   232→    }
+   233→   233→  }
+   234→   234→
+   235→   235→  async nodeCount(): Promise<number> {
+   236→   236→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   237→   237→    try {
+   238→   238→      const result = await session.run(`MATCH (n:SIData) RETURN count(n) AS count`);
+   239→   239→      return (result.records[0]?.get('count') as Integer).toNumber();
+   240→   240→    } finally {
+   241→   241→      await session.close();
+   242→   242→    }
+   243→   243→  }
+   244→   244→
+   245→   245→  // ─── Node Batch Operations ────────────────────────────────
+   246→   246→
+   247→   247→  async batchCreateNodes(nodes: readonly GraphNode[]): Promise<BatchOperationResult> {
+   248→   248→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   249→   249→    try {
+   250→   250→      const result = await session.run(
+   251→   251→        `UNWIND $nodes AS nodeData
+   252→   252→         CREATE (n:SIData)
+   253→   253→         SET n = nodeData
+   254→   254→         RETURN count(n) AS created`,
+   255→   255→        { nodes: nodes.map(n => this.nodeToProps(n)) },
+   256→   256→      );
+   257→   257→      const created = (result.records[0]?.get('created') as Integer).toNumber();
+   258→   258→      return { success: true, processedCount: created, errorCount: 0, errors: [] };
+   259→   259→    } catch (err) {
+   260→   260→      return {
+   261→   261→        success: false,
+   262→   262→        processedCount: 0,
+   263→   263→        errorCount: nodes.length,
+   264→   264→        errors: [{ index: 0, error: err instanceof Error ? err.message : String(err) }],
+   265→   265→      };
+   266→   266→    } finally {
+   267→   267→      await session.close();
+   268→   268→    }
+   269→   269→  }
+   270→   270→
+   271→   271→  async batchDeleteNodes(ids: readonly NodeId[]): Promise<BatchOperationResult> {
+   272→   272→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   273→   273→    try {
+   274→   274→      const result = await session.run(
+   275→   275→        `UNWIND $ids AS nodeId
+   276→   276→         MATCH (n:SIData {nodeId: nodeId})
+   277→   277→         DETACH DELETE n
+   278→   278→         RETURN count(n) AS deleted`,
+   279→   279→        { ids: ids.map(id => id as string) },
+   280→   280→      );
+   281→   281→      const deleted = (result.records[0]?.get('deleted') as Integer).toNumber();
+   282→   282→      return { success: true, processedCount: deleted, errorCount: 0, errors: [] };
+   283→   283→    } catch (err) {
+   284→   284→      return {
+   285→   285→        success: false,
+   286→   286→        processedCount: 0,
+   287→   287→        errorCount: ids.length,
+   288→   288→        errors: [{ index: 0, error: err instanceof Error ? err.message : String(err) }],
+   289→   289→      };
+   290→   290→    } finally {
+   291→   291→      await session.close();
+   292→   292→    }
+   293→   293→  }
+   294→   294→
+   295→   295→  // ─── Edge Operations ─────────────────────────────────────
+   296→   296→
+   297→   297→  async createEdge(edge: GraphEdge): Promise<StorageOperationResult<GraphEdge>> {
+   298→   298→    try {
+   299→   299→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   300→   300→      try {
+   301→   301→        const edgeType = edge.relationship.edgeType.replace(/[^a-zA-Z0-9_]/g, '_').toUpperCase() || 'SI_EDGE';
+   302→   302→        const props = this.edgeToProps(edge);
+   303→   303→        const result = await session.run(
+   304→   304→          `MATCH (src:SIData {nodeId: $sourceId})
+   305→   305→           MATCH (tgt:SIData {nodeId: $targetId})
+   306→   306→           CREATE (src)-[r:${edgeType} $props]->(tgt)
+   307→   307→           RETURN r`,
+   308→   308→          { sourceId: edge.sourceId as string, targetId: edge.targetId as string, props },
+   309→   309→        );
+   310→   310→        if (result.records.length > 0) {
+   311→   311→          return { success: true, data: edge };
+   312→   312→        }
+   313→   313→        return { success: false, error: 'Failed to create edge — source or target not found' };
+   314→   314→      } finally {
+   315→   315→        await session.close();
+   316→   316→      }
+   317→   317→    } catch (err) {
+   318→   318→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   319→   319→    }
+   320→   320→  }
+   321→   321→
+   322→   322→  async updateEdge(id: EdgeId, properties: Metadata): Promise<StorageOperationResult<GraphEdge>> {
+   323→   323→    try {
+   324→   324→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   325→   325→      try {
+   326→   326→        const result = await session.run(
+   327→   327→          `MATCH ()-[r {edgeId: $id}]->() SET r += $props RETURN r`,
+   328→   328→          { id: id as string, props: { ...properties, _serialized: JSON.stringify(properties) } },
+   329→   329→        );
+   330→   330→        if (result.records.length > 0) {
+   331→   331→          // Reconstruct edge from stored props
+   332→   332→          const props = result.records[0].get('r').properties;
+   333→   333→          return { success: true, data: this.propsToEdge(props) };
+   334→   334→        }
+   335→   335→        return { success: false, error: `Edge '${id}' not found` };
+   336→   336→      } finally {
+   337→   337→        await session.close();
+   338→   338→      }
+   339→   339→    } catch (err) {
+   340→   340→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   341→   341→    }
+   342→   342→  }
+   343→   343→
+   344→   344→  async deleteEdge(id: EdgeId): Promise<StorageOperationResult<boolean>> {
+   345→   345→    try {
+   346→   346→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   347→   347→      try {
+   348→   348→        const result = await session.run(
+   349→   349→          `MATCH ()-[r {edgeId: $id}]->() DELETE r RETURN count(r) AS deleted`,
+   350→   350→          { id: id as string },
+   351→   351→        );
+   352→   352→        const deleted = result.records[0]?.get('deleted') as Integer;
+   353→   353→        return { success: true, data: deleted.toNumber() > 0 };
+   354→   354→      } finally {
+   355→   355→        await session.close();
+   356→   356→      }
+   357→   357→    } catch (err) {
+   358→   358→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   359→   359→    }
+   360→   360→  }
+   361→   361→
+   362→   362→  async getEdge(id: EdgeId): Promise<StorageOperationResult<GraphEdge | undefined>> {
+   363→   363→    try {
+   364→   364→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   365→   365→      try {
+   366→   366→        const result = await session.run(
+   367→   367→          `MATCH (src:SIData)-[r {edgeId: $id}]->(tgt:SIData) RETURN r, src.nodeId AS sourceId, tgt.nodeId AS targetId`,
+   368→   368→          { id: id as string },
+   369→   369→        );
+   370→   370→        if (result.records.length > 0) {
+   371→   371→          return { success: true, data: this.propsToEdge(result.records[0].get('r').properties) };
+   372→   372→        }
+   373→   373→        return { success: true, data: undefined };
+   374→   374→      } finally {
+   375→   375→        await session.close();
+   376→   376→      }
+   377→   377→    } catch (err) {
+   378→   378→      return { success: false, error: err instanceof Error ? err.message : String(err) };
+   379→   379→    }
+   380→   380→  }
+   381→   381→
+   382→   382→  async hasEdge(id: EdgeId): Promise<boolean> {
+   383→   383→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   384→   384→    try {
+   385→   385→      const result = await session.run(
+   386→   386→        `MATCH ()-[r {edgeId: $id}]->() RETURN count(r) > 0 AS exists`,
+   387→   387→        { id: id as string },
+   388→   388→      );
+   389→   389→      return result.records[0]?.get('exists') as boolean;
+   390→   390→    } finally {
+   391→   391→      await session.close();
+   392→   392→    }
+   393→   393→  }
+   394→   394→
+   395→   395→  async getAllEdges(): Promise<readonly GraphEdge[]> {
+   396→   396→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   397→   397→    try {
+   398→   398→      const result = await session.run(
+   399→   399→        `MATCH (src:SIData)-[r]->(tgt:SIData) RETURN r, src.nodeId AS sourceId, tgt.nodeId AS targetId`,
+   400→   400→      );
+   401→   401→      return result.records.map(r => this.propsToEdge(r.get('r').properties));
+   402→   402→    } finally {
+   403→   403→      await session.close();
+   404→   404→    }
+   405→   405→  }
+   406→   406→
+   407→   407→  async edgeCount(): Promise<number> {
+   408→   408→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   409→   409→    try {
+   410→   410→      const result = await session.run(`MATCH ()-[r]->() RETURN count(r) AS count`);
+   411→   411→      return (result.records[0]?.get('count') as Integer).toNumber();
+   412→   412→    } finally {
+   413→   413→      await session.close();
+   414→   414→    }
+   415→   415→  }
+   416→   416→
+   417→   417→  async getEdgesFrom(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   418→   418→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   419→   419→    try {
+   420→   420→      const result = await session.run(
+   421→   421→        `MATCH (src:SIData {nodeId: $id})-[r]->(tgt:SIData) RETURN r, src.nodeId AS sourceId, tgt.nodeId AS targetId`,
+   422→   422→        { id: nodeId as string },
+   423→   423→      );
+   424→   424→      return result.records.map(r => this.propsToEdge(r.get('r').properties));
+   425→   425→    } finally {
+   426→   426→      await session.close();
+   427→   427→    }
+   428→   428→  }
+   429→   429→
+   430→   430→  async getEdgesTo(nodeId: NodeId): Promise<readonly GraphEdge[]> {
+   431→   431→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   432→   432→    try {
+   433→   433→      const result = await session.run(
+   434→   434→        `MATCH (src:SIData)-[r]->(tgt:SIData {nodeId: $id}) RETURN r, src.nodeId AS sourceId, tgt.nodeId AS targetId`,
+   435→   435→        { id: nodeId as string },
+   436→   436→      );
+   437→   437→      return result.records.map(r => this.propsToEdge(r.get('r').properties));
+   438→   438→    } finally {
+   439→   439→      await session.close();
+   440→   440→    }
+   441→   441→  }
+   442→   442→
+   443→   443→  // ─── Edge Batch Operations ────────────────────────────────
+   444→   444→
+   445→   445→  async batchCreateEdges(edges: readonly GraphEdge[]): Promise<BatchOperationResult> {
+   446→   446→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   447→   447→    try {
+   448→   448→      let created = 0;
+   449→   449→      for (const edge of edges) {
+   450→   450→        const edgeType = edge.relationship.edgeType.replace(/[^a-zA-Z0-9_]/g, '_').toUpperCase() || 'SI_EDGE';
+   451→   451→        const props = this.edgeToProps(edge);
+   452→   452→        const result = await session.run(
+   453→   453→          `MATCH (src:SIData {nodeId: $sourceId})
+   454→   454→           MATCH (tgt:SIData {nodeId: $targetId})
+   455→   455→           CREATE (src)-[r:${edgeType} $props]->(tgt)
+   456→   456→           RETURN r`,
+   457→   457→          { sourceId: edge.sourceId as string, targetId: edge.targetId as string, props },
+   458→   458→        );
+   459→   459→        if (result.records.length > 0) created++;
+   460→   460→      }
+   461→   461→      return { success: true, processedCount: created, errorCount: edges.length - created, errors: [] };
+   462→   462→    } catch (err) {
+   463→   463→      return {
+   464→   464→        success: false,
+   465→   465→        processedCount: 0,
+   466→   466→        errorCount: edges.length,
+   467→   467→        errors: [{ index: 0, error: err instanceof Error ? err.message : String(err) }],
+   468→   468→      };
+   469→   469→    } finally {
+   470→   470→      await session.close();
+   471→   471→    }
+   472→   472→  }
+   473→   473→
+   474→   474→  async batchDeleteEdges(ids: readonly EdgeId[]): Promise<BatchOperationResult> {
+   475→   475→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   476→   476→    try {
+   477→   477→      const result = await session.run(
+   478→   478→        `UNWIND $ids AS edgeId
+   479→   479→         MATCH ()-[r {edgeId: edgeId}]->() DELETE r
+   480→   480→         RETURN count(r) AS deleted`,
+   481→   481→        { ids: ids.map(id => id as string) },
+   482→   482→      );
+   483→   483→      const deleted = (result.records[0]?.get('deleted') as Integer).toNumber();
+   484→   484→      return { success: true, processedCount: deleted, errorCount: 0, errors: [] };
+   485→   485→    } catch (err) {
+   486→   486→      return {
+   487→   487→        success: false,
+   488→   488→        processedCount: 0,
+   489→   489→        errorCount: ids.length,
+   490→   490→        errors: [{ index: 0, error: err instanceof Error ? err.message : String(err) }],
+   491→   491→      };
+   492→   492→    } finally {
+   493→   493→      await session.close();
+   494→   494→    }
+   495→   495→  }
+   496→   496→
+   497→   497→  // ─── Snapshots ───────────────────────────────────────────
+   498→   498→
+   499→   499→  async saveSnapshot(metadata?: Metadata): Promise<GraphSnapshot> {
+   500→   500→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   501→   501→    try {
+   502→   502→      const nodes = await this.getAllNodes();
+   503→   503→      const edges = await this.getAllEdges();
+   504→   504→      const snapshot: GraphSnapshot = {
+   505→   505→        id: crypto.randomUUID() as SnapshotId,
+   506→   506→        timestamp: new Date().toISOString(),
+   507→   507→        nodeCount: nodes.length,
+   508→   508→        edgeCount: edges.length,
+   509→   509→        nodes: nodes as GraphNode[],
+   510→   510→        edges: edges as GraphEdge[],
+   511→   511→        metadata: metadata ?? {},
+   512→   512→      } as GraphSnapshot;
+   513→   513→
+   514→   514→      // Store snapshot reference
+   515→   515→      await session.run(
+   516→   516→        `CREATE (s:SISnapshot {snapshotId: $id, timestamp: datetime(), nodeCount: $nc, edgeCount: $ec, metadata: $meta})`,
+   517→   517→        {
+   518→   518→          id: snapshot.id as string,
+   519→   519→          nc: snapshot.nodeCount,
+   520→   520→          ec: snapshot.edgeCount,
+   521→   521→          meta: JSON.stringify(metadata ?? {}),
+   522→   522→        },
+   523→   523→      );
+   524→   524→      return snapshot;
+   525→   525→    } finally {
+   526→   526→      await session.close();
+   527→   527→    }
+   528→   528→  }
+   529→   529→
+   530→   530→  async restoreSnapshot(snapshotId: SnapshotId): Promise<GraphSnapshot> {
+   531→   531→    // For Neo4j, restoring means clearing current data and reimporting
+   532→   532→    // This is a simplified implementation — production would use backup/restore
+   533→   533→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   534→   534→    try {
+   535→   535→      const result = await session.run(
+   536→   536→        `MATCH (s:SISnapshot {snapshotId: $id}) RETURN s`,
+   537→   537→        { id: snapshotId as string },
+   538→   538→      );
+   539→   539→      if (result.records.length === 0) {
+   540→   540→        throw new Error(`Snapshot ${snapshotId} not found`);
+   541→   541→      }
+   542→   542→      // In production, this would restore from a backup
+   543→   543→      return {} as GraphSnapshot;
+   544→   544→    } finally {
+   545→   545→      await session.close();
+   546→   546→    }
+   547→   547→  }
+   548→   548→
+   549→   549→  async listSnapshots(): Promise<readonly GraphSnapshot[]> {
+   550→   550→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   551→   551→    try {
+   552→   552→      const result = await session.run(
+   553→   553→        `MATCH (s:SISnapshot) RETURN s ORDER BY s.timestamp DESC`,
+   554→   554→      );
+   555→   555→      return result.records.map(r => {
+   556→   556→        const props = r.get('s').properties;
+   557→   557→        return {
+   558→   558→          id: props.snapshotId,
+   559→   559→          timestamp: props.timestamp,
+   560→   560→          nodeCount: props.nodeCount?.toNumber() ?? 0,
+   561→   561→          edgeCount: props.edgeCount?.toNumber() ?? 0,
+   562→   562→          metadata: JSON.parse(props.metadata ?? '{}'),
+   563→   563→        } as unknown as GraphSnapshot;
+   564→   564→      });
+   565→   565→    } finally {
+   566→   566→      await session.close();
+   567→   567→    }
+   568→   568→  }
+   569→   569→
+   570→   570→  // ─── Transactions ────────────────────────────────────────
+   571→   571→
+   572→   572→  async beginTransaction(): Promise<TransactionId> {
+   573→   573→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   574→   574→    const tx = session.beginTransaction();
+   575→   575→    const txId = crypto.randomUUID() as TransactionId;
+   576→   576→    this.activeTransaction = { sessionId: txId, tx };
+   577→   577→    return txId;
+   578→   578→  }
+   579→   579→
+   580→   580→  async commitTransaction(): Promise<StorageTransactionInfo> {
+   581→   581→    if (!this.activeTransaction) {
+   582→   582→      throw new Error('No active transaction');
+   583→   583→    }
+   584→   584→    try {
+   585→   585→      await this.activeTransaction.tx.commit();
+   586→   586→      return { transactionId: this.activeTransaction.sessionId, status: 'committed' };
+   587→   587→    } finally {
+   588→   588→      this.activeTransaction = null;
+   589→   589→    }
+   590→   590→  }
+   591→   591→
+   592→   592→  async rollbackTransaction(): Promise<StorageTransactionInfo> {
+   593→   593→    if (!this.activeTransaction) {
+   594→   594→      throw new Error('No active transaction');
+   595→   595→    }
+   596→   596→    try {
+   597→   597→      await this.activeTransaction.tx.rollback();
+   598→   598→      return { transactionId: this.activeTransaction.sessionId, status: 'rolled_back' };
+   599→   599→    } finally {
+   600→   600→      this.activeTransaction = null;
+   601→   601→    }
+   602→   602→  }
+   603→   603→
+   604→   604→  // ─── Import / Export ─────────────────────────────────────
+   605→   605→
+   606→   606→  async exportGraph(options: ExportOptions): Promise<ExportResult> {
+   607→   607→    const nodes = await this.getAllNodes();
+   608→   608→    const edges = await this.getAllEdges();
+   609→   609→    const data = JSON.stringify({ nodes, edges }, null, options.pretty ? 2 : 0);
+   610→   610→    return {
+   611→   611→      format: options.format,
+   612→   612→      data,
+   613→   613→      nodeCount: nodes.length,
+   614→   614→      edgeCount: edges.length,
+   615→   615→      sizeBytes: Buffer.byteLength(data, 'utf-8'),
+   616→   616→      exportedAt: new Date(),
+   617→   617→    };
+   618→   618→  }
+   619→   619→
+   620→   620→  async importGraph(data: string, options: ImportOptions): Promise<ImportResult> {
+   621→   621→    const parsed = JSON.parse(data);
+   622→   622→    const nodes = parsed.nodes ?? [];
+   623→   623→    const edges = parsed.edges ?? [];
+   624→   624→
+   625→   625→    if (options.clearBeforeImport) {
+   626→   626→      await this.clear();
+   627→   627→    }
+   628→   628→
+   629→   629→    await this.batchCreateNodes(nodes);
+   630→   630→    await this.batchCreateEdges(edges);
+   631→   631→
+   632→   632→    return {
+   633→   633→      nodesImported: nodes.length,
+   634→   634→      edgesImported: edges.length,
+   635→   635→      errors: [],
+   636→   636→      importedAt: new Date(),
+   637→   637→    };
+   638→   638→  }
+   639→   639→
+   640→   640→  // ─── Statistics & Health ──────────────────────────────────
+   641→   641→
+   642→   642→  getStatistics(): StorageStatistics {
+   643→   643→    return {
+   644→   644→      nodeCount: 0,
+   645→   645→      edgeCount: 0,
+   646→   646→      cacheHitRate: 0,
+   647→   647→      cacheSize: 0,
+   648→   648→      indexCount: 4, // We created 4 indexes
+   649→   649→      memoryUsageBytes: 0,
+   650→   650→      lastOperationAt: new Date(),
+   651→   651→    };
+   652→   652→  }
+   653→   653→
+   654→   654→  async health(): Promise<StorageHealthResult> {
+   655→   655→    try {
+   656→   656→      const session = this.driver.session({ database: this.neo4jConfig.database });
+   657→   657→      try {
+   658→   658→        await session.run('RETURN 1');
+   659→   659→        return { healthy: true, message: 'Connected to Neo4j', timestamp: new Date() };
+   660→   660→      } finally {
+   661→   661→        await session.close();
+   662→   662→      }
+   663→   663→    } catch (err) {
+   664→   664→      return {
+   665→   665→        healthy: false,
+   666→   666→        message: err instanceof Error ? err.message : 'Unknown error',
+   667→   667→        timestamp: new Date(),
+   668→   668→      };
+   669→   669→    }
+   670→   670→  }
+   671→   671→
+   672→   672→  async verify(): Promise<StorageHealthResult> {
+   673→   673→    return this.health();
+   674→   674→  }
+   675→   675→
+   676→   676→  async rebuildIndexes(): Promise<void> {
+   677→   677→    await this.createSchema();
+   678→   678→  }
+   679→   679→
+   680→   680→  clearCache(): void { /* Neo4j manages its own cache */ }
+   681→   681→
+   682→   682→  async flushWriteBuffer(): Promise<BatchOperationResult> {
+   683→   683→    return { success: true, processedCount: 0, errorCount: 0, errors: [] };
+   684→   684→  }
+   685→   685→
+   686→   686→  async clear(): Promise<void> {
+   687→   687→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   688→   688→    try {
+   689→   689→      await session.run(`MATCH (n) DETACH DELETE n`);
+   690→   690→    } finally {
+   691→   691→      await session.close();
+   692→   692→    }
+   693→   693→  }
+   694→   694→
+   695→   695→  // ─── Traversal & Path Operations ─────────────────────────
+   696→   696→
+   697→   697→  /** Find shortest path between two nodes */
+   698→   698→  async shortestPath(fromId: NodeId, toId: NodeId, maxDepth: number = 10): Promise<readonly NodeId[]> {
+   699→   699→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   700→   700→    try {
+   701→   701→      const result = await session.run(
+   702→   702→        `MATCH path = shortestPath((src:SIData {nodeId: $fromId})-[*..${maxDepth}]-(tgt:SIData {nodeId: $toId}))
+   703→   703→         RETURN [n IN nodes(path) | n.nodeId] AS pathIds`,
+   704→   704→        { fromId: fromId as string, toId: toId as string },
+   705→   705→      );
+   706→   706→      if (result.records.length > 0) {
+   707→   707→        return result.records[0].get('pathIds') as string[];
+   708→   708→      }
+   709→   709→      return [];
+   710→   710→    } finally {
+   711→   711→      await session.close();
+   712→   712→    }
+   713→   713→  }
+   714→   714→
+   715→   715→  /** Execute a raw Cypher query */
+   716→   716→  async executeCypher(query: string, params: Record<string, unknown> = {}): Promise<readonly Record<string, unknown>[]> {
+   717→   717→    const session = this.driver.session({ database: this.neo4jConfig.database });
+   718→   718→    try {
+   719→   719→      const result = await session.run(query, params);
+   720→   720→      return result.records.map(r => r.toObject() as Record<string, unknown>);
+   721→   721→    } finally {
+   722→   722→      await session.close();
+   723→   723→    }
+   724→   724→  }
+   725→   725→
+   726→   726→  // ─── Mapping Helpers ─────────────────────────────────────
+   727→   727→
+   728→   728→  private nodeToProps(node: GraphNode): Record<string, unknown> {
+   729→   729→    return {
+   730→   730→      nodeId: node.identity.id as string,
+   731→   731→      nodeType: node.identity.type,
+   732→   732→      labels_text: node.identity.labels.join(','),
+   733→   733→      source: node.metadata.source,
+   734→   734→      createdAt: node.metadata.createdAt,
+   735→   735→      updatedAt: node.metadata.updatedAt,
+   736→   736→      properties_json: JSON.stringify(node.properties),
+   737→   737→      metadata_json: JSON.stringify(node.metadata),
+   738→   738→    };
+   739→   739→  }
+   740→   740→
+   741→   741→  private propsToNode(props: Record<string, unknown>): GraphNode {
+   742→   742→    return {
+   743→   743→      identity: {
+   744→   744→        id: props.nodeId as string,
+   745→   745→        type: (props.nodeType as string) ?? 'unknown',
+   746→   746→        labels: ((props.labels_text as string) ?? '').split(',').filter(Boolean),
+   747→   747→      },
+   748→   748→      properties: typeof props.properties_json === 'string' ? JSON.parse(props.properties_json) : (props.properties_json as Record<string, unknown> ?? {}),
+   749→   749→      metadata: typeof props.metadata_json === 'string' ? JSON.parse(props.metadata_json) : (props.metadata_json as Record<string, unknown> ?? {}),
+   750→   750→    } as GraphNode;
+   751→   751→  }
+   752→   752→
+   753→   753→  private edgeToProps(edge: GraphEdge): Record<string, unknown> {
+   754→   754→    return {
+   755→   755→      edgeId: edge.id as string,
+   756→   756→      sourceId: edge.sourceId as string,
+   757→   757→      targetId: edge.targetId as string,
+   758→   758→      edgeType: edge.relationship.edgeType,
+   759→   759→      properties_json: JSON.stringify(edge.properties),
+   760→   760→      relationship_json: JSON.stringify(edge.relationship),
+   761→   761→    };
+   762→   762→  }
+   763→   763→
+   764→   764→  private propsToEdge(props: Record<string, unknown>): GraphEdge {
+   765→   765→    return {
+   766→   766→      id: props.edgeId as string,
+   767→   767→      sourceId: props.sourceId as string,
+   768→   768→      targetId: props.targetId as string,
+   769→   769→      relationship: typeof props.relationship_json === 'string' ? JSON.parse(props.relationship_json) : (props.relationship_json as GraphEdge['relationship']),
+   770→   770→      properties: typeof props.properties_json === 'string' ? JSON.parse(props.properties_json) : (props.properties_json as Record<string, unknown> ?? {}),
+   771→   771→    } as GraphEdge;
+   772→   772→  }
+   773→   773→}
+   774→   774→
