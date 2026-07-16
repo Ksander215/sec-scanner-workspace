@@ -257,3 +257,35 @@ Stage Summary:
 - All sections rendered: Hero, Platform, Capabilities, Architecture, Demo, Pricing, Marketplace, Roadmap, Community, Footer
 - Old site backed up at /var/www/sec-scanner.pro.bak.*
 - SSH access working on port 22222
+---
+Task ID: INT-023A
+Agent: Main Agent + full-stack-developer subagent
+Task: INT-023A — Transform sec-scanner.pro into full Security Intelligence Platform portal
+
+Work Log:
+- Designed full Information Architecture (see INFORMATION_ARCHITECTURE.md)
+- Created i18n foundation (src/lib/i18n.ts, src/lib/i18n-context.tsx) with RU/EN
+- Created design system components: Button, Badge, Card, SectionHeader, PageHeader, Container
+- Created global navigation: Header (with dropdowns), MobileNav, Footer, Layout, SearchModal (Cmd+K), Breadcrumbs
+- Created 37 stub pages organized in route group (portal):
+  - Product: platform, capabilities, architecture, pricing, demo, changelog
+  - Marketplace: hub + 8 categories (plugins, rules, connectors, templates, dashboards, integrations, themes, ai-prompts)
+  - Docs: portal + 11 sections (getting-started, guides, api, cli, sdk, architecture, deployment, security, compliance, marketplace, plugins)
+  - Community: hub + 3 sub-pages (contributing, roadmap, feature-requests)
+  - Resources: blog, examples
+  - Legal: privacy, terms, security
+  - SaaS: app redirect, dashboard stub
+- Built static search index with 37 entries
+- Static export build: 42 routes, all prerendered
+- Deployed via tar + SFTP to server
+- Updated nginx: try_files for Next.js static export, CSP for scripts/styles/fonts
+- Verified all 38 pages return HTTP 200
+- Verified navigation, search, language switcher, breadcrumbs, footer, OpenGraph
+
+Stage Summary:
+- sec-scanner.pro is now a multi-page portal with 37+ pages
+- Global nav with dropdown menus (Product, Marketplace, Docs, Community)
+- Cmd+K search modal
+- RU/EN language switcher foundation
+- Design system scaffold ready for content fill
+- All pages accessible and rendering correctly
