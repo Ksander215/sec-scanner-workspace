@@ -234,3 +234,26 @@ Stage Summary:
 - All production infrastructure providers implemented
 - Docker Compose stack ready
 - Release candidate documentation complete
+---
+Task ID: 1
+Agent: Main Agent
+Task: INT-023 Phase 1 — New Landing Page for sec-scanner.pro
+
+Work Log:
+- Generated Ed25519 SSH key for server access (port 22222)
+- Explored server: Ubuntu 24.04, Docker, Node v20, nginx, PostgreSQL
+- Current site: Astro-based, static files from /var/www/sec-scanner.pro/
+- Created Next.js 16 project at /home/z/my-project/sec-scanner-landing
+- Built complete landing page with 10 sections: Hero, Platform, Capabilities, Architecture, Demo, Pricing, Marketplace, Roadmap, Community, Footer
+- Dark premium design with #00ff88 accent color, Geist fonts, Framer Motion animations
+- Custom GitHub SVG icon (lucide-react v1.24 removed Github export)
+- Static export build → deployed to /var/www/sec-scanner.pro/ via SFTP
+- Updated nginx CSP to allow Next.js scripts, styles, fonts
+- Verified all 14 key content sections present on live site
+- CSS and JS assets loading correctly (200 status)
+
+Stage Summary:
+- Live site: https://sec-scanner.pro/ — fully replaced with new landing
+- All sections rendered: Hero, Platform, Capabilities, Architecture, Demo, Pricing, Marketplace, Roadmap, Community, Footer
+- Old site backed up at /var/www/sec-scanner.pro.bak.*
+- SSH access working on port 22222
