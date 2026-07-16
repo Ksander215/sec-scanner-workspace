@@ -1,0 +1,25 @@
+[Unit]
+Description=Security Intelligence Platform
+After=network.target
+
+[Service]
+Type=simple
+User=si-platform
+Group=si-platform
+WorkingDirectory=/opt/si-platform
+ExecStart=/usr/bin/node /opt/si-platform/dist/cli/index.js server start --port 8080
+Restart=on-failure
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=SI_DATA_DIR=/var/lib/si-platform/data
+Environment=SI_LOG_LEVEL=info
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/si-platform /var/log/si-platform
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

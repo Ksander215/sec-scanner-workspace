@@ -1,0 +1,52 @@
+replicaCount: 1
+
+image:
+  repository: si-platform
+  pullPolicy: IfNotPresent
+  tag: "1.0.0"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: si-platform.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+config:
+  server:
+    port: 8080
+  persistence:
+    backend: json
+    dataDir: /app/data
+  auth:
+    enabled: false
+    provider: none
+  observability:
+    logging:
+      level: info
+      format: json
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClassName: standard

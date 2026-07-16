@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "si-platform.fullname" . }}
+  labels:
+    app: {{ include "si-platform.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "si-platform.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "si-platform.name" . }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.config.server.port }}
+          env:
+            - name: SI_SERVER_PORT
+              value: "{{ .Values.config.server.port }}"
+            - name: SI_PERSISTENCE_BACKEND
+              value: "{{ .Values.config.persistence.backend }}"
+            - name: SI_DATA_DIR
+              value: "{{ .Values.config.persistence.dataDir }}"
+            - name: SI_AUTH_ENABLED
+              value: "{{ .Values.config.auth.enabled }}"
+            - name: SI_LOG_LEVEL
+              value: "{{ .Values.config.observability.logging.level }}"
+          livenessProbe:
+            httpGet:
+              path: /live
+              port: {{ .Values.config.server.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ .Values.config.server.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "si-platform.fullname" . }}
+      {{- end }}

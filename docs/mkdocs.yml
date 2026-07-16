@@ -1,0 +1,84 @@
+site_name: Security Intelligence Platform
+site_description: AI-Native Security Intelligence Platform Documentation
+site_url: https://si-platform.dev/docs
+repo_url: https://github.com/Ksander215/sec-scanner-workspace
+repo_name: Ksander215/sec-scanner-workspace
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Configuration: getting-started/configuration.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Domain Layer: architecture/domain.md
+      - Pipeline: architecture/pipeline.md
+      - Knowledge Graph: architecture/knowledge-graph.md
+  - API Reference:
+      - REST API: api/rest.md
+      - WebSocket: api/websocket.md
+      - Authentication: api/auth.md
+  - CLI:
+      - Commands: cli/commands.md
+      - Configuration: cli/config.md
+      - Output Formats: cli/output-formats.md
+  - Plugins:
+      - Plugin SDK: plugins/sdk.md
+      - Extension Points: plugins/extension-points.md
+  - Deployment:
+      - Docker: deployment/docker.md
+      - Kubernetes: deployment/kubernetes.md
+      - Production: deployment/production.md
+  - Contributing:
+      - Guidelines: contributing/guidelines.md
+      - Architecture Review: contributing/architecture-review.md
+
+plugins:
+  - search
+  - mermaid2:
+      arguments:
+        theme: default
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - meta
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
