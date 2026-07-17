@@ -24,7 +24,7 @@ export default function AiPromptsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "AI Prompts" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "AI Prompts" }]}
         title="AI Prompts"
         description="Curated prompt templates for AI-assisted vulnerability analysis, remediation, and reporting."
       />

@@ -15,7 +15,7 @@ const metrics = [
 
 export function PlatformMetrics() {
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section id="metrics" className="relative py-24 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-surface/50" />
       <div className="absolute inset-0 grid-bg opacity-30" />

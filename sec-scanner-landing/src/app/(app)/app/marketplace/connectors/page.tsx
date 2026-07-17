@@ -24,7 +24,7 @@ export default function ConnectorsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "Connectors" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "Connectors" }]}
         title="Connectors"
         description="Data source connectors for ticketing, messaging, SIEM, and workflow automation tools."
       />

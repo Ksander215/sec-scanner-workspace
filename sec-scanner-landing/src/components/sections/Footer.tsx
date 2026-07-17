@@ -28,8 +28,8 @@ const footerLinks = [
   {
     title: "Community",
     links: [
-      { label: "Discord", href: "#" },
-      { label: "Telegram", href: "#" },
+      { label: "Discord", href: "/app/community", comingSoon: true },
+      { label: "Telegram", href: "/app/community", comingSoon: true },
       { label: "GitHub Discussions", href: "https://github.com/Ksander215/sec-scanner-workspace/discussions" },
       { label: "Roadmap", href: "/app/community/roadmap" },
       { label: "Contributing", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/CONTRIBUTING.md" },
@@ -74,23 +74,32 @@ export function Footer() {
                 <GitHubIcon className="w-4 h-4" />
               </a>
               <a
-                href="#"
-                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
-                aria-label="X (Twitter)"
+                href="https://x.com/sec_scanner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors opacity-50"
+                aria-label="X (Twitter) — Coming soon"
+                title="Coming soon"
               >
                 <X className="w-4 h-4" />
               </a>
               <a
-                href="#"
-                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
-                aria-label="Telegram"
+                href="https://t.me/sec_scanner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors opacity-50"
+                aria-label="Telegram — Coming soon"
+                title="Coming soon"
               >
                 <Send className="w-4 h-4" />
               </a>
               <a
-                href="#"
-                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
-                aria-label="Discord"
+                href="https://discord.gg/sec-scanner"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors opacity-50"
+                aria-label="Discord — Coming soon"
+                title="Coming soon"
               >
                 <MessageCircle className="w-4 h-4" />
               </a>
@@ -108,9 +117,9 @@ export function Footer() {
                       href={link.href}
                       target={link.href.startsWith("http") ? "_blank" : undefined}
                       rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="text-sm text-muted-2 hover:text-foreground transition-colors"
+                      className={`text-sm transition-colors ${link.comingSoon ? "text-muted-2/50 hover:text-muted-2 cursor-default" : "text-muted-2 hover:text-foreground"}`}
                     >
-                      {link.label}
+                      {link.label}{link.comingSoon ? " (Soon)" : ""}
                     </a>
                   </li>
                 ))}

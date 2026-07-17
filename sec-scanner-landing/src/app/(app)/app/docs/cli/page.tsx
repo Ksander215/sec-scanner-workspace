@@ -23,7 +23,7 @@ export default function CliPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "CLI" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "CLI" }]}
         title="CLI Reference"
         description="Complete command-line interface reference for the Security Intelligence Platform."
       />

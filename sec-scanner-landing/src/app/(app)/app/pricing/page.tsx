@@ -28,6 +28,7 @@ const plans = [
       "Community support",
     ],
     cta: "Get Started",
+    ctaHref: "/app/demo",
     highlighted: false,
   },
   {
@@ -46,6 +47,7 @@ const plans = [
       "Custom dashboards",
     ],
     cta: "Start Trial",
+    ctaHref: "/app/demo",
     highlighted: true,
   },
   {
@@ -65,6 +67,7 @@ const plans = [
       "White-label options",
     ],
     cta: "Contact Sales",
+    ctaHref: "mailto:hello@sec-scanner.pro",
     highlighted: false,
   },
 ];
@@ -110,15 +113,16 @@ export default function PricingPage() {
                 ))}
               </ul>
 
-              <button
-                className={`mt-8 w-full py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              <a
+                href={plan.ctaHref}
+                className={`mt-8 block w-full py-2.5 rounded-lg text-sm font-medium text-center transition-colors ${
                   plan.highlighted
                     ? "bg-accent text-background hover:bg-accent-hover"
                     : "bg-surface-2 text-foreground border border-border hover:border-border-light"
                 }`}
               >
                 {plan.cta}
-              </button>
+              </a>
             </div>
           ))}
         </div>

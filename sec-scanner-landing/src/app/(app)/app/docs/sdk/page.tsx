@@ -40,7 +40,7 @@ export default function SdkPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "SDK" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "SDK" }]}
         title="SDK"
         description="Official language SDKs for programmatic access to the Security Intelligence Platform."
       />

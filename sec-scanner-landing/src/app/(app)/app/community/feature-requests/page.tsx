@@ -31,7 +31,7 @@ export default function FeatureRequestsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Community", href: "/community" }, { label: "Feature Requests" }]}
+        breadcrumbs={[{ label: "Community", href: "/app/community" }, { label: "Feature Requests" }]}
         title="Feature Requests"
         description="Suggest new features, vote on existing requests, and help shape the product roadmap."
       />

@@ -24,7 +24,7 @@ export default function ThemesPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "Themes" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "Themes" }]}
         title="Themes"
         description="Customize the platform dashboard with community and official UI themes."
       />

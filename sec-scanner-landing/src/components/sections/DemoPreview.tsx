@@ -138,7 +138,7 @@ function InterfaceScreenshot() {
 
 export function DemoPreview() {
   return (
-    <section className="relative py-24 overflow-hidden">
+    <section id="demo" className="relative py-24 overflow-hidden">
       <div className="absolute inset-0 bg-surface/30" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

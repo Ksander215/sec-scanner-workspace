@@ -24,7 +24,7 @@ export default function PluginsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "Plugins" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "Plugins" }]}
         title="Plugins"
         description="Extend the platform with custom scanning engines, data processors, and workflow automation tools."
       />

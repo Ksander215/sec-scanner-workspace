@@ -49,6 +49,7 @@ export default function MarketplacePreviewPage() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"rating" | "installs">("installs");
   const [installing, setInstalling] = useState<string | null>(null);
+  const [installed, setInstalled] = useState<Set<string>>(new Set());
 
   const filtered = marketplaceItems
     .filter((item) => activeCategory === "all" || item.category === activeCategory)
@@ -62,8 +63,15 @@ export default function MarketplacePreviewPage() {
     .sort((a, b) => (sortBy === "rating" ? b.rating - a.rating : b.installs - a.installs));
 
   const handleInstall = (id: string) => {
+    if (installed.has(id)) {
+      setInstalled(prev => { const next = new Set(prev); next.delete(id); return next; });
+      return;
+    }
     setInstalling(id);
-    setTimeout(() => setInstalling(null), 1500);
+    setTimeout(() => {
+      setInstalling(null);
+      setInstalled(prev => new Set(prev).add(id));
+    }, 1500);
   };
 
   return (
@@ -155,6 +163,7 @@ export default function MarketplacePreviewPage() {
           {filtered.map((item) => {
             const Icon = categoryIcons[item.category];
             const isInstalling = installing === item.id;
+            const isInstalled = installed.has(item.id);
 
             return (
               <div
@@ -209,11 +218,11 @@ export default function MarketplacePreviewPage() {
                   </div>
                   <Button
                     size="sm"
-                    variant={isInstalling ? "secondary" : "primary"}
+                    variant={isInstalled ? "outline" : isInstalling ? "secondary" : "primary"}
                     onClick={() => handleInstall(item.id)}
                     disabled={isInstalling}
                   >
-                    {isInstalling ? "Installing..." : "Install"}
+                    {isInstalling ? "Installing..." : isInstalled ? "Installed ✓" : "Install"}
                   </Button>
                 </div>
               </div>

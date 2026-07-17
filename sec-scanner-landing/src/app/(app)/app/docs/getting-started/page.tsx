@@ -46,10 +46,10 @@ export default function GettingStartedPage() {
             <h3 className="text-base font-semibold text-accent mb-3">Next Steps</h3>
             <div className="grid sm:grid-cols-2 gap-3">
               {[
-                { label: "Step-by-step Guides", href: "/docs/guides" },
-                { label: "API Reference", href: "/docs/api" },
-                { label: "CLI Commands", href: "/docs/cli" },
-                { label: "Browse Marketplace", href: "/marketplace" },
+                { label: "Step-by-step Guides", href: "/app/docs/guides" },
+                { label: "API Reference", href: "/app/docs/api" },
+                { label: "CLI Commands", href: "/app/docs/cli" },
+                { label: "Browse Marketplace", href: "/app/marketplace" },
               ].map((next) => (
                 <a
                   key={next.href}
