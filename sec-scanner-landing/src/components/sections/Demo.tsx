@@ -444,6 +444,29 @@ export function Demo() {
                       to trusted origins.
                     </p>
                   </div>
+
+                  {/* Link to full interactive demo */}
+                  <div className="mt-6 text-center">
+                    <a
+                      href="/demo"
+                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
+                    >
+                      <Play className="w-4 h-4" />
+                      Open Full Interactive Demo
+                      <ChevronRight className="w-4 h-4" />
+                    </a>
+                    <div className="mt-3 flex items-center justify-center gap-4">
+                      <a href="/demo/knowledge-graph" className="text-xs text-cyan hover:text-cyan/80 transition-colors">
+                        Knowledge Graph
+                      </a>
+                      <a href="/demo/attack-paths" className="text-xs text-amber hover:text-amber/80 transition-colors">
+                        Attack Paths
+                      </a>
+                      <a href="/dashboard" className="text-xs text-purple hover:text-purple/80 transition-colors">
+                        Dashboard
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             )}

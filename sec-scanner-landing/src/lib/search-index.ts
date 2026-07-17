@@ -54,6 +54,15 @@ export const searchIndex: SearchEntry[] = [
   { title: "Terms of Service", description: "Terms and conditions", category: "Legal", href: "/legal/terms" },
   { title: "Security Policy", description: "Security disclosure policy", category: "Legal", href: "/legal/security" },
 
+  // Interactive
+  { title: "Demo Workspace", description: "Interactive demo with live pipeline analysis", category: "Interactive", href: "/demo" },
+  { title: "Knowledge Graph", description: "Explore security relationships interactively", category: "Interactive", href: "/demo/knowledge-graph" },
+  { title: "Attack Path Visualizer", description: "Visualize and explore attack paths", category: "Interactive", href: "/demo/attack-paths" },
+  { title: "Executive Dashboard", description: "Security posture overview with KPIs and trends", category: "Interactive", href: "/dashboard" },
+  { title: "AI Security Copilot", description: "AI-powered security assistant", category: "Interactive", href: "/dashboard" },
+  { title: "Cloud Workspace", description: "SaaS workspace with projects, billing, and API keys", category: "Interactive", href: "/cloud" },
+  { title: "Download Center", description: "Install CLI, Docker, SDK, and extensions", category: "Interactive", href: "/download" },
+
   // App
-  { title: "Dashboard", description: "Security dashboard", category: "App", href: "/app/dashboard" },
+  { title: "Dashboard", description: "Security dashboard", category: "App", href: "/dashboard" },
 ];
