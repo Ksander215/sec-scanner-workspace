@@ -496,13 +496,13 @@ export default function DemoWorkspacePage() {
               <div className="flex items-center justify-center">
                 <div className="relative w-48 h-48">
                   <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1e2e" strokeWidth="8" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-border)" strokeWidth="8" />
                     <circle
                       cx="50"
                       cy="50"
                       r="42"
                       fill="none"
-                      stroke="#ffb800"
+                      stroke="var(--color-amber)"
                       strokeWidth="8"
                       strokeDasharray={`${78 * 2.64} ${100 * 2.64}`}
                       strokeLinecap="round"

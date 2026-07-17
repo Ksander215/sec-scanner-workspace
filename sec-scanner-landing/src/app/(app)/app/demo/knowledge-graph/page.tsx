@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   ReactFlow,
   Background,
@@ -140,11 +141,11 @@ function computeLayout(): { nodes: Node[]; edges: Edge[] } {
         ? "#00ff88"
         : e.label === "authenticates" || e.label === "unseals"
         ? "#ff4444"
-        : "#4a4a6a",
+        : "var(--color-border-light)",
       strokeWidth: e.label === "exploits" || e.label === "affects" ? 2 : 1,
     },
-    labelStyle: { fill: "#6b6b80", fontSize: 10 },
-    labelBgStyle: { fill: "#0d0d12", fillOpacity: 0.8 },
+    labelStyle: { fill: "var(--color-muted)", fontSize: 10 },
+    labelBgStyle: { fill: "var(--color-surface)", fillOpacity: 0.8 },
   }));
 
   return { nodes, edges };
@@ -153,6 +154,8 @@ function computeLayout(): { nodes: Node[]; edges: Edge[] } {
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function KnowledgeGraphPage() {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme !== "light";
   const layout = useMemo(() => computeLayout(), []);
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
@@ -275,21 +278,21 @@ export default function KnowledgeGraphPage() {
           minZoom={0.1}
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
-          style={{ background: "#050507" }}
+          style={{ background: "var(--color-background)" }}
         >
-          <Background color="#1e1e2e" gap={32} size={1} />
+          <Background color="var(--color-border)" gap={32} size={1} />
           <Controls
             showInteractive={false}
-            style={{ background: "#0d0d12", border: "1px solid #1e1e2e", borderRadius: 8 }}
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 8 }}
           />
           <MiniMap
             nodeColor={(n) => {
               const data = n.data as unknown as KGNode;
               const nodeType = data.nodeType || data.type;
-              return nodeConfig[nodeType]?.color || "#6b6b80";
+              return nodeConfig[nodeType]?.color || "var(--color-muted)";
             }}
-            style={{ background: "#0d0d12", border: "1px solid #1e1e2e", borderRadius: 8 }}
-            maskColor="rgba(5,5,7,0.8)"
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 8 }}
+            maskColor="color-mix(in srgb, var(--color-background) 80%, transparent)"
           />
         </ReactFlow>
 

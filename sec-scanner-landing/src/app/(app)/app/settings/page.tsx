@@ -71,12 +71,22 @@ export default function SettingsPage() {
               <h2 className="text-base font-semibold text-foreground">Notifications</h2>
             </div>
             <div className="space-y-3">
-              {["Critical findings", "Scan completed", "New recommendations", "Community updates"].map((item) => (
-                <div key={item} className="flex items-center justify-between p-3 rounded-lg bg-surface-2 border border-border">
-                  <span className="text-sm text-foreground">{item}</span>
-                  <div className="w-10 h-5 rounded-full bg-accent/20 relative cursor-pointer">
-                    <div className="absolute right-0.5 top-0.5 w-4 h-4 rounded-full bg-accent" />
-                  </div>
+              {[
+                { name: "Critical findings", enabled: true },
+                { name: "Scan completed", enabled: true },
+                { name: "New recommendations", enabled: true },
+                { name: "Community updates", enabled: false },
+              ].map((item) => (
+                <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-surface-2 border border-border">
+                  <span className="text-sm text-foreground">{item.name}</span>
+                  <button
+                    role="switch"
+                    aria-checked={item.enabled}
+                    aria-label={`Toggle ${item.name} notifications`}
+                    className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${item.enabled ? "bg-accent/20" : "bg-surface-3"}`}
+                  >
+                    <div className={`absolute top-0.5 w-4 h-4 rounded-full transition-all ${item.enabled ? "right-0.5 bg-accent" : "left-0.5 bg-muted"}`} />
+                  </button>
                 </div>
               ))}
             </div>

@@ -101,26 +101,26 @@ function TrendChart() {
       {/* Grid lines */}
       {[0, 25, 50, 75, 100].map((v) => (
         <g key={v}>
-          <line x1={0} y1={h - (v / 100) * (h - 20) - 10} x2={w} y2={h - (v / 100) * (h - 20) - 10} stroke="#1e1e2e" strokeWidth="0.5" />
-          <text x={2} y={h - (v / 100) * (h - 20) - 6} fill="#6b6b80" fontSize="8">{v}</text>
+          <line x1={0} y1={h - (v / 100) * (h - 20) - 10} x2={w} y2={h - (v / 100) * (h - 20) - 10} stroke="var(--color-border)" strokeWidth="0.5" />
+          <text x={2} y={h - (v / 100) * (h - 20) - 6} fill="var(--color-muted)" fontSize="8">{v}</text>
         </g>
       ))}
 
       {/* X labels */}
       {data.map((d, i) => (
-        <text key={i} x={i * step} y={h} fill="#6b6b80" fontSize="8" textAnchor="middle">{d.date}</text>
+        <text key={i} x={i * step} y={h} fill="var(--color-muted)" fontSize="8" textAnchor="middle">{d.date}</text>
       ))}
 
       {/* Risk score line */}
-      <polyline fill="none" stroke="#ffb800" strokeWidth="2" points={scorePoints} />
+      <polyline fill="none" stroke="var(--color-amber)" strokeWidth="2" points={scorePoints} />
       {/* Critical count line */}
-      <polyline fill="none" stroke="#ff4444" strokeWidth="1.5" strokeDasharray="4 2" points={criticalPoints} />
+      <polyline fill="none" stroke="var(--color-red)" strokeWidth="1.5" strokeDasharray="4 2" points={criticalPoints} />
 
       {/* Legend */}
-      <rect x={w - 140} y={4} width={8} height={8} fill="#ffb800" rx={1} />
-      <text x={w - 128} y={12} fill="#8888a0" fontSize="8">Risk Score</text>
-      <rect x={w - 70} y={4} width={8} height={8} fill="#ff4444" rx={1} />
-      <text x={w - 58} y={12} fill="#8888a0" fontSize="8">Critical</text>
+      <rect x={w - 140} y={4} width={8} height={8} fill="var(--color-amber)" rx={1} />
+      <text x={w - 128} y={12} fill="var(--color-muted-2)" fontSize="8">Risk Score</text>
+      <rect x={w - 70} y={4} width={8} height={8} fill="var(--color-red)" rx={1} />
+      <text x={w - 58} y={12} fill="var(--color-muted-2)" fontSize="8">Critical</text>
     </svg>
   );
 }

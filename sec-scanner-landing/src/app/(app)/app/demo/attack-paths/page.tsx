@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useTheme } from "next-themes";
 import {
   ReactFlow,
   Background,
@@ -105,7 +106,7 @@ function computePathLayout(pathIndex: number): { nodes: Node[]; edges: Edge[] } 
       style: { stroke: critColor, strokeWidth: 2 },
       label: `${Math.round(e.probability * 100)}%`,
       labelStyle: { fill: critColor, fontSize: 11, fontWeight: 600 },
-      labelBgStyle: { fill: "#0d0d12", fillOpacity: 0.9 },
+      labelBgStyle: { fill: "var(--color-surface)", fillOpacity: 0.9 },
     };
   });
 
@@ -115,6 +116,8 @@ function computePathLayout(pathIndex: number): { nodes: Node[]; edges: Edge[] } 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function AttackPathsPage() {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme !== "light";
   const [activePath, setActivePath] = useState(0);
   const layout = useMemo(() => computePathLayout(activePath), [activePath]);
   const [nodes, , onNodesChange] = useNodesState(layout.nodes);
@@ -189,12 +192,12 @@ export default function AttackPathsPage() {
           minZoom={0.3}
           maxZoom={2}
           proOptions={{ hideAttribution: true }}
-          style={{ background: "#050507" }}
+          style={{ background: "var(--color-background)" }}
         >
-          <Background color="#1e1e2e" gap={32} size={1} />
+          <Background color="var(--color-border)" gap={32} size={1} />
           <Controls
             showInteractive={false}
-            style={{ background: "#0d0d12", border: "1px solid #1e1e2e", borderRadius: 8 }}
+            style={{ background: "var(--color-surface)", border: "1px solid var(--color-border)", borderRadius: 8 }}
           />
         </ReactFlow>
 
