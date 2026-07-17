@@ -1,16 +1,14 @@
 "use client";
 
 import { I18nProvider } from "@/lib/i18n-context";
-import { Layout } from "@/components/layout/Layout";
+import { PortalLayout } from "@/components/layout/PortalLayout";
 
-export default function PortalLayout({
+export default function PortalLayoutWrapper({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: { children: React.ReactNode }) {
   return (
     <I18nProvider>
-      <Layout>{children}</Layout>
+      <PortalLayout>{children}</PortalLayout>
     </I18nProvider>
   );
 }
