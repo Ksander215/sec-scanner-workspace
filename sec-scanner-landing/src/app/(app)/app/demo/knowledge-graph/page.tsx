@@ -232,33 +232,48 @@ export default function KnowledgeGraphPage() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search nodes..."
-                  className="pl-9 pr-3 py-1.5 text-xs bg-surface-2 border border-border rounded-lg text-foreground placeholder:text-muted focus:outline-none focus:border-accent/40 w-48"
-                />
-              </div>
+            {/* Stats bar */}
+            <div className="flex items-center gap-3">
+              {[
+                { label: "Nodes", value: kgNodes.length, color: "text-cyan" },
+                { label: "Edges", value: kgEdges.length, color: "text-accent" },
+                { label: "Types", value: Object.keys(nodeConfig).length, color: "text-purple" },
+                { label: "Critical", value: kgNodes.filter(n => n.severity === "critical").length, color: "text-red" },
+              ].map((stat) => (
+                <div key={stat.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-2 border border-border">
+                  <span className={`text-sm font-bold ${stat.color}`}>{stat.value}</span>
+                  <span className="text-[10px] text-muted uppercase tracking-wider">{stat.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              {/* Filter */}
-              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 border border-border">
-                {filterTypes.map(({ key, label }) => (
-                  <button
-                    key={key}
-                    onClick={() => handleFilter(key)}
-                    className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
-                      filterType === key ? "bg-accent text-background" : "text-muted-2 hover:text-foreground"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+          <div className="flex items-center gap-2 mt-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                placeholder="Search nodes, CVEs, hosts..."
+                className="pl-9 pr-3 py-1.5 text-xs bg-surface-2 border border-border rounded-lg text-foreground placeholder:text-muted focus:outline-none focus:border-accent/40 w-56"
+              />
+            </div>
+
+            {/* Filter */}
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 border border-border">
+              {filterTypes.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => handleFilter(key)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                    filterType === key ? "bg-accent text-background" : "text-muted-2 hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

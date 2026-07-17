@@ -195,10 +195,13 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             <div className="absolute inset-0 bg-accent/20 rounded-full blur-md group-hover:bg-accent/30 transition-colors" />
           </div>
           {!collapsed && (
-            <span className="font-semibold text-base tracking-tight truncate">
-              <span className="text-foreground">sec</span>
-              <span className="text-accent">‑scanner</span>
-            </span>
+            <div>
+              <span className="font-semibold text-base tracking-tight truncate block leading-tight">
+                <span className="text-foreground">sec</span>
+                <span className="text-accent">‑scanner</span>
+              </span>
+              <span className="powered-by block leading-tight mt-0.5">Security Intelligence Platform</span>
+            </div>
           )}
         </Link>
       </div>

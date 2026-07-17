@@ -333,6 +333,9 @@ export interface AttackPathEdge {
   techniques: string[];
   cves: string[];
   exploitable: boolean;
+  timeToCompromise: string;
+  businessRisk: string;
+  cvss: number;
 }
 
 export const attackPathNodes: AttackPathNode[] = [
@@ -350,29 +353,29 @@ export const attackPaths: { name: string; edges: AttackPathEdge[] }[] = [
   {
     name: "SQL Injection Data Breach",
     edges: [
-      { id: "ap1-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "critical", techniques: ["T1190"], cves: [], exploitable: true },
-      { id: "ap1-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true },
-      { id: "ap1-e3", source: "nginx", target: "app", probability: 0.85, criticality: "critical", techniques: ["T1190"], cves: ["CVE-2024-23956"], exploitable: true },
-      { id: "ap1-e4", source: "app", target: "database", probability: 0.8, criticality: "critical", techniques: ["T1555", "T1005"], cves: [], exploitable: true },
+      { id: "ap1-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "critical", techniques: ["T1190"], cves: [], exploitable: true, timeToCompromise: "<1 hour", businessRisk: "Network breach", cvss: 9.8 },
+      { id: "ap1-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true, timeToCompromise: "<2 hours", businessRisk: "Lateral movement", cvss: 8.5 },
+      { id: "ap1-e3", source: "nginx", target: "app", probability: 0.85, criticality: "critical", techniques: ["T1190"], cves: ["CVE-2024-23956"], exploitable: true, timeToCompromise: "<4 hours", businessRisk: "Data exfiltration", cvss: 9.1 },
+      { id: "ap1-e4", source: "app", target: "database", probability: 0.8, criticality: "critical", techniques: ["T1555", "T1005"], cves: [], exploitable: true, timeToCompromise: "<6 hours", businessRisk: "Full data breach", cvss: 9.8 },
     ],
   },
   {
     name: "Redis RCE to Cluster Takeover",
     edges: [
-      { id: "ap2-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "critical", techniques: ["T1190"], cves: [], exploitable: true },
-      { id: "ap2-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true },
-      { id: "ap2-e3", source: "nginx", target: "app", probability: 0.85, criticality: "high", techniques: ["T1190"], cves: ["CVE-2024-29155"], exploitable: true },
-      { id: "ap2-e4", source: "app", target: "redis", probability: 0.75, criticality: "critical", techniques: ["T1210", "T1059"], cves: ["CVE-2024-31449"], exploitable: true },
-      { id: "ap2-e5", source: "redis", target: "k8s", probability: 0.6, criticality: "critical", techniques: ["T1078", "T1609"], cves: [], exploitable: true },
+      { id: "ap2-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "critical", techniques: ["T1190"], cves: [], exploitable: true, timeToCompromise: "<1 hour", businessRisk: "Network breach", cvss: 9.8 },
+      { id: "ap2-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true, timeToCompromise: "<2 hours", businessRisk: "Lateral movement", cvss: 8.5 },
+      { id: "ap2-e3", source: "nginx", target: "app", probability: 0.85, criticality: "high", techniques: ["T1190"], cves: ["CVE-2024-29155"], exploitable: true, timeToCompromise: "<4 hours", businessRisk: "RCE via SSRF", cvss: 8.2 },
+      { id: "ap2-e4", source: "app", target: "redis", probability: 0.75, criticality: "critical", techniques: ["T1210", "T1059"], cves: ["CVE-2024-31449"], exploitable: true, timeToCompromise: "<8 hours", businessRisk: "Cache poisoning", cvss: 9.0 },
+      { id: "ap2-e5", source: "redis", target: "k8s", probability: 0.6, criticality: "critical", techniques: ["T1078", "T1609"], cves: [], exploitable: true, timeToCompromise: "<12 hours", businessRisk: "Cluster takeover", cvss: 9.5 },
     ],
   },
   {
     name: "Vault Key Exposure to Secret Theft",
     edges: [
-      { id: "ap3-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true },
-      { id: "ap3-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "medium", techniques: ["T1190"], cves: [], exploitable: true },
-      { id: "ap3-e3", source: "nginx", target: "app", probability: 0.85, criticality: "high", techniques: ["T1190"], cves: ["CVE-2024-29155"], exploitable: true },
-      { id: "ap3-e4", source: "app", target: "vault", probability: 0.7, criticality: "critical", techniques: ["T1552", "T1078"], cves: [], exploitable: true },
+      { id: "ap3-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true, timeToCompromise: "<1 hour", businessRisk: "Network breach", cvss: 8.8 },
+      { id: "ap3-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "medium", techniques: ["T1190"], cves: [], exploitable: true, timeToCompromise: "<2 hours", businessRisk: "Service access", cvss: 7.5 },
+      { id: "ap3-e3", source: "nginx", target: "app", probability: 0.85, criticality: "high", techniques: ["T1190"], cves: ["CVE-2024-29155"], exploitable: true, timeToCompromise: "<4 hours", businessRisk: "App compromise", cvss: 8.2 },
+      { id: "ap3-e4", source: "app", target: "vault", probability: 0.7, criticality: "critical", techniques: ["T1552", "T1078"], cves: [], exploitable: true, timeToCompromise: "<8 hours", businessRisk: "Secret theft", cvss: 9.5 },
     ],
   },
 ];

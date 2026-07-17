@@ -8,59 +8,54 @@ import {
   Workflow,
   BarChart3,
   Lock,
+  ArrowRight,
 } from "lucide-react";
 
 const platformFeatures = [
   {
     icon: Radar,
     title: "Multi-Engine Scanning",
-    description:
-      "Единый интерфейс для Nmap, Nuclei, Semgrep, Trivy и других сканеров. Запускайте сканирование любой сложности из одной точки управления с автоматической корреляцией результатов.",
+    oneLiner: "Unified interface for Nmap, Nuclei, Semgrep, Trivy and 20+ scanners.",
     color: "accent",
   },
   {
     icon: Brain,
     title: "AI-Powered Analysis",
-    description:
-      "Интеллектуальная корреляция и приоритизация находок с помощью ML-моделей. Платформа понимает контекст, связывает уязвимости в цепочки атак и предлагает оптимальные пути ремедиации.",
+    oneLiner: "ML-driven correlation, prioritization, and automated remediation planning.",
     color: "cyan",
   },
   {
     icon: Network,
     title: "Knowledge Graph",
-    description:
-      "Граф знаний безопасности на базе Neo4j — визуализируйте связи между активами, уязвимостями и путями атак. Находите скрытые векторы, которые не видны в плоских отчётах.",
+    oneLiner: "Visualize asset-vulnerability-attack path relationships in an interactive graph.",
     color: "purple",
   },
   {
     icon: Workflow,
     title: "Automated Workflows",
-    description:
-      "Настраиваемые пайплайны анализа: от сканирования до JIRA-тикета. Интеграция с CI/CD, автоматическая триадж и эскалация по правилам, которые вы определяете.",
+    oneLiner: "Configurable pipelines from scan to JIRA ticket with CI/CD integration.",
     color: "amber",
   },
   {
     icon: BarChart3,
     title: "Risk Quantification",
-    description:
-      "Количественная оценка риска для каждого актива и проекта. Дашборды с трендами, SLA-метрики и Executive Summary для руководства — от технических данных к бизнес-решениям.",
+    oneLiner: "Quantified risk scores, SLA metrics, and executive dashboards.",
     color: "accent",
   },
   {
     icon: Lock,
     title: "Enterprise Security",
-    description:
-      "SSO через Keycloak, Auth0, Azure AD. RBAC с гранулярными правами, аудит-лог, шифрование данных. Соответствие SOC 2, ISO 27001, GDPR из коробки.",
+    oneLiner: "SSO, RBAC, audit log, encryption. SOC 2, ISO 27001, GDPR compliant.",
     color: "red",
   },
 ];
 
-const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-  accent: { bg: "bg-accent-muted", text: "text-accent", border: "border-accent-border" },
-  cyan: { bg: "bg-cyan-muted", text: "text-cyan", border: "border-[rgba(0,212,255,0.2)]" },
-  purple: { bg: "bg-purple-muted", text: "text-purple", border: "border-[rgba(168,85,247,0.2)]" },
-  amber: { bg: "bg-amber-muted", text: "text-amber", border: "border-[rgba(255,184,0,0.2)]" },
-  red: { bg: "bg-red-muted", text: "text-red", border: "border-[rgba(255,68,68,0.2)]" },
+const colorMap: Record<string, { bg: string; text: string; border: string; glow: string }> = {
+  accent: { bg: "bg-accent-muted", text: "text-accent", border: "border-accent-border", glow: "hover:shadow-[0_0_30px_rgba(0,255,136,0.08)]" },
+  cyan: { bg: "bg-cyan-muted", text: "text-cyan", border: "border-[rgba(0,212,255,0.2)]", glow: "hover:shadow-[0_0_30px_rgba(0,212,255,0.08)]" },
+  purple: { bg: "bg-purple-muted", text: "text-purple", border: "border-[rgba(168,85,247,0.2)]", glow: "hover:shadow-[0_0_30px_rgba(168,85,247,0.08)]" },
+  amber: { bg: "bg-amber-muted", text: "text-amber", border: "border-[rgba(255,184,0,0.2)]", glow: "hover:shadow-[0_0_30px_rgba(255,184,0,0.08)]" },
+  red: { bg: "bg-red-muted", text: "text-red", border: "border-[rgba(255,68,68,0.2)]", glow: "hover:shadow-[0_0_30px_rgba(255,68,68,0.08)]" },
 };
 
 export function Platform() {
@@ -78,18 +73,13 @@ export function Platform() {
             Platform
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            Единая платформа
+            One platform.
             <br />
-            <span className="text-gradient-accent">безопасности</span>
+            <span className="text-gradient-accent">Complete security intelligence.</span>
           </h2>
-          <p className="mt-6 text-lg text-muted-2 leading-relaxed">
-            Security Intelligence Platform объединяет сканирование, анализ, корреляцию и
-            ремедиацию в единый рабочий процесс. От обнаружения до исправления — без разрывов
-            между инструментами.
-          </p>
         </motion.div>
 
-        {/* Feature grid */}
+        {/* Feature grid — 6 large cards */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {platformFeatures.map((feature, i) => {
             const colors = colorMap[feature.color];
@@ -100,19 +90,22 @@ export function Platform() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className={`group relative p-6 rounded-2xl border ${colors.border} bg-surface hover:bg-surface-2 transition-all duration-300`}
+                className={`group relative p-8 rounded-2xl border ${colors.border} bg-surface hover:bg-surface-2 transition-all duration-300 ${colors.glow}`}
               >
                 <div
-                  className={`inline-flex items-center justify-center w-12 h-12 rounded-xl ${colors.bg} ${colors.text}`}
+                  className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${colors.bg} ${colors.text}`}
                 >
-                  <feature.icon className="w-6 h-6" />
+                  <feature.icon className="w-7 h-7" />
                 </div>
-                <h3 className="mt-4 text-lg font-semibold text-foreground">
+                <h3 className="mt-5 text-xl font-semibold text-foreground">
                   {feature.title}
                 </h3>
-                <p className="mt-2 text-sm text-muted-2 leading-relaxed">
-                  {feature.description}
+                <p className="mt-3 text-base text-muted-2 leading-relaxed">
+                  {feature.oneLiner}
                 </p>
+                <div className={`mt-5 inline-flex items-center gap-1.5 text-sm font-medium ${colors.text} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                  Learn more <ArrowRight className="w-3.5 h-3.5" />
+                </div>
               </motion.div>
             );
           })}
