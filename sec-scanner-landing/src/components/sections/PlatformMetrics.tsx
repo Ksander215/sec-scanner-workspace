@@ -5,23 +5,21 @@ import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { CheckCircle2, Code2, TestTube2, Shield, Unlock, Rocket } from "lucide-react";
 
 const metrics = [
-  { value: 20, suffix: "", label: "Modules", color: "text-accent", icon: Shield, description: "Scanning, analysis, correlation, reporting", href: "/app/docs" },
-  { value: 370, suffix: "+", label: "Source Files", color: "text-cyan", icon: Code2, description: "Production-grade TypeScript codebase", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
-  { value: 2350, suffix: "+", label: "Tests", color: "text-amber", icon: TestTube2, description: "Unit, integration, and E2E coverage", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
-  { value: 0, suffix: "", label: "TS Errors", color: "text-accent", icon: CheckCircle2, description: "Zero TypeScript compilation errors", href: "/app/docs" },
-  { value: 100, suffix: "%", label: "Open Source", color: "text-purple", icon: Unlock, description: "MIT licensed, fully transparent", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
-  { value: 1, suffix: "", label: "Command Install", color: "text-cyan", icon: Rocket, description: "npx sec-scanner scan — ready in 30s", href: "/app/playground" },
+  { value: 20, suffix: "", label: "Модулей", color: "text-accent", icon: Shield, description: "Сканирование, анализ, корреляция, отчёты", href: "/app/docs" },
+  { value: 370, suffix: "+", label: "Файлов исходного кода", color: "text-cyan", icon: Code2, description: "Продакшн-код на TypeScript", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
+  { value: 2350, suffix: "+", label: "Тестов", color: "text-amber", icon: TestTube2, description: "Unit, интеграционные и E2E", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
+  { value: 0, suffix: "", label: "Ошибок TypeScript", color: "text-accent", icon: CheckCircle2, description: "Ноль ошибок компиляции", href: "/app/docs" },
+  { value: 100, suffix: "%", label: "Открытый исходный код", color: "text-purple", icon: Unlock, description: "MIT лицензия, полная прозрачность", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
+  { value: 1, suffix: "", label: "Команда для установки", color: "text-cyan", icon: Rocket, description: "sip scan — готово за 30 секунд", href: "/app/playground" },
 ];
 
 export function PlatformMetrics() {
   return (
     <section id="metrics" className="relative py-24 overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0 bg-surface/50" />
       <div className="absolute inset-0 grid-bg opacity-30" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -30,14 +28,13 @@ export function PlatformMetrics() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            Production <span className="text-gradient-accent">by the Numbers</span>
+            Платформа <span className="text-gradient-accent">в цифрах</span>
           </h2>
           <p className="mt-4 text-lg text-muted-2 max-w-2xl mx-auto">
-            Open source. Production ready. Zero compromises.
+            Открытый исходный код. Готов к продакшену. Никаких компромиссов.
           </p>
         </motion.div>
 
-        {/* Metrics grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {metrics.map((metric, i) => (
             <motion.a

@@ -6,19 +6,19 @@ import { GitHubIcon } from "@/components/ui/icons";
 
 const footerLinks = [
   {
-    title: "Product",
+    title: "Продукт",
     links: [
-      { label: "Platform", href: "/app/platform" },
-      { label: "Dashboard", href: "/app/dashboard" },
-      { label: "Pricing", href: "/app/pricing" },
-      { label: "Marketplace", href: "/app/marketplace" },
-      { label: "Demo", href: "/app/demo" },
+      { label: "Платформа", href: "/app/platform" },
+      { label: "Дашборд", href: "/app/dashboard" },
+      { label: "Тарифы", href: "/app/pricing" },
+      { label: "Каталог инструментов", href: "/app/marketplace" },
+      { label: "Демо", href: "/app/dashboard" },
     ],
   },
   {
-    title: "Developers",
+    title: "Разработчикам",
     links: [
-      { label: "Documentation", href: "/app/docs" },
+      { label: "Документация", href: "/app/docs" },
       { label: "API Reference", href: "/app/docs/api" },
       { label: "CLI", href: "/app/docs/cli" },
       { label: "SDK", href: "/app/docs/sdk" },
@@ -26,22 +26,22 @@ const footerLinks = [
     ],
   },
   {
-    title: "Community",
+    title: "Сообщество",
     links: [
-      { label: "Discord", href: "/app/community", comingSoon: true },
-      { label: "Telegram", href: "/app/community", comingSoon: true },
+      { label: "Telegram", href: "https://t.me/sip_security_platform" },
+      { label: "Discord", href: "https://discord.gg/sip-security" },
       { label: "GitHub Discussions", href: "https://github.com/Ksander215/sec-scanner-workspace/discussions" },
-      { label: "Roadmap", href: "/app/community/roadmap" },
-      { label: "Contributing", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/CONTRIBUTING.md" },
+      { label: "Дорожная карта", href: "/app/community/roadmap" },
+      { label: "Вклад в проект", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/CONTRIBUTING.md" },
     ],
   },
   {
-    title: "Legal",
+    title: "Юридическое",
     links: [
-      { label: "Privacy Policy", href: "/app/legal/privacy" },
-      { label: "Terms of Service", href: "/app/legal/terms" },
-      { label: "Security Policy", href: "/app/legal/security" },
-      { label: "License (MIT)", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/LICENSE" },
+      { label: "Политика конфиденциальности", href: "/app/legal/privacy" },
+      { label: "Условия использования", href: "/app/legal/terms" },
+      { label: "Политика безопасности", href: "/app/legal/security" },
+      { label: "Лицензия (MIT)", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/LICENSE" },
     ],
   },
 ];
@@ -55,13 +55,14 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 group">
               <Shield className="w-6 h-6 text-accent" />
-              <span className="font-semibold text-foreground">
-                sec<span className="text-accent">‑scanner</span>
-                <span className="text-muted text-xs">.pro</span>
+              <span className="font-bold text-foreground text-lg">
+                <span className="text-accent">SIP</span>
               </span>
             </Link>
-            <p className="mt-4 text-sm text-muted leading-relaxed">
-              Open Source Security Intelligence Platform для компаний любого масштаба.
+            <p className="mt-2 text-xs text-muted">Security Intelligence Platform</p>
+            <p className="mt-1 text-xs text-muted">Операционная система для безопасности бизнеса</p>
+            <p className="mt-3 text-sm text-muted leading-relaxed">
+              Powered by Sec Scanner Engine
             </p>
             <div className="mt-4 flex items-center gap-3">
               <a
@@ -74,32 +75,20 @@ export function Footer() {
                 <GitHubIcon className="w-4 h-4" />
               </a>
               <a
-                href="https://x.com/sec_scanner"
+                href="https://t.me/sip_security_platform"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors opacity-50"
-                aria-label="X (Twitter) — Coming soon"
-                title="Coming soon"
-              >
-                <X className="w-4 h-4" />
-              </a>
-              <a
-                href="https://t.me/sec_scanner"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors opacity-50"
-                aria-label="Telegram — Coming soon"
-                title="Coming soon"
+                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
+                aria-label="Telegram"
               >
                 <Send className="w-4 h-4" />
               </a>
               <a
-                href="https://discord.gg/sec-scanner"
+                href="https://discord.gg/sip-security"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors opacity-50"
-                aria-label="Discord — Coming soon"
-                title="Coming soon"
+                className="p-2 text-muted hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
+                aria-label="Discord"
               >
                 <MessageCircle className="w-4 h-4" />
               </a>
@@ -117,9 +106,9 @@ export function Footer() {
                       href={link.href}
                       target={link.href.startsWith("http") ? "_blank" : undefined}
                       rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className={`text-sm transition-colors ${link.comingSoon ? "text-muted-2/50 hover:text-muted-2 cursor-default" : "text-muted-2 hover:text-foreground"}`}
+                      className="text-sm text-muted-2 hover:text-foreground transition-colors"
                     >
-                      {link.label}{link.comingSoon ? " (Soon)" : ""}
+                      {link.label}
                     </a>
                   </li>
                 ))}
@@ -130,7 +119,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted">
-            &copy; {new Date().getFullYear()} sec-scanner.pro — Open Source Security Intelligence
+            &copy; {new Date().getFullYear()} SIP — Security Intelligence Platform. {footer_allRights}
           </p>
           <a
             href="mailto:hello@sec-scanner.pro"
@@ -143,3 +132,5 @@ export function Footer() {
     </footer>
   );
 }
+
+const footer_allRights = "Все права защищены";

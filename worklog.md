@@ -85,3 +85,39 @@ Stage Summary:
 - Key UX improvements: Hero simplification, Dashboard hierarchy, KG stats, Attack Path detail enrichment
 - Key visual improvements: Focus rings, card shadows, hover effects, brand consistency
 - Product rating: 8.1/10 — production-ready for public demo
+---
+Task ID: INT-024
+Agent: Main Agent
+Task: SIP Rebranding & Product Experience Transformation
+
+Work Log:
+- Created comprehensive i18n system with 500+ translation keys (ru/en)
+- Rebranded from "Sec Scanner" to "SIP — Security Intelligence Platform"
+- Updated tagline to "Операционная система для безопасности бизнеса"
+- Sec Scanner positioned only as "Sec Scanner Engine" (powered by)
+- Rewrote Hero section with 30-second value proposition
+- Replaced technical terms: Knowledge Graph → Карта инфраструктуры, Attack Paths → Пути атаки, Marketplace → Каталог инструментов, Findings → Найденные проблемы
+- Reordered sidebar: Marketplace → Scan → Projects → Dashboard → Reports → ...
+- Created Toast notification system for UX feedback
+- Updated Marketplace with Installed tab, detail view, install info, uninstall/update
+- Rewrote Playground with real file export (PDF/HTML/JSON/CSV/MD/SARIF)
+- Rewrote Reports with real file download functionality
+- Updated Documentation with persistent sticky sidebar and ← Назад button
+- Created full Settings page with 14 sections (Profile, Team, API, SSH, Notifications, Integrations, Security, Appearance, Language, Billing, Marketplace, Sessions, Tokens, Audit Log)
+- Updated Community with real Telegram/Discord/GitHub links
+- Synchronized Pricing across Landing and Dashboard (4 tiers: Community/Team/Business/Enterprise)
+- Fixed Light theme to ChatGPT-style (proper white bg, green accent #10a37f)
+- Updated all landing sections: Header, Hero, Platform, Metrics, DemoPreview, Pricing, Community, Footer
+- Updated AppSidebar with i18n and new terminology
+- Updated AppTopBar with i18n
+- Updated MobileNav with i18n and real links
+- Updated root layout metadata with SIP branding
+- Build passes successfully
+
+Stage Summary:
+- Full rebranding complete: Sec Scanner → SIP
+- Full Russian localization implemented with i18n system
+- All 17 task phases completed
+- Build compiles and serves correctly
+- Landing page verified: title, branding, Russian text all present
+- Dashboard verified: SIP branding, new terminology present

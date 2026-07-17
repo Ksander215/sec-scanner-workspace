@@ -11,6 +11,8 @@ import {
   Globe,
   Menu,
   User,
+  Settings,
+  LogOut,
 } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/icons";
 import { useI18n } from "@/lib/i18n-context";
@@ -27,7 +29,7 @@ export function AppTopBar({
   onSearchOpen,
   onMobileMenuToggle,
 }: AppTopBarProps) {
-  const { locale, setLocale } = useI18n();
+  const { locale, setLocale, t } = useI18n();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
@@ -50,10 +52,16 @@ export function AppTopBar({
   }, [onSearchOpen]);
 
   const themeOptions = [
-    { value: "dark" as const, label: "Dark", icon: Moon },
-    { value: "light" as const, label: "Light", icon: Sun },
-    { value: "system" as const, label: "System", icon: Monitor },
+    { value: "dark" as const, labelKey: "settings.appearance.theme", icon: Moon },
+    { value: "light" as const, labelKey: "settings.appearance.theme", icon: Sun },
+    { value: "system" as const, labelKey: "settings.appearance.theme", icon: Monitor },
   ];
+
+  const themeLabels: Record<string, string> = {
+    dark: locale === "ru" ? "Тёмная" : "Dark",
+    light: locale === "ru" ? "Светлая" : "Light",
+    system: locale === "ru" ? "Системная" : "System",
+  };
 
   return (
     <header
@@ -63,7 +71,6 @@ export function AppTopBar({
     >
       {/* Left: Mobile menu + Search */}
       <div className="flex items-center gap-2">
-        {/* Mobile hamburger */}
         <button
           onClick={onMobileMenuToggle}
           className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-2 hover:text-foreground hover:bg-surface-2 transition-colors md:hidden"
@@ -71,13 +78,12 @@ export function AppTopBar({
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Search trigger */}
         <button
           onClick={onSearchOpen}
           className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted hover:text-foreground bg-surface border border-border rounded-lg hover:border-border-light transition-colors min-w-[200px]"
         >
           <Search className="w-3.5 h-3.5" />
-          <span className="text-xs flex-1 text-left">Search everything...</span>
+          <span className="text-xs flex-1 text-left">{t("search.placeholder")}</span>
           <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded bg-surface-2 border border-border text-muted">
             ⌘K
           </kbd>
@@ -91,7 +97,7 @@ export function AppTopBar({
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="relative flex items-center justify-center w-8 h-8 rounded-lg text-muted-2 hover:text-foreground hover:bg-surface-2 transition-colors"
-            title="Notifications"
+            title={t("common.notifications")}
           >
             <Bell className="w-4 h-4" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
@@ -101,11 +107,17 @@ export function AppTopBar({
               <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)} />
               <div className="absolute right-0 top-full mt-1 w-72 bg-surface-2 border border-border rounded-lg shadow-xl z-50 py-2 overflow-hidden">
                 <div className="px-3 py-2 border-b border-border">
-                  <p className="text-sm font-medium text-foreground">Notifications</p>
+                  <p className="text-sm font-medium text-foreground">{t("common.notifications")}</p>
                 </div>
                 <div className="px-3 py-3 text-center">
-                  <p className="text-xs text-muted-2">No new notifications</p>
-                  <p className="text-[10px] text-muted mt-1">Notifications will appear here when scans complete or critical findings are detected.</p>
+                  <p className="text-xs text-muted-2">
+                    {locale === "ru" ? "Нет новых уведомлений" : "No new notifications"}
+                  </p>
+                  <p className="text-[10px] text-muted mt-1">
+                    {locale === "ru"
+                      ? "Уведомления появятся здесь после завершения сканирования или обнаружения критических проблем."
+                      : "Notifications will appear here when scans complete or critical findings are detected."}
+                  </p>
                 </div>
               </div>
             </>
@@ -117,7 +129,7 @@ export function AppTopBar({
           <button
             onClick={() => setThemeMenuOpen(!themeMenuOpen)}
             className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-2 hover:text-foreground hover:bg-surface-2 transition-colors"
-            title="Toggle theme"
+            title={t("settings.appearance.theme")}
           >
             {mounted && theme === "light" ? (
               <Sun className="w-4 h-4" />
@@ -130,11 +142,8 @@ export function AppTopBar({
 
           {themeMenuOpen && (
             <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setThemeMenuOpen(false)}
-              />
-              <div className="absolute right-0 top-full mt-1 w-36 bg-surface-2 border border-border rounded-lg shadow-xl z-50 py-1 overflow-hidden">
+              <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
+              <div className="absolute right-0 top-full mt-1 w-40 bg-surface-2 border border-border rounded-lg shadow-xl z-50 py-1 overflow-hidden">
                 {themeOptions.map((opt) => (
                   <button
                     key={opt.value}
@@ -149,7 +158,7 @@ export function AppTopBar({
                     }`}
                   >
                     <opt.icon className="w-4 h-4" />
-                    {opt.label}
+                    {themeLabels[opt.value]}
                   </button>
                 ))}
               </div>
@@ -161,7 +170,7 @@ export function AppTopBar({
         <button
           onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
           className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-muted-2 hover:text-foreground hover:bg-surface-2 transition-colors"
-          title="Switch language"
+          title={t("settings.language.interface")}
         >
           <Globe className="w-3.5 h-3.5" />
           <span className="font-medium hidden sm:inline">{localeNames[locale]}</span>
@@ -189,38 +198,38 @@ export function AppTopBar({
 
           {userMenuOpen && (
             <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setUserMenuOpen(false)}
-              />
+              <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
               <div className="absolute right-0 top-full mt-1 w-48 bg-surface-2 border border-border rounded-lg shadow-xl z-50 py-1 overflow-hidden">
                 <div className="px-3 py-2 border-b border-border">
-                  <p className="text-sm font-medium text-foreground">Demo User</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {locale === "ru" ? "Демо-пользователь" : "Demo User"}
+                  </p>
                   <p className="text-xs text-muted">demo@sec-scanner.pro</p>
                 </div>
                 <a
                   href="/app/settings"
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-3 transition-colors"
                 >
-                  <User className="w-4 h-4" />
-                  Profile
+                  <Settings className="w-4 h-4" />
+                  {t("common.settings")}
                 </a>
                 <a
                   href="/app/settings"
                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-3 transition-colors"
                 >
-                  <Sun className="w-4 h-4" />
-                  Preferences
+                  <User className="w-4 h-4" />
+                  {t("settings.profile")}
                 </a>
                 <div className="border-t border-border mt-1 pt-1">
                   <button
                     onClick={() => {
                       setUserMenuOpen(false);
-                      window.location.href = "/app/demo";
+                      window.location.href = "/";
                     }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red hover:bg-red-muted transition-colors"
                   >
-                    Sign Out
+                    <LogOut className="w-4 h-4" />
+                    {locale === "ru" ? "Выйти" : "Sign Out"}
                   </button>
                 </div>
               </div>

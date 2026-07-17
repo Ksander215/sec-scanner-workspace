@@ -14,45 +14,45 @@ import {
 const platformFeatures = [
   {
     icon: Radar,
-    title: "Multi-Engine Scanning",
-    oneLiner: "Unified interface for Nmap, Nuclei, Semgrep, Trivy and 20+ scanners.",
+    title: "Поиск уязвимостей",
+    oneLiner: "Автоматическое обнаружение уязвимостей в API, веб-приложениях и инфраструктуре",
     color: "accent",
     href: "/app/scans",
   },
   {
     icon: Brain,
-    title: "AI-Powered Analysis",
-    oneLiner: "ML-driven correlation, prioritization, and automated remediation planning.",
+    title: "AI-рекомендации",
+    oneLiner: "Интеллектуальный анализ результатов и приоритезация рекомендаций",
     color: "cyan",
     href: "/app/dashboard",
   },
   {
     icon: Network,
-    title: "Knowledge Graph",
-    oneLiner: "Visualize asset-vulnerability-attack path relationships in an interactive graph.",
+    title: "Карта инфраструктуры",
+    oneLiner: "Визуализация связей между активами, уязвимостями и путями атаки",
     color: "purple",
     href: "/app/demo/knowledge-graph",
   },
   {
     icon: Workflow,
-    title: "Automated Workflows",
-    oneLiner: "Configurable pipelines from scan to JIRA ticket with CI/CD integration.",
+    title: "Автоматизация",
+    oneLiner: "Настраиваемые конвейеры сканирования и интеграции с CI/CD",
     color: "amber",
     href: "/app/workspace/pipelines",
   },
   {
     icon: BarChart3,
-    title: "Risk Quantification",
-    oneLiner: "Quantified risk scores, SLA metrics, and executive dashboards.",
+    title: "Оценка рисков",
+    oneLiner: "Автоматический расчёт рисков с приоритезацией по бизнес-влиянию",
     color: "accent",
     href: "/app/risks",
   },
   {
     icon: Lock,
-    title: "Enterprise Security",
-    oneLiner: "SSO, RBAC, audit log, encryption. SOC 2, ISO 27001, GDPR compliant.",
+    title: "Корпоративные возможности",
+    oneLiner: "SSO, RBAC, API, аудит и соответствие требованиям",
     color: "red",
-    href: "/app/docs/security",
+    href: "/app/platform",
   },
 ];
 
@@ -76,12 +76,12 @@ export function Platform() {
           className="text-center max-w-3xl mx-auto"
         >
           <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            Platform
+            Возможности платформы
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            One platform.
+            Всё, что нужно для
             <br />
-            <span className="text-gradient-accent">Complete security intelligence.</span>
+            <span className="text-gradient-accent">управления безопасностью в одном месте</span>
           </h2>
         </motion.div>
 
@@ -111,7 +111,7 @@ export function Platform() {
                   {feature.oneLiner}
                 </p>
                 <div className={`mt-5 inline-flex items-center gap-1.5 text-sm font-medium ${colors.text} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                  Learn more <ArrowRight className="w-3.5 h-3.5" />
+                  Подробнее <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </motion.a>
             );

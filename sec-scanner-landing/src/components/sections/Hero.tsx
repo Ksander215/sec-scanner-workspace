@@ -25,7 +25,7 @@ export function Hero() {
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent-border bg-accent-muted text-accent text-xs font-medium tracking-wide uppercase">
             <Shield className="w-3.5 h-3.5" />
-            Security Intelligence Platform
+            Платформа корпоративной безопасности
           </span>
         </motion.div>
 
@@ -36,35 +36,38 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="mt-8 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
         >
+          <span className="text-accent">SIP</span>
+          <br />
           <span className="text-gradient-accent">Security Intelligence</span>
           <br />
           <span className="text-foreground">Platform</span>
         </motion.h1>
 
-        {/* Tagline */}
+        {/* Tagline — The 30-second value proposition */}
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-6 text-lg sm:text-xl text-muted-2 max-w-2xl mx-auto leading-relaxed"
         >
-          Open-source platform for vulnerability intelligence, attack path analysis and AI-powered security operations.
+          Операционная система для безопасности бизнеса.
+          Находите уязвимости, анализируйте инфраструктуру, получайте рекомендации&nbsp;AI.
         </motion.p>
 
-        {/* Keywords */}
+        {/* What you can do */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-3 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight"
         >
-          <span className="text-accent">Analyze.</span>
-          <span className="text-cyan">Correlate.</span>
-          <span className="text-amber">Prioritize.</span>
-          <span className="text-purple">Remediate.</span>
+          <span className="text-accent">Находите.</span>
+          <span className="text-cyan">Анализируйте.</span>
+          <span className="text-amber">Защищайте.</span>
+          <span className="text-purple">Автоматизируйте.</span>
         </motion.div>
 
-        {/* CTA — One primary, one secondary */}
+        {/* CTA */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -72,11 +75,11 @@ export function Hero() {
           className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <a
-            href="/app/demo"
+            href="/app/dashboard"
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
           >
             <Play className="w-4 h-4" />
-            Open Interactive Demo
+            Открыть платформу
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </a>
           <a
@@ -86,7 +89,7 @@ export function Hero() {
             className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-medium border border-border-light text-foreground rounded-xl hover:bg-surface-2 hover:border-muted transition-all"
           >
             <GitHubIcon className="w-4 h-4" />
-            View on GitHub
+            GitHub
           </a>
         </motion.div>
 
@@ -102,29 +105,32 @@ export function Hero() {
               <div className="w-3 h-3 rounded-full bg-red/60" />
               <div className="w-3 h-3 rounded-full bg-amber/60" />
               <div className="w-3 h-3 rounded-full bg-accent/60" />
-              <span className="ml-3 text-xs text-muted font-mono">terminal</span>
+              <span className="ml-3 text-xs text-muted font-mono">sip cli</span>
             </div>
             <div className="p-4 font-mono text-sm leading-7 text-left">
               <div className="text-muted">
-                $ <span className="text-foreground">npx sec-scanner scan</span>{" "}
+                $ <span className="text-foreground">sip scan</span>{" "}
                 --target api.example.com
               </div>
               <div className="text-accent">
-                ✓ Detected 50 findings across 3 severity levels
+                ✓ Найдено 50 проблем по 3 уровням критичности
               </div>
               <div className="text-cyan">
-                ✓ Risk score: 73/100 (High) — 12 critical, 23 high, 15 medium
+                ✓ Оценка риска: 73/100 (Высокий) — 12 критических, 23 высоких, 15 средних
               </div>
               <div className="text-amber">
-                ✓ Attack path: API4:2023 → API8:2023 → API1:2023 (Exploit chain)
+                ✓ Путь атаки: API4:2023 → API8:2023 → API1:2023 (цепочка)
               </div>
               <div className="text-purple">
-                ✓ Generated 8 prioritized recommendations
+                ✓ Сгенерировано 8 приоритетных рекомендаций
               </div>
               <div className="text-muted mt-2">
                 $ <span className="text-accent animate-blink">▋</span>
               </div>
             </div>
+          </div>
+          <div className="mt-3 text-center">
+            <span className="text-xs text-muted">Powered by Sec Scanner Engine</span>
           </div>
         </motion.div>
 
@@ -136,10 +142,10 @@ export function Hero() {
           className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-3xl mx-auto"
         >
           {[
-            { value: 50, suffix: "K+", label: "Scans performed" },
-            { value: 370, suffix: "+", label: "Detection rules" },
-            { value: 99.2, suffix: "%", label: "Accuracy rate" },
-            { value: 3, suffix: "s", label: "Avg scan time", prefix: "<" },
+            { value: 50, suffix: "K+", label: "Сканирований" },
+            { value: 370, suffix: "+", label: "Правил обнаружения" },
+            { value: 99.2, suffix: "%", label: "Точность" },
+            { value: 3, suffix: "с", label: "Среднее время", prefix: "<" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-gradient-accent">

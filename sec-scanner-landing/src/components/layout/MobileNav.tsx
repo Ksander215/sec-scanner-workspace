@@ -13,62 +13,62 @@ interface MobileNavProps {
 }
 
 interface NavSection {
-  title: string;
-  links: { label: string; href: string }[];
+  titleKey: string;
+  links: { labelKey: string; href: string }[];
 }
 
 const sections: NavSection[] = [
   {
-    title: "Product",
+    titleKey: "nav.platform",
     links: [
-      { label: "Platform", href: "/platform" },
-      { label: "Capabilities", href: "/capabilities" },
-      { label: "Architecture", href: "/architecture" },
-      { label: "Demo", href: "/demo" },
-      { label: "Changelog", href: "/changelog" },
+      { labelKey: "platform.title", href: "/app/platform" },
+      { labelKey: "capabilities.title", href: "/app/capabilities" },
+      { labelKey: "architecture.title", href: "/app/architecture" },
+      { labelKey: "common.demo", href: "/app/dashboard" },
+      { labelKey: "changelog.title", href: "/app/changelog" },
     ],
   },
   {
-    title: "Marketplace",
+    titleKey: "nav.marketplace",
     links: [
-      { label: "All Extensions", href: "/marketplace" },
-      { label: "Plugins", href: "/marketplace/plugins" },
-      { label: "Rules", href: "/marketplace/rules" },
-      { label: "Connectors", href: "/marketplace/connectors" },
-      { label: "Templates", href: "/marketplace/templates" },
-      { label: "Dashboards", href: "/marketplace/dashboards" },
-      { label: "Integrations", href: "/marketplace/integrations" },
-      { label: "Themes", href: "/marketplace/themes" },
-      { label: "AI Prompts", href: "/marketplace/ai-prompts" },
+      { labelKey: "common.all", href: "/app/marketplace" },
+      { labelKey: "marketplace.tab.plugins", href: "/app/marketplace/plugins" },
+      { labelKey: "marketplace.tab.rules", href: "/app/marketplace/rules" },
+      { labelKey: "marketplace.tab.connectors", href: "/app/marketplace/connectors" },
+      { labelKey: "marketplace.tab.templates", href: "/app/marketplace/templates" },
+      { labelKey: "marketplace.tab.dashboards", href: "/app/marketplace/dashboards" },
+      { labelKey: "marketplace.tab.integrations", href: "/app/marketplace/integrations" },
+      { labelKey: "marketplace.tab.themes", href: "/app/marketplace/themes" },
+      { labelKey: "marketplace.tab.ai", href: "/app/marketplace/ai-prompts" },
     ],
   },
   {
-    title: "Docs",
+    titleKey: "nav.docs",
     links: [
-      { label: "Getting Started", href: "/docs/getting-started" },
-      { label: "Guides", href: "/docs/guides" },
-      { label: "API Reference", href: "/docs/api" },
-      { label: "CLI", href: "/docs/cli" },
-      { label: "SDK", href: "/docs/sdk" },
-      { label: "Deployment", href: "/docs/deployment" },
-      { label: "Security", href: "/docs/security" },
-      { label: "Compliance", href: "/docs/compliance" },
+      { labelKey: "docs.gettingStarted", href: "/app/docs/getting-started" },
+      { labelKey: "docs.guides", href: "/app/docs/guides" },
+      { labelKey: "docs.api", href: "/app/docs/api" },
+      { labelKey: "docs.cli", href: "/app/docs/cli" },
+      { labelKey: "docs.sdk", href: "/app/docs/sdk" },
+      { labelKey: "docs.deployment", href: "/app/docs/deployment" },
+      { labelKey: "docs.security", href: "/app/docs/security" },
+      { labelKey: "docs.compliance", href: "/app/docs/compliance" },
     ],
   },
   {
-    title: "Community",
+    titleKey: "nav.community",
     links: [
-      { label: "Discord", href: "#" },
-      { label: "Telegram", href: "#" },
-      { label: "Contributing", href: "/community/contributing" },
-      { label: "Roadmap", href: "/community/roadmap" },
-      { label: "Feature Requests", href: "/community/feature-requests" },
+      { labelKey: "community.discord", href: "https://discord.gg/sec-scanner" },
+      { labelKey: "community.telegram", href: "https://t.me/sec_scanner" },
+      { labelKey: "community.contributing", href: "/app/community/contributing" },
+      { labelKey: "community.roadmap", href: "/app/community/roadmap" },
+      { labelKey: "community.featureRequests", href: "/app/community/feature-requests" },
     ],
   },
 ];
 
 export function MobileNav({ open, onClose }: MobileNavProps) {
-  const { locale, setLocale } = useI18n();
+  const { locale, setLocale, t } = useI18n();
 
   return (
     <AnimatePresence>
@@ -95,9 +95,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             <div className="flex items-center justify-between p-4 border-b border-border">
               <Link href="/" onClick={onClose} className="flex items-center gap-2">
                 <Shield className="w-6 h-6 text-accent" />
-                <span className="font-semibold text-foreground">
-                  sec<span className="text-accent">‑scanner</span>
-                </span>
+                <span className="font-bold text-accent">SIP</span>
               </Link>
               <button
                 onClick={onClose}
@@ -111,20 +109,32 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
             {/* Nav sections */}
             <div className="p-4">
               {sections.map((section) => (
-                <div key={section.title} className="mb-6">
+                <div key={section.titleKey} className="mb-6">
                   <h3 className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">
-                    {section.title}
+                    {t(section.titleKey)}
                   </h3>
                   <ul className="space-y-0.5">
                     {section.links.map((link) => (
                       <li key={link.href}>
-                        <Link
-                          href={link.href}
-                          onClick={onClose}
-                          className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
-                        >
-                          {link.label}
-                        </Link>
+                        {link.href.startsWith("http") ? (
+                          <a
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={onClose}
+                            className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
+                          >
+                            {t(link.labelKey)}
+                          </a>
+                        ) : (
+                          <Link
+                            href={link.href}
+                            onClick={onClose}
+                            className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
+                          >
+                            {t(link.labelKey)}
+                          </Link>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -138,21 +148,14 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
                   onClick={onClose}
                   className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
                 >
-                  Pricing
+                  {t("nav.pricing")}
                 </Link>
                 <Link
                   href="/app/blog"
                   onClick={onClose}
                   className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
                 >
-                  Blog
-                </Link>
-                <Link
-                  href="/app/examples"
-                  onClick={onClose}
-                  className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
-                >
-                  Examples
+                  {t("blog.title")}
                 </Link>
               </div>
 
@@ -178,11 +181,11 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
                   <ExternalLink className="w-3 h-3" />
                 </a>
                 <Link
-                  href="/app/demo"
+                  href="/app/dashboard"
                   onClick={onClose}
                   className="block w-full text-center px-4 py-2.5 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors"
                 >
-                  Try Demo
+                  {t("nav.openPlatform")}
                 </Link>
               </div>
             </div>

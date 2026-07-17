@@ -1,136 +1,655 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { FileBarChart, Download, Calendar, CheckCircle2, Loader2 } from "lucide-react";
+import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FileBarChart,
+  Download,
+  Trash2,
+  Loader2,
+  Plus,
+  ShieldAlert,
+  X,
+} from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
+import { useToast } from "@/components/ui/Toast";
+import { Container } from "@/components/ui/Container";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
-const reports = [
-  { id: "RPT-001", name: "Executive Security Summary - Q3 2026", type: "executive", format: "PDF", generatedAt: "Jul 15, 2026", size: "2.4 MB" },
-  { id: "RPT-002", name: "Vulnerability Assessment - Production", type: "vulnerability", format: "PDF", generatedAt: "Jul 14, 2026", size: "5.1 MB" },
-  { id: "RPT-003", name: "PCI-DSS Compliance Report", type: "compliance", format: "PDF", generatedAt: "Jul 12, 2026", size: "3.8 MB" },
-  { id: "RPT-004", name: "Attack Path Analysis - Full Scope", type: "attack-path", format: "HTML", generatedAt: "Jul 10, 2026", size: "12.3 MB" },
-  { id: "RPT-005", name: "Asset Inventory Export", type: "inventory", format: "CSV", generatedAt: "Jul 8, 2026", size: "0.8 MB" },
-  { id: "RPT-006", name: "Risk Trend Analysis - 30 Days", type: "trend", format: "PDF", generatedAt: "Jul 5, 2026", size: "1.9 MB" },
+// ─── Types ──────────────────────────────────────────────────────────────
+
+type ReportType = "executive" | "technical" | "compliance";
+
+interface DemoReport {
+  id: string;
+  type: ReportType;
+  date: string;
+  findings: number;
+  riskScore: number; // 0–100
+}
+
+// ─── Demo data ──────────────────────────────────────────────────────────
+
+const initialReports: DemoReport[] = [
+  {
+    id: "RPT-001",
+    type: "executive",
+    date: "2026-07-15",
+    findings: 12,
+    riskScore: 78,
+  },
+  {
+    id: "RPT-002",
+    type: "technical",
+    date: "2026-07-14",
+    findings: 37,
+    riskScore: 92,
+  },
+  {
+    id: "RPT-003",
+    type: "compliance",
+    date: "2026-07-12",
+    findings: 8,
+    riskScore: 45,
+  },
+  {
+    id: "RPT-004",
+    type: "executive",
+    date: "2026-07-08",
+    findings: 5,
+    riskScore: 31,
+  },
+  {
+    id: "RPT-005",
+    type: "technical",
+    date: "2026-07-05",
+    findings: 24,
+    riskScore: 85,
+  },
 ];
 
-const typeColors: Record<string, string> = {
-  executive: "text-accent",
-  vulnerability: "text-red",
-  compliance: "text-purple",
-  "attack-path": "text-amber",
-  inventory: "text-cyan",
-  trend: "text-cyan",
-};
+// ─── Helpers ────────────────────────────────────────────────────────────
+
+function riskVariant(score: number): "critical" | "high" | "medium" | "low" {
+  if (score >= 80) return "critical";
+  if (score >= 60) return "high";
+  if (score >= 30) return "medium";
+  return "low";
+}
+
+function riskKey(score: number): string {
+  if (score >= 80) return "reports.risk.critical";
+  if (score >= 60) return "reports.risk.high";
+  if (score >= 30) return "reports.risk.medium";
+  return "reports.risk.low";
+}
+
+function typeBadgeVariant(
+  type: ReportType
+): "info" | "high" | "default" {
+  switch (type) {
+    case "executive":
+      return "info";
+    case "technical":
+      return "high";
+    case "compliance":
+      return "default";
+  }
+}
+
+function typeKey(type: ReportType): string {
+  return `reports.type.${type}`;
+}
+
+function formatDate(iso: string, locale: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString(locale === "en" ? "en-US" : "ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+let nextReportNum = 6;
+
+// ─── Report content generators ──────────────────────────────────────────
+
+function generateMarkdownReport(report: DemoReport, t: (k: string) => string, locale: string): string {
+  const typeName = t(typeKey(report.type));
+  const riskLabel = t(riskKey(report.riskScore));
+  const lines = [
+    `# ${typeName}`,
+    "",
+    `**ID:** ${report.id}`,
+    `**${t("reports.date")}:** ${report.date}`,
+    `**${t("reports.findings")}:** ${report.findings}`,
+    `**${t("reports.riskScore")}:** ${report.riskScore}/100 (${riskLabel})`,
+    "",
+    "---",
+    "",
+    "## " + (t("reports.type.executive") === "Executive Report" ? "Findings Summary" : "Сводка находок"),
+    "",
+  ];
+
+  const demoFindings = generateDemoFindings(report, locale);
+  demoFindings.forEach((f, i) => {
+    lines.push(`### ${i + 1}. ${f.title}`);
+    lines.push(`- **Severity:** ${f.severity}`);
+    lines.push(`- **Description:** ${f.description}`);
+    lines.push(`- **Recommendation:** ${f.recommendation}`);
+    lines.push("");
+  });
+
+  lines.push("---");
+  lines.push("");
+  lines.push(t("reports.type.executive") === "Executive Report"
+    ? "*Generated by SIP Security Intelligence Platform*"
+    : "*Сгенерировано платформой SIP Security Intelligence Platform*");
+
+  return lines.join("\n");
+}
+
+function generateHTMLReport(report: DemoReport, t: (k: string) => string, locale: string): string {
+  const typeName = t(typeKey(report.type));
+  const riskLabel = t(riskKey(report.riskScore));
+  const findings = generateDemoFindings(report, locale);
+
+  const findingsHTML = findings
+    .map(
+      (f, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${f.title}</td>
+      <td><span style="color:${f.severity === "Critical" || f.severity === "Критический" ? "#ef4444" : f.severity === "High" || f.severity === "Высокий" ? "#f59e0b" : "#22c55e"}">${f.severity}</span></td>
+      <td>${f.description}</td>
+      <td>${f.recommendation}</td>
+    </tr>`
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>${typeName} — ${report.id}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    h1 { border-bottom: 3px solid #0f0; padding-bottom: 12px; }
+    .meta { display: flex; gap: 32px; margin: 20px 0; flex-wrap: wrap; }
+    .meta-item { background: #f5f5f5; padding: 12px 20px; border-radius: 8px; }
+    .meta-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+    .meta-value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .risk-critical { color: #ef4444; }
+    .risk-high { color: #f59e0b; }
+    .risk-medium { color: #22c55e; }
+    .risk-low { color: #10b981; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e5e5e5; font-size: 14px; }
+    th { background: #f9f9f9; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.04em; color: #666; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5e5; font-size: 12px; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>${typeName}</h1>
+  <div class="meta">
+    <div class="meta-item"><div class="meta-label">ID</div><div class="meta-value">${report.id}</div></div>
+    <div class="meta-item"><div class="meta-label">${t("reports.date")}</div><div class="meta-value">${report.date}</div></div>
+    <div class="meta-item"><div class="meta-label">${t("reports.findings")}</div><div class="meta-value">${report.findings}</div></div>
+    <div class="meta-item"><div class="meta-label">${t("reports.riskScore")}</div><div class="meta-value risk-${riskVariant(report.riskScore)}">${report.riskScore}/100 — ${riskLabel}</div></div>
+  </div>
+  <h2>Findings</h2>
+  <table>
+    <thead><tr><th>#</th><th>Title</th><th>Severity</th><th>Description</th><th>Recommendation</th></tr></thead>
+    <tbody>${findingsHTML}</tbody>
+  </table>
+  <div class="footer">Generated by SIP Security Intelligence Platform</div>
+</body>
+</html>`;
+}
+
+function generateJSONReport(report: DemoReport, t: (k: string) => string, locale: string): string {
+  const findings = generateDemoFindings(report, locale);
+  return JSON.stringify(
+    {
+      id: report.id,
+      type: report.type,
+      typeName: t(typeKey(report.type)),
+      date: report.date,
+      findingsCount: report.findings,
+      riskScore: report.riskScore,
+      riskLevel: t(riskKey(report.riskScore)),
+      findings,
+      generatedBy: "SIP Security Intelligence Platform",
+    },
+    null,
+    2
+  );
+}
+
+interface DemoFinding {
+  title: string;
+  severity: string;
+  description: string;
+  recommendation: string;
+}
+
+function generateDemoFindings(report: DemoReport, locale: string): DemoFinding[] {
+  const isEn = locale === "en";
+  // Provide a mix of findings based on report type
+  const pool: Record<ReportType, DemoFinding[]> = {
+    executive: [
+      {
+        title: isEn ? "Unpatched Critical Vulnerabilities" : "Неустранённые критические уязвимости",
+        severity: isEn ? "Critical" : "Критический",
+        description: isEn ? "3 critical CVEs remain unpatched on production servers." : "3 критических CVE не устранены на продакшн-серверах.",
+        recommendation: isEn ? "Apply security patches within 24 hours." : "Установить обновления безопасности в течение 24 часов.",
+      },
+      {
+        title: isEn ? "Weak Authentication Policies" : "Слабые политики аутентификации",
+        severity: isEn ? "High" : "Высокий",
+        description: isEn ? "MFA not enforced for 40% of user accounts." : "MFA не включена для 40% учётных записей.",
+        recommendation: isEn ? "Enforce MFA across all accounts." : "Включить MFA для всех учётных записей.",
+      },
+      {
+        title: isEn ? "Data Encryption Gaps" : "Пробелы в шифровании данных",
+        severity: isEn ? "Medium" : "Средний",
+        description: isEn ? "Data at rest encryption not enabled for 2 databases." : "Шифрование данных в покое не включено для 2 баз данных.",
+        recommendation: isEn ? "Enable AES-256 encryption for all databases." : "Включить шифрование AES-256 для всех баз данных.",
+      },
+    ],
+    technical: [
+      {
+        title: isEn ? "SQL Injection in Login Form" : "SQL-инъекция в форме входа",
+        severity: isEn ? "Critical" : "Критический",
+        description: isEn ? "User input not sanitized in /api/auth/login endpoint." : "Ввод пользователя не очищается в эндпоинте /api/auth/login.",
+        recommendation: isEn ? "Use parameterized queries and input validation." : "Использовать параметризованные запросы и валидацию ввода.",
+      },
+      {
+        title: isEn ? "Redis RCE via Exposed Port" : "RCE в Redis через открытый порт",
+        severity: isEn ? "Critical" : "Критический",
+        description: isEn ? "Redis port 6379 exposed to 0.0.0.0 without authentication." : "Порт Redis 6379 открыт на 0.0.0.0 без аутентификации.",
+        recommendation: isEn ? "Bind Redis to localhost and require a password." : "Привязать Redis к localhost и задать пароль.",
+      },
+      {
+        title: isEn ? "Outdated TLS Configuration" : "Устаревшая конфигурация TLS",
+        severity: isEn ? "High" : "Высокий",
+        description: isEn ? "TLS 1.0 and 1.1 still enabled on web servers." : "TLS 1.0 и 1.1 всё ещё включены на веб-серверах.",
+        recommendation: isEn ? "Disable TLS 1.0/1.1 and enforce TLS 1.2+." : "Отключить TLS 1.0/1.1 и требовать TLS 1.2+.",
+      },
+      {
+        title: isEn ? "Hardcoded API Keys in Source" : "Захардкоженные API-ключи в коде",
+        severity: isEn ? "High" : "Высокий",
+        description: isEn ? "5 API keys found hardcoded in repository." : "5 API-ключей обнаружены в исходном коде репозитория.",
+        recommendation: isEn ? "Move secrets to environment variables or vault." : "Перенести секреты в переменные окружения или Vault.",
+      },
+    ],
+    compliance: [
+      {
+        title: isEn ? "PCI-DSS 6.5: Missing Input Validation" : "PCI-DSS 6.5: Отсутствует валидация ввода",
+        severity: isEn ? "High" : "Высокий",
+        description: isEn ? "Web application does not validate input for 3 endpoints." : "Веб-приложение не валидирует ввод для 3 эндпоинтов.",
+        recommendation: isEn ? "Implement input validation on all user-facing endpoints." : "Реализовать валидацию ввода на всех пользовательских эндпоинтах.",
+      },
+      {
+        title: isEn ? "GDPR Art. 32: Insufficient Encryption" : "GDPR ст. 32: Недостаточное шифрование",
+        severity: isEn ? "Medium" : "Средний",
+        description: isEn ? "PII stored without encryption in backup archives." : "Персональные данные хранятся без шифрования в архивах бэкапов.",
+        recommendation: isEn ? "Encrypt all PII at rest and in transit." : "Шифровать все персональные данные в покое и при передаче.",
+      },
+      {
+        title: isEn ? "ISO 27001 A.9: Access Control Gaps" : "ISO 27001 A.9: Пробелы в управлении доступом",
+        severity: isEn ? "Low" : "Низкий",
+        description: isEn ? "2 former employees retain active accounts." : "2 бывших сотрудника имеют активные учётные записи.",
+        recommendation: isEn ? "Implement offboarding automation for account deactivation." : "Реализовать автоматизацию отключения учётных записей при увольнении.",
+      },
+    ],
+  };
+
+  return pool[report.type] || pool.executive;
+}
+
+// ─── Component ──────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
+  const { t, locale } = useI18n();
+  const { addToast } = useToast();
+
+  const [reports, setReports] = useState<DemoReport[]>(initialReports);
   const [downloading, setDownloading] = useState<Set<string>>(new Set());
-  const [downloaded, setDownloaded] = useState<Set<string>>(new Set());
   const [generating, setGenerating] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedType, setSelectedType] = useState<ReportType>("executive");
 
-  const handleDownload = (id: string) => {
-    setDownloading((prev) => new Set(prev).add(id));
-    setTimeout(() => {
-      setDownloading((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-      setDownloaded((prev) => new Set(prev).add(id));
-    }, 1500);
-  };
+  // ── Real file download ──────────────────────────────────────────────
 
-  const handleGenerate = () => {
+  const downloadReport = useCallback(
+    (report: DemoReport) => {
+      setDownloading((prev) => new Set(prev).add(report.id));
+
+      // Simulate brief preparation delay
+      setTimeout(() => {
+        let content: string;
+        let mimeType: string;
+        let extension: string;
+
+        // Choose format based on report type
+        switch (report.type) {
+          case "executive":
+            content = generateHTMLReport(report, t, locale);
+            mimeType = "text/html";
+            extension = "html";
+            break;
+          case "technical":
+            content = generateMarkdownReport(report, t, locale);
+            mimeType = "text/markdown";
+            extension = "md";
+            break;
+          case "compliance":
+            content = generateJSONReport(report, t, locale);
+            mimeType = "application/json";
+            extension = "json";
+            break;
+          default:
+            content = generateMarkdownReport(report, t, locale);
+            mimeType = "text/markdown";
+            extension = "md";
+        }
+
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `${report.id}-${report.type}-report.${extension}`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(url);
+
+        setDownloading((prev) => {
+          const next = new Set(prev);
+          next.delete(report.id);
+          return next;
+        });
+
+        addToast({
+          type: "success",
+          title: t("reports.downloaded"),
+          description: t("reports.downloaded.desc"),
+        });
+      }, 800);
+    },
+    [t, locale, addToast]
+  );
+
+  // ── Delete ──────────────────────────────────────────────────────────
+
+  const deleteReport = useCallback(
+    (id: string) => {
+      setReports((prev) => prev.filter((r) => r.id !== id));
+      addToast({ type: "info", title: t("reports.deleted") });
+    },
+    [addToast, t]
+  );
+
+  // ── Generate new report ─────────────────────────────────────────────
+
+  const handleGenerate = useCallback(() => {
     setGenerating(true);
+    setShowDialog(false);
+
     setTimeout(() => {
+      const newReport: DemoReport = {
+        id: `RPT-${String(nextReportNum++).padStart(3, "0")}`,
+        type: selectedType,
+        date: new Date().toISOString().slice(0, 10),
+        findings: Math.floor(Math.random() * 40) + 3,
+        riskScore: Math.floor(Math.random() * 80) + 15,
+      };
+
+      setReports((prev) => [newReport, ...prev]);
       setGenerating(false);
-    }, 2500);
-  };
+
+      addToast({
+        type: "success",
+        title: t("reports.generated"),
+        description: t("reports.generated.desc"),
+      });
+    }, 1500);
+  }, [selectedType, addToast, t]);
+
+  // ── Render ──────────────────────────────────────────────────────────
 
   return (
-    <div className="animate-page-in">
+    <Container as="main" className="py-8 animate-page-in">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Reports</h1>
-          <p className="mt-2 text-muted-2">Generate and view security reports.</p>
+          <h1 className="text-2xl font-bold text-foreground">
+            {t("reports.title")}
+          </h1>
+          <p className="mt-2 text-muted-2">{t("reports.subtitle")}</p>
         </div>
-        <button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-70"
-        >
-          {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileBarChart className="w-4 h-4" />}
-          {generating ? "Generating..." : "Generate Report"}
-        </button>
+        <Button onClick={() => setShowDialog(true)} disabled={generating}>
+          {generating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
+          {t("reports.generate")}
+        </Button>
       </div>
 
-      {generating && (
+      {/* Generating banner */}
+      <AnimatePresence>
+        {generating && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 rounded-xl bg-accent-muted border border-accent/20 mb-6 flex items-center gap-3"
+          >
+            <Loader2 className="w-5 h-5 text-accent animate-spin" />
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                {t("reports.generating")}
+              </p>
+              <p className="text-xs text-muted-2">
+                {t("reports.generating.desc")}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Empty state */}
+      {reports.length === 0 && !generating && (
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 rounded-xl bg-accent-muted border border-accent-border mb-6 flex items-center gap-3"
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center py-20 text-center"
         >
-          <Loader2 className="w-5 h-5 text-accent animate-spin" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Generating report...</p>
-            <p className="text-xs text-muted-2">Collecting findings, computing risk scores, and building the report.</p>
+          <div className="w-16 h-16 rounded-2xl bg-surface-2 flex items-center justify-center mb-4">
+            <ShieldAlert className="w-8 h-8 text-muted-2" />
           </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            {t("reports.empty.title")}
+          </h2>
+          <p className="text-sm text-muted-2 max-w-md mb-6">
+            {t("reports.noReports")}
+          </p>
+          <Button onClick={() => setShowDialog(true)}>
+            {t("reports.empty.cta")}
+          </Button>
         </motion.div>
       )}
 
-      <div className="space-y-3">
-        {reports.map((report, i) => {
-          const isDownloading = downloading.has(report.id);
-          const isDownloaded = downloaded.has(report.id);
-          return (
+      {/* Report list */}
+      {reports.length > 0 && (
+        <div className="space-y-3">
+          {reports.map((report, i) => {
+            const isDownloading = downloading.has(report.id);
+            const rv = riskVariant(report.riskScore);
+
+            return (
+              <motion.div
+                key={report.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className="flex items-center gap-4 p-5 rounded-xl bg-surface border border-border hover:border-border-light transition-colors group"
+              >
+                {/* Icon */}
+                <div className="w-10 h-10 rounded-lg bg-purple-muted flex items-center justify-center shrink-0">
+                  <FileBarChart className="w-5 h-5 text-purple" />
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+                      {t(typeKey(report.type))}
+                    </h3>
+                    <Badge variant={typeBadgeVariant(report.type)}>
+                      {report.type.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-2 flex-wrap">
+                    <span>{report.id}</span>
+                    <span>{formatDate(report.date, locale)}</span>
+                    <span>
+                      {report.findings} {t("reports.findings")}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Risk score */}
+                <div className="text-right shrink-0 hidden sm:block">
+                  <div className="text-xs text-muted-2 mb-0.5">
+                    {t("reports.riskScore")}
+                  </div>
+                  <Badge variant={rv}>{report.riskScore}/100</Badge>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => downloadReport(report)}
+                    disabled={isDownloading}
+                    title={t("reports.download")}
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteReport(report.id)}
+                    title={t("reports.delete")}
+                    className="text-muted-2 hover:text-red"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Generate Report Dialog */}
+      <AnimatePresence>
+        {showDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+            onClick={() => setShowDialog(false)}
+          >
             <motion.div
-              key={report.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="flex items-center gap-4 p-5 rounded-xl bg-surface border border-border hover:border-border-light transition-colors group"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md rounded-2xl bg-surface border border-border shadow-2xl p-6"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-10 h-10 rounded-lg bg-purple-muted flex items-center justify-center shrink-0">
-                <FileBarChart className={`w-5 h-5 ${typeColors[report.type] || "text-purple"}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">{report.name}</h3>
-                <div className="flex items-center gap-3 mt-1 text-xs text-muted-2">
-                  <span>{report.id}</span>
-                  <span className="capitalize">{report.type.replace("-", " ")}</span>
-                  <span className="uppercase font-mono">{report.format}</span>
-                  <span>{report.size}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs text-muted-2">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {report.generatedAt}
-                </div>
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {t("reports.selectType")}
+                </h2>
                 <button
-                  onClick={() => handleDownload(report.id)}
-                  disabled={isDownloading}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isDownloaded
-                      ? "text-accent bg-accent-muted"
-                      : isDownloading
-                      ? "text-muted-2 bg-surface-2"
-                      : "text-muted-2 hover:text-accent hover:bg-accent-muted"
-                  }`}
-                  title={isDownloaded ? "Downloaded" : isDownloading ? "Downloading..." : "Download report"}
+                  onClick={() => setShowDialog(false)}
+                  className="p-1.5 rounded-lg text-muted-2 hover:text-foreground hover:bg-surface-2 transition-colors"
                 >
-                  {isDownloading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : isDownloaded ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    <Download className="w-4 h-4" />
-                  )}
+                  <X className="w-4 h-4" />
                 </button>
               </div>
+
+              <div className="space-y-2">
+                {(["executive", "technical", "compliance"] as ReportType[]).map(
+                  (type) => (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedType(type)}
+                      className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all text-left ${
+                        selectedType === type
+                          ? "border-accent/50 bg-accent-muted"
+                          : "border-border hover:border-border-light bg-surface"
+                      }`}
+                    >
+                      <FileBarChart
+                        className={`w-5 h-5 shrink-0 ${
+                          selectedType === type ? "text-accent" : "text-muted-2"
+                        }`}
+                      />
+                      <div>
+                        <div className="text-sm font-medium text-foreground">
+                          {t(typeKey(type))}
+                        </div>
+                        <div className="text-xs text-muted-2 mt-0.5">
+                          {type === "executive" &&
+                            (locale === "en"
+                              ? "High-level overview for leadership"
+                              : "Общий обзор для руководства")}
+                          {type === "technical" &&
+                            (locale === "en"
+                              ? "Detailed findings for engineering teams"
+                              : "Подробные находки для инженерных команд")}
+                          {type === "compliance" &&
+                            (locale === "en"
+                              ? "Regulatory compliance assessment"
+                              : "Оценка соответствия нормативам")}
+                        </div>
+                      </div>
+                    </button>
+                  )
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 mt-6">
+                <Button onClick={handleGenerate} className="flex-1">
+                  <Plus className="w-4 h-4" />
+                  {t("reports.generate")}
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowDialog(false)}
+                >
+                  {t("reports.cancel")}
+                </Button>
+              </div>
             </motion.div>
-          );
-        })}
-      </div>
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Container>
   );
 }

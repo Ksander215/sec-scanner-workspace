@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { DocsSidebar } from "@/components/layout/DocsSidebar";
 import { Badge } from "@/components/ui/Badge";
+import { useI18n } from "@/lib/i18n-context";
 import {
   Rocket,
   BookOpen,
@@ -16,30 +18,43 @@ import {
   Store,
   Puzzle,
   ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 
 const sections = [
-  { icon: Rocket, title: "Getting Started", description: "Install, configure, and run your first scan in under 5 minutes. Covers Docker, CLI, and SaaS setup.", href: "/app/docs/getting-started", badge: "Start here" },
-  { icon: BookOpen, title: "Guides", description: "Step-by-step tutorials for common workflows: scanning, correlation, reporting, and remediation.", href: "/app/docs/guides" },
-  { icon: Code2, title: "API Reference", description: "REST API documentation with request/response examples, authentication, and rate limits.", href: "/app/docs/api" },
-  { icon: Terminal, title: "CLI", description: "Command-line interface reference with usage patterns, flags, and output formats.", href: "/app/docs/cli" },
-  { icon: Blocks, title: "SDK", description: "TypeScript and Python SDKs for programmatic access. Integrate scanning into your CI/CD.", href: "/app/docs/sdk" },
-  { icon: Server, title: "Architecture", description: "Technical architecture: data flow, domain models, and system design decisions.", href: "/app/docs/architecture" },
-  { icon: Upload, title: "Deployment", description: "Docker Compose, Kubernetes Helm, and cloud deployment guides with best practices.", href: "/app/docs/deployment" },
-  { icon: Shield, title: "Security", description: "Security hardening, TLS configuration, and best practices for production deployments.", href: "/app/docs/security" },
-  { icon: ClipboardCheck, title: "Compliance", description: "Compliance frameworks (OWASP, CIS, PCI DSS), reports, and audit trail configuration.", href: "/app/docs/compliance" },
-  { icon: Store, title: "Marketplace", description: "Publishing and managing marketplace extensions. Versioning, reviews, and monetization.", href: "/app/docs/marketplace" },
-  { icon: Puzzle, title: "Plugin Development", description: "Build custom scanning plugins with the Plugin SDK. API hooks, testing, and distribution.", href: "/app/docs/plugins" },
+  { icon: Rocket, titleKey: "docs.gettingStarted", descKey: "docs.desc.gettingStarted", href: "/app/docs/getting-started", badgeKey: "docs.badge.startHere" },
+  { icon: BookOpen, titleKey: "docs.guides", descKey: "docs.desc.guides", href: "/app/docs/guides" },
+  { icon: Code2, titleKey: "docs.api", descKey: "docs.desc.api", href: "/app/docs/api" },
+  { icon: Terminal, titleKey: "docs.cli", descKey: "docs.desc.cli", href: "/app/docs/cli" },
+  { icon: Blocks, titleKey: "docs.sdk", descKey: "docs.desc.sdk", href: "/app/docs/sdk" },
+  { icon: Server, titleKey: "docs.architecture", descKey: "docs.desc.architecture", href: "/app/docs/architecture" },
+  { icon: Upload, titleKey: "docs.deployment", descKey: "docs.desc.deployment", href: "/app/docs/deployment" },
+  { icon: Shield, titleKey: "docs.security", descKey: "docs.desc.security", href: "/app/docs/security" },
+  { icon: ClipboardCheck, titleKey: "docs.compliance", descKey: "docs.desc.compliance", href: "/app/docs/compliance" },
+  { icon: Store, titleKey: "docs.marketplace", descKey: "docs.desc.marketplace", href: "/app/docs/marketplace" },
+  { icon: Puzzle, titleKey: "docs.plugins", descKey: "docs.desc.plugins", href: "/app/docs/plugins" },
 ];
 
 export default function DocsPage() {
+  const { t } = useI18n();
+  const router = useRouter();
+
   return (
     <div className="flex min-h-[calc(100vh-7rem)]">
       <DocsSidebar />
       <div className="flex-1 py-8 px-8 max-w-4xl">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Documentation</h1>
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors mb-6 group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>{t("docs.back")}</span>
+        </button>
+
+        <h1 className="text-3xl font-bold text-foreground mb-2">{t("docs.title")}</h1>
         <p className="text-lg text-muted-2 mb-8">
-          Everything you need to get started, integrate, and master the Security Intelligence Platform.
+          {t("docs.subtitle")}
         </p>
 
         <div className="grid sm:grid-cols-2 gap-4">
@@ -56,11 +71,11 @@ export default function DocsPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
-                      {section.title}
+                      {t(section.titleKey)}
                     </h3>
-                    {section.badge && <Badge variant="low">{section.badge}</Badge>}
+                    {section.badgeKey && <Badge variant="low">{t(section.badgeKey)}</Badge>}
                   </div>
-                  <p className="text-xs text-muted-2 mt-1 leading-relaxed">{section.description}</p>
+                  <p className="text-xs text-muted-2 mt-1 leading-relaxed">{t(section.descKey)}</p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-muted mt-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all shrink-0" />
               </div>

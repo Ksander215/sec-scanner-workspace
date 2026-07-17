@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useI18n } from "@/lib/i18n-context";
 import {
   Rocket,
   BookOpen,
@@ -14,30 +15,48 @@ import {
   ClipboardCheck,
   Store,
   Puzzle,
+  ArrowLeft,
 } from "lucide-react";
 
 const docSections = [
-  { icon: Rocket, label: "Getting Started", href: "/app/docs/getting-started" },
-  { icon: BookOpen, label: "Guides", href: "/app/docs/guides" },
-  { icon: Code2, label: "API Reference", href: "/app/docs/api" },
-  { icon: Terminal, label: "CLI", href: "/app/docs/cli" },
-  { icon: Blocks, label: "SDK", href: "/app/docs/sdk" },
-  { icon: Server, label: "Architecture", href: "/app/docs/architecture" },
-  { icon: Upload, label: "Deployment", href: "/app/docs/deployment" },
-  { icon: Shield, label: "Security", href: "/app/docs/security" },
-  { icon: ClipboardCheck, label: "Compliance", href: "/app/docs/compliance" },
-  { icon: Store, label: "Marketplace", href: "/app/docs/marketplace" },
-  { icon: Puzzle, label: "Plugin Development", href: "/app/docs/plugins" },
+  { icon: Rocket, labelKey: "docs.gettingStarted", href: "/app/docs/getting-started" },
+  { icon: BookOpen, labelKey: "docs.guides", href: "/app/docs/guides" },
+  { icon: Code2, labelKey: "docs.api", href: "/app/docs/api" },
+  { icon: Terminal, labelKey: "docs.cli", href: "/app/docs/cli" },
+  { icon: Blocks, labelKey: "docs.sdk", href: "/app/docs/sdk" },
+  { icon: Server, labelKey: "docs.architecture", href: "/app/docs/architecture" },
+  { icon: Upload, labelKey: "docs.deployment", href: "/app/docs/deployment" },
+  { icon: Shield, labelKey: "docs.security", href: "/app/docs/security" },
+  { icon: ClipboardCheck, labelKey: "docs.compliance", href: "/app/docs/compliance" },
+  { icon: Store, labelKey: "docs.marketplace", href: "/app/docs/marketplace" },
+  { icon: Puzzle, labelKey: "docs.plugins", href: "/app/docs/plugins" },
 ];
 
 export function DocsSidebar() {
   const pathname = usePathname();
+  const { t } = useI18n();
 
   return (
-    <nav className="w-56 shrink-0 py-6 pr-6 border-r border-border overflow-y-auto">
+    <nav className="w-56 shrink-0 py-6 pr-6 border-r border-border overflow-y-auto sticky top-0 h-[calc(100vh-7rem)]">
+      {/* Back button */}
       <div className="mb-4 px-3">
-        <span className="text-xs text-muted uppercase tracking-wider font-medium">Documentation</span>
+        <Link
+          href="/app"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>{t("docs.back")}</span>
+        </Link>
       </div>
+
+      {/* Section heading */}
+      <div className="mb-4 px-3">
+        <span className="text-xs text-muted uppercase tracking-wider font-medium">
+          {t("docs.title")}
+        </span>
+      </div>
+
+      {/* Navigation links */}
       <div className="space-y-0.5">
         {docSections.map((section) => {
           const isActive = pathname === section.href;
@@ -53,7 +72,7 @@ export function DocsSidebar() {
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span className="truncate">{section.label}</span>
+              <span className="truncate">{t(section.labelKey)}</span>
             </Link>
           );
         })}
