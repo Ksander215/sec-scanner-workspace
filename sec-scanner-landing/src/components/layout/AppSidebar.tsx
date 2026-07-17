@@ -1,0 +1,362 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  LayoutDashboard,
+  Briefcase,
+  FolderKanban,
+  Radar,
+  Bug,
+  ShieldAlert,
+  Network,
+  Route,
+  FileBarChart,
+  Store,
+  FlaskConical,
+  BookOpen,
+  Users,
+  Download,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Shield,
+  Activity,
+  Database,
+  GitBranch,
+  Clock,
+  Cpu,
+  BarChart3,
+} from "lucide-react";
+
+interface SidebarSection {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  href?: string;
+  badge?: string;
+  children?: { label: string; href: string; icon: React.ElementType }[];
+}
+
+const sidebarSections: SidebarSection[] = [
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    href: "/app/dashboard",
+    badge: "3",
+  },
+  {
+    id: "workspace",
+    label: "Workspace",
+    icon: Briefcase,
+    href: "/app/workspace",
+    children: [
+      { label: "Overview", href: "/app/workspace", icon: Activity },
+      { label: "Assets", href: "/app/workspace/assets", icon: Database },
+      { label: "Pipelines", href: "/app/workspace/pipelines", icon: GitBranch },
+      { label: "History", href: "/app/workspace/history", icon: Clock },
+      { label: "Jobs", href: "/app/workspace/jobs", icon: Cpu },
+      { label: "Monitoring", href: "/app/workspace/monitoring", icon: BarChart3 },
+    ],
+  },
+  {
+    id: "projects",
+    label: "Projects",
+    icon: FolderKanban,
+    href: "/app/projects",
+  },
+  {
+    id: "scans",
+    label: "Scans",
+    icon: Radar,
+    href: "/app/scans",
+    badge: "5",
+  },
+  {
+    id: "findings",
+    label: "Findings",
+    icon: Bug,
+    href: "/app/findings",
+    badge: "12",
+  },
+  {
+    id: "risks",
+    label: "Risks",
+    icon: ShieldAlert,
+    href: "/app/risks",
+  },
+  {
+    id: "knowledge-graph",
+    label: "Knowledge Graph",
+    icon: Network,
+    href: "/app/demo/knowledge-graph",
+  },
+  {
+    id: "attack-paths",
+    label: "Attack Paths",
+    icon: Route,
+    href: "/app/demo/attack-paths",
+  },
+  {
+    id: "reports",
+    label: "Reports",
+    icon: FileBarChart,
+    href: "/app/reports",
+  },
+  {
+    id: "marketplace",
+    label: "Marketplace",
+    icon: Store,
+    href: "/app/marketplace",
+  },
+  {
+    id: "playground",
+    label: "Playground",
+    icon: FlaskConical,
+    href: "/app/playground",
+  },
+  {
+    id: "documentation",
+    label: "Documentation",
+    icon: BookOpen,
+    href: "/app/docs",
+  },
+  {
+    id: "community",
+    label: "Community",
+    icon: Users,
+    href: "/app/community",
+  },
+  {
+    id: "downloads",
+    label: "Downloads",
+    icon: Download,
+    href: "/app/downloads",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    href: "/app/settings",
+  },
+];
+
+interface AppSidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
+  const pathname = usePathname();
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["workspace"]));
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  const isActive = (href: string) => {
+    if (!pathname) return false;
+    if (href === "/app/dashboard" && pathname === "/app/dashboard") return true;
+    if (href === "/app/workspace" && pathname === "/app/workspace") return true;
+    return pathname.startsWith(href) && href.length > 1 && href !== "/app";
+  };
+
+  const isSectionActive = (section: SidebarSection) => {
+    if (section.href && isActive(section.href)) return true;
+    if (section.children) {
+      return section.children.some((child) => isActive(child.href));
+    }
+    return false;
+  };
+
+  const toggleSection = (id: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const sidebarContent = (
+    <aside
+      className={`flex flex-col h-full bg-surface border-r border-border transition-all duration-300 ${
+        collapsed ? "w-16" : "w-60"
+      }`}
+    >
+      {/* Logo */}
+      <div className="flex items-center h-14 px-3 border-b border-border shrink-0">
+        <Link href="/" className="flex items-center gap-2.5 group min-w-0">
+          <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
+            <Shield className="w-6 h-6 text-accent" />
+            <div className="absolute inset-0 bg-accent/20 rounded-full blur-md group-hover:bg-accent/30 transition-colors" />
+          </div>
+          {!collapsed && (
+            <span className="font-semibold text-base tracking-tight truncate">
+              <span className="text-foreground">sec</span>
+              <span className="text-accent">‑scanner</span>
+            </span>
+          )}
+        </Link>
+      </div>
+
+      {/* Nav items */}
+      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
+        {sidebarSections.map((section) => {
+          const active = isSectionActive(section);
+          const expanded = expandedSections.has(section.id);
+          const hasChildren = section.children && section.children.length > 0;
+
+          return (
+            <div key={section.id}>
+              <div
+                className="relative"
+                onMouseEnter={() => setHoveredItem(section.id)}
+                onMouseLeave={() => setHoveredItem(null)}
+              >
+                {hasChildren ? (
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className={`flex items-center gap-3 w-full px-2.5 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      active
+                        ? "bg-accent-muted text-accent"
+                        : "text-muted-2 hover:text-foreground hover:bg-surface-2"
+                    }`}
+                  >
+                    <section.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-accent" : ""}`} />
+                    {!collapsed && (
+                      <>
+                        <span className="truncate flex-1 text-left font-medium">{section.label}</span>
+                        <motion.div
+                          animate={{ rotate: expanded ? 0 : -90 }}
+                          transition={{ duration: 0.15 }}
+                        >
+                          <ChevronDown className="w-3.5 h-3.5 shrink-0 text-muted" />
+                        </motion.div>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={section.href!}
+                    onClick={() => {
+                      if (mobileOpen) onMobileClose();
+                    }}
+                    className={`flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      active
+                        ? "bg-accent-muted text-accent"
+                        : "text-muted-2 hover:text-foreground hover:bg-surface-2"
+                    }`}
+                  >
+                    <section.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-accent" : ""}`} />
+                    {!collapsed && (
+                      <span className="truncate flex-1 font-medium">{section.label}</span>
+                    )}
+                    {!collapsed && section.badge && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-accent-muted text-accent border border-accent-border font-semibold">
+                        {section.badge}
+                      </span>
+                    )}
+                  </Link>
+                )}
+
+                {/* Tooltip when collapsed */}
+                {collapsed && hoveredItem === section.id && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 rounded-md bg-surface-2 border border-border text-xs text-foreground font-medium whitespace-nowrap z-50 shadow-lg">
+                    {section.label}
+                  </div>
+                )}
+              </div>
+
+              {/* Sub-items */}
+              {hasChildren && expanded && !collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="ml-4 mt-0.5 space-y-0.5 border-l border-border pl-2"
+                >
+                  {section.children!.map((child) => {
+                    const childActive = isActive(child.href);
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={() => {
+                          if (mobileOpen) onMobileClose();
+                        }}
+                        className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-[13px] transition-all duration-200 ${
+                          childActive
+                            ? "bg-accent-muted text-accent"
+                            : "text-muted-2 hover:text-foreground hover:bg-surface-2"
+                        }`}
+                      >
+                        <child.icon className={`w-3.5 h-3.5 shrink-0 ${childActive ? "text-accent" : ""}`} />
+                        <span className="font-medium">{child.label}</span>
+                      </Link>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      {/* Collapse toggle */}
+      <div className="p-2 border-t border-border shrink-0">
+        <button
+          onClick={onToggle}
+          className="flex items-center justify-center w-full py-2 rounded-lg text-muted hover:text-foreground hover:bg-surface-2 transition-colors"
+        >
+          {collapsed ? (
+            <ChevronRight className="w-4 h-4" />
+          ) : (
+            <ChevronLeft className="w-4 h-4" />
+          )}
+        </button>
+      </div>
+    </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div
+        className={`fixed left-0 top-0 bottom-0 z-40 transition-all duration-300 hidden md:block ${
+          collapsed ? "w-16" : "w-60"
+        }`}
+      >
+        {sidebarContent}
+      </div>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm md:hidden"
+              onClick={onMobileClose}
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-0 left-0 bottom-0 z-[70] w-72 md:hidden"
+            >
+              {sidebarContent}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

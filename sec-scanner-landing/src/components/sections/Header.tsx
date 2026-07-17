@@ -8,17 +8,14 @@ import {
   Menu,
   X,
   ExternalLink,
+  ArrowRight,
 } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/icons";
 
 const navLinks = [
   { href: "#platform", label: "Platform" },
-  { href: "#capabilities", label: "Capabilities" },
-  { href: "#architecture", label: "Architecture" },
+  { href: "#metrics", label: "Metrics" },
   { href: "#demo", label: "Demo" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#marketplace", label: "Marketplace" },
-  { href: "#roadmap", label: "Roadmap" },
   { href: "#community", label: "Community" },
 ];
 
@@ -66,6 +63,18 @@ export function Header() {
                 {link.label}
               </a>
             ))}
+            <Link
+              href="/app/dashboard"
+              className="px-3 py-2 text-sm text-muted-2 hover:text-foreground transition-colors rounded-lg hover:bg-surface-2"
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/app/docs"
+              className="px-3 py-2 text-sm text-muted-2 hover:text-foreground transition-colors rounded-lg hover:bg-surface-2"
+            >
+              Docs
+            </Link>
           </nav>
 
           {/* Actions */}
@@ -80,12 +89,13 @@ export function Header() {
               <span>GitHub</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-            <a
-              href="#demo"
-              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors"
+            <Link
+              href="/app/dashboard"
+              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors"
             >
-              Try Demo
-            </a>
+              Open Platform
+              <ArrowRight className="w-4 h-4" />
+            </Link>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="lg:hidden p-2 text-muted-2 hover:text-foreground"
@@ -117,6 +127,20 @@ export function Header() {
                   {link.label}
                 </a>
               ))}
+              <Link
+                href="/app/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className="px-4 py-2.5 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/app/docs"
+                onClick={() => setMobileOpen(false)}
+                className="px-4 py-2.5 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
+              >
+                Docs
+              </Link>
               <div className="flex gap-3 mt-3 pt-3 border-t border-border">
                 <a
                   href="https://github.com/Ksander215/sec-scanner-workspace"
@@ -126,13 +150,13 @@ export function Header() {
                 >
                   <GitHubIcon className="w-4 h-4" /> GitHub
                 </a>
-                <a
-                  href="#demo"
+                <Link
+                  href="/app/dashboard"
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center px-4 py-2.5 text-sm font-medium bg-accent text-background rounded-lg"
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-accent text-background rounded-lg"
                 >
-                  Try Demo
-                </a>
+                  Open Platform <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             </nav>
           </motion.div>

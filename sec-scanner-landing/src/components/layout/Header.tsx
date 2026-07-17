@@ -207,7 +207,7 @@ export function Header() {
                 </div>
               ))}
               <Link
-                href="/pricing"
+                href="/app/pricing"
                 className="px-3 py-2 text-sm text-muted-2 hover:text-foreground transition-colors rounded-lg hover:bg-surface-2"
               >
                 Pricing
@@ -246,7 +246,7 @@ export function Header() {
               </a>
 
               <Link
-                href="/demo"
+                href="/app/demo"
                 className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors"
               >
                 Try Demo

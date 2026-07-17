@@ -17,17 +17,17 @@ import {
 } from "lucide-react";
 
 const docSections = [
-  { icon: Rocket, label: "Getting Started", href: "/docs/getting-started" },
-  { icon: BookOpen, label: "Guides", href: "/docs/guides" },
-  { icon: Code2, label: "API Reference", href: "/docs/api" },
-  { icon: Terminal, label: "CLI", href: "/docs/cli" },
-  { icon: Blocks, label: "SDK", href: "/docs/sdk" },
-  { icon: Server, label: "Architecture", href: "/docs/architecture" },
-  { icon: Upload, label: "Deployment", href: "/docs/deployment" },
-  { icon: Shield, label: "Security", href: "/docs/security" },
-  { icon: ClipboardCheck, label: "Compliance", href: "/docs/compliance" },
-  { icon: Store, label: "Marketplace", href: "/docs/marketplace" },
-  { icon: Puzzle, label: "Plugin Development", href: "/docs/plugins" },
+  { icon: Rocket, label: "Getting Started", href: "/app/docs/getting-started" },
+  { icon: BookOpen, label: "Guides", href: "/app/docs/guides" },
+  { icon: Code2, label: "API Reference", href: "/app/docs/api" },
+  { icon: Terminal, label: "CLI", href: "/app/docs/cli" },
+  { icon: Blocks, label: "SDK", href: "/app/docs/sdk" },
+  { icon: Server, label: "Architecture", href: "/app/docs/architecture" },
+  { icon: Upload, label: "Deployment", href: "/app/docs/deployment" },
+  { icon: Shield, label: "Security", href: "/app/docs/security" },
+  { icon: ClipboardCheck, label: "Compliance", href: "/app/docs/compliance" },
+  { icon: Store, label: "Marketplace", href: "/app/docs/marketplace" },
+  { icon: Puzzle, label: "Plugin Development", href: "/app/docs/plugins" },
 ];
 
 export function DocsSidebar() {
