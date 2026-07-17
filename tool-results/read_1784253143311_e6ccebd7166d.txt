@@ -1,0 +1,679 @@
+     1→     1→"use client";
+     2→     2→
+     3→     3→import { useState, useEffect, useCallback } from "react";
+     4→     4→import { Container } from "@/components/ui/Container";
+     5→     5→import { Badge } from "@/components/ui/Badge";
+     6→     6→import { Button } from "@/components/ui/Button";
+     7→     7→import {
+     8→     8→  Play,
+     9→     9→  Upload,
+    10→    10→  Database,
+    11→    11→  ChevronDown,
+    12→    12→  ChevronRight,
+    13→    13→  CheckCircle2,
+    14→    14→  Loader2,
+    15→    15→  Circle,
+    16→    16→  AlertTriangle,
+    17→    17→  XCircle,
+    18→    18→  Info,
+    19→    19→  ExternalLink,
+    20→    20→} from "lucide-react";
+    21→    21→import { demoFindings, pipelineStages, type Finding, type PipelineStage, type Severity } from "@/lib/demo-data";
+    22→    22→
+    23→    23→// ─── Severity helpers ───────────────────────────────────────────────────────
+    24→    24→
+    25→    25→const severityIcon: Record<Severity, React.ReactNode> = {
+    26→    26→  critical: <XCircle className="w-4 h-4 text-red" />,
+    27→    27→  high: <AlertTriangle className="w-4 h-4 text-amber" />,
+    28→    28→  medium: <AlertTriangle className="w-4 h-4 text-amber" />,
+    29→    29→  low: <Info className="w-4 h-4 text-accent" />,
+    30→    30→  info: <Info className="w-4 h-4 text-cyan" />,
+    31→    31→};
+    32→    32→
+    33→    33→const severityColors: Record<Severity, string> = {
+    34→    34→  critical: "text-red",
+    35→    35→  high: "text-amber",
+    36→    36→  medium: "text-amber",
+    37→    37→  low: "text-accent",
+    38→    38→  info: "text-cyan",
+    39→    39→};
+    40→    40→
+    41→    41→// ─── Pipeline Stage Component ───────────────────────────────────────────────
+    42→    42→
+    43→    43→function PipelineStageCard({
+    44→    44→  stage,
+    45→    45→  index,
+    46→    46→  status,
+    47→    47→  progress,
+    48→    48→  outputs,
+    49→    49→  isLast,
+    50→    50→}: {
+    51→    51→  stage: PipelineStage;
+    52→    52→  index: number;
+    53→    53→  status: "pending" | "running" | "completed";
+    54→    54→  progress: number;
+    55→    55→  outputs: string[];
+    56→    56→  isLast: boolean;
+    57→    57→}) {
+    58→    58→  return (
+    59→    59→    <div className="flex flex-col items-center">
+    60→    60→      {/* Stage Card */}
+    61→    61→      <div
+    62→    62→        className={`w-full max-w-md p-4 rounded-xl border transition-all duration-500 ${
+    63→    63→          status === "running"
+    64→    64→            ? "bg-accent-muted border-accent/40 shadow-[0_0_30px_rgba(0,255,136,0.1)]"
+    65→    65→            : status === "completed"
+    66→    66→            ? "bg-surface border-accent/20"
+    67→    67→            : "bg-surface border-border opacity-50"
+    68→    68→        }`}
+    69→    69→      >
+    70→    70→        <div className="flex items-center gap-3 mb-2">
+    71→    71→          <div className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-mono font-bold bg-surface-2 border border-border">
+    72→    72→            {status === "completed" ? (
+    73→    73→              <CheckCircle2 className="w-4 h-4 text-accent" />
+    74→    74→            ) : status === "running" ? (
+    75→    75→              <Loader2 className="w-4 h-4 text-accent animate-spin" />
+    76→    76→            ) : (
+    77→    77→              <span className="text-muted">{index + 1}</span>
+    78→    78→            )}
+    79→    79→          </div>
+    80→    80→          <div className="flex-1">
+    81→    81→            <h3
+    82→    82→              className={`text-sm font-semibold ${
+    83→    83→                status === "running" ? "text-accent" : status === "completed" ? "text-foreground" : "text-muted"
+    84→    84→              }`}
+    85→    85→            >
+    86→    86→              {stage.label}
+    87→    87→            </h3>
+    88→    88→            <p className="text-xs text-muted-2">{stage.description}</p>
+    89→    89→          </div>
+    90→    90→        </div>
+    91→    91→
+    92→    92→        {/* Progress bar */}
+    93→    93→        {status === "running" && (
+    94→    94→          <div className="mt-2 ml-10">
+    95→    95→            <div className="h-1.5 rounded-full bg-surface-2 overflow-hidden">
+    96→    96→              <div
+    97→    97→                className="h-full bg-accent rounded-full transition-all duration-100 ease-linear"
+    98→    98→                style={{ width: `${progress}%` }}
+    99→    99→              />
+   100→   100→            </div>
+   101→   101→            <div className="mt-1 text-xs text-muted font-mono">{Math.round(progress)}%</div>
+   102→   102→          </div>
+   103→   103→        )}
+   104→   104→
+   105→   105→        {/* Outputs */}
+   106→   106→        {status === "completed" && outputs.length > 0 && (
+   107→   107→          <div className="mt-2 ml-10 space-y-0.5">
+   108→   108→            {outputs.map((out, i) => (
+   109→   109→              <div key={i} className="text-xs text-accent/80 font-mono flex items-center gap-1.5">
+   110→   110→                <span className="text-accent">→</span> {out}
+   111→   111→              </div>
+   112→   112→            ))}
+   113→   113→          </div>
+   114→   114→        )}
+   115→   115→      </div>
+   116→   116→
+   117→   117→      {/* Connector arrow */}
+   118→   118→      {!isLast && (
+   119→   119→        <div className="flex flex-col items-center my-1">
+   120→   120→          <div
+   121→   121→            className={`w-px h-6 transition-colors duration-300 ${
+   122→   122→              status === "completed" ? "bg-accent/40" : "bg-border"
+   123→   123→            }`}
+   124→   124→          />
+   125→   125→          <ChevronDown
+   126→   126→            className={`w-4 h-4 transition-colors duration-300 ${
+   127→   127→              status === "completed" ? "text-accent/40" : "text-border"
+   128→   128→            }`}
+   129→   129→          />
+   130→   130→        </div>
+   131→   131→      )}
+   132→   132→    </div>
+   133→   133→  );
+   134→   134→}
+   135→   135→
+   136→   136→// ─── Finding Row ────────────────────────────────────────────────────────────
+   137→   137→
+   138→   138→function FindingRow({ finding, expanded, onToggle }: { finding: Finding; expanded: boolean; onToggle: () => void }) {
+   139→   139→  return (
+   140→   140→    <div className="border-b border-border last:border-0">
+   141→   141→      <button
+   142→   142→        onClick={onToggle}
+   143→   143→        className="w-full px-4 py-3 flex items-center gap-3 hover:bg-surface-2 transition-colors text-left"
+   144→   144→      >
+   145→   145→        {severityIcon[finding.severity]}
+   146→   146→        <Badge variant={finding.severity}>{finding.severity}</Badge>
+   147→   147→        <span className="text-sm text-foreground flex-1 truncate">{finding.title}</span>
+   148→   148→        <span className="text-xs font-mono text-muted">{finding.id}</span>
+   149→   149→        <span className="text-xs font-mono text-muted-2">CVSS {finding.cvss}</span>
+   150→   150→        {expanded ? <ChevronDown className="w-4 h-4 text-muted" /> : <ChevronRight className="w-4 h-4 text-muted" />}
+   151→   151→      </button>
+   152→   152→      {expanded && (
+   153→   153→        <div className="px-4 pb-4 ml-9 space-y-3">
+   154→   154→          <div>
+   155→   155→            <span className="text-xs font-medium text-muted uppercase tracking-wider">Description</span>
+   156→   156→            <p className="text-sm text-foreground mt-1">{finding.description}</p>
+   157→   157→          </div>
+   158→   158→          <div>
+   159→   159→            <span className="text-xs font-medium text-muted uppercase tracking-wider">Recommendation</span>
+   160→   160→            <p className="text-sm text-accent mt-1">{finding.recommendation}</p>
+   161→   161→          </div>
+   162→   162→          <div className="flex flex-wrap gap-3">
+   163→   163→            {finding.cve && (
+   164→   164→              <span className="text-xs font-mono px-2 py-1 rounded bg-red/10 text-red border border-red/20">
+   165→   165→                {finding.cve}
+   166→   166→              </span>
+   167→   167→            )}
+   168→   168→            {finding.mitre && (
+   169→   169→              <span className="text-xs font-mono px-2 py-1 rounded bg-purple/10 text-purple border border-purple/20">
+   170→   170→                MITRE {finding.mitre}
+   171→   171→              </span>
+   172→   172→            )}
+   173→   173→            <span className="text-xs font-mono px-2 py-1 rounded bg-cyan/10 text-cyan border border-cyan/20">
+   174→   174→              {finding.asset}
+   175→   175→            </span>
+   176→   176→            <span className="text-xs font-mono px-2 py-1 rounded bg-surface-2 text-muted-2 border border-border">
+   177→   177→              {finding.service}
+   178→   178→            </span>
+   179→   179→          </div>
+   180→   180→        </div>
+   181→   181→      )}
+   182→   182→    </div>
+   183→   183→  );
+   184→   184→}
+   185→   185→
+   186→   186→// ─── Main Page Component ────────────────────────────────────────────────────
+   187→   187→
+   188→   188→type DataSource = "demo" | "upload" | "dataset";
+   189→   189→
+   190→   190→export default function DemoWorkspacePage() {
+   191→   191→  const [dataSource, setDataSource] = useState<DataSource>("demo");
+   192→   192→  const [pipelineRunning, setPipelineRunning] = useState(false);
+   193→   193→  const [pipelineComplete, setPipelineComplete] = useState(false);
+   194→   194→  const [currentStage, setCurrentStage] = useState(-1);
+   195→   195→  const [stageProgress, setStageProgress] = useState(0);
+   196→   196→  const [stageOutputs, setStageOutputs] = useState<Record<number, string[]>>({});
+   197→   197→  const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
+   198→   198→  const [activeTab, setActiveTab] = useState<"pipeline" | "findings" | "risk" | "paths">("pipeline");
+   199→   199→
+   200→   200→  const runPipeline = useCallback(() => {
+   201→   201→    setPipelineRunning(true);
+   202→   202→    setPipelineComplete(false);
+   203→   203→    setCurrentStage(0);
+   204→   204→    setStageProgress(0);
+   205→   205→    setStageOutputs({});
+   206→   206→
+   207→   207→    let stageIdx = 0;
+   208→   208→    let progress = 0;
+   209→   209→
+   210→   210→    const progressInterval = setInterval(() => {
+   211→   211→      progress += Math.random() * 8 + 2;
+   212→   212→      if (progress >= 100) {
+   213→   213→        progress = 100;
+   214→   214→        setStageProgress(100);
+   215→   215→        setStageOutputs((prev) => ({
+   216→   216→          ...prev,
+   217→   217→          [stageIdx]: pipelineStages[stageIdx].outputs,
+   218→   218→        }));
+   219→   219→
+   220→   220→        clearInterval(progressInterval);
+   221→   221→
+   222→   222→        setTimeout(() => {
+   223→   223→          stageIdx++;
+   224→   224→          if (stageIdx < pipelineStages.length) {
+   225→   225→            setCurrentStage(stageIdx);
+   226→   226→            setStageProgress(0);
+   227→   227→            progress = 0;
+   228→   228→            runNextStage();
+   229→   229→          } else {
+   230→   230→            setPipelineRunning(false);
+   231→   231→            setPipelineComplete(true);
+   232→   232→            setCurrentStage(pipelineStages.length);
+   233→   233→          }
+   234→   234→        }, 400);
+   235→   235→      } else {
+   236→   236→        setStageProgress(progress);
+   237→   237→      }
+   238→   238→    }, 80);
+   239→   239→
+   240→   240→    function runNextStage() {
+   241→   241→      const interval = setInterval(() => {
+   242→   242→        progress += Math.random() * 8 + 2;
+   243→   243→        if (progress >= 100) {
+   244→   244→          progress = 100;
+   245→   245→          setStageProgress(100);
+   246→   246→          setStageOutputs((prev) => ({
+   247→   247→            ...prev,
+   248→   248→            [stageIdx]: pipelineStages[stageIdx].outputs,
+   249→   249→          }));
+   250→   250→
+   251→   251→          clearInterval(interval);
+   252→   252→
+   253→   253→          setTimeout(() => {
+   254→   254→            stageIdx++;
+   255→   255→            if (stageIdx < pipelineStages.length) {
+   256→   256→              setCurrentStage(stageIdx);
+   257→   257→              setStageProgress(0);
+   258→   258→              progress = 0;
+   259→   259→              runNextStage();
+   260→   260→            } else {
+   261→   261→              setPipelineRunning(false);
+   262→   262→              setPipelineComplete(true);
+   263→   263→              setCurrentStage(pipelineStages.length);
+   264→   264→            }
+   265→   265→          }, 400);
+   266→   266→        } else {
+   267→   267→          setStageProgress(progress);
+   268→   268→        }
+   269→   269→      }, 80);
+   270→   270→    }
+   271→   271→  }, []);
+   272→   272→
+   273→   273→  const resetPipeline = () => {
+   274→   274→    setPipelineRunning(false);
+   275→   275→    setPipelineComplete(false);
+   276→   276→    setCurrentStage(-1);
+   277→   277→    setStageProgress(0);
+   278→   278→    setStageOutputs({});
+   279→   279→  };
+   280→   280→
+   281→   281→  const findingsBySeverity = {
+   282→   282→    critical: demoFindings.filter((f) => f.severity === "critical"),
+   283→   283→    high: demoFindings.filter((f) => f.severity === "high"),
+   284→   284→    medium: demoFindings.filter((f) => f.severity === "medium"),
+   285→   285→    low: demoFindings.filter((f) => f.severity === "low"),
+   286→   286→    info: demoFindings.filter((f) => f.severity === "info"),
+   287→   287→  };
+   288→   288→
+   289→   289→  return (
+   290→   290→    <div className="min-h-[calc(100vh-4rem)]">
+   291→   291→      {/* Header bar */}
+   292→   292→      <div className="border-b border-border bg-surface/80 backdrop-blur-sm">
+   293→   293→        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+   294→   294→          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+   295→   295→            <div>
+   296→   296→              <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+   297→   297→                <div className="w-2 h-2 rounded-full bg-accent animate-pulse-accent" />
+   298→   298→                Security Intelligence Demo
+   299→   299→              </h1>
+   300→   300→              <p className="text-sm text-muted-2 mt-1">Interactive workspace — explore the platform with demo data</p>
+   301→   301→            </div>
+   302→   302→            <div className="flex items-center gap-2">
+   303→   303→              {/* Data source selector */}
+   304→   304→              <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 border border-border">
+   305→   305→                {([
+   306→   306→                  { key: "demo", label: "Demo", icon: Play },
+   307→   307→                  { key: "upload", label: "Upload", icon: Upload },
+   308→   308→                  { key: "dataset", label: "Dataset", icon: Database },
+   309→   309→                ] as const).map(({ key, label, icon: Icon }) => (
+   310→   310→                  <button
+   311→   311→                    key={key}
+   312→   312→                    onClick={() => setDataSource(key)}
+   313→   313→                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+   314→   314→                      dataSource === key
+   315→   315→                        ? "bg-accent text-background"
+   316→   316→                        : "text-muted-2 hover:text-foreground hover:bg-surface-3"
+   317→   317→                    }`}
+   318→   318→                  >
+   319→   319→                    <Icon className="w-3.5 h-3.5" />
+   320→   320→                    {label}
+   321→   321→                  </button>
+   322→   322→                ))}
+   323→   323→              </div>
+   324→   324→
+   325→   325→              {/* Run / Reset */}
+   326→   326→              {!pipelineRunning && !pipelineComplete && (
+   327→   327→                <Button onClick={runPipeline} size="sm">
+   328→   328→                  <Play className="w-4 h-4" />
+   329→   329→                  Run Analysis
+   330→   330→                </Button>
+   331→   331→              )}
+   332→   332→              {pipelineRunning && (
+   333→   333→                <Button variant="secondary" size="sm" disabled>
+   334→   334→                  <Loader2 className="w-4 h-4 animate-spin" />
+   335→   335→                  Analyzing...
+   336→   336→                </Button>
+   337→   337→              )}
+   338→   338→              {pipelineComplete && (
+   339→   339→                <Button variant="outline" size="sm" onClick={resetPipeline}>
+   340→   340→                  Reset
+   341→   341→                </Button>
+   342→   342→              )}
+   343→   343→            </div>
+   344→   344→          </div>
+   345→   345→        </div>
+   346→   346→      </div>
+   347→   347→
+   348→   348→      <Container className="py-6">
+   349→   349→        {/* Upload hint */}
+   350→   350→        {dataSource === "upload" && (
+   351→   351→          <div className="mb-6 p-4 rounded-xl border-2 border-dashed border-border hover:border-accent/30 transition-colors text-center">
+   352→   352→            <Upload className="w-8 h-8 text-muted mx-auto mb-2" />
+   353→   353→            <p className="text-sm text-muted-2">Drop a JSON or SARIF file here, or click to browse</p>
+   354→   354→            <p className="text-xs text-muted mt-1">Supports: OWASP SARIF, Burp XML, Nmap XML, ZAP JSON</p>
+   355→   355→          </div>
+   356→   356→        )}
+   357→   357→
+   358→   358→        {dataSource === "dataset" && (
+   359→   359→          <div className="mb-6 p-4 rounded-xl bg-surface border border-border">
+   360→   360→            <div className="flex items-center gap-3 mb-2">
+   361→   361→              <Database className="w-5 h-5 text-cyan" />
+   362→   362→              <h3 className="text-sm font-semibold text-foreground">Built-in Demo Dataset</h3>
+   363→   363→              <Badge variant="info">12 Findings</Badge>
+   364→   364→            </div>
+   365→   365→            <p className="text-xs text-muted-2">
+   366→   366→              Pre-configured environment: 8 assets, 12 findings (4 critical, 4 high, 2 medium, 1 low, 1 info), 3 attack paths,
+   367→   367→              5 CVEs, and 6 recommendations.
+   368→   368→            </p>
+   369→   369→          </div>
+   370→   370→        )}
+   371→   371→
+   372→   372→        {/* Tab navigation */}
+   373→   373→        <div className="flex items-center gap-1 p-1 mb-6 rounded-lg bg-surface-2 border border-border w-fit">
+   374→   374→          {([
+   375→   375→            { key: "pipeline", label: "Pipeline" },
+   376→   376→            { key: "findings", label: "Findings" },
+   377→   377→            { key: "risk", label: "Risk" },
+   378→   378→            { key: "paths", label: "Attack Paths" },
+   379→   379→          ] as const).map(({ key, label }) => (
+   380→   380→            <button
+   381→   381→              key={key}
+   382→   382→              onClick={() => setActiveTab(key)}
+   383→   383→              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-all ${
+   384→   384→                activeTab === key ? "bg-accent text-background" : "text-muted-2 hover:text-foreground"
+   385→   385→              }`}
+   386→   386→            >
+   387→   387→              {label}
+   388→   388→            </button>
+   389→   389→          ))}
+   390→   390→        </div>
+   391→   391→
+   392→   392→        {/* ─── Pipeline Tab ─────────────────────────────────────────────── */}
+   393→   393→        {activeTab === "pipeline" && (
+   394→   394→          <div className="grid lg:grid-cols-[1fr_380px] gap-6">
+   395→   395→            {/* Pipeline stages */}
+   396→   396→            <div className="space-y-0">
+   397→   397→              {pipelineStages.map((stage, i) => (
+   398→   398→                <PipelineStageCard
+   399→   399→                  key={stage.id}
+   400→   400→                  stage={stage}
+   401→   401→                  index={i}
+   402→   402→                  status={
+   403→   403→                    currentStage > i ? "completed" : currentStage === i ? "running" : "pending"
+   404→   404→                  }
+   405→   405→                  progress={currentStage === i ? stageProgress : 0}
+   406→   406→                  outputs={stageOutputs[i] || []}
+   407→   407→                  isLast={i === pipelineStages.length - 1}
+   408→   408→                />
+   409→   409→              ))}
+   410→   410→            </div>
+   411→   411→
+   412→   412→            {/* Live terminal */}
+   413→   413→            <div className="rounded-xl bg-surface border border-border overflow-hidden h-fit sticky top-20">
+   414→   414→              <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+   415→   415→                <div className="w-2.5 h-2.5 rounded-full bg-red/60" />
+   416→   416→                <div className="w-2.5 h-2.5 rounded-full bg-amber/60" />
+   417→   417→                <div className="w-2.5 h-2.5 rounded-full bg-accent/60" />
+   418→   418→                <span className="ml-2 text-xs text-muted font-mono">Live Output</span>
+   419→   419→              </div>
+   420→   420→              <div className="p-4 font-mono text-xs leading-relaxed max-h-[500px] overflow-y-auto">
+   421→   421→                {!pipelineRunning && currentStage === -1 && (
+   422→   422→                  <div className="text-muted">
+   423→   423→                    $ sec-scanner analyze --project demo
+   424→   424→                    <br />
+   425→   425→                    <span className="text-muted-2">Ready. Press &quot;Run Analysis&quot; to start.</span>
+   426→   426→                    <span className="ml-1 w-2 h-3 bg-accent animate-blink inline-block" />
+   427→   427→                  </div>
+   428→   428→                )}
+   429→   429→                {currentStage >= 0 && (
+   430→   430→                  <>
+   431→   431→                    <div className="text-muted">$ sec-scanner analyze --project demo</div>
+   432→   432→                    {pipelineStages.slice(0, Math.min(currentStage + 1, pipelineStages.length)).map((stage, i) => (
+   433→   433→                      <div key={stage.id} className="mt-1">
+   434→   434→                        <div className={currentStage > i ? "text-accent" : "text-amber"}>
+   435→   435→                          [{currentStage > i ? "✓" : "..."}] {stage.label}...
+   436→   436→                        </div>
+   437→   437→                        {stageOutputs[i]?.map((out, j) => (
+   438→   438→                          <div key={j} className="text-accent/70 ml-2">
+   439→   439→                            → {out}
+   440→   440→                          </div>
+   441→   441→                        ))}
+   442→   442→                      </div>
+   443→   443→                    ))}
+   444→   444→                    {pipelineComplete && (
+   445→   445→                      <div className="mt-2 text-foreground">
+   446→   446→                        Analysis complete. 12 findings, 3 attack paths, risk score 78/100.
+   447→   447→                        <span className="ml-1 w-2 h-3 bg-accent animate-blink inline-block" />
+   448→   448→                      </div>
+   449→   449→                    )}
+   450→   450→                  </>
+   451→   451→                )}
+   452→   452→              </div>
+   453→   453→            </div>
+   454→   454→          </div>
+   455→   455→        )}
+   456→   456→
+   457→   457→        {/* ─── Findings Tab ─────────────────────────────────────────────── */}
+   458→   458→        {activeTab === "findings" && (
+   459→   459→          <div>
+   460→   460→            {/* Summary cards */}
+   461→   461→            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+   462→   462→              {(["critical", "high", "medium", "low", "info"] as Severity[]).map((sev) => (
+   463→   463→                <div key={sev} className="p-4 rounded-xl bg-surface border border-border text-center">
+   464→   464→                  <div className={`text-2xl font-bold ${severityColors[sev]}`}>
+   465→   465→                    {findingsBySeverity[sev].length}
+   466→   466→                  </div>
+   467→   467→                  <div className="text-xs text-muted uppercase tracking-wider mt-1">{sev}</div>
+   468→   468→                </div>
+   469→   469→              ))}
+   470→   470→            </div>
+   471→   471→
+   472→   472→            {/* Findings list */}
+   473→   473→            <div className="rounded-xl bg-surface border border-border overflow-hidden">
+   474→   474→              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+   475→   475→                <h3 className="text-sm font-semibold text-foreground">All Findings</h3>
+   476→   476→                <span className="text-xs text-muted-2">{demoFindings.length} total</span>
+   477→   477→              </div>
+   478→   478→              {demoFindings.map((f) => (
+   479→   479→                <FindingRow
+   480→   480→                  key={f.id}
+   481→   481→                  finding={f}
+   482→   482→                  expanded={expandedFinding === f.id}
+   483→   483→                  onToggle={() => setExpandedFinding(expandedFinding === f.id ? null : f.id)}
+   484→   484→                />
+   485→   485→              ))}
+   486→   486→            </div>
+   487→   487→          </div>
+   488→   488→        )}
+   489→   489→
+   490→   490→        {/* ─── Risk Tab ─────────────────────────────────────────────────── */}
+   491→   491→        {activeTab === "risk" && (
+   492→   492→          <div className="grid md:grid-cols-2 gap-6">
+   493→   493→            {/* Risk score */}
+   494→   494→            <div className="p-6 rounded-xl bg-surface border border-border">
+   495→   495→              <h3 className="text-sm font-semibold text-foreground mb-4">Overall Risk Score</h3>
+   496→   496→              <div className="flex items-center justify-center">
+   497→   497→                <div className="relative w-48 h-48">
+   498→   498→                  <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+   499→   499→                    <circle cx="50" cy="50" r="42" fill="none" stroke="#1e1e2e" strokeWidth="8" />
+   500→   500→                    <circle
+   501→   501→                      cx="50"
+   502→   502→                      cy="50"
+   503→   503→                      r="42"
+   504→   504→                      fill="none"
+   505→   505→                      stroke="#ffb800"
+   506→   506→                      strokeWidth="8"
+   507→   507→                      strokeDasharray={`${78 * 2.64} ${100 * 2.64}`}
+   508→   508→                      strokeLinecap="round"
+   509→   509→                    />
+   510→   510→                  </svg>
+   511→   511→                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+   512→   512→                    <span className="text-3xl font-bold text-amber">78</span>
+   513→   513→                    <span className="text-xs text-muted">/100 HIGH</span>
+   514→   514→                  </div>
+   515→   515→                </div>
+   516→   516→              </div>
+   517→   517→            </div>
+   518→   518→
+   519→   519→            {/* Severity distribution */}
+   520→   520→            <div className="p-6 rounded-xl bg-surface border border-border">
+   521→   521→              <h3 className="text-sm font-semibold text-foreground mb-4">Severity Distribution</h3>
+   522→   522→              <div className="space-y-3">
+   523→   523→                {(["critical", "high", "medium", "low", "info"] as Severity[]).map((sev) => {
+   524→   524→                  const count = findingsBySeverity[sev].length;
+   525→   525→                  const pct = (count / demoFindings.length) * 100;
+   526→   526→                  const colorMap: Record<Severity, string> = {
+   527→   527→                    critical: "bg-red",
+   528→   528→                    high: "bg-amber",
+   529→   529→                    medium: "bg-amber/70",
+   530→   530→                    low: "bg-accent",
+   531→   531→                    info: "bg-cyan",
+   532→   532→                  };
+   533→   533→                  return (
+   534→   534→                    <div key={sev}>
+   535→   535→                      <div className="flex items-center justify-between text-xs mb-1">
+   536→   536→                        <span className="text-muted-2 capitalize">{sev}</span>
+   537→   537→                        <span className="text-foreground font-mono">{count}</span>
+   538→   538→                      </div>
+   539→   539→                      <div className="h-2 rounded-full bg-surface-2">
+   540→   540→                        <div className={`h-full rounded-full ${colorMap[sev]}`} style={{ width: `${pct}%` }} />
+   541→   541→                      </div>
+   542→   542→                    </div>
+   543→   543→                  );
+   544→   544→                })}
+   545→   545→              </div>
+   546→   546→            </div>
+   547→   547→
+   548→   548→            {/* Top risk assets */}
+   549→   549→            <div className="p-6 rounded-xl bg-surface border border-border md:col-span-2">
+   550→   550→              <h3 className="text-sm font-semibold text-foreground mb-4">Top Risk Assets</h3>
+   551→   551→              <div className="space-y-3">
+   552→   552→                {[
+   553→   553→                  { name: "db-internal.sec-scanner.pro", score: 95, findings: 2, criticality: "critical" },
+   554→   554→                  { name: "vault.sec-scanner.pro", score: 90, findings: 1, criticality: "critical" },
+   555→   555→                  { name: "app.sec-scanner.pro", score: 92, findings: 4, criticality: "critical" },
+   556→   556→                  { name: "k8s.sec-scanner.pro", score: 88, findings: 1, criticality: "critical" },
+   557→   557→                  { name: "api.sec-scanner.pro", score: 78, findings: 3, criticality: "high" },
+   558→   558→                ]
+   559→   559→                  .sort((a, b) => b.score - a.score)
+   560→   560→                  .map((asset) => (
+   561→   561→                    <div key={asset.name} className="flex items-center gap-4 p-3 rounded-lg bg-surface-2 border border-border">
+   562→   562→                      <div className="flex-1">
+   563→   563→                        <div className="text-sm font-medium text-foreground">{asset.name}</div>
+   564→   564→                        <div className="text-xs text-muted-2">{asset.findings} findings</div>
+   565→   565→                      </div>
+   566→   566→                      <Badge variant={asset.criticality as Severity}>{asset.criticality}</Badge>
+   567→   567→                      <div className="w-24">
+   568→   568→                        <div className="flex items-center justify-between text-xs mb-1">
+   569→   569→                          <span className="text-muted">Risk</span>
+   570→   570→                          <span className={`font-mono ${asset.score >= 90 ? "text-red" : asset.score >= 70 ? "text-amber" : "text-accent"}`}>
+   571→   571→                            {asset.score}
+   572→   572→                          </span>
+   573→   573→                        </div>
+   574→   574→                        <div className="h-1.5 rounded-full bg-surface">
+   575→   575→                          <div
+   576→   576→                            className={`h-full rounded-full ${asset.score >= 90 ? "bg-red" : asset.score >= 70 ? "bg-amber" : "bg-accent"}`}
+   577→   577→                            style={{ width: `${asset.score}%` }}
+   578→   578→                          />
+   579→   579→                        </div>
+   580→   580→                      </div>
+   581→   581→                    </div>
+   582→   582→                  ))}
+   583→   583→              </div>
+   584→   584→            </div>
+   585→   585→          </div>
+   586→   586→        )}
+   587→   587→
+   588→   588→        {/* ─── Attack Paths Tab ─────────────────────────────────────────── */}
+   589→   589→        {activeTab === "paths" && (
+   590→   590→          <div className="space-y-6">
+   591→   591→            {[
+   592→   592→              {
+   593→   593→                name: "SQL Injection Data Breach",
+   594→   594→                path: ["Internet", "Firewall", "NGINX", "Application", "Database"],
+   595→   595→                risk: "critical",
+   596→   596→                probability: "80%",
+   597→   597→                cves: ["CVE-2024-23956"],
+   598→   598→                techniques: ["T1190", "T1555", "T1005"],
+   599→   599→              },
+   600→   600→              {
+   601→   601→                name: "Redis RCE to Cluster Takeover",
+   602→   602→                path: ["Internet", "Firewall", "NGINX", "Application", "Redis", "Kubernetes"],
+   603→   603→                risk: "critical",
+   604→   604→                probability: "60%",
+   605→   605→                cves: ["CVE-2024-29155", "CVE-2024-31449"],
+   606→   606→                techniques: ["T1190", "T1210", "T1059", "T1078", "T1609"],
+   607→   607→              },
+   608→   608→              {
+   609→   609→                name: "Vault Key Exposure to Secret Theft",
+   610→   610→                path: ["Internet", "Firewall", "NGINX", "Application", "Vault"],
+   611→   611→                risk: "high",
+   612→   612→                probability: "70%",
+   613→   613→                cves: ["CVE-2024-29155"],
+   614→   614→                techniques: ["T1190", "T1552", "T1078"],
+   615→   615→              },
+   616→   616→            ].map((ap, idx) => (
+   617→   617→              <div key={idx} className="p-5 rounded-xl bg-surface border border-border">
+   618→   618→                <div className="flex items-center justify-between mb-4">
+   619→   619→                  <div className="flex items-center gap-3">
+   620→   620→                    <Badge variant={ap.risk as Severity}>{ap.risk}</Badge>
+   621→   621→                    <h3 className="text-sm font-semibold text-foreground">{ap.name}</h3>
+   622→   622→                  </div>
+   623→   623→                  <span className="text-xs text-muted-2 font-mono">
+   624→   624→                    Success probability: <span className="text-amber">{ap.probability}</span>
+   625→   625→                  </span>
+   626→   626→                </div>
+   627→   627→                {/* Path visualization */}
+   628→   628→                <div className="flex items-center gap-1.5 flex-wrap mb-4">
+   629→   629→                  {ap.path.map((node, ni) => (
+   630→   630→                    <div key={ni} className="flex items-center gap-1.5">
+   631→   631→                      <div
+   632→   632→                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${
+   633→   633→                          ni === 0
+   634→   634→                            ? "bg-red/10 text-red border-red/20"
+   635→   635→                            : ni === ap.path.length - 1
+   636→   636→                            ? "bg-amber/10 text-amber border-amber/20"
+   637→   637→                            : "bg-surface-2 text-muted-2 border-border"
+   638→   638→                        }`}
+   639→   639→                      >
+   640→   640→                        {node}
+   641→   641→                      </div>
+   642→   642→                      {ni < ap.path.length - 1 && (
+   643→   643→                        <div className="w-6 h-px bg-border-light" />
+   644→   644→                      )}
+   645→   645→                    </div>
+   646→   646→                  ))}
+   647→   647→                </div>
+   648→   648→                {/* Tags */}
+   649→   649→                <div className="flex flex-wrap gap-2">
+   650→   650→                  {ap.cves.map((cve) => (
+   651→   651→                    <span key={cve} className="text-xs font-mono px-2 py-1 rounded bg-red/10 text-red border border-red/20">
+   652→   652→                      {cve}
+   653→   653→                    </span>
+   654→   654→                  ))}
+   655→   655→                  {ap.techniques.map((t) => (
+   656→   656→                    <span key={t} className="text-xs font-mono px-2 py-1 rounded bg-purple/10 text-purple border border-purple/20">
+   657→   657→                      MITRE {t}
+   658→   658→                    </span>
+   659→   659→                  ))}
+   660→   660→                </div>
+   661→   661→              </div>
+   662→   662→            ))}
+   663→   663→
+   664→   664→            <div className="text-center">
+   665→   665→              <a
+   666→   666→                href="/app/demo/attack-paths"
+   667→   667→                className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
+   668→   668→              >
+   669→   669→                View Interactive Attack Path Visualizer
+   670→   670→                <ExternalLink className="w-4 h-4" />
+   671→   671→              </a>
+   672→   672→            </div>
+   673→   673→          </div>
+   674→   674→        )}
+   675→   675→      </Container>
+   676→   676→    </div>
+   677→   677→  );
+   678→   678→}
+   679→   679→

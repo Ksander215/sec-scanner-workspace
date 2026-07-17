@@ -19,17 +19,17 @@ import {
 } from "lucide-react";
 
 const sections = [
-  { icon: Rocket, title: "Getting Started", description: "Install, configure, and run your first scan in under 5 minutes. Covers Docker, CLI, and SaaS setup.", href: "/docs/getting-started", badge: "Start here" },
-  { icon: BookOpen, title: "Guides", description: "Step-by-step tutorials for common workflows: scanning, correlation, reporting, and remediation.", href: "/docs/guides" },
-  { icon: Code2, title: "API Reference", description: "REST API documentation with request/response examples, authentication, and rate limits.", href: "/docs/api" },
-  { icon: Terminal, title: "CLI", description: "Command-line interface reference with usage patterns, flags, and output formats.", href: "/docs/cli" },
-  { icon: Blocks, title: "SDK", description: "TypeScript and Python SDKs for programmatic access. Integrate scanning into your CI/CD.", href: "/docs/sdk" },
-  { icon: Server, title: "Architecture", description: "Technical architecture: data flow, domain models, and system design decisions.", href: "/docs/architecture" },
-  { icon: Upload, title: "Deployment", description: "Docker Compose, Kubernetes Helm, and cloud deployment guides with best practices.", href: "/docs/deployment" },
-  { icon: Shield, title: "Security", description: "Security hardening, TLS configuration, and best practices for production deployments.", href: "/docs/security" },
-  { icon: ClipboardCheck, title: "Compliance", description: "Compliance frameworks (OWASP, CIS, PCI DSS), reports, and audit trail configuration.", href: "/docs/compliance" },
-  { icon: Store, title: "Marketplace", description: "Publishing and managing marketplace extensions. Versioning, reviews, and monetization.", href: "/docs/marketplace" },
-  { icon: Puzzle, title: "Plugin Development", description: "Build custom scanning plugins with the Plugin SDK. API hooks, testing, and distribution.", href: "/docs/plugins" },
+  { icon: Rocket, title: "Getting Started", description: "Install, configure, and run your first scan in under 5 minutes. Covers Docker, CLI, and SaaS setup.", href: "/app/docs/getting-started", badge: "Start here" },
+  { icon: BookOpen, title: "Guides", description: "Step-by-step tutorials for common workflows: scanning, correlation, reporting, and remediation.", href: "/app/docs/guides" },
+  { icon: Code2, title: "API Reference", description: "REST API documentation with request/response examples, authentication, and rate limits.", href: "/app/docs/api" },
+  { icon: Terminal, title: "CLI", description: "Command-line interface reference with usage patterns, flags, and output formats.", href: "/app/docs/cli" },
+  { icon: Blocks, title: "SDK", description: "TypeScript and Python SDKs for programmatic access. Integrate scanning into your CI/CD.", href: "/app/docs/sdk" },
+  { icon: Server, title: "Architecture", description: "Technical architecture: data flow, domain models, and system design decisions.", href: "/app/docs/architecture" },
+  { icon: Upload, title: "Deployment", description: "Docker Compose, Kubernetes Helm, and cloud deployment guides with best practices.", href: "/app/docs/deployment" },
+  { icon: Shield, title: "Security", description: "Security hardening, TLS configuration, and best practices for production deployments.", href: "/app/docs/security" },
+  { icon: ClipboardCheck, title: "Compliance", description: "Compliance frameworks (OWASP, CIS, PCI DSS), reports, and audit trail configuration.", href: "/app/docs/compliance" },
+  { icon: Store, title: "Marketplace", description: "Publishing and managing marketplace extensions. Versioning, reviews, and monetization.", href: "/app/docs/marketplace" },
+  { icon: Puzzle, title: "Plugin Development", description: "Build custom scanning plugins with the Plugin SDK. API hooks, testing, and distribution.", href: "/app/docs/plugins" },
 ];
 
 export default function DocsPage() {
