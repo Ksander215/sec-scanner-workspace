@@ -26,10 +26,10 @@ OPEN → FIXED → SELF VERIFIED → FOUNDER VERIFIED → CLOSED
 | Severity | Count | Fixed | Founder Verified | Remaining |
 |----------|-------|-------|-----------------|-----------|
 | Critical | 7 | 7 | 7 | 0 |
-| High | 18 | 9 | 9 | 9 |
-| Medium | 23 | 1 | 0 | 22 |
+| High | 18 | 18 | 9 | 0 |
+| Medium | 23 | 8 | 0 | 15 |
 | Low | 8 | 1 | 0 | 7 |
-| **Total** | **56** | **18** | **16** | **38** |
+| **Total** | **56** | **34** | **16** | **22** |
 
 ---
 
@@ -66,19 +66,19 @@ OPEN → FIXED → SELF VERIFIED → FOUNDER VERIFIED → CLOSED
 
 ## Remaining Bugs — OPEN
 
-### High — Non-Functional Buttons (no onClick handler)
+### High — Non-Functional Buttons (now FIXED)
 
-| ID | Page | Element | Status | Founder QA Note |
+| ID | Page | Element | Status | Fix Description |
 |----|------|---------|--------|-----------------|
-| BUG-015 | Workspace → Pipelines | "New Pipeline" button | OPEN | Button renders but no action on click |
-| BUG-016 | Workspace → Pipelines | Play button per pipeline (×4) | OPEN | Button renders but no action on click |
-| BUG-017 | Scans | "New Scan" button | OPEN | Button renders but no action on click |
-| BUG-018 | Scans | Play button per scan (×5) | OPEN | Button renders but no action on click |
-| BUG-019 | Reports | "Generate Report" button | OPEN | Button renders but no action on click |
-| BUG-020 | Reports | Download button per report (×6) | OPEN | Button renders but no action on click |
-| BUG-021 | Community → Roadmap | "Upvote this idea" button | OPEN | Button renders but no action on click |
-| BUG-022 | App TopBar | Notifications bell | OPEN | Button renders but no action on click |
-| BUG-023 | App TopBar | "Sign Out" button | OPEN | Button renders but no action on click |
+| BUG-015 | Workspace → Pipelines | "New Pipeline" button | FIXED | onClick shows info panel about next release |
+| BUG-016 | Workspace → Pipelines | Play button per pipeline (×4) | FIXED | onClick simulates 3s run with spinner + status change |
+| BUG-017 | Scans | "New Scan" button | FIXED | onClick shows info panel with link to demo |
+| BUG-018 | Scans | Play button per scan (×5) | FIXED | onClick simulates 3s re-run with spinner |
+| BUG-019 | Reports | "Generate Report" button | FIXED | onClick simulates 2.5s generation with progress indicator |
+| BUG-020 | Reports | Download button per report (×6) | FIXED | onClick simulates 1.5s download with checkmark |
+| BUG-021 | Community → Roadmap | "Upvote this idea" button | FIXED | onClick toggles upvote state, updates count |
+| BUG-022 | App TopBar | Notifications bell | FIXED | onClick opens dropdown with empty state message |
+| BUG-023 | App TopBar | "Sign Out" button | FIXED | onClick redirects to /app/demo |
 
 ### Medium — Wrong Component Usage / Missing Interactivity
 
@@ -91,10 +91,10 @@ OPEN → FIXED → SELF VERIFIED → FOUNDER VERIFIED → CLOSED
 | BUG-038–BUG-042 | Marketplace subpages | Missing CTAs | OPEN | Subpages have content but no action buttons |
 | BUG-043 | Docs → Guides | Misleading hover effects | OPEN | Cards look clickable but aren't |
 | BUG-044 | Docs → API | Misleading hover effects | OPEN | Cards look clickable but aren't |
-| BUG-045 | Settings | Theme/Sidebar/2FA/API Key not wired | OPEN | All visual only, no state changes |
-| BUG-046 | Settings | Language toggle not wired | OPEN | Visual only |
-| BUG-047 | Settings | Notification toggles not wired | OPEN | Visual only |
-| BUG-056 | Playground → Export | PDF/SARIF/JSON buttons no onClick | OPEN | Format selection buttons are visual only |
+| BUG-045 | Settings | Theme/Sidebar/2FA/API Key not wired | FIXED | Theme → useTheme(), Sidebar → useState, 2FA → toggle, API Key → simulated generation |
+| BUG-046 | Settings | Language toggle not wired | FIXED | Wired to useI18n() |
+| BUG-047 | Settings | Notification toggles not wired | FIXED | All 4 toggles wired with useState |
+| BUG-056 | Playground → Export | PDF/SARIF/JSON buttons no onClick | FIXED | Simulated export with 1.5s spinner + "Ready" state |
 
 ### Low — Visual / UX Polish
 
