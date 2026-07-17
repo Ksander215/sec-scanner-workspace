@@ -1,0 +1,74 @@
+[
+  {
+    "page": "homepage",
+    "url": "https://sec-scanner.pro/",
+    "performance": 77,
+    "accessibility": 96,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "dashboard",
+    "url": "https://sec-scanner.pro/app/dashboard",
+    "performance": 96,
+    "accessibility": 82,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "workspace",
+    "url": "https://sec-scanner.pro/app/workspace",
+    "performance": 98,
+    "accessibility": 84,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "projects",
+    "url": "https://sec-scanner.pro/app/projects",
+    "performance": 79,
+    "accessibility": 82,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "findings",
+    "url": "https://sec-scanner.pro/app/findings",
+    "performance": 100,
+    "accessibility": 85,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "demo",
+    "url": "https://sec-scanner.pro/app/demo",
+    "performance": 94,
+    "accessibility": 82,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "marketplace",
+    "url": "https://sec-scanner.pro/app/marketplace",
+    "performance": 85,
+    "accessibility": 83,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "docs",
+    "url": "https://sec-scanner.pro/app/docs",
+    "performance": 99,
+    "accessibility": 82,
+    "best_practices": 100,
+    "seo": 91
+  },
+  {
+    "page": "settings",
+    "url": "https://sec-scanner.pro/app/settings",
+    "performance": 98,
+    "accessibility": 84,
+    "best_practices": 100,
+    "seo": 91
+  }
+]
