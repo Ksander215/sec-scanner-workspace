@@ -350,103 +350,183 @@ export default function DashboardPage() {
         {/* ─── Overview ──────────────────────────────────────────────────── */}
         {activeView === "overview" && (
           <div className="space-y-6">
-            {/* KPI cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { label: "Security Score", value: "78", suffix: "/100", change: "-3", trend: "down", color: "text-amber", icon: Shield },
-                { label: "Critical Findings", value: String(criticalCount), suffix: "", change: "+1", trend: "up", color: "text-red", icon: AlertTriangle },
-                { label: "Assets at Risk", value: "5", suffix: "/8", change: "", trend: "neutral", color: "text-amber", icon: Server },
-                { label: "Attack Paths", value: "3", suffix: "", change: "", trend: "neutral", color: "text-red", icon: GitBranch },
-              ].map((kpi) => (
-                <div key={kpi.label} className="p-5 rounded-xl bg-surface border border-border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-muted uppercase tracking-wider">{kpi.label}</span>
-                    <kpi.icon className="w-4 h-4 text-muted" />
+            {/* Today's Overview — Large hero card + 3 smaller KPI cards */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Security Score — hero card (2 cols) */}
+              <div className="lg:col-span-2 p-6 rounded-xl bg-surface border border-border relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-accent/5 rounded-full blur-[80px]" />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield className="w-5 h-5 text-accent" />
+                    <span className="text-xs text-muted uppercase tracking-wider font-medium">Today's Overview</span>
+                    <span className="ml-auto text-xs text-muted-2 flex items-center gap-1"><Clock className="w-3 h-3" />Updated 2 min ago</span>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className={`text-3xl font-bold ${kpi.color}`}>{kpi.value}</span>
-                    <span className="text-sm text-muted-2">{kpi.suffix}</span>
-                  </div>
-                  {kpi.change && (
-                    <div className="flex items-center gap-1 mt-1 text-xs">
-                      {kpi.trend === "down" ? (
+                  <div className="flex items-end gap-6">
+                    <div>
+                      <div className="text-6xl font-bold text-amber">78</div>
+                      <div className="text-sm text-muted-2 mt-1">Security Score out of 100</div>
+                      <div className="flex items-center gap-1 mt-2 text-xs">
                         <TrendingDown className="w-3 h-3 text-red" />
-                      ) : (
-                        <TrendingUp className="w-3 h-3 text-red" />
-                      )}
-                      <span className="text-muted-2">{kpi.change} this week</span>
+                        <span className="text-red">-3</span>
+                        <span className="text-muted-2">from last week</span>
+                      </div>
                     </div>
-                  )}
+                    <div className="flex-1">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
+                          <div className="text-2xl font-bold text-red">{criticalCount}</div>
+                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">Critical</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
+                          <div className="text-2xl font-bold text-red">3</div>
+                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">Attack Paths</div>
+                        </div>
+                        <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
+                          <div className="text-2xl font-bold text-amber">{highCount}</div>
+                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">High</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Active Incidents — tall card */}
+              <div className="p-6 rounded-xl bg-surface border border-red/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-red/5 rounded-full blur-[60px]" />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-4">
+                    <AlertTriangle className="w-5 h-5 text-red" />
+                    <span className="text-xs text-muted uppercase tracking-wider font-medium">Active Incidents</span>
+                  </div>
+                  <div className="text-4xl font-bold text-red">{openCount}</div>
+                  <div className="text-sm text-muted-2 mt-1">Open findings require attention</div>
+                  <div className="mt-4 space-y-2">
+                    {demoFindings.filter(f => f.severity === "critical").slice(0, 3).map((f) => (
+                      <div key={f.id} className="flex items-center gap-2 p-2 rounded-lg bg-red-muted/50 border border-red/10">
+                        <div className="w-2 h-2 rounded-full bg-red animate-pulse shrink-0" />
+                        <span className="text-xs text-foreground truncate flex-1">{f.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <a href="/app/findings" className="mt-3 text-xs text-red hover:text-red/80 flex items-center gap-1">
+                    View all incidents <ArrowRight className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
             </div>
 
-            {/* Charts row */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Risk trend */}
-              <div className="p-5 rounded-xl bg-surface border border-border">
-                <h3 className="text-sm font-semibold text-foreground mb-4">Risk Score Trend</h3>
+            {/* AI Recommendations — full-width banner */}
+            <div className="p-5 rounded-xl bg-gradient-to-r from-purple-muted/30 to-cyan-muted/30 border border-purple/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-muted flex items-center justify-center shrink-0">
+                  <Brain className="w-5 h-5 text-purple" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-foreground">AI Recommendation</h3>
+                  <p className="text-xs text-muted-2 mt-0.5">Enable Redis authentication on production-cluster — this will eliminate 1 critical attack path in under 5 minutes.</p>
+                </div>
+                <a href="/app/dashboard" onClick={() => setActiveView("ai")} className="shrink-0 px-4 py-2 text-xs font-medium bg-purple text-foreground rounded-lg hover:bg-purple/80 transition-colors">
+                  Ask AI Copilot
+                </a>
+              </div>
+            </div>
+
+            {/* Risk Trend (2 cols) + Latest Scans (1 col) */}
+            <div className="grid md:grid-cols-3 gap-4">
+              {/* Risk trend — wide card */}
+              <div className="md:col-span-2 p-5 rounded-xl bg-surface border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-foreground">Risk Score Trend (30 days)</h3>
+                  <span className="text-xs text-muted-2">Updated daily</span>
+                </div>
                 <TrendChart />
               </div>
 
-              {/* Severity distribution */}
+              {/* Latest Scans — compact card */}
+              <div className="p-5 rounded-xl bg-surface border border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-4">Latest Scans</h3>
+                <div className="space-y-2.5">
+                  {[
+                    { name: "Production API", status: "completed", time: "2 min ago", findings: 12 },
+                    { name: "Staging Web", status: "running", time: "In progress", findings: 5 },
+                    { name: "K8s Cluster", status: "completed", time: "1 hour ago", findings: 8 },
+                    { name: "VPN Gateway", status: "completed", time: "3 hours ago", findings: 3 },
+                  ].map((scan, i) => (
+                    <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-2 border border-border">
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${scan.status === "running" ? "bg-cyan animate-pulse" : "bg-accent"}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-foreground truncate">{scan.name}</div>
+                        <div className="text-[10px] text-muted">{scan.time}</div>
+                      </div>
+                      <span className="text-[10px] text-muted-2 font-mono">{scan.findings} found</span>
+                    </div>
+                  ))}
+                </div>
+                <a href="/app/scans" className="mt-3 text-xs text-accent hover:text-accent-hover flex items-center gap-1">
+                  All scans <ArrowRight className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+
+            {/* Severity Distribution + Compliance + Recent Reports — 3 cols */}
+            <div className="grid md:grid-cols-3 gap-4">
               <div className="p-5 rounded-xl bg-surface border border-border">
                 <h3 className="text-sm font-semibold text-foreground mb-4">Severity Distribution</h3>
                 <SeverityBarChart />
               </div>
-            </div>
 
-            {/* Recommendations + Compliance */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Top recommendations */}
-              <div className="p-5 rounded-xl bg-surface border border-border">
-                <h3 className="text-sm font-semibold text-foreground mb-4">Top Recommendations</h3>
-                <div className="space-y-3">
-                  {[
-                    { title: "Enable Redis authentication", impact: "Eliminates 1 attack path", effort: "5 min", severity: "critical" as Severity },
-                    { title: "Parameterize SQL queries", impact: "Blocks primary data breach path", effort: "2 hours", severity: "critical" as Severity },
-                    { title: "Enable K8s RBAC", impact: "Prevents cluster takeover", effort: "1 hour", severity: "critical" as Severity },
-                    { title: "Migrate Vault to auto-unseal", impact: "Removes key exposure", effort: "4 hours", severity: "high" as Severity },
-                  ].map((rec, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-surface-2 border border-border">
-                      <Badge variant={rec.severity}>{rec.severity}</Badge>
-                      <div className="flex-1">
-                        <div className="text-sm text-foreground font-medium">{rec.title}</div>
-                        <div className="text-xs text-muted-2 mt-0.5">{rec.impact}</div>
-                      </div>
-                      <span className="text-xs text-muted shrink-0">{rec.effort}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Compliance */}
               <div className="p-5 rounded-xl bg-surface border border-border">
                 <h3 className="text-sm font-semibold text-foreground mb-4">Compliance Status</h3>
                 <ComplianceHeatmap />
               </div>
-            </div>
 
-            {/* Recent findings */}
-            <div className="p-5 rounded-xl bg-surface border border-border">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-foreground">Recent Critical & High Findings</h3>
-                <a href="/app/demo" className="text-xs text-accent hover:text-accent-hover flex items-center gap-1">
-                  View all <ArrowRight className="w-3 h-3" />
-                </a>
-              </div>
-              <div className="space-y-2">
-                {demoFindings
-                  .filter((f) => f.severity === "critical" || f.severity === "high")
-                  .slice(0, 6)
-                  .map((f) => (
-                    <div key={f.id} className="flex items-center gap-3 p-3 rounded-lg bg-surface-2 border border-border">
-                      <Badge variant={f.severity}>{f.severity}</Badge>
-                      <span className="text-sm text-foreground flex-1 truncate">{f.title}</span>
-                      <span className="text-xs text-muted font-mono">{f.asset}</span>
-                      <span className="text-xs text-muted-2">CVSS {f.cvss}</span>
+              <div className="p-5 rounded-xl bg-surface border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-foreground">Recent Reports</h3>
+                  <a href="/app/reports" className="text-xs text-accent hover:text-accent-hover">View all</a>
+                </div>
+                <div className="space-y-2.5">
+                  {[
+                    { name: "Executive Summary Q3", type: "PDF", date: "Jul 15" },
+                    { name: "Vulnerability Assessment", type: "PDF", date: "Jul 14" },
+                    { name: "PCI-DSS Compliance", type: "PDF", date: "Jul 12" },
+                    { name: "Attack Path Analysis", type: "HTML", date: "Jul 10" },
+                  ].map((report, i) => (
+                    <div key={i} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-surface-2 border border-border">
+                      <BarChart3 className="w-3.5 h-3.5 text-purple shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-foreground truncate">{report.name}</div>
+                        <div className="text-[10px] text-muted">{report.type} · {report.date}</div>
+                      </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Top Recommendations — full width */}
+            <div className="p-5 rounded-xl bg-surface border border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-semibold text-foreground">Top Recommendations</h3>
+                <span className="text-xs text-muted-2">Sorted by impact</span>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[
+                  { title: "Enable Redis authentication", impact: "Eliminates 1 attack path", effort: "5 min", severity: "critical" as Severity },
+                  { title: "Parameterize SQL queries", impact: "Blocks primary data breach path", effort: "2 hours", severity: "critical" as Severity },
+                  { title: "Enable K8s RBAC", impact: "Prevents cluster takeover", effort: "1 hour", severity: "critical" as Severity },
+                  { title: "Migrate Vault to auto-unseal", impact: "Removes key exposure", effort: "4 hours", severity: "high" as Severity },
+                ].map((rec, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-surface-2 border border-border">
+                    <Badge variant={rec.severity}>{rec.severity}</Badge>
+                    <div className="flex-1">
+                      <div className="text-sm text-foreground font-medium">{rec.title}</div>
+                      <div className="text-xs text-muted-2 mt-0.5">{rec.impact}</div>
+                    </div>
+                    <span className="text-xs text-muted shrink-0">{rec.effort}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

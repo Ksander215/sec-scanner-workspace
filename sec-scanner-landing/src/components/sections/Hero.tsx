@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Shield, ArrowRight, BookOpen, Play } from "lucide-react";
+import { Shield, ArrowRight, Play } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/icons";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
@@ -36,18 +36,19 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.1 }}
           className="mt-8 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1]"
         >
-          <span className="text-foreground">Open Source</span>
-          <br />
           <span className="text-gradient-accent">Security Intelligence</span>
+          <br />
+          <span className="text-foreground">Platform</span>
         </motion.h1>
 
+        {/* Tagline */}
         <motion.p
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-6 text-lg sm:text-xl text-muted-2 max-w-2xl mx-auto leading-relaxed"
         >
-          для компаний любого масштаба
+          Open-source platform for vulnerability intelligence, attack path analysis and AI-powered security operations.
         </motion.p>
 
         {/* Keywords */}
@@ -55,7 +56,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="mt-10 flex flex-wrap items-center justify-center gap-3 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight"
+          className="mt-8 flex flex-wrap items-center justify-center gap-3 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight"
         >
           <span className="text-accent">Analyze.</span>
           <span className="text-cyan">Correlate.</span>
@@ -63,7 +64,7 @@ export function Hero() {
           <span className="text-purple">Remediate.</span>
         </motion.div>
 
-        {/* CTA buttons */}
+        {/* CTA — One primary, one secondary */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -75,7 +76,7 @@ export function Hero() {
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
           >
             <Play className="w-4 h-4" />
-            Try Demo
+            Open Interactive Demo
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </a>
           <a
@@ -85,14 +86,7 @@ export function Hero() {
             className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-medium border border-border-light text-foreground rounded-xl hover:bg-surface-2 hover:border-muted transition-all"
           >
             <GitHubIcon className="w-4 h-4" />
-            GitHub
-          </a>
-          <a
-            href="/app/docs"
-            className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-medium text-muted-2 hover:text-foreground transition-colors"
-          >
-            <BookOpen className="w-4 h-4" />
-            Documentation
+            View on GitHub
           </a>
         </motion.div>
 
@@ -143,7 +137,7 @@ export function Hero() {
         >
           {[
             { value: 50, suffix: "K+", label: "Scans performed" },
-            { value: 150, suffix: "+", label: "Detection rules" },
+            { value: 370, suffix: "+", label: "Detection rules" },
             { value: 99.2, suffix: "%", label: "Accuracy rate" },
             { value: 3, suffix: "s", label: "Avg scan time", prefix: "<" },
           ].map((stat) => (

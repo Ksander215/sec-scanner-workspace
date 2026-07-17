@@ -233,6 +233,22 @@ export default function AttackPathsPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 rounded-lg bg-surface-2 border border-border">
+                  <span className="text-[10px] text-muted uppercase tracking-wider">Time to Compromise</span>
+                  <div className="text-sm font-mono text-red font-bold mt-0.5">{selectedEdge.timeToCompromise}</div>
+                </div>
+                <div className="p-2 rounded-lg bg-surface-2 border border-border">
+                  <span className="text-[10px] text-muted uppercase tracking-wider">CVSS Score</span>
+                  <div className="text-sm font-mono text-amber font-bold mt-0.5">{selectedEdge.cvss}</div>
+                </div>
+              </div>
+
+              <div>
+                <span className="text-xs text-muted uppercase tracking-wider">Business Risk</span>
+                <div className="mt-1 text-sm text-foreground font-medium">{selectedEdge.businessRisk}</div>
+              </div>
+
               <div>
                 <span className="text-xs text-muted uppercase tracking-wider">Exploitable</span>
                 <div className="mt-1">
