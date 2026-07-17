@@ -121,3 +121,23 @@ Stage Summary:
 - Build compiles and serves correctly
 - Landing page verified: title, branding, Russian text all present
 - Dashboard verified: SIP branding, new terminology present
+
+---
+Task ID: INT-024-DEPLOY
+Agent: Main Agent
+Task: Deploy INT-024 changes to production server and push to GitHub
+
+Work Log:
+- Built Next.js project: 59 pages, 0 errors, 0 warnings
+- Packaged build output as tar.gz (1.4MB)
+- Deployed to server 85.239.38.163 via paramiko SFTP (tar upload + SSH extract)
+- Set permissions: chmod 755, chown www-data:www-data
+- Verified: 663 files deployed, nginx active, all pages HTTP 200
+- Pushed 34 commits to GitHub (force-with-lease)
+- Verified site: title="SIP — Security Intelligence Platform", Russian terminology present
+- Verified key pages: /app/dashboard (200), /app/marketplace (200), /app/settings (200), /app/pricing (200)
+
+Stage Summary:
+- Production site https://sec-scanner.pro/ now shows INT-024 changes
+- GitHub repository up to date with local commits
+- SIP branding, Russian localization, new terminology all live
