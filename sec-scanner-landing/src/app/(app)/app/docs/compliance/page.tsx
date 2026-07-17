@@ -22,7 +22,7 @@ export default function CompliancePage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "Compliance" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Compliance" }]}
         title="Compliance"
         description="Automated compliance monitoring and reporting for major security frameworks."
       />

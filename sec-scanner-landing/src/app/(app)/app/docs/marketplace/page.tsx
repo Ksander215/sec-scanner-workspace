@@ -22,7 +22,7 @@ export default function DocsMarketplacePage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "Marketplace" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Marketplace" }]}
         title="Marketplace Documentation"
         description="Everything you need to publish, manage, and consume marketplace extensions."
       />

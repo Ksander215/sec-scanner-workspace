@@ -24,7 +24,7 @@ export default function IntegrationsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "Integrations" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "Integrations" }]}
         title="Integrations"
         description="Seamlessly integrate with your existing CI/CD pipelines, cloud providers, and DevOps tools."
       />

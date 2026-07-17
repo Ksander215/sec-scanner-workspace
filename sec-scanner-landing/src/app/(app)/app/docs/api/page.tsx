@@ -33,7 +33,7 @@ export default function ApiPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "API Reference" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "API Reference" }]}
         title="API Reference"
         description="REST and GraphQL API documentation with request/response examples and authentication guides."
       />

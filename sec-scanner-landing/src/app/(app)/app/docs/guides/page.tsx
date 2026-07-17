@@ -24,7 +24,7 @@ export default function GuidesPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "Guides" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Guides" }]}
         title="Guides"
         description="Step-by-step tutorials for common tasks, integrations, and advanced configurations."
       />

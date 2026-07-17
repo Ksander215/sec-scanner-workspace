@@ -24,7 +24,7 @@ export default function DashboardsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "Dashboards" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "Dashboards" }]}
         title="Dashboards"
         description="Pre-configured visualization dashboards for executive reporting, operations, and compliance monitoring."
       />

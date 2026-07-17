@@ -24,7 +24,7 @@ export default function RulesPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "Rules" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "Rules" }]}
         title="Rules"
         description="Custom detection rules, compliance checks, and security policies for targeted vulnerability scanning."
       />

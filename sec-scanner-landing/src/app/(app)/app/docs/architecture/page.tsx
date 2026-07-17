@@ -23,7 +23,7 @@ export default function DocsArchitecturePage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "Architecture" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Architecture" }]}
         title="Architecture Documentation"
         description="Deep dive into the technical architecture, design decisions, and component interactions."
       />

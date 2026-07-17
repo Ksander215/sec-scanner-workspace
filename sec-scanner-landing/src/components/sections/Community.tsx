@@ -9,17 +9,19 @@ const communityLinks = [
     icon: MessageCircle,
     name: "Discord",
     desc: "Обсуждения, помощь, анонсы",
-    href: "#",
+    href: "https://github.com/Ksander215/sec-scanner-workspace/discussions",
     color: "#5865F2",
     members: "2.4K",
+    comingSoon: true,
   },
   {
     icon: Send,
     name: "Telegram",
     desc: "Русскоязычное сообщество",
-    href: "#",
+    href: "https://github.com/Ksander215/sec-scanner-workspace/discussions",
     color: "#26A5E4",
     members: "1.8K",
+    comingSoon: true,
   },
   {
     icon: GitHubIcon,
@@ -90,7 +92,7 @@ export function Community() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.05 }}
-              className="group flex items-start gap-4 p-5 rounded-2xl border border-border bg-background hover:bg-surface-2 hover:border-border-light transition-all duration-300"
+              className={`group flex items-start gap-4 p-5 rounded-2xl border border-border bg-background hover:bg-surface-2 hover:border-border-light transition-all duration-300 ${link.comingSoon ? "opacity-60" : ""}`}
             >
               <div
                 className="flex items-center justify-center w-11 h-11 rounded-xl shrink-0"
@@ -101,7 +103,7 @@ export function Community() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-semibold text-foreground group-hover:text-accent transition-colors">
-                    {link.name}
+                    {link.name}{link.comingSoon ? " (Soon)" : ""}
                   </h3>
                   {link.members !== "—" && (
                     <span className="text-xs font-mono text-muted">{link.members}</span>
@@ -137,7 +139,9 @@ export function Community() {
               <GitHubIcon className="w-4 h-4" /> Star on GitHub
             </a>
             <a
-              href="#"
+              href="https://github.com/Ksander215/sec-scanner-workspace/blob/main/CONTRIBUTING.md"
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium border border-border-light text-foreground rounded-xl hover:bg-surface-2 transition-colors"
             >
               <Heart className="w-4 h-4" /> Contribute

@@ -24,7 +24,7 @@ export default function TemplatesPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Marketplace", href: "/marketplace" }, { label: "Templates" }]}
+        breadcrumbs={[{ label: "Marketplace", href: "/app/marketplace" }, { label: "Templates" }]}
         title="Templates"
         description="Pre-built scan templates for common technology stacks. Get started quickly with proven configurations."
       />

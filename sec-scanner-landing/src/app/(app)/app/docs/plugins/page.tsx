@@ -12,7 +12,7 @@ export default function DocsPluginsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "Plugin Development" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Plugin Development" }]}
         title="Plugin Development"
         description="Build custom scanning engines, data processors, and workflow automations with the Plugin SDK."
       />

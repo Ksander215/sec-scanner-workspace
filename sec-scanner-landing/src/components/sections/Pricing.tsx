@@ -20,8 +20,9 @@ const plans = [
       "CLI доступ",
       "REST API",
     ],
-    cta: "Начать бесплатно",
+    cta: "\u041d\u0430\u0447\u0430\u0442\u044c \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e",
     ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
+    ctaHref: "/app/demo",
     highlight: false,
   },
   {
@@ -43,6 +44,7 @@ const plans = [
     ],
     cta: "Start Free Trial",
     ctaStyle: "bg-accent text-background hover:bg-accent-hover glow-accent",
+    ctaHref: "/app/demo",
     highlight: true,
   },
   {
@@ -65,6 +67,7 @@ const plans = [
     ],
     cta: "Start Free Trial",
     ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
+    ctaHref: "/app/demo",
     highlight: false,
   },
   {
@@ -87,6 +90,7 @@ const plans = [
     ],
     cta: "Contact Sales",
     ctaStyle: "border border-amber/30 bg-amber-muted text-amber hover:bg-amber/20",
+    ctaHref: "mailto:hello@sec-scanner.pro",
     highlight: false,
   },
 ];
@@ -151,11 +155,12 @@ export function Pricing() {
                   </li>
                 ))}
               </ul>
-              <button
-                className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${plan.ctaStyle}`}
+              <a
+                href={plan.ctaHref}
+                className={`block w-full py-2.5 rounded-xl text-sm font-medium text-center transition-colors ${plan.ctaStyle}`}
               >
                 {plan.cta}
-              </button>
+              </a>
             </motion.div>
           ))}
         </div>

@@ -12,7 +12,7 @@ export default function DocsSecurityPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "Security" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Security" }]}
         title="Security"
         description="Security best practices, platform hardening, and vulnerability disclosure policy."
       />

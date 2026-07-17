@@ -17,36 +17,42 @@ const platformFeatures = [
     title: "Multi-Engine Scanning",
     oneLiner: "Unified interface for Nmap, Nuclei, Semgrep, Trivy and 20+ scanners.",
     color: "accent",
+    href: "/app/scans",
   },
   {
     icon: Brain,
     title: "AI-Powered Analysis",
     oneLiner: "ML-driven correlation, prioritization, and automated remediation planning.",
     color: "cyan",
+    href: "/app/dashboard",
   },
   {
     icon: Network,
     title: "Knowledge Graph",
     oneLiner: "Visualize asset-vulnerability-attack path relationships in an interactive graph.",
     color: "purple",
+    href: "/app/demo/knowledge-graph",
   },
   {
     icon: Workflow,
     title: "Automated Workflows",
     oneLiner: "Configurable pipelines from scan to JIRA ticket with CI/CD integration.",
     color: "amber",
+    href: "/app/workspace/pipelines",
   },
   {
     icon: BarChart3,
     title: "Risk Quantification",
     oneLiner: "Quantified risk scores, SLA metrics, and executive dashboards.",
     color: "accent",
+    href: "/app/risks",
   },
   {
     icon: Lock,
     title: "Enterprise Security",
     oneLiner: "SSO, RBAC, audit log, encryption. SOC 2, ISO 27001, GDPR compliant.",
     color: "red",
+    href: "/app/docs/security",
   },
 ];
 
@@ -84,13 +90,14 @@ export function Platform() {
           {platformFeatures.map((feature, i) => {
             const colors = colorMap[feature.color];
             return (
-              <motion.div
+              <motion.a
                 key={feature.title}
+                href={feature.href}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className={`group relative p-8 rounded-2xl border ${colors.border} bg-surface hover:bg-surface-2 transition-all duration-300 ${colors.glow}`}
+                className={`group relative block p-8 rounded-2xl border ${colors.border} bg-surface hover:bg-surface-2 transition-all duration-300 ${colors.glow}`}
               >
                 <div
                   className={`inline-flex items-center justify-center w-14 h-14 rounded-xl ${colors.bg} ${colors.text}`}
@@ -106,7 +113,7 @@ export function Platform() {
                 <div className={`mt-5 inline-flex items-center gap-1.5 text-sm font-medium ${colors.text} opacity-0 group-hover:opacity-100 transition-opacity`}>
                   Learn more <ArrowRight className="w-3.5 h-3.5" />
                 </div>
-              </motion.div>
+              </motion.a>
             );
           })}
         </div>

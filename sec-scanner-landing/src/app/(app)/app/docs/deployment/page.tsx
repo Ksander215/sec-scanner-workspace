@@ -36,7 +36,7 @@ export default function DeploymentPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/docs" }, { label: "Deployment" }]}
+        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Deployment" }]}
         title="Deployment"
         description="Deploy the Security Intelligence Platform on-premises, in the cloud, or in hybrid configurations."
       />

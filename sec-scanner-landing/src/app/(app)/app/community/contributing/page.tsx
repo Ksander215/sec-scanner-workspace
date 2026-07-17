@@ -12,7 +12,7 @@ export default function ContributingPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Community", href: "/community" }, { label: "Contributing" }]}
+        breadcrumbs={[{ label: "Community", href: "/app/community" }, { label: "Contributing" }]}
         title="Contributing"
         description="We welcome contributions from everyone — code, documentation, testing, design, and ideas."
       />
