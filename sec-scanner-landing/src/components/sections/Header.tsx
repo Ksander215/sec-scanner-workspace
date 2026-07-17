@@ -13,10 +13,10 @@ import {
 import { GitHubIcon } from "@/components/ui/icons";
 
 const navLinks = [
-  { href: "#platform", label: "Platform" },
-  { href: "#metrics", label: "Metrics" },
-  { href: "#demo", label: "Demo" },
-  { href: "#community", label: "Community" },
+  { href: "#platform", label: "Платформа" },
+  { href: "#metrics", label: "Метрики" },
+  { href: "#demo", label: "Демо" },
+  { href: "#community", label: "Сообщество" },
 ];
 
 export function Header() {
@@ -39,17 +39,18 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Logo — SIP */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="relative w-8 h-8 flex items-center justify-center">
               <Shield className="w-7 h-7 text-accent" />
               <div className="absolute inset-0 bg-accent/20 rounded-full blur-md group-hover:bg-accent/30 transition-colors" />
             </div>
-            <span className="font-semibold text-lg tracking-tight">
-              <span className="text-foreground">sec</span>
-              <span className="text-accent">‑scanner</span>
-              <span className="text-muted text-sm">.pro</span>
-            </span>
+            <div>
+              <span className="font-bold text-lg tracking-tight">
+                <span className="text-accent">SIP</span>
+              </span>
+              <span className="hidden sm:inline text-muted text-xs ml-2">Security Intelligence Platform</span>
+            </div>
           </Link>
 
           {/* Desktop nav */}
@@ -67,13 +68,13 @@ export function Header() {
               href="/app/dashboard"
               className="px-3 py-2 text-sm text-muted-2 hover:text-foreground transition-colors rounded-lg hover:bg-surface-2"
             >
-              Dashboard
+              Дашборд
             </Link>
             <Link
               href="/app/docs"
               className="px-3 py-2 text-sm text-muted-2 hover:text-foreground transition-colors rounded-lg hover:bg-surface-2"
             >
-              Docs
+              Документация
             </Link>
           </nav>
 
@@ -93,7 +94,7 @@ export function Header() {
               href="/app/dashboard"
               className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors"
             >
-              Open Platform
+              Открыть платформу
               <ArrowRight className="w-4 h-4" />
             </Link>
             <button
@@ -132,14 +133,14 @@ export function Header() {
                 onClick={() => setMobileOpen(false)}
                 className="px-4 py-2.5 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
               >
-                Dashboard
+                Дашборд
               </Link>
               <Link
                 href="/app/docs"
                 onClick={() => setMobileOpen(false)}
                 className="px-4 py-2.5 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
               >
-                Docs
+                Документация
               </Link>
               <div className="flex gap-3 mt-3 pt-3 border-t border-border">
                 <a
@@ -155,7 +156,7 @@ export function Header() {
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-accent text-background rounded-lg"
                 >
-                  Open Platform <ArrowRight className="w-4 h-4" />
+                  Открыть платформу <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </nav>

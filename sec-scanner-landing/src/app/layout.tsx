@@ -14,30 +14,34 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Security Intelligence Platform — Open Source Security Intelligence",
+  title: "SIP — Security Intelligence Platform",
   description:
-    "Open Source Security Intelligence Platform для компаний любого масштаба. Analyze. Correlate. Prioritize. Remediate.",
+    "Операционная система для безопасности бизнеса. Находите уязвимости, анализируйте инфраструктуру, получайте рекомендации AI.",
   keywords: [
+    "SIP",
     "security",
     "intelligence",
+    "platform",
     "vulnerability",
     "scanner",
     "OWASP",
     "API security",
     "open source",
+    "информационная безопасность",
+    "уязвимости",
   ],
   openGraph: {
-    title: "Security Intelligence Platform",
-    description: "Open Source Security Intelligence для компаний любого масштаба",
+    title: "SIP — Security Intelligence Platform",
+    description: "Операционная система для безопасности бизнеса",
     url: "https://sec-scanner.pro",
-    siteName: "Security Intelligence Platform",
+    siteName: "SIP — Security Intelligence Platform",
     type: "website",
     locale: "ru_RU",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Security Intelligence Platform",
-    description: "Open Source Security Intelligence для компаний любого масштаба",
+    title: "SIP — Security Intelligence Platform",
+    description: "Операционная система для безопасности бизнеса",
   },
   robots: {
     index: true,

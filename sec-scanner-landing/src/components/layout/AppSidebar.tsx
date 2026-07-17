@@ -31,115 +31,116 @@ import {
   Cpu,
   BarChart3,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n-context";
 
 interface SidebarSection {
   id: string;
-  label: string;
+  labelKey: string;
   icon: React.ElementType;
   href?: string;
   badge?: string;
-  children?: { label: string; href: string; icon: React.ElementType }[];
+  children?: { labelKey: string; href: string; icon: React.ElementType }[];
 }
 
 const sidebarSections: SidebarSection[] = [
   {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/app/dashboard",
-    badge: "3",
-  },
-  {
-    id: "workspace",
-    label: "Workspace",
-    icon: Briefcase,
-    href: "/app/workspace",
-    children: [
-      { label: "Overview", href: "/app/workspace", icon: Activity },
-      { label: "Assets", href: "/app/workspace/assets", icon: Database },
-      { label: "Pipelines", href: "/app/workspace/pipelines", icon: GitBranch },
-      { label: "History", href: "/app/workspace/history", icon: Clock },
-      { label: "Jobs", href: "/app/workspace/jobs", icon: Cpu },
-      { label: "Monitoring", href: "/app/workspace/monitoring", icon: BarChart3 },
-    ],
-  },
-  {
-    id: "projects",
-    label: "Projects",
-    icon: FolderKanban,
-    href: "/app/projects",
+    id: "marketplace",
+    labelKey: "sidebar.catalog",
+    icon: Store,
+    href: "/app/marketplace",
   },
   {
     id: "scans",
-    label: "Scans",
+    labelKey: "sidebar.scan",
     icon: Radar,
     href: "/app/scans",
     badge: "5",
   },
   {
+    id: "projects",
+    labelKey: "sidebar.projects",
+    icon: FolderKanban,
+    href: "/app/projects",
+  },
+  {
+    id: "dashboard",
+    labelKey: "sidebar.dashboard",
+    icon: LayoutDashboard,
+    href: "/app/dashboard",
+    badge: "3",
+  },
+  {
+    id: "reports",
+    labelKey: "sidebar.reports",
+    icon: FileBarChart,
+    href: "/app/reports",
+  },
+  {
+    id: "knowledge-graph",
+    labelKey: "sidebar.infrastructure",
+    icon: Network,
+    href: "/app/demo/knowledge-graph",
+  },
+  {
+    id: "attack-paths",
+    labelKey: "sidebar.attackPaths",
+    icon: Route,
+    href: "/app/demo/attack-paths",
+  },
+  {
     id: "findings",
-    label: "Findings",
+    labelKey: "sidebar.findings",
     icon: Bug,
     href: "/app/findings",
     badge: "12",
   },
   {
     id: "risks",
-    label: "Risks",
+    labelKey: "sidebar.risks",
     icon: ShieldAlert,
     href: "/app/risks",
   },
   {
-    id: "knowledge-graph",
-    label: "Knowledge Graph",
-    icon: Network,
-    href: "/app/demo/knowledge-graph",
-  },
-  {
-    id: "attack-paths",
-    label: "Attack Paths",
-    icon: Route,
-    href: "/app/demo/attack-paths",
-  },
-  {
-    id: "reports",
-    label: "Reports",
-    icon: FileBarChart,
-    href: "/app/reports",
-  },
-  {
-    id: "marketplace",
-    label: "Marketplace",
-    icon: Store,
-    href: "/app/marketplace",
+    id: "workspace",
+    labelKey: "sidebar.workspace",
+    icon: Briefcase,
+    href: "/app/workspace",
+    children: [
+      { labelKey: "sidebar.workspace.overview", href: "/app/workspace", icon: Activity },
+      { labelKey: "sidebar.workspace.assets", href: "/app/workspace/assets", icon: Database },
+      { labelKey: "sidebar.workspace.pipelines", href: "/app/workspace/pipelines", icon: GitBranch },
+      { labelKey: "sidebar.workspace.history", href: "/app/workspace/history", icon: Clock },
+      { labelKey: "sidebar.workspace.jobs", href: "/app/workspace/jobs", icon: Cpu },
+      { labelKey: "sidebar.workspace.monitoring", href: "/app/workspace/monitoring", icon: BarChart3 },
+    ],
   },
   {
     id: "playground",
-    label: "Playground",
+    labelKey: "sidebar.playground",
     icon: FlaskConical,
     href: "/app/playground",
   },
   {
     id: "documentation",
-    label: "Documentation",
+    labelKey: "sidebar.documentation",
     icon: BookOpen,
     href: "/app/docs",
   },
   {
     id: "community",
-    label: "Community",
+    labelKey: "sidebar.community",
     icon: Users,
     href: "/app/community",
   },
   {
     id: "downloads",
-    label: "Downloads",
+    labelKey: "downloads.title",
     icon: Download,
     href: "/app/downloads",
   },
   {
     id: "settings",
-    label: "Settings",
+    labelKey: "sidebar.settings",
     icon: Settings,
     href: "/app/settings",
   },
@@ -154,6 +155,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["workspace"]));
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
@@ -187,7 +189,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         collapsed ? "w-16" : "w-60"
       }`}
     >
-      {/* Logo */}
+      {/* Logo — SIP */}
       <div className="flex items-center h-14 px-3 border-b border-border shrink-0">
         <Link href="/" className="flex items-center gap-2.5 group min-w-0">
           <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
@@ -196,9 +198,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           </div>
           {!collapsed && (
             <div>
-              <span className="font-semibold text-base tracking-tight truncate block leading-tight">
-                <span className="text-foreground">sec</span>
-                <span className="text-accent">‑scanner</span>
+              <span className="font-bold text-base tracking-tight truncate block leading-tight text-accent">
+                SIP
               </span>
               <span className="powered-by block leading-tight mt-0.5">Security Intelligence Platform</span>
             </div>
@@ -212,6 +213,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           const active = isSectionActive(section);
           const expanded = expandedSections.has(section.id);
           const hasChildren = section.children && section.children.length > 0;
+          const label = t(section.labelKey);
 
           return (
             <div key={section.id}>
@@ -232,7 +234,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     <section.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-accent" : ""}`} />
                     {!collapsed && (
                       <>
-                        <span className="truncate flex-1 text-left font-medium">{section.label}</span>
+                        <span className="truncate flex-1 text-left font-medium">{label}</span>
                         <motion.div
                           animate={{ rotate: expanded ? 0 : -90 }}
                           transition={{ duration: 0.15 }}
@@ -256,7 +258,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   >
                     <section.icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-accent" : ""}`} />
                     {!collapsed && (
-                      <span className="truncate flex-1 font-medium">{section.label}</span>
+                      <span className="truncate flex-1 font-medium">{label}</span>
                     )}
                     {!collapsed && section.badge && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-accent-muted text-accent border border-accent-border font-semibold">
@@ -269,7 +271,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                 {/* Tooltip when collapsed */}
                 {collapsed && hoveredItem === section.id && (
                   <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 rounded-md bg-surface-2 border border-border text-xs text-foreground font-medium whitespace-nowrap z-50 shadow-lg">
-                    {section.label}
+                    {label}
                   </div>
                 )}
               </div>
@@ -299,7 +301,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                         }`}
                       >
                         <child.icon className={`w-3.5 h-3.5 shrink-0 ${childActive ? "text-accent" : ""}`} />
-                        <span className="font-medium">{child.label}</span>
+                        <span className="font-medium">{t(child.labelKey)}</span>
                       </Link>
                     );
                   })}

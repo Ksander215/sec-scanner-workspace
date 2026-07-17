@@ -26,25 +26,25 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Light theme overrides */
+/* ─── Light theme — ChatGPT-style ───────────────────────────────────────── */
 :root.light {
-  --color-background: #f8f9fa;
-  --color-foreground: #1a1a2e;
-  --color-surface: #ffffff;
-  --color-surface-2: #f0f1f3;
-  --color-surface-3: #e8e9eb;
-  --color-border: #d1d5db;
-  --color-border-light: #e5e7eb;
-  --color-muted: #6b7280;
-  --color-muted-2: #9ca3af;
-  --color-accent: #00b864;
-  --color-accent-hover: #00a058;
-  --color-accent-muted: rgba(0, 184, 100, 0.1);
-  --color-accent-border: rgba(0, 184, 100, 0.25);
-  --color-cyan: #0099cc;
-  --color-cyan-muted: rgba(0, 153, 204, 0.1);
-  --color-amber: #d49900;
-  --color-amber-muted: rgba(212, 153, 0, 0.1);
+  --color-background: #ffffff;
+  --color-foreground: #0d0d0d;
+  --color-surface: #f7f7f8;
+  --color-surface-2: #ececec;
+  --color-surface-3: #e3e3e3;
+  --color-border: #e5e5e5;
+  --color-border-light: #d9d9d9;
+  --color-muted: #6b6b6b;
+  --color-muted-2: #999999;
+  --color-accent: #10a37f;
+  --color-accent-hover: #0d8c6d;
+  --color-accent-muted: rgba(16, 163, 127, 0.1);
+  --color-accent-border: rgba(16, 163, 127, 0.25);
+  --color-cyan: #0077b6;
+  --color-cyan-muted: rgba(0, 119, 182, 0.1);
+  --color-amber: #b8860b;
+  --color-amber-muted: rgba(184, 134, 11, 0.1);
   --color-red: #dc2626;
   --color-red-muted: rgba(220, 38, 38, 0.1);
   --color-purple: #7c3aed;
@@ -62,8 +62,8 @@
 }
 
 :root.light ::selection {
-  background-color: rgba(0, 184, 100, 0.2);
-  color: #1a1a2e;
+  background-color: rgba(16, 163, 127, 0.2);
+  color: #0d0d0d;
 }
 
 body {
@@ -75,6 +75,10 @@ body {
 /* Glow effects */
 .glow-accent {
   box-shadow: 0 0 20px rgba(0, 255, 136, 0.15), 0 0 60px rgba(0, 255, 136, 0.05);
+}
+
+:root.light .glow-accent {
+  box-shadow: 0 0 20px rgba(16, 163, 127, 0.12), 0 0 60px rgba(16, 163, 127, 0.04);
 }
 
 .glow-cyan {
@@ -104,7 +108,7 @@ body {
 }
 
 :root.light .text-gradient-accent {
-  background: linear-gradient(135deg, #00b864 0%, #0099cc 100%);
+  background: linear-gradient(135deg, #10a37f 0%, #0077b6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -129,6 +133,10 @@ body {
   border: 1px solid;
   border-image: linear-gradient(var(--angle), #00ff88, #00d4ff, #a855f7, #00ff88) 1;
   animation: rotate-border 4s linear infinite;
+}
+
+:root.light .animated-border {
+  border-image: linear-gradient(var(--angle), #10a37f, #0077b6, #7c3aed, #10a37f) 1;
 }
 
 @keyframes rotate-border {
@@ -172,6 +180,10 @@ body {
   opacity: 0.3;
 }
 
+:root.light .scan-line::after {
+  background: linear-gradient(90deg, transparent, #10a37f, transparent);
+}
+
 /* Terminal blink */
 @keyframes blink {
   0%, 50% { opacity: 1; }
@@ -197,16 +209,14 @@ html {
   animation: pageIn 0.25s ease-out;
 }
 
-/* ─── Enterprise Polish (Sprint 8) ───────────────────────────────────────── */
+/* ─── Enterprise Polish ────────────────────────────────────────────────── */
 
-/* Consistent focus rings */
 *:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* Consistent card shadows */
 .card-shadow {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
 }
@@ -223,12 +233,10 @@ html {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
-/* Consistent button transitions */
 .btn-enterprise {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Smooth hover lift effect */
 .hover-lift {
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -242,7 +250,6 @@ html {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-/* Brand mark styling */
 .brand-mark {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 700;
@@ -253,7 +260,6 @@ html {
   color: var(--color-accent);
 }
 
-/* Powered by text */
 .powered-by {
   font-size: 10px;
   letter-spacing: 0.1em;
@@ -261,7 +267,6 @@ html {
   color: var(--color-muted);
 }
 
-/* Consistent status dot animation */
 @keyframes status-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(1.2); }

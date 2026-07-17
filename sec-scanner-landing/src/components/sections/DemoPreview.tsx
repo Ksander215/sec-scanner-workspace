@@ -14,51 +14,47 @@ import {
   AlertTriangle,
   Shield,
   Server,
-  CheckCircle,
-  Clock,
   TrendingUp,
 } from "lucide-react";
 
 const demoFeatures = [
   {
     icon: GitBranch,
-    title: "Live Pipeline",
-    description: "8-stage analysis pipeline: Normalize → Correlate → Graph → Score → Paths → Remediate → Explain → Report.",
-    href: "/app/demo",
+    title: "Конвейер анализа",
+    description: "8 этапов: нормализация, корреляция, карта, оценка, пути атак, рекомендации, объяснимость, отчёт.",
+    href: "/app/playground",
     color: "text-accent",
     bg: "bg-accent-muted",
   },
   {
     icon: Network,
-    title: "Knowledge Graph",
-    description: "34 interconnected nodes — hosts, services, findings, CVEs, credentials — with real-time search and filtering.",
+    title: "Карта инфраструктуры",
+    description: "34 связанных узла — хосты, сервисы, уязвимости, CVE — с поиском и фильтрацией в реальном времени.",
     href: "/app/demo/knowledge-graph",
     color: "text-cyan",
     bg: "bg-cyan-muted",
   },
   {
     icon: ShieldAlert,
-    title: "Attack Paths",
-    description: "3 traced attack paths with exploitation probability, MITRE ATT&CK mapping, and CVE references.",
+    title: "Пути атаки",
+    description: "3 прослеженных пути атак с вероятностью эксплуатации, маппингом MITRE ATT&CK и CVE.",
     href: "/app/demo/attack-paths",
     color: "text-red",
     bg: "bg-red-muted",
   },
   {
     icon: Brain,
-    title: "AI Copilot",
-    description: "Ask questions in natural language — get reasoning, connections, and remediation plans.",
+    title: "AI-помощник",
+    description: "Задавайте вопросы на естественном языке — получите рассуждения, связи и план устранения.",
     href: "/app/dashboard",
     color: "text-purple",
     bg: "bg-purple-muted",
   },
 ];
 
-// Simulated interface screenshot as a styled component
 function InterfaceScreenshot() {
   return (
     <div className="rounded-xl border border-border bg-surface overflow-hidden shadow-2xl shadow-accent/5">
-      {/* Top bar */}
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border bg-surface-2">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red/60" />
@@ -69,18 +65,16 @@ function InterfaceScreenshot() {
           <div className="px-3 py-1 rounded-md bg-surface text-xs text-muted-2 font-mono">sec-scanner.pro/app/dashboard</div>
         </div>
       </div>
-      {/* Interface content */}
       <div className="flex">
-        {/* Sidebar */}
         <div className="w-44 border-r border-border p-3 space-y-1 hidden sm:block">
           {[
-            { icon: BarChart3, label: "Dashboard", active: true },
-            { icon: Server, label: "Workspace" },
-            { icon: Bug, label: "Findings" },
-            { icon: ShieldAlert, label: "Risks" },
-            { icon: Network, label: "Knowledge Graph" },
-            { icon: Activity, label: "Attack Paths" },
-            { icon: Shield, label: "Reports" },
+            { icon: BarChart3, label: "Дашборд", active: true },
+            { icon: Server, label: "Рабочее пространство" },
+            { icon: Bug, label: "Проблемы" },
+            { icon: ShieldAlert, label: "Риски" },
+            { icon: Network, label: "Карта инфр." },
+            { icon: Activity, label: "Пути атаки" },
+            { icon: Shield, label: "Отчёты" },
           ].map((item) => (
             <div key={item.label} className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs ${item.active ? "bg-accent-muted text-accent font-medium" : "text-muted-2"}`}>
               <item.icon className="w-3.5 h-3.5" />
@@ -88,15 +82,13 @@ function InterfaceScreenshot() {
             </div>
           ))}
         </div>
-        {/* Main content */}
         <div className="flex-1 p-4">
-          {/* Stats row */}
           <div className="grid grid-cols-4 gap-2 mb-4">
             {[
-              { label: "Risk Score", value: "73", color: "text-amber" },
-              { label: "Critical", value: "4", color: "text-red" },
-              { label: "Findings", value: "12", color: "text-cyan" },
-              { label: "Compliance", value: "82%", color: "text-accent" },
+              { label: "Риск", value: "73", color: "text-amber" },
+              { label: "Критич.", value: "4", color: "text-red" },
+              { label: "Проблемы", value: "12", color: "text-cyan" },
+              { label: "Соотв.", value: "82%", color: "text-accent" },
             ].map((stat) => (
               <div key={stat.label} className="p-2.5 rounded-lg bg-surface-2 border border-border text-center">
                 <div className={`text-lg font-bold ${stat.color}`}>{stat.value}</div>
@@ -104,24 +96,22 @@ function InterfaceScreenshot() {
               </div>
             ))}
           </div>
-          {/* Findings list */}
           <div className="space-y-1.5">
             {[
-              { severity: "critical", title: "SQL Injection in /api/v1/users", status: "open" },
-              { severity: "high", title: "Exposed Redis on 0.0.0.0:6379", status: "acknowledged" },
-              { severity: "critical", title: "Vault seal key in env variable", status: "open" },
+              { severity: "critical", title: "SQL Injection в /api/v1/users", status: "open" },
+              { severity: "high", title: "Открытый Redis на 0.0.0.0:6379", status: "acknowledged" },
+              { severity: "critical", title: "Ключ Vault в переменной окружения", status: "open" },
             ].map((finding) => (
               <div key={finding.title} className="flex items-center gap-2 p-2 rounded-md bg-surface-2 border border-border text-xs">
                 <AlertTriangle className={`w-3 h-3 shrink-0 ${finding.severity === "critical" ? "text-red" : "text-amber"}`} />
                 <span className="flex-1 text-foreground truncate">{finding.title}</span>
-                <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase ${finding.severity === "critical" ? "bg-red-muted text-red" : "bg-amber-muted text-amber"}`}>{finding.severity}</span>
+                <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase ${finding.severity === "critical" ? "bg-red-muted text-red" : "bg-amber-muted text-amber"}`}>{finding.severity === "critical" ? "критич." : "высокий"}</span>
               </div>
             ))}
           </div>
-          {/* Trend chart placeholder */}
           <div className="mt-3 p-3 rounded-lg bg-surface-2 border border-border">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] text-muted font-medium">Risk Trend (30 days)</span>
+              <span className="text-[10px] text-muted font-medium">Тренд риска (30 дней)</span>
               <TrendingUp className="w-3 h-3 text-accent" />
             </div>
             <div className="flex items-end gap-1 h-8">
@@ -142,7 +132,6 @@ export function DemoPreview() {
       <div className="absolute inset-0 bg-surface/30" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -151,16 +140,15 @@ export function DemoPreview() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            See the Platform <span className="text-gradient-accent">in Action</span>
+            Попробуйте <span className="text-gradient-accent">SIP</span>
           </h2>
           <p className="mt-4 text-lg text-muted-2 max-w-2xl mx-auto">
-            No signup required. Open the demo and explore the full platform in under 3 minutes.
+            Интерактивная демонстрация — изучите платформу без регистрации менее чем за 3 минуты.
           </p>
         </motion.div>
 
-        {/* Interface screenshot — clickable */}
         <motion.a
-          href="/app/demo"
+          href="/app/dashboard"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -169,19 +157,17 @@ export function DemoPreview() {
         >
           <div className="relative rounded-xl overflow-hidden">
             <InterfaceScreenshot />
-            {/* Hover overlay */}
             <div className="absolute inset-0 bg-accent/0 group-hover:bg-accent/5 transition-colors duration-300 flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-95 group-hover:scale-100">
                 <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm shadow-lg shadow-accent/20">
                   <Play className="w-4 h-4" />
-                  Open Interactive Demo
+                  Открыть демо
                 </div>
               </div>
             </div>
           </div>
         </motion.a>
 
-        {/* Demo feature cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
           {demoFeatures.map((feature, i) => (
             <motion.a
@@ -205,7 +191,6 @@ export function DemoPreview() {
           ))}
         </div>
 
-        {/* CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -214,11 +199,11 @@ export function DemoPreview() {
           className="mt-12 text-center"
         >
           <a
-            href="/app/demo"
+            href="/app/dashboard"
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
           >
             <Play className="w-4 h-4" />
-            Open Interactive Demo
+            Открыть платформу
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </a>
         </motion.div>

@@ -1,94 +1,93 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Zap, Building2, Rocket } from "lucide-react";
+import { Check, X, Zap, Rocket, Building2, Crown } from "lucide-react";
 
 const plans = [
   {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Для индивидуальных исследователей и обучения",
+    name: "Сообщество",
+    price: "Бесплатно",
+    period: "",
+    description: "Для индивидуальных исследователей",
     icon: Zap,
     color: "accent",
     features: [
-      "1 проект",
-      "5 сканов в день",
-      "50 находок на скан",
-      "Базовый risk score",
-      "Community поддержка",
-      "CLI доступ",
-      "REST API",
+      { label: "Сканирования", value: "100" },
+      { label: "Пользователи", value: "1" },
+      { label: "Проекты", value: "3" },
+      { label: "API доступ", value: false },
+      { label: "Поддержка", value: "Поддержка сообщества" },
+      { label: "SSO/SAML", value: false },
+      { label: "RBAC", value: false },
+      { label: "Аудит логов", value: false },
     ],
-    cta: "\u041d\u0430\u0447\u0430\u0442\u044c \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e",
+    cta: "Начать бесплатно",
     ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
     ctaHref: "/app/demo",
     highlight: false,
   },
   {
-    name: "Starter",
-    price: "$29",
-    period: "/month",
-    description: "Для малых команд и стартапов",
+    name: "Команда",
+    price: "4 900 ₽",
+    period: "/мес",
+    description: "Для security-команд и DevOps",
     icon: Rocket,
     color: "cyan",
     features: [
-      "5 проектов",
-      "50 сканов в день",
-      "500 находок на скан",
-      "Knowledge Graph",
-      "Attack Path Analysis",
-      "Slack интеграция",
-      "Email уведомления",
-      "PDF отчёты",
+      { label: "Сканирования", value: "Безлимит" },
+      { label: "Пользователи", value: "до 10" },
+      { label: "Проекты", value: "20" },
+      { label: "API доступ", value: true },
+      { label: "Поддержка", value: "Email" },
+      { label: "SSO/SAML", value: false },
+      { label: "RBAC", value: true },
+      { label: "Аудит логов", value: false },
     ],
-    cta: "Start Free Trial",
+    cta: "Выбрать",
     ctaStyle: "bg-accent text-background hover:bg-accent-hover glow-accent",
     ctaHref: "/app/demo",
     highlight: true,
   },
   {
-    name: "Professional",
-    price: "$99",
-    period: "/month",
-    description: "Для security-команд среднего масштаба",
+    name: "Бизнес",
+    price: "14 900 ₽",
+    period: "/мес",
+    description: "Для среднего и крупного бизнеса",
     icon: Building2,
     color: "purple",
     features: [
-      "20 проектов",
-      "Безлимитные сканы",
-      "Безлимит findings",
-      "SSO (SAML/OIDC)",
-      "JIRA / Linear интеграция",
-      "Custom rules & plugins",
-      "Webhook events",
-      "Priority поддержка",
-      "SLA 99.9%",
+      { label: "Сканирования", value: "Безлимит" },
+      { label: "Пользователи", value: "до 50" },
+      { label: "Проекты", value: "Безлимит" },
+      { label: "API доступ", value: true },
+      { label: "Поддержка", value: "Приоритетная" },
+      { label: "SSO/SAML", value: true },
+      { label: "RBAC", value: true },
+      { label: "Аудит логов", value: true },
     ],
-    cta: "Start Free Trial",
+    cta: "Выбрать",
     ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
     ctaHref: "/app/demo",
     highlight: false,
   },
   {
-    name: "Enterprise",
-    price: "Custom",
+    name: "Корпоративный",
+    price: "По запросу",
     period: "",
-    description: "Для крупных организаций с особыми требованиями",
-    icon: Building2,
+    description: "Для крупных организаций",
+    icon: Crown,
     color: "amber",
     features: [
-      "Безлимит проекты",
-      "Безлимит сканы",
-      "On-premise deployment",
-      "Dedicated support",
-      "Custom integrations",
-      "SOC 2 compliance",
-      "Audit log retention",
-      "SLA 99.99%",
-      "Training & onboarding",
+      { label: "Сканирования", value: "Безлимит" },
+      { label: "Пользователи", value: "Безлимит" },
+      { label: "Проекты", value: "Безлимит" },
+      { label: "API доступ", value: true },
+      { label: "Поддержка", value: "Выделенный менеджер" },
+      { label: "SSO/SAML", value: true },
+      { label: "RBAC", value: true },
+      { label: "Аудит логов", value: true },
     ],
-    cta: "Contact Sales",
+    cta: "Связаться",
     ctaStyle: "border border-amber/30 bg-amber-muted text-amber hover:bg-amber/20",
     ctaHref: "mailto:hello@sec-scanner.pro",
     highlight: false,
@@ -106,7 +105,7 @@ export function Pricing() {
           className="text-center max-w-3xl mx-auto"
         >
           <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            Pricing
+            Тарифы
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
             Прозрачные
@@ -135,7 +134,7 @@ export function Pricing() {
             >
               {plan.highlight && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-medium bg-accent text-background rounded-full">
-                  Most Popular
+                  Популярный
                 </span>
               )}
               <div className="flex items-center gap-3 mb-4">
@@ -144,14 +143,33 @@ export function Pricing() {
               </div>
               <div className="mb-4">
                 <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                <span className="text-sm text-muted">{plan.period}</span>
+                {plan.period && (
+                  <span className="text-sm text-muted">{plan.period}</span>
+                )}
               </div>
               <p className="text-sm text-muted-2 mb-6">{plan.description}</p>
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2.5 text-sm">
-                    <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                    <span className="text-muted-2">{feature}</span>
+                  <li key={feature.label} className="flex items-start gap-2.5 text-sm">
+                    {feature.value === true ? (
+                      <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                    ) : feature.value === false ? (
+                      <X className="w-4 h-4 text-muted shrink-0 mt-0.5" />
+                    ) : (
+                      <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                    )}
+                    <span className="text-muted-2">
+                      {feature.label}:{" "}
+                      {typeof feature.value === "boolean" ? (
+                        feature.value ? (
+                          <span className="text-foreground">✓</span>
+                        ) : (
+                          <span className="text-muted">✗</span>
+                        )
+                      ) : (
+                        <span className="text-foreground">{feature.value}</span>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>

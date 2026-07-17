@@ -12,7 +12,6 @@ import {
   defaultLocale,
   setLocaleToStorage,
   t as translate,
-  type TranslationKey,
 } from "./i18n";
 
 function getLocaleSnapshot(): Locale {
@@ -38,7 +37,7 @@ function subscribeToLocale(cb: () => void) {
 interface I18nContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: string) => string;
 }
 
 const I18nContext = createContext<I18nContextValue>({
@@ -61,13 +60,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new StorageEvent("storage", { key: "locale" }));
   }, []);
 
-  const t = useCallback(
-    (key: TranslationKey) => translate(key, locale),
+  const tFn = useCallback(
+    (key: string) => translate(key, locale),
     [locale]
   );
 
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t }}>
+    <I18nContext.Provider value={{ locale, setLocale, t: tFn }}>
       {children}
     </I18nContext.Provider>
   );
