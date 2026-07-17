@@ -32,6 +32,16 @@ export default function PlaygroundPage() {
   const [activeStep, setActiveStep] = useState<PlaygroundStep>("upload");
   const [uploaded, setUploaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [exportFormat, setExportFormat] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = (format: string) => {
+    setExportFormat(format);
+    setIsExporting(true);
+    setTimeout(() => {
+      setIsExporting(false);
+    }, 1500);
+  };
 
   const handleUpload = () => {
     setUploaded(true);
@@ -255,8 +265,31 @@ export default function PlaygroundPage() {
                   { format: "SARIF", desc: "Standard static analysis format" },
                   { format: "JSON", desc: "Full structured data export" },
                 ].map((exp) => (
-                  <button key={exp.format} className="p-4 rounded-xl bg-surface-2 border border-border hover:border-accent/30 transition-colors text-left group">
-                    <div className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">{exp.format}</div>
+                  <button
+                    key={exp.format}
+                    onClick={() => handleExport(exp.format)}
+                    disabled={isExporting}
+                    className={`p-4 rounded-xl border transition-colors text-left group ${
+                      exportFormat === exp.format && isExporting
+                        ? "bg-accent-muted border-accent/30"
+                        : "bg-surface-2 border-border hover:border-accent/30"
+                    } ${isExporting && exportFormat !== exp.format ? "opacity-50" : ""}`}
+                  >
+                    <div className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+                      {exportFormat === exp.format && isExporting ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Exporting...
+                        </span>
+                      ) : exportFormat === exp.format && !isExporting ? (
+                        <span className="flex items-center gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
+                          {exp.format} Ready
+                        </span>
+                      ) : (
+                        exp.format
+                      )}
+                    </div>
                     <div className="text-xs text-muted-2 mt-1">{exp.desc}</div>
                   </button>
                 ))}

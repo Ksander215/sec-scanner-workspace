@@ -25,7 +25,7 @@ const statusConfig: Record<RoadmapStatus, { label: string; icon: React.ElementTy
   "community-idea": { label: "Community Ideas", icon: Lightbulb, color: "#a855f7", bg: "rgba(168,85,247,0.08)", badge: "category" },
 };
 
-function RoadmapCard({ item, expanded, onToggle }: { item: RoadmapItem; expanded: boolean; onToggle: () => void }) {
+function RoadmapCard({ item, expanded, onToggle, onUpvote, isUpvoted }: { item: RoadmapItem; expanded: boolean; onToggle: () => void; onUpvote: () => void; isUpvoted: boolean }) {
   const config = statusConfig[item.status];
   const Icon = config.icon;
 
@@ -52,9 +52,9 @@ function RoadmapCard({ item, expanded, onToggle }: { item: RoadmapItem; expanded
             )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-1 text-xs text-muted-2">
+            <div className={`flex items-center gap-1 text-xs ${isUpvoted ? "text-accent" : "text-muted-2"}`}>
               <ThumbsUp className="w-3.5 h-3.5" />
-              <span>{item.upvotes}</span>
+              <span>{item.upvotes + (isUpvoted ? 1 : 0)}</span>
             </div>
             {expanded ? (
               <ChevronDown className="w-4 h-4 text-muted" />
@@ -71,10 +71,10 @@ function RoadmapCard({ item, expanded, onToggle }: { item: RoadmapItem; expanded
           <div className="flex items-center gap-4 text-xs">
             <span className="text-muted-2">Target: <span style={{ color: config.color }}>{item.target}</span></span>
             <span className="text-muted-2">Category: {item.category}</span>
-            <span className="text-muted-2">Upvotes: {item.upvotes}</span>
+            <span className="text-muted-2">Upvotes: {item.upvotes + (isUpvoted ? 1 : 0)}</span>
           </div>
           {item.status === "community-idea" && (
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" onClick={onUpvote}>
               <ThumbsUp className="w-3.5 h-3.5" />
               Upvote this idea
             </Button>
@@ -88,10 +88,24 @@ function RoadmapCard({ item, expanded, onToggle }: { item: RoadmapItem; expanded
 export default function InteractiveRoadmapPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [expandedItem, setExpandedItem] = useState<string | null>(null);
+  const [upvotedItems, setUpvotedItems] = useState<Set<string>>(new Set());
+
+  const handleUpvote = (id: string) => {
+    setUpvotedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const filtered = roadmapItems
     .filter((item) => statusFilter === "all" || item.status === statusFilter)
-    .sort((a, b) => b.upvotes - a.upvotes);
+    .sort((a, b) => {
+      const aVotes = a.upvotes + (upvotedItems.has(a.id) ? 1 : 0);
+      const bVotes = b.upvotes + (upvotedItems.has(b.id) ? 1 : 0);
+      return bVotes - aVotes;
+    });
 
   const statusCounts = {
     all: roadmapItems.length,
@@ -150,6 +164,8 @@ export default function InteractiveRoadmapPage() {
               item={item}
               expanded={expandedItem === item.id}
               onToggle={() => setExpandedItem(expandedItem === item.id ? null : item.id)}
+              onUpvote={() => handleUpvote(item.id)}
+              isUpvoted={upvotedItems.has(item.id)}
             />
           ))}
 

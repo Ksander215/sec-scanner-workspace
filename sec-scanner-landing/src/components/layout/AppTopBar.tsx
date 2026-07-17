@@ -32,6 +32,7 @@ export function AppTopBar({
   const [mounted, setMounted] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -86,13 +87,30 @@ export function AppTopBar({
       {/* Right: Actions */}
       <div className="flex items-center gap-1">
         {/* Notifications */}
-        <button
-          className="relative flex items-center justify-center w-8 h-8 rounded-lg text-muted-2 hover:text-foreground hover:bg-surface-2 transition-colors"
-          title="Notifications"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setNotificationsOpen(!notificationsOpen)}
+            className="relative flex items-center justify-center w-8 h-8 rounded-lg text-muted-2 hover:text-foreground hover:bg-surface-2 transition-colors"
+            title="Notifications"
+          >
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-accent rounded-full" />
+          </button>
+          {notificationsOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setNotificationsOpen(false)} />
+              <div className="absolute right-0 top-full mt-1 w-72 bg-surface-2 border border-border rounded-lg shadow-xl z-50 py-2 overflow-hidden">
+                <div className="px-3 py-2 border-b border-border">
+                  <p className="text-sm font-medium text-foreground">Notifications</p>
+                </div>
+                <div className="px-3 py-3 text-center">
+                  <p className="text-xs text-muted-2">No new notifications</p>
+                  <p className="text-[10px] text-muted mt-1">Notifications will appear here when scans complete or critical findings are detected.</p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Theme toggle */}
         <div className="relative">
@@ -195,7 +213,13 @@ export function AppTopBar({
                   Preferences
                 </a>
                 <div className="border-t border-border mt-1 pt-1">
-                  <button className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red hover:bg-red-muted transition-colors">
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false);
+                      window.location.href = "/app/demo";
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red hover:bg-red-muted transition-colors"
+                  >
                     Sign Out
                   </button>
                 </div>
