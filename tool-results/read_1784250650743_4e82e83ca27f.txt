@@ -1,0 +1,739 @@
+     1→/**
+     2→ * Shared demo data for all interactive platform pages.
+     3→ * Uses realistic domain models matching the Security Intelligence Platform.
+     4→ */
+     5→
+     6→// ─── Findings ───────────────────────────────────────────────────────────────
+     7→
+     8→export type Severity = "critical" | "high" | "medium" | "low" | "info";
+     9→
+    10→export interface Finding {
+    11→  id: string;
+    12→  title: string;
+    13→  severity: Severity;
+    14→  cvss: number;
+    15→  asset: string;
+    16→  service: string;
+    17→  description: string;
+    18→  recommendation: string;
+    19→  cve?: string;
+    20→  mitre?: string;
+    21→  status: "open" | "acknowledged" | "remediated" | "false_positive";
+    22→  discoveredAt: string;
+    23→}
+    24→
+    25→export const demoFindings: Finding[] = [
+    26→  {
+    27→    id: "FND-001",
+    28→    title: "SQL Injection in /api/v1/users",
+    29→    severity: "critical",
+    30→    cvss: 9.8,
+    31→    asset: "app.sec-scanner.pro",
+    32→    service: "API Gateway",
+    33→    description: "User-supplied input in the 'id' parameter of /api/v1/users is directly interpolated into SQL queries without parameterization, allowing unauthenticated attackers to extract database contents.",
+    34→    recommendation: "Use parameterized queries or an ORM. Add input validation and a WAF rule to block SQLi patterns.",
+    35→    cve: "CVE-2024-23956",
+    36→    mitre: "T1190",
+    37→    status: "open",
+    38→    discoveredAt: "2026-07-17T08:23:00Z",
+    39→  },
+    40→  {
+    41→    id: "FND-002",
+    42→    title: "XSS (Reflected) in /search",
+    43→    severity: "high",
+    44→    cvss: 7.5,
+    45→    asset: "app.sec-scanner.pro",
+    46→    service: "Web Frontend",
+    47→    description: "The search endpoint reflects user input without sanitization, allowing cross-site scripting attacks that can steal session cookies.",
+    48→    recommendation: "Apply output encoding and Content-Security-Policy headers. Use a modern framework's built-in XSS protection.",
+    49→    cve: "CVE-2024-31027",
+    50→    mitre: "T1189",
+    51→    status: "open",
+    52→    discoveredAt: "2026-07-17T08:23:12Z",
+    53→  },
+    54→  {
+    55→    id: "FND-003",
+    56→    title: "Missing Content-Security-Policy Header",
+    57→    severity: "medium",
+    58→    cvss: 5.3,
+    59→    asset: "portal.sec-scanner.pro",
+    60→    service: "NGINX",
+    61→    description: "No Content-Security-Policy header is set on any response, leaving the application vulnerable to XSS and data injection attacks.",
+    62→    recommendation: "Add a strict CSP header: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'.",
+    63→    mitre: "T1059",
+    64→    status: "acknowledged",
+    65→    discoveredAt: "2026-07-16T14:00:00Z",
+    66→  },
+    67→  {
+    68→    id: "FND-004",
+    69→    title: "Outdated TLS 1.0 Configuration",
+    70→    severity: "high",
+    71→    cvss: 6.5,
+    72→    asset: "api.sec-scanner.pro",
+    73→    service: "NGINX",
+    74→    description: "TLS 1.0 is still enabled, which is deprecated by PCI DSS and vulnerable to BEAST and POODLE downgrade attacks.",
+    75→    recommendation: "Disable TLS 1.0 and 1.1. Enforce TLS 1.2+ with modern cipher suites.",
+    76→    cve: "CVE-2014-3566",
+    77→    mitre: "T1573",
+    78→    status: "open",
+    79→    discoveredAt: "2026-07-16T14:01:00Z",
+    80→  },
+    81→  {
+    82→    id: "FND-005",
+    83→    title: "Redis Exposed Without Authentication",
+    84→    severity: "critical",
+    85→    cvss: 9.1,
+    86→    asset: "db-internal.sec-scanner.pro",
+    87→    service: "Redis",
+    88→    description: "Redis instance on port 6379 is accessible without authentication, allowing full database access and potential RCE via CONFIG SET.",
+    89→    recommendation: "Enable requirepass, bind to 127.0.0.1, and use a firewall to restrict access.",
+    90→    cve: "CVE-2024-31449",
+    91→    mitre: "T1078",
+    92→    status: "open",
+    93→    discoveredAt: "2026-07-17T08:24:00Z",
+    94→  },
+    95→  {
+    96→    id: "FND-006",
+    97→    title: "Kubernetes Dashboard Exposed",
+    98→    severity: "critical",
+    99→    cvss: 9.6,
+   100→    asset: "k8s.sec-scanner.pro",
+   101→    service: "Kubernetes",
+   102→    description: "Kubernetes dashboard is publicly accessible without authentication, exposing cluster configuration and workloads.",
+   103→    recommendation: "Enable RBAC, add authentication proxy, and restrict access to internal networks only.",
+   104→    mitre: "T1078",
+   105→    status: "open",
+   106→    discoveredAt: "2026-07-17T08:25:00Z",
+   107→  },
+   108→  {
+   109→    id: "FND-007",
+   110→    title: "Vault Seal Key in Environment Variable",
+   111→    severity: "critical",
+   112→    cvss: 9.3,
+   113→    asset: "vault.sec-scanner.pro",
+   114→    service: "HashiCorp Vault",
+   115→    description: "Vault unseal key is stored in a plaintext environment variable, defeating the purpose of sealed secret storage.",
+   116→    recommendation: "Use auto-unseal with AWS KMS or transit seal. Remove plaintext keys from environment.",
+   117→    mitre: "T1552",
+   118→    status: "acknowledged",
+   119→    discoveredAt: "2026-07-15T20:00:00Z",
+   120→  },
+   121→  {
+   122→    id: "FND-008",
+   123→    title: "Information Disclosure via /server-status",
+   124→    severity: "low",
+   125→    cvss: 2.6,
+   126→    asset: "staging.sec-scanner.pro",
+   127→    service: "Apache",
+   128→    description: "Apache server-status endpoint is publicly accessible, revealing worker statistics and request URIs.",
+   129→    recommendation: "Restrict server-status to localhost or internal IPs. Use Require ip directive.",
+   130→    mitre: "T1082",
+   131→    status: "false_positive",
+   132→    discoveredAt: "2026-07-15T20:05:00Z",
+   133→  },
+   134→  {
+   135→    id: "FND-009",
+   136→    title: "Default Credentials on PostgreSQL",
+   137→    severity: "high",
+   138→    cvss: 7.2,
+   139→    asset: "db-internal.sec-scanner.pro",
+   140→    service: "PostgreSQL",
+   141→    description: "PostgreSQL is running with default 'postgres:postgres' credentials, allowing full database access.",
+   142→    recommendation: "Change default credentials, use .pgpass or vault integration, enforce password complexity.",
+   143→    mitre: "T1078",
+   144→    status: "open",
+   145→    discoveredAt: "2026-07-17T08:26:00Z",
+   146→  },
+   147→  {
+   148→    id: "FND-010",
+   149→    title: "Missing Authentication on /api/v1/admin",
+   150→    severity: "high",
+   151→    cvss: 7.5,
+   152→    asset: "app.sec-scanner.pro",
+   153→    service: "API Gateway",
+   154→    description: "Admin API endpoints require no authentication token, allowing any user to access administrative functions.",
+   155→    recommendation: "Add JWT or API key authentication to all admin routes. Implement rate limiting.",
+   156→    mitre: "T1190",
+   157→    status: "open",
+   158→    discoveredAt: "2026-07-17T08:27:00Z",
+   159→  },
+   160→  {
+   161→    id: "FND-011",
+   162→    title: "CORS Allows All Origins",
+   163→    severity: "medium",
+   164→    cvss: 4.3,
+   165→    asset: "api.sec-scanner.pro",
+   166→    service: "API Gateway",
+   167→    description: "Access-Control-Allow-Origin is set to wildcard (*), allowing any domain to make authenticated cross-origin requests.",
+   168→    recommendation: "Restrict CORS to specific trusted origins. Remove wildcard and list allowed domains.",
+   169→    mitre: "T1189",
+   170→    status: "acknowledged",
+   171→    discoveredAt: "2026-07-16T15:00:00Z",
+   172→  },
+   173→  {
+   174→    id: "FND-012",
+   175→    title: "SSRF via Webhook URL Parameter",
+   176→    severity: "high",
+   177→    cvss: 8.6,
+   178→    asset: "app.sec-scanner.pro",
+   179→    service: "Web Application",
+   180→    description: "The webhook registration endpoint allows internal network URLs, enabling Server-Side Request Forgery attacks against internal services.",
+   181→    recommendation: "Validate and restrict webhook URLs to public domains. Block private IP ranges (RFC 1918).",
+   182→    cve: "CVE-2024-29155",
+   183→    mitre: "T1190",
+   184→    status: "open",
+   185→    discoveredAt: "2026-07-17T08:28:00Z",
+   186→  },
+   187→];
+   188→
+   189→// ─── Assets ─────────────────────────────────────────────────────────────────
+   190→
+   191→export interface Asset {
+   192→  id: string;
+   193→  name: string;
+   194→  type: "host" | "service" | "application" | "database" | "container";
+   195→  ip: string;
+   196→  os?: string;
+   197→  criticality: "critical" | "high" | "medium" | "low";
+   198→  findingsCount: number;
+   199→  riskScore: number;
+   200→}
+   201→
+   202→export const demoAssets: Asset[] = [
+   203→  { id: "AST-001", name: "app.sec-scanner.pro", type: "application", ip: "10.0.1.10", os: "Ubuntu 24.04", criticality: "critical", findingsCount: 4, riskScore: 92 },
+   204→  { id: "AST-002", name: "api.sec-scanner.pro", type: "service", ip: "10.0.1.20", os: "Ubuntu 24.04", criticality: "high", findingsCount: 3, riskScore: 78 },
+   205→  { id: "AST-003", name: "portal.sec-scanner.pro", type: "application", ip: "10.0.1.30", os: "Debian 12", criticality: "medium", findingsCount: 1, riskScore: 45 },
+   206→  { id: "AST-004", name: "db-internal.sec-scanner.pro", type: "database", ip: "10.0.2.10", os: "Ubuntu 22.04", criticality: "critical", findingsCount: 2, riskScore: 95 },
+   207→  { id: "AST-005", name: "k8s.sec-scanner.pro", type: "container", ip: "10.0.3.10", os: "CoreOS", criticality: "critical", findingsCount: 1, riskScore: 88 },
+   208→  { id: "AST-006", name: "vault.sec-scanner.pro", type: "service", ip: "10.0.2.20", os: "Alpine 3.19", criticality: "critical", findingsCount: 1, riskScore: 90 },
+   209→  { id: "AST-007", name: "staging.sec-scanner.pro", type: "host", ip: "10.0.4.10", os: "Ubuntu 22.04", criticality: "low", findingsCount: 1, riskScore: 22 },
+   210→  { id: "AST-008", name: "redis-internal.sec-scanner.pro", type: "database", ip: "10.0.2.30", os: "Alpine 3.19", criticality: "high", findingsCount: 0, riskScore: 15 },
+   211→];
+   212→
+   213→// ─── Knowledge Graph Nodes ──────────────────────────────────────────────────
+   214→
+   215→export type KGNodeType = "host" | "finding" | "cve" | "service" | "credential" | "asset" | "recommendation";
+   216→
+   217→export interface KGNode {
+   218→  id: string;
+   219→  type: KGNodeType;
+   220→  label: string;
+   221→  severity?: Severity;
+   222→  detail?: string;
+   223→  nodeType?: KGNodeType;
+   224→}
+   225→
+   226→export interface KGEdge {
+   227→  id: string;
+   228→  source: string;
+   229→  target: string;
+   230→  label?: string;
+   231→}
+   232→
+   233→export const kgNodes: KGNode[] = [
+   234→  { id: "host-app", type: "host", label: "app.sec-scanner.pro", detail: "10.0.1.10" },
+   235→  { id: "host-api", type: "host", label: "api.sec-scanner.pro", detail: "10.0.1.20" },
+   236→  { id: "host-db", type: "host", label: "db-internal", detail: "10.0.2.10" },
+   237→  { id: "host-k8s", type: "host", label: "k8s.sec-scanner.pro", detail: "10.0.3.10" },
+   238→  { id: "host-vault", type: "host", label: "vault.sec-scanner.pro", detail: "10.0.2.20" },
+   239→  { id: "host-staging", type: "host", label: "staging.sec-scanner.pro", detail: "10.0.4.10" },
+   240→
+   241→  { id: "svc-nginx", type: "service", label: "NGINX", detail: "Reverse Proxy" },
+   242→  { id: "svc-api-gw", type: "service", label: "API Gateway", detail: "Node.js / Express" },
+   243→  { id: "svc-redis", type: "service", label: "Redis", detail: "Cache / Session Store" },
+   244→  { id: "svc-pg", type: "service", label: "PostgreSQL", detail: "Primary Database" },
+   245→  { id: "svc-vault", type: "service", label: "Vault", detail: "Secret Management" },
+   246→  { id: "svc-k8s-dash", type: "service", label: "K8s Dashboard", detail: "Cluster Management" },
+   247→
+   248→  { id: "fnd-sqli", type: "finding", label: "SQL Injection", severity: "critical", detail: "FND-001" },
+   249→  { id: "fnd-xss", type: "finding", label: "XSS Reflected", severity: "high", detail: "FND-002" },
+   250→  { id: "fnd-csp", type: "finding", label: "Missing CSP", severity: "medium", detail: "FND-003" },
+   251→  { id: "fnd-tls", type: "finding", label: "TLS 1.0 Active", severity: "high", detail: "FND-004" },
+   252→  { id: "fnd-redis", type: "finding", label: "Redis No Auth", severity: "critical", detail: "FND-005" },
+   253→  { id: "fnd-k8s", type: "finding", label: "K8s Dashboard Exposed", severity: "critical", detail: "FND-006" },
+   254→  { id: "fnd-vault", type: "finding", label: "Vault Key Exposed", severity: "critical", detail: "FND-007" },
+   255→  { id: "fnd-ssrf", type: "finding", label: "SSRF Webhook", severity: "high", detail: "FND-012" },
+   256→
+   257→  { id: "cve-23956", type: "cve", label: "CVE-2024-23956", severity: "critical", detail: "SQL Injection" },
+   258→  { id: "cve-31027", type: "cve", label: "CVE-2024-31027", severity: "high", detail: "XSS" },
+   259→  { id: "cve-3566", type: "cve", label: "CVE-2014-3566", severity: "medium", detail: "POODLE" },
+   260→  { id: "cve-31449", type: "cve", label: "CVE-2024-31449", severity: "critical", detail: "Redis RCE" },
+   261→  { id: "cve-29155", type: "cve", label: "CVE-2024-29155", severity: "high", detail: "SSRF" },
+   262→
+   263→  { id: "cred-pg", type: "credential", label: "postgres:postgres", detail: "Default DB Creds" },
+   264→  { id: "cred-vault-key", type: "credential", label: "Vault Unseal Key", detail: "In Env Var" },
+   265→
+   266→  { id: "rec-sqli", type: "recommendation", label: "Parameterize SQL Queries", detail: "FND-001" },
+   267→  { id: "rec-xss", type: "recommendation", label: "Output Encoding + CSP", detail: "FND-002" },
+   268→  { id: "rec-redis", type: "recommendation", label: "Enable Redis Auth", detail: "FND-005" },
+   269→  { id: "rec-k8s", type: "recommendation", label: "Enable RBAC + Auth Proxy", detail: "FND-006" },
+   270→  { id: "rec-vault", type: "recommendation", label: "Use Auto-Unseal (KMS)", detail: "FND-007" },
+   271→  { id: "rec-ssrf", type: "recommendation", label: "Block Private IPs in Webhooks", detail: "FND-012" },
+   272→];
+   273→
+   274→export const kgEdges: KGEdge[] = [
+   275→  { id: "e1", source: "host-app", target: "svc-nginx", label: "runs" },
+   276→  { id: "e2", source: "host-app", target: "svc-api-gw", label: "runs" },
+   277→  { id: "e3", source: "host-api", target: "svc-api-gw", label: "runs" },
+   278→  { id: "e4", source: "host-api", target: "svc-nginx", label: "runs" },
+   279→  { id: "e5", source: "host-db", target: "svc-pg", label: "runs" },
+   280→  { id: "e6", source: "host-db", target: "svc-redis", label: "runs" },
+   281→  { id: "e7", source: "host-vault", target: "svc-vault", label: "runs" },
+   282→  { id: "e8", source: "host-k8s", target: "svc-k8s-dash", label: "runs" },
+   283→
+   284→  { id: "e9", source: "fnd-sqli", target: "svc-api-gw", label: "affects" },
+   285→  { id: "e10", source: "fnd-xss", target: "svc-api-gw", label: "affects" },
+   286→  { id: "e11", source: "fnd-csp", target: "svc-nginx", label: "affects" },
+   287→  { id: "e12", source: "fnd-tls", target: "svc-nginx", label: "affects" },
+   288→  { id: "e13", source: "fnd-redis", target: "svc-redis", label: "affects" },
+   289→  { id: "e14", source: "fnd-k8s", target: "svc-k8s-dash", label: "affects" },
+   290→  { id: "e15", source: "fnd-vault", target: "svc-vault", label: "affects" },
+   291→  { id: "e16", source: "fnd-ssrf", target: "svc-api-gw", label: "affects" },
+   292→
+   293→  { id: "e17", source: "cve-23956", target: "fnd-sqli", label: "exploits" },
+   294→  { id: "e18", source: "cve-31027", target: "fnd-xss", label: "exploits" },
+   295→  { id: "e19", source: "cve-3566", target: "fnd-tls", label: "exploits" },
+   296→  { id: "e20", source: "cve-31449", target: "fnd-redis", label: "exploits" },
+   297→  { id: "e21", source: "cve-29155", target: "fnd-ssrf", label: "exploits" },
+   298→
+   299→  { id: "e22", source: "cred-pg", target: "svc-pg", label: "authenticates" },
+   300→  { id: "e23", source: "cred-vault-key", target: "svc-vault", label: "unseals" },
+   301→
+   302→  { id: "e24", source: "rec-sqli", target: "fnd-sqli", label: "remediates" },
+   303→  { id: "e25", source: "rec-xss", target: "fnd-xss", label: "remediates" },
+   304→  { id: "e26", source: "rec-redis", target: "fnd-redis", label: "remediates" },
+   305→  { id: "e27", source: "rec-k8s", target: "fnd-k8s", label: "remediates" },
+   306→  { id: "e28", source: "rec-vault", target: "fnd-vault", label: "remediates" },
+   307→  { id: "e29", source: "rec-ssrf", target: "fnd-ssrf", label: "remediates" },
+   308→
+   309→  { id: "e30", source: "svc-api-gw", target: "svc-pg", label: "queries" },
+   310→  { id: "e31", source: "svc-api-gw", target: "svc-redis", label: "caches" },
+   311→  { id: "e32", source: "svc-api-gw", target: "svc-vault", label: "fetches secrets" },
+   312→  { id: "e33", source: "svc-nginx", target: "svc-api-gw", label: "proxies" },
+   313→  { id: "e34", source: "host-app", target: "host-db", label: "connects" },
+   314→];
+   315→
+   316→// ─── Attack Paths ───────────────────────────────────────────────────────────
+   317→
+   318→export interface AttackPathNode {
+   319→  id: string;
+   320→  label: string;
+   321→  type: "internet" | "firewall" | "proxy" | "app" | "cache" | "secrets" | "orchestrator" | "database";
+   322→  icon: string;
+   323→  risk: number;
+   324→  description: string;
+   325→}
+   326→
+   327→export interface AttackPathEdge {
+   328→  id: string;
+   329→  source: string;
+   330→  target: string;
+   331→  probability: number;
+   332→  criticality: Severity;
+   333→  techniques: string[];
+   334→  cves: string[];
+   335→  exploitable: boolean;
+   336→}
+   337→
+   338→export const attackPathNodes: AttackPathNode[] = [
+   339→  { id: "internet", label: "Internet", type: "internet", icon: "globe", risk: 100, description: "External attack surface accessible from the public internet." },
+   340→  { id: "firewall", label: "Firewall", type: "firewall", icon: "shield", risk: 80, description: "Perimeter firewall with permissive rules allowing traffic to internal services." },
+   341→  { id: "nginx", label: "NGINX", type: "proxy", icon: "server", risk: 65, description: "Reverse proxy handling TLS termination and request routing." },
+   342→  { id: "app", label: "Application", type: "app", icon: "code", risk: 55, description: "Node.js application with SQL Injection and SSRF vulnerabilities." },
+   343→  { id: "redis", label: "Redis", type: "cache", icon: "database", risk: 40, description: "Unauthenticated Redis instance used for caching and sessions." },
+   344→  { id: "vault", label: "Vault", type: "secrets", icon: "key", risk: 35, description: "HashiCorp Vault with exposed unseal key in environment variable." },
+   345→  { id: "k8s", label: "Kubernetes", type: "orchestrator", icon: "box", risk: 30, description: "Kubernetes cluster with exposed dashboard, no RBAC." },
+   346→  { id: "database", label: "Database", type: "database", icon: "hard-drive", risk: 15, description: "PostgreSQL with default credentials containing all application data." },
+   347→];
+   348→
+   349→export const attackPaths: { name: string; edges: AttackPathEdge[] }[] = [
+   350→  {
+   351→    name: "SQL Injection Data Breach",
+   352→    edges: [
+   353→      { id: "ap1-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "critical", techniques: ["T1190"], cves: [], exploitable: true },
+   354→      { id: "ap1-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true },
+   355→      { id: "ap1-e3", source: "nginx", target: "app", probability: 0.85, criticality: "critical", techniques: ["T1190"], cves: ["CVE-2024-23956"], exploitable: true },
+   356→      { id: "ap1-e4", source: "app", target: "database", probability: 0.8, criticality: "critical", techniques: ["T1555", "T1005"], cves: [], exploitable: true },
+   357→    ],
+   358→  },
+   359→  {
+   360→    name: "Redis RCE to Cluster Takeover",
+   361→    edges: [
+   362→      { id: "ap2-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "critical", techniques: ["T1190"], cves: [], exploitable: true },
+   363→      { id: "ap2-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true },
+   364→      { id: "ap2-e3", source: "nginx", target: "app", probability: 0.85, criticality: "high", techniques: ["T1190"], cves: ["CVE-2024-29155"], exploitable: true },
+   365→      { id: "ap2-e4", source: "app", target: "redis", probability: 0.75, criticality: "critical", techniques: ["T1210", "T1059"], cves: ["CVE-2024-31449"], exploitable: true },
+   366→      { id: "ap2-e5", source: "redis", target: "k8s", probability: 0.6, criticality: "critical", techniques: ["T1078", "T1609"], cves: [], exploitable: true },
+   367→    ],
+   368→  },
+   369→  {
+   370→    name: "Vault Key Exposure to Secret Theft",
+   371→    edges: [
+   372→      { id: "ap3-e1", source: "internet", target: "firewall", probability: 0.95, criticality: "high", techniques: ["T1190"], cves: [], exploitable: true },
+   373→      { id: "ap3-e2", source: "firewall", target: "nginx", probability: 0.9, criticality: "medium", techniques: ["T1190"], cves: [], exploitable: true },
+   374→      { id: "ap3-e3", source: "nginx", target: "app", probability: 0.85, criticality: "high", techniques: ["T1190"], cves: ["CVE-2024-29155"], exploitable: true },
+   375→      { id: "ap3-e4", source: "app", target: "vault", probability: 0.7, criticality: "critical", techniques: ["T1552", "T1078"], cves: [], exploitable: true },
+   376→    ],
+   377→  },
+   378→];
+   379→
+   380→// ─── Pipeline Stages ────────────────────────────────────────────────────────
+   381→
+   382→export interface PipelineStage {
+   383→  id: string;
+   384→  label: string;
+   385→  description: string;
+   386→  duration: number; // ms
+   387→  outputs: string[];
+   388→}
+   389→
+   390→export const pipelineStages: PipelineStage[] = [
+   391→  { id: "normalize", label: "Normalize", description: "Raw findings from scanners are normalized into a unified schema.", duration: 1200, outputs: ["12 raw findings ingested", "Normalized to 8 unique issues"] },
+   392→  { id: "correlation", label: "Correlation", description: "Cross-reference findings across scanners to identify duplicates and related issues.", duration: 1800, outputs: ["4 duplicates merged", "3 new correlations found"] },
+   393→  { id: "knowledge-graph", label: "Knowledge Graph", description: "Build entity relationships — assets, services, findings, and CVEs.", duration: 2200, outputs: ["34 nodes created", "29 edges mapped"] },
+   394→  { id: "risk", label: "Risk Scoring", description: "Compute risk scores based on CVSS, exploitability, asset criticality, and business context.", duration: 1500, outputs: ["Overall risk: 78/100 (HIGH)", "3 critical-risk assets identified"] },
+   395→  { id: "attack-paths", label: "Attack Paths", description: "Trace attack paths from internet-facing services to critical assets.", duration: 2000, outputs: ["3 attack paths traced", "Primary path: SQLi → DB"] },
+   396→  { id: "recommendations", label: "Recommendations", description: "Generate prioritized remediation steps with code examples.", duration: 1600, outputs: ["6 recommendations generated", "Top: Parameterize SQL queries"] },
+   397→  { id: "explainability", label: "Explainability", description: "AI reasoning trace explaining why each finding matters and how it connects.", duration: 1400, outputs: ["Explanation chains built", "Confidence: 94.2%"] },
+   398→  { id: "report", label: "Report", description: "Compile findings into a structured report with executive summary and technical details.", duration: 1000, outputs: ["Report generated", "8 findings, 3 attack paths"] },
+   399→];
+   400→
+   401→// ─── Risk Distribution ──────────────────────────────────────────────────────
+   402→
+   403→export const riskDistribution = [
+   404→  { name: "Critical", value: 4, color: "#ff4444" },
+   405→  { name: "High", value: 4, color: "#ffb800" },
+   406→  { name: "Medium", value: 2, color: "#ffb800" },
+   407→  { name: "Low", value: 1, color: "#00ff88" },
+   408→  { name: "Info", value: 1, color: "#00d4ff" },
+   409→];
+   410→
+   411→// ─── Time Series ────────────────────────────────────────────────────────────
+   412→
+   413→export const riskTrend = [
+   414→  { date: "Jul 11", score: 85, critical: 8, high: 12, medium: 18 },
+   415→  { date: "Jul 12", score: 82, critical: 7, high: 11, medium: 16 },
+   416→  { date: "Jul 13", score: 80, critical: 6, high: 10, medium: 15 },
+   417→  { date: "Jul 14", score: 79, critical: 6, high: 10, medium: 14 },
+   418→  { date: "Jul 15", score: 78, critical: 5, high: 9, medium: 13 },
+   419→  { date: "Jul 16", score: 76, critical: 4, high: 8, medium: 12 },
+   420→  { date: "Jul 17", score: 78, critical: 4, high: 6, medium: 10 },
+   421→];
+   422→
+   423→// ─── Compliance ──────────────────────────────────────────────────────────────
+   424→
+   425→export interface ComplianceFramework {
+   426→  name: string;
+   427→  score: number;
+   428→  total: number;
+   429→  passed: number;
+   430→}
+   431→
+   432→export const complianceData: ComplianceFramework[] = [
+   433→  { name: "OWASP Top 10", score: 42, total: 10, passed: 4 },
+   434→  { name: "CIS Benchmark", score: 58, total: 15, passed: 9 },
+   435→  { name: "PCI DSS", score: 35, total: 12, passed: 4 },
+   436→  { name: "NIST 800-53", score: 67, total: 18, passed: 12 },
+   437→  { name: "SOC 2", score: 72, total: 8, passed: 6 },
+   438→];
+   439→
+   440→// ─── Marketplace Items ──────────────────────────────────────────────────────
+   441→
+   442→export interface MarketplaceItem {
+   443→  id: string;
+   444→  name: string;
+   445→  description: string;
+   446→  category: "plugins" | "rules" | "dashboards" | "templates" | "ai-prompts" | "integrations" | "connectors" | "themes";
+   447→  author: string;
+   448→  version: string;
+   449→  rating: number;
+   450→  installs: number;
+   451→  license: string;
+   452→  verified: boolean;
+   453→  tags: string[];
+   454→}
+   455→
+   456→export const marketplaceItems: MarketplaceItem[] = [
+   457→  { id: "mpl-001", name: "DAST Ultra Engine", description: "Advanced dynamic application security testing with OWASP coverage and custom payload generation.", category: "plugins", author: "SecInt Labs", version: "2.4.1", rating: 4.8, installs: 12540, license: "MIT", verified: true, tags: ["dast", "owasp", "scanning"] },
+   458→  { id: "mpl-002", name: "OWASP Rules Pack", description: "Comprehensive detection rules covering OWASP Top 10 with zero false positive guarantee.", category: "rules", author: "Security Alliance", version: "1.8.0", rating: 4.9, installs: 28430, license: "Apache-2.0", verified: true, tags: ["owasp", "rules", "detection"] },
+   459→  { id: "mpl-003", name: "Executive Summary Dashboard", description: "C-level security dashboard with KPIs, risk trends, and compliance status at a glance.", category: "dashboards", author: "SecInt Labs", version: "3.1.0", rating: 4.7, installs: 8920, license: "MIT", verified: true, tags: ["dashboard", "executive", "reporting"] },
+   460→  { id: "mpl-004", name: "React SPA Template", description: "Pre-built scan template optimized for React single-page applications with API backend.", category: "templates", author: "Community", version: "1.2.3", rating: 4.5, installs: 6780, license: "MIT", verified: false, tags: ["react", "spa", "template"] },
+   461→  { id: "mpl-005", name: "Vulnerability Explainer AI", description: "AI prompt pack for detailed vulnerability explanation, impact analysis, and remediation guidance.", category: "ai-prompts", author: "SecInt Labs", version: "1.0.0", rating: 4.6, installs: 4520, license: "Commercial", verified: true, tags: ["ai", "explainability", "remediation"] },
+   462→  { id: "mpl-006", name: "GitHub Integration", description: "Sync findings to GitHub Issues and Security tab. Auto-create PRs with fix suggestions.", category: "integrations", author: "Open Source", version: "2.0.4", rating: 4.8, installs: 19230, license: "MIT", verified: true, tags: ["github", "ci-cd", "issues"] },
+   463→  { id: "mpl-007", name: "Jira Cloud Connector", description: "Bi-directional sync with Jira Cloud. Map findings to epics, stories, and bugs automatically.", category: "connectors", author: "Atlassian Partner", version: "1.5.2", rating: 4.4, installs: 7890, license: "Commercial", verified: true, tags: ["jira", "project-management", "sync"] },
+   464→  { id: "mpl-008", name: "Midnight Neon Theme", description: "Dark cyberpunk theme with neon accents. Easy on the eyes during long security reviews.", category: "themes", author: "Community", version: "1.1.0", rating: 4.3, installs: 3240, license: "MIT", verified: false, tags: ["dark", "neon", "theme"] },
+   465→  { id: "mpl-009", name: "SAST CodeQL Engine", description: "Static analysis powered by CodeQL with support for JavaScript, Python, Java, and Go.", category: "plugins", author: "SecInt Labs", version: "1.6.0", rating: 4.7, installs: 15670, license: "MIT", verified: true, tags: ["sast", "codeql", "scanning"] },
+   466→  { id: "mpl-010", name: "CIS Benchmark Rules", description: "CIS Benchmark compliance rules for AWS, Azure, GCP, and Kubernetes configurations.", category: "rules", author: "CIS Partner", version: "2.1.0", rating: 4.9, installs: 21340, license: "Commercial", verified: true, tags: ["cis", "compliance", "cloud"] },
+   467→  { id: "mpl-011", name: "Risk Heatmap Dashboard", description: "Visual heatmap of risk across assets, services, and environments with drill-down capability.", category: "dashboards", author: "Community", version: "1.3.0", rating: 4.5, installs: 5670, license: "MIT", verified: false, tags: ["heatmap", "risk", "visualization"] },
+   468→  { id: "mpl-012", name: "Spring Boot Template", description: "Scan template for Spring Boot applications with Actuator, Security, and Data JPA coverage.", category: "templates", author: "SecInt Labs", version: "2.0.1", rating: 4.6, installs: 8940, license: "MIT", verified: true, tags: ["spring", "java", "template"] },
+   469→  { id: "mpl-013", name: "Remediation Planner AI", description: "AI-powered remediation planning with effort estimation, priority ranking, and step-by-step guides.", category: "ai-prompts", author: "SecInt Labs", version: "1.1.0", rating: 4.8, installs: 6230, license: "Commercial", verified: true, tags: ["ai", "remediation", "planning"] },
+   470→  { id: "mpl-014", name: "Slack Integration", description: "Real-time alerts in Slack channels with interactive buttons for triage and assignment.", category: "integrations", author: "Open Source", version: "1.4.2", rating: 4.5, installs: 14230, license: "MIT", verified: true, tags: ["slack", "alerts", "triage"] },
+   471→  { id: "mpl-015", name: "Splunk Connector", description: "Forward findings to Splunk SIEM for correlation with existing security events.", category: "connectors", author: "Splunk Partner", version: "1.2.0", rating: 4.3, installs: 4560, license: "Commercial", verified: true, tags: ["splunk", "siem", "forwarding"] },
+   472→  { id: "mpl-016", name: "Nord Theme", description: "Clean, calm dark theme inspired by the Nord color palette for extended work sessions.", category: "themes", author: "Community", version: "1.0.2", rating: 4.6, installs: 2870, license: "MIT", verified: false, tags: ["nord", "dark", "clean"] },
+   473→];
+   474→
+   475→// ─── Architecture Layers (Interactive) ──────────────────────────────────────
+   476→
+   477→export interface ArchLayer {
+   478→  id: string;
+   479→  name: string;
+   480→  description: string;
+   481→  classes: string[];
+   482→  technologies: string[];
+   483→  connections: string[];
+   484→}
+   485→
+   486→export const architectureLayers: ArchLayer[] = [
+   487→  {
+   488→    id: "api",
+   489→    name: "REST API Layer",
+   490→    description: "The API gateway exposes RESTful endpoints for all platform operations. Handles authentication, rate limiting, request validation, and response serialization. Supports OpenAPI 3.1 spec generation.",
+   491→    classes: ["ApiController", "AuthMiddleware", "RateLimiter", "RequestValidator", "ResponseSerializer", "OpenApiGenerator"],
+   492→    technologies: ["Express.js", "TypeScript", "Zod", "JWT", "OpenAPI 3.1"],
+   493→    connections: ["Orchestrator → API via Command Bus", "API → Client via HTTP/2"],
+   494→  },
+   495→  {
+   496→    id: "orchestrator",
+   497→    name: "Orchestrator Layer",
+   498→    description: "The orchestration engine coordinates scanning pipelines, manages job scheduling, and handles the event-driven correlation bus. Each pipeline stage is a discrete, testable unit.",
+   499→    classes: ["PipelineOrchestrator", "JobScheduler", "EventBus", "StageRunner", "CorrelationEngine", "PipelineRegistry"],
+   500→    technologies: ["Node.js", "EventEmitter", "Bull Queue", "Redis", "Domain Events"],
+   501→    connections: ["API → Orchestrator via Command Bus", "Orchestrator → Domain via Application Services"],
+   502→  },
+   503→  {
+   504→    id: "domain",
+   505→    name: "Domain Layer",
+   506→    description: "Core business logic implementing Domain-Driven Design patterns. Contains entities, value objects, aggregates, and domain services. No external dependencies — pure business rules.",
+   507→    classes: ["Finding", "Asset", "RiskScore", "AttackPath", "KnowledgeGraph", "Recommendation", "ScanResult", "Correlation", "FindingRepository", "AssetRepository"],
+   508→    technologies: ["TypeScript", "DDD", "CQRS", "Domain Events", "Aggregate Roots"],
+   509→    connections: ["Orchestrator → Domain via Application Services", "Domain → Persistence via Repository Interfaces"],
+   510→  },
+   511→  {
+   512→    id: "persistence",
+   513→    name: "Persistence Layer",
+   514→    description: "Repository implementations and data access layer. Handles database operations, caching, and data migration. Implements the Repository pattern defined by the domain layer.",
+   515→    classes: ["PostgresFindingRepository", "RedisCacheStore", "MigrationRunner", "QueryBuilder", "TransactionManager", "DocumentStore"],
+   516→    technologies: ["PostgreSQL", "Redis", "Prisma ORM", "Knex.js", "Database Migrations"],
+   517→    connections: ["Domain → Persistence via Repository Interfaces", "Persistence → Infrastructure via Database Drivers"],
+   518→  },
+   519→  {
+   520→    id: "infrastructure",
+   521→    name: "Infrastructure Layer",
+   522→    description: "External integrations, scanner adapters, and platform-specific implementations. Contains Docker clients, cloud SDKs, and third-party API wrappers. All I/O happens here.",
+   523→    classes: ["DockerScannerAdapter", "NmapAdapter", "ZapAdapter", "S3StorageClient", "DockerClient", "KubernetesClient", "CloudProviderAdapter"],
+   524→    technologies: ["Docker SDK", "Nmap", "OWASP ZAP", "AWS SDK", "Kubernetes Client", "SSH2"],
+   525→    connections: ["Infrastructure → Persistence via Data Mappers", "Orchestrator → Infrastructure via Scanner Interfaces"],
+   526→  },
+   527→];
+   528→
+   529→// ─── Roadmap Items (Interactive) ────────────────────────────────────────────
+   530→
+   531→export type RoadmapStatus = "completed" | "in-progress" | "planned" | "community-idea";
+   532→
+   533→export interface RoadmapItem {
+   534→  id: string;
+   535→  title: string;
+   536→  description: string;
+   537→  status: RoadmapStatus;
+   538→  category: string;
+   539→  upvotes: number;
+   540→  target: string;
+   541→}
+   542→
+   543→export const roadmapItems: RoadmapItem[] = [
+   544→  { id: "rm-001", title: "Knowledge Graph Visualization", description: "Interactive graph view for security findings, assets, and attack paths with real-time exploration.", status: "completed", category: "Platform", upvotes: 342, target: "Q2 2026" },
+   545→  { id: "rm-002", title: "SBOM Generation", description: "Software Bill of Materials generation from scan results with CycloneDX and SPDX support.", status: "completed", category: "Scanning", upvotes: 287, target: "Q2 2026" },
+   546→  { id: "rm-003", title: "Plugin Marketplace v2", description: "Redesigned marketplace with ratings, reviews, verified publisher badges, and one-click install.", status: "completed", category: "Platform", upvotes: 256, target: "Q2 2026" },
+   547→  { id: "rm-004", title: "Cloud Scanning Module", description: "AWS, GCP, and Azure misconfiguration detection with CIS benchmark validation.", status: "in-progress", category: "Scanning", upvotes: 412, target: "Q3 2026" },
+   548→  { id: "rm-005", title: "AI Remediation Assistant", description: "AI-powered remediation guidance with code examples, step-by-step instructions, and effort estimation.", status: "in-progress", category: "AI/ML", upvotes: 523, target: "Q3 2026" },
+   549→  { id: "rm-006", title: "Real-time Collaboration", description: "Multi-user collaboration with live cursors, comments, and shared investigation workspaces.", status: "in-progress", category: "Platform", upvotes: 198, target: "Q3 2026" },
+   550→  { id: "rm-007", title: "Mobile App Security", description: "Static and dynamic analysis for iOS and Android applications with OWASP Mobile coverage.", status: "planned", category: "Scanning", upvotes: 367, target: "Q4 2026" },
+   551→  { id: "rm-008", title: "Custom Compliance Frameworks", description: "Build and share custom compliance frameworks with requirement mapping and evidence collection.", status: "planned", category: "Compliance", upvotes: 276, target: "Q4 2026" },
+   552→  { id: "rm-009", title: "CI/CD Pipeline Integration", description: "Native GitHub Actions, GitLab CI, and Jenkins plugins with gating and quality policies.", status: "planned", category: "Integrations", upvotes: 445, target: "Q4 2026" },
+   553→  { id: "rm-010", title: "Team Collaboration v2", description: "Enhanced team features: assignments, SLA tracking, workflows, and role-based dashboards.", status: "planned", category: "Platform", upvotes: 189, target: "Q1 2027" },
+   554→  { id: "rm-011", title: "API Security Testing", description: "Automated API security testing with OpenAPI spec fuzzing and schema validation.", status: "community-idea", category: "Scanning", upvotes: 534, target: "TBD" },
+   555→  { id: "rm-012", title: "Kubernetes Operator", description: "Native Kubernetes operator for in-cluster scanning with auto-discovery and policy enforcement.", status: "community-idea", category: "Infrastructure", upvotes: 312, target: "TBD" },
+   556→  { id: "rm-013", title: "Threat Intel Feed Integration", description: "Auto-enrich findings with threat intelligence from MITRE, NVD, CISA KEV, and commercial feeds.", status: "community-idea", category: "Intelligence", upvotes: 478, target: "TBD" },
+   557→];
+   558→
+   559→// ─── AI Copilot Examples ────────────────────────────────────────────────────
+   560→
+   561→export interface CopilotExample {
+   562→  question: string;
+   563→  icon: string;
+   564→}
+   565→
+   566→export const copilotExamples: CopilotExample[] = [
+   567→  { question: "Show my highest risks", icon: "alert-triangle" },
+   568→  { question: "Explain attack path", icon: "route" },
+   569→  { question: "How do I reduce exposure?", icon: "shield" },
+   570→  { question: "Why is this finding critical?", icon: "help-circle" },
+   571→  { question: "Build remediation plan", icon: "wrench" },
+   572→];
+   573→
+   574→export interface CopilotResponse {
+   575→  question: string;
+   576→  reasoning: string[];
+   577→  connections: string[];
+   578→  recommendations: string[];
+   579→  links: { label: string; id: string }[];
+   580→}
+   581→
+   582→export const copilotResponses: Record<string, CopilotResponse> = {
+   583→  "Show my highest risks": {
+   584→    question: "Show my highest risks",
+   585→    reasoning: [
+   586→      "Analyzing all findings by CVSS score and asset criticality...",
+   587→      "Cross-referencing with known exploit availability (CISA KEV)...",
+   588→      "Computing composite risk scores incorporating business impact...",
+   589→    ],
+   590→    connections: [
+   591→      "FND-005 (Redis No Auth) → AST-004 (db-internal) — Critical database exposed",
+   592→      "FND-001 (SQL Injection) → AST-001 (app.sec-scanner.pro) — Internet-facing application",
+   593→      "FND-006 (K8s Dashboard) → AST-005 (k8s.sec-scanner.pro) — Full cluster access",
+   594→      "FND-007 (Vault Key) → AST-006 (vault.sec-scanner.pro) — Secrets compromised",
+   595→    ],
+   596→    recommendations: [
+   597→      "PRIORITY 1: Enable Redis authentication immediately — 5-minute fix, eliminates 1 attack path",
+   598→      "PRIORITY 2: Parameterize SQL queries in /api/v1/users — blocks the primary data breach path",
+   599→      "PRIORITY 3: Enable RBAC on Kubernetes dashboard — prevents cluster takeover",
+   600→      "PRIORITY 4: Migrate Vault unseal to KMS auto-unseal — removes key exposure",
+   601→    ],
+   602→    links: [
+   603→      { label: "FND-005", id: "FND-005" },
+   604→      { label: "FND-001", id: "FND-001" },
+   605→      { label: "FND-006", id: "FND-006" },
+   606→      { label: "FND-007", id: "FND-007" },
+   607→    ],
+   608→  },
+   609→  "Explain attack path": {
+   610→    question: "Explain attack path",
+   611→    reasoning: [
+   612→      "Tracing attack paths from internet-facing services to critical assets...",
+   613→      "Found 3 viable attack paths. Primary path has 80% success probability.",
+   614→      "Cross-referencing with MITRE ATT&CK techniques and known exploits...",
+   615→    ],
+   616→    connections: [
+   617→      "Internet → Firewall (95%) → NGINX (90%) → App (85%) → Database (80%)",
+   618→      "This path exploits CVE-2024-23956 (SQL Injection) to reach PostgreSQL",
+   619→      "Firewall rules allow unrestricted traffic to app.sec-scanner.pro:443",
+   620→      "App uses string concatenation for SQL queries in the users endpoint",
+   621→    ],
+   622→    recommendations: [
+   623→      "Block: Parameterize all SQL queries — stops this path at the Application layer",
+   624→      "Detect: Add WAF rule for SQLi patterns on /api/v1/users",
+   625→      "Contain: Move database to a private subnet with no internet route",
+   626→      "Monitor: Alert on unusual SQL patterns in application logs",
+   627→    ],
+   628→    links: [
+   629→      { label: "Attack Path 1", id: "ap1" },
+   630→      { label: "CVE-2024-23956", id: "cve-23956" },
+   631→      { label: "FND-001", id: "FND-001" },
+   632→    ],
+   633→  },
+   634→  "How do I reduce exposure?": {
+   635→    question: "How do I reduce exposure?",
+   636→    reasoning: [
+   637→      "Analyzing external attack surface and exposure vectors...",
+   638→      "Identifying services that don't need to be internet-facing...",
+   639→      "Calculating risk reduction for each remediation action...",
+   640→    ],
+   641→    connections: [
+   642→      "4 services are exposed to the internet that shouldn't be",
+   643→      "Redis (6379) and PostgreSQL (5432) have no business being publicly accessible",
+   644→      "Kubernetes dashboard should be behind a VPN or auth proxy",
+   645→      "Vault unseal key in env var means any code execution = secret access",
+   646→    ],
+   647→    recommendations: [
+   648→      "Move Redis and PostgreSQL to private subnets — reduces attack surface by 40%",
+   649→      "Enable authentication on all internet-facing services — eliminates 3 attack paths",
+   650→      "Add VPN/bastion host for internal service access — zero-trust access model",
+   651→      "Implement network segmentation between application tiers — limits lateral movement",
+   652→    ],
+   653→    links: [
+   654→      { label: "FND-005", id: "FND-005" },
+   655→      { label: "FND-006", id: "FND-006" },
+   656→      { label: "FND-009", id: "FND-009" },
+   657→    ],
+   658→  },
+   659→  "Why is this finding critical?": {
+   660→    question: "Why is this finding critical?",
+   661→    reasoning: [
+   662→      "Analyzing FND-005 (Redis Exposed Without Authentication)...",
+   663→      "CVSS base score is 9.1 — but let me explain why it's actually worse...",
+   664→      "This Redis instance is on the same network as Kubernetes and Vault...",
+   665→    ],
+   666→    connections: [
+   667→      "Redis can be exploited via CONFIG SET to write files (RCE)",
+   668→      "Same-network access to Kubernetes API server (6443)",
+   669→      "Redis session data includes active user tokens",
+   670→      "Attack chain: Redis RCE → K8s API → Full cluster compromise",
+   671→    ],
+   672→    recommendations: [
+   673→      "Immediate: Enable requirepass in redis.conf and restart",
+   674→      "Short-term: Bind Redis to 127.0.0.1, use firewall rules",
+   675→      "Medium-term: Migrate to Redis with TLS and ACLs (Redis 6+)",
+   676→      "Long-term: Use Redis as a sidecar with network policies",
+   677→    ],
+   678→    links: [
+   679→      { label: "FND-005", id: "FND-005" },
+   680→      { label: "CVE-2024-31449", id: "cve-31449" },
+   681→      { label: "Attack Path 2", id: "ap2" },
+   682→    ],
+   683→  },
+   684→  "Build remediation plan": {
+   685→    question: "Build remediation plan",
+   686→    reasoning: [
+   687→      "Prioritizing all open findings by risk score and remediation effort...",
+   688→      "Grouping related findings that can be fixed together...",
+   689→      "Estimating effort and impact for each remediation task...",
+   690→    ],
+   691→    connections: [
+   692→      "4 findings can be resolved in under 1 hour each (quick wins)",
+   693→      "2 findings require code changes (medium effort, 1-2 days)",
+   694→      "2 findings require infrastructure changes (high effort, 3-5 days)",
+   695→      "Fixing Redis auth + Vault key migration blocks 2 of 3 attack paths",
+   696→    ],
+   697→    recommendations: [
+   698→      "WEEK 1 (Quick Wins): Enable Redis auth, remove Vault key from env, add CSP header, disable TLS 1.0",
+   699→      "WEEK 2 (Code Fixes): Parameterize SQL queries, add output encoding for XSS, validate webhook URLs",
+   700→      "WEEK 3 (Infra): Enable K8s RBAC, move DBs to private subnets, add auth proxy to K8s dashboard",
+   701→      "WEEK 4 (Verify): Re-scan all assets, validate remediation, update compliance reports",
+   702→    ],
+   703→    links: [
+   704→      { label: "All Findings", id: "findings" },
+   705→      { label: "All Attack Paths", id: "attack-paths" },
+   706→      { label: "Compliance Report", id: "compliance" },
+   707→    ],
+   708→  },
+   709→};
+   710→
+   711→// ─── Cloud Workspace ────────────────────────────────────────────────────────
+   712→
+   713→export interface CloudProject {
+   714→  id: string;
+   715→  name: string;
+   716→  status: "active" | "paused" | "completed";
+   717→  assets: number;
+   718→  findings: number;
+   719→  lastScan: string;
+   720→}
+   721→
+   722→export const cloudProjects: CloudProject[] = [
+   723→  { id: "prj-001", name: "Production Environment", status: "active", assets: 8, findings: 12, lastScan: "2 min ago" },
+   724→  { id: "prj-002", name: "Staging Cluster", status: "active", assets: 4, findings: 3, lastScan: "1 hour ago" },
+   725→  { id: "prj-003", name: "Payment Services", status: "completed", assets: 6, findings: 0, lastScan: "3 hours ago" },
+   726→  { id: "prj-004", name: "Legacy Infrastructure", status: "paused", assets: 12, findings: 28, lastScan: "2 days ago" },
+   727→];
+   728→
+   729→// ─── Animated Metrics ───────────────────────────────────────────────────────
+   730→
+   731→export const platformMetrics = [
+   732→  { label: "Modules", value: 20, suffix: "" },
+   733→  { label: "Source Files", value: 370, suffix: "+", prefix: "" },
+   734→  { label: "Lines of Code", value: 73, suffix: "k" },
+   735→  { label: "Tests", value: 2350, suffix: "" },
+   736→  { label: "TypeScript Errors", value: 0, suffix: "" },
+   737→  { label: "Open Source", value: 100, suffix: "%" },
+   738→];
+   739→

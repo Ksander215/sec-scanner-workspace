@@ -134,21 +134,21 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
               {/* Extra links */}
               <div className="pt-4 border-t border-border space-y-2">
                 <Link
-                  href="/pricing"
+                  href="/app/pricing"
                   onClick={onClose}
                   className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
                 >
                   Pricing
                 </Link>
                 <Link
-                  href="/blog"
+                  href="/app/blog"
                   onClick={onClose}
                   className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
                 >
                   Blog
                 </Link>
                 <Link
-                  href="/examples"
+                  href="/app/examples"
                   onClick={onClose}
                   className="block px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
                 >
@@ -178,7 +178,7 @@ export function MobileNav({ open, onClose }: MobileNavProps) {
                   <ExternalLink className="w-3 h-3" />
                 </a>
                 <Link
-                  href="/demo"
+                  href="/app/demo"
                   onClick={onClose}
                   className="block w-full text-center px-4 py-2.5 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors"
                 >

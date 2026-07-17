@@ -16,7 +16,7 @@ const demoFeatures = [
     icon: GitBranch,
     title: "Live Pipeline",
     description: "Watch the 8-stage analysis pipeline run in real time — from Normalize to Report.",
-    href: "/demo",
+    href: "/app/demo",
     color: "text-accent",
     bg: "bg-accent-muted",
   },
@@ -24,7 +24,7 @@ const demoFeatures = [
     icon: Network,
     title: "Knowledge Graph",
     description: "Explore 34 interconnected nodes — hosts, findings, CVEs, and attack paths.",
-    href: "/demo/knowledge-graph",
+    href: "/app/demo/knowledge-graph",
     color: "text-cyan",
     bg: "bg-cyan-muted",
   },
@@ -32,7 +32,7 @@ const demoFeatures = [
     icon: ShieldAlert,
     title: "Attack Paths",
     description: "Trace 3 attack paths from the internet to your critical assets with MITRE ATT&CK mapping.",
-    href: "/demo/attack-paths",
+    href: "/app/demo/attack-paths",
     color: "text-red",
     bg: "bg-red-muted",
   },
@@ -40,7 +40,7 @@ const demoFeatures = [
     icon: Brain,
     title: "AI Copilot",
     description: "Ask questions in natural language — get reasoning, connections, and remediation plans.",
-    href: "/dashboard",
+    href: "/app/dashboard",
     color: "text-purple",
     bg: "bg-purple-muted",
   },
@@ -109,7 +109,7 @@ export function DemoPreview() {
           className="mt-12 text-center"
         >
           <a
-            href="/demo"
+            href="/app/demo"
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
           >
             <Play className="w-4 h-4" />
@@ -117,13 +117,13 @@ export function DemoPreview() {
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </a>
           <div className="mt-4 flex items-center justify-center gap-6">
-            <a href="/dashboard" className="text-sm text-muted-2 hover:text-foreground transition-colors flex items-center gap-1.5">
+            <a href="/app/dashboard" className="text-sm text-muted-2 hover:text-foreground transition-colors flex items-center gap-1.5">
               <BarChart3 className="w-4 h-4" /> Dashboard
             </a>
-            <a href="/cloud" className="text-sm text-muted-2 hover:text-foreground transition-colors flex items-center gap-1.5">
+            <a href="/app/cloud" className="text-sm text-muted-2 hover:text-foreground transition-colors flex items-center gap-1.5">
               <ShieldAlert className="w-4 h-4" /> Cloud
             </a>
-            <a href="/download" className="text-sm text-muted-2 hover:text-foreground transition-colors flex items-center gap-1.5">
+            <a href="/app/downloads" className="text-sm text-muted-2 hover:text-foreground transition-colors flex items-center gap-1.5">
               <Play className="w-4 h-4" /> Download
             </a>
           </div>

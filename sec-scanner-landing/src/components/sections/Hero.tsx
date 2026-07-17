@@ -71,7 +71,7 @@ export function Hero() {
           className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
           <a
-            href="#demo"
+            href="/app/demo"
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
           >
             <Play className="w-4 h-4" />
@@ -88,7 +88,7 @@ export function Hero() {
             GitHub
           </a>
           <a
-            href="https://sec-scanner.pro/docs"
+            href="/app/docs"
             className="inline-flex items-center gap-2 px-8 py-3.5 text-base font-medium text-muted-2 hover:text-foreground transition-colors"
           >
             <BookOpen className="w-4 h-4" />

@@ -26,6 +26,31 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Light theme overrides */
+:root.light {
+  --color-background: #f8f9fa;
+  --color-foreground: #1a1a2e;
+  --color-surface: #ffffff;
+  --color-surface-2: #f0f1f3;
+  --color-surface-3: #e8e9eb;
+  --color-border: #d1d5db;
+  --color-border-light: #e5e7eb;
+  --color-muted: #6b7280;
+  --color-muted-2: #9ca3af;
+  --color-accent: #00b864;
+  --color-accent-hover: #00a058;
+  --color-accent-muted: rgba(0, 184, 100, 0.1);
+  --color-accent-border: rgba(0, 184, 100, 0.25);
+  --color-cyan: #0099cc;
+  --color-cyan-muted: rgba(0, 153, 204, 0.1);
+  --color-amber: #d49900;
+  --color-amber-muted: rgba(212, 153, 0, 0.1);
+  --color-red: #dc2626;
+  --color-red-muted: rgba(220, 38, 38, 0.1);
+  --color-purple: #7c3aed;
+  --color-purple-muted: rgba(124, 58, 237, 0.1);
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border-light) transparent;
@@ -34,6 +59,11 @@
 ::selection {
   background-color: rgba(0, 255, 136, 0.2);
   color: #fff;
+}
+
+:root.light ::selection {
+  background-color: rgba(0, 184, 100, 0.2);
+  color: #1a1a2e;
 }
 
 body {
@@ -59,9 +89,22 @@ body {
   background-size: 64px 64px;
 }
 
+:root.light .grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+}
+
 /* Gradient text */
 .text-gradient-accent {
   background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:root.light .text-gradient-accent {
+  background: linear-gradient(135deg, #00b864 0%, #0099cc 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -142,4 +185,14 @@ body {
 /* Smooth scroll */
 html {
   scroll-behavior: smooth;
+}
+
+/* Page transition */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-page-in {
+  animation: pageIn 0.25s ease-out;
 }
