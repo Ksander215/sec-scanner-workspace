@@ -158,16 +158,28 @@ export function DemoPreview() {
           </p>
         </motion.div>
 
-        {/* Interface screenshot */}
-        <motion.div
+        {/* Interface screenshot — clickable */}
+        <motion.a
+          href="/app/demo"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="max-w-4xl mx-auto mb-12"
+          className="block max-w-4xl mx-auto mb-12 group"
         >
-          <InterfaceScreenshot />
-        </motion.div>
+          <div className="relative rounded-xl overflow-hidden">
+            <InterfaceScreenshot />
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-accent/0 group-hover:bg-accent/5 transition-colors duration-300 flex items-center justify-center">
+              <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-95 group-hover:scale-100">
+                <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-background font-semibold text-sm shadow-lg shadow-accent/20">
+                  <Play className="w-4 h-4" />
+                  Open Interactive Demo
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.a>
 
         {/* Demo feature cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
