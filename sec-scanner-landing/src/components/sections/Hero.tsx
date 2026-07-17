@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Shield, ArrowRight, BookOpen, Play } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/icons";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 export function Hero() {
   return (
@@ -141,14 +142,19 @@ export function Hero() {
           className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-3xl mx-auto"
         >
           {[
-            { value: "50K+", label: "Scans performed" },
-            { value: "150+", label: "Detection rules" },
-            { value: "99.2%", label: "Accuracy rate" },
-            { value: "<3s", label: "Avg scan time" },
+            { value: 50, suffix: "K+", label: "Scans performed" },
+            { value: 150, suffix: "+", label: "Detection rules" },
+            { value: 99.2, suffix: "%", label: "Accuracy rate" },
+            { value: 3, suffix: "s", label: "Avg scan time", prefix: "<" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-gradient-accent">
-                {stat.value}
+                {stat.prefix === "<" ? "<" : ""}
+                {stat.value % 1 !== 0 ? (
+                  <AnimatedCounter value={Math.round(stat.value * 10)} suffix="" duration={2000} />
+                ) : (
+                  <AnimatedCounter value={stat.value} suffix={stat.suffix} duration={2000} />
+                )}
               </div>
               <div className="mt-1 text-xs sm:text-sm text-muted">{stat.label}</div>
             </div>

@@ -4,6 +4,7 @@ import { Platform } from "@/components/sections/Platform";
 import { Capabilities } from "@/components/sections/Capabilities";
 import { Architecture } from "@/components/sections/Architecture";
 import { Demo } from "@/components/sections/Demo";
+import { PlatformMetrics } from "@/components/sections/PlatformMetrics";
 import { Pricing } from "@/components/sections/Pricing";
 import { Marketplace } from "@/components/sections/Marketplace";
 import { Roadmap } from "@/components/sections/Roadmap";
@@ -20,6 +21,7 @@ export default function Home() {
         <Capabilities />
         <Architecture />
         <Demo />
+        <PlatformMetrics />
         <Pricing />
         <Marketplace />
         <Roadmap />
