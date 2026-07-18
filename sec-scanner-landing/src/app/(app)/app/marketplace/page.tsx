@@ -22,6 +22,8 @@ import {
   Trash2,
   RefreshCw,
   Info,
+  Play,
+  ArrowRight,
 } from "lucide-react";
 import { marketplaceItems, type MarketplaceItem } from "@/lib/demo-data";
 import { useI18n } from "@/lib/i18n-context";
@@ -203,6 +205,40 @@ export default function MarketplacePreviewPage() {
                 </div>
               </div>
             </div>
+
+            {/* Post-install status block */}
+            {isInstalled && (
+              <div className="mb-6 p-4 rounded-xl bg-accent-muted/50 border border-accent/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="w-5 h-5 text-accent" />
+                  <span className="text-sm font-semibold text-foreground">{locale === "ru" ? "Инструмент установлен" : "Tool installed"}</span>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-3 mb-4">
+                  <div className="p-3 rounded-lg bg-surface border border-border">
+                    <span className="text-xs text-muted-2">{locale === "ru" ? "Версия" : "Version"}</span>
+                    <p className="text-sm text-foreground font-medium mt-0.5">v{detailItem.version}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-surface border border-border">
+                    <span className="text-xs text-muted-2">{locale === "ru" ? "Автор" : "Author"}</span>
+                    <p className="text-sm text-foreground font-medium mt-0.5">{detailItem.author}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-surface border border-border">
+                    <span className="text-xs text-muted-2">{locale === "ru" ? "Добавлен в Pipeline" : "Added to Pipeline"}</span>
+                    <p className="text-sm text-accent font-medium mt-0.5">{locale === "ru" ? "Да ✓" : "Yes ✓"}</p>
+                  </div>
+                </div>
+                {/* Next step CTA */}
+                <div className="p-3 rounded-lg bg-surface border border-accent/30 flex items-center gap-3">
+                  <Play className="w-4 h-4 text-accent shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-sm text-foreground">{locale === "ru" ? "Теперь используйте инструмент при следующем сканировании." : "Now use this tool in your next scan."}</span>
+                  </div>
+                  <a href="/app/scanner" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors">
+                    {locale === "ru" ? "Перейти к сканированию" : "Go to Scanner"} <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             {isInstalled && (
