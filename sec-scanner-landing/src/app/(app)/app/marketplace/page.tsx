@@ -400,6 +400,18 @@ export default function MarketplacePreviewPage() {
             })}
           </div>
         )}
+
+        {/* Community CTA */}
+        <div className="mt-8 p-6 rounded-xl border border-border bg-surface text-center">
+          <p className="text-sm text-muted-2">
+            {locale === "ru" ? "Есть вопросы? Обсудите в" : "Questions? Discuss in"}{" "}
+            <a href="https://t.me/sip_security_platform" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Telegram</a>
+            {" · "}
+            <a href="https://discord.gg/sip-security" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Discord</a>
+            {" · "}
+            <a href="https://github.com/Ksander215/sec-scanner-workspace" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">GitHub</a>
+          </p>
+        </div>
       </Container>
     </div>
   );

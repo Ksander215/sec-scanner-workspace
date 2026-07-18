@@ -14,7 +14,7 @@ import { GitHubIcon } from "@/components/ui/icons";
 import { useI18n } from "@/lib/i18n-context";
 
 export function Header() {
-  const { t } = useI18n();
+  const { t, locale, setLocale } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -82,6 +82,13 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setLocale(locale === "ru" ? "en" : "ru")}
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-sm text-muted-2 hover:text-foreground rounded-md hover:bg-surface-2 transition-colors font-medium"
+              aria-label="Switch language"
+            >
+              {locale === "ru" ? "EN" : "RU"}
+            </button>
             <a
               href="https://github.com/Ksander215/sec-scanner-workspace"
               target="_blank"
