@@ -10,6 +10,7 @@ import { Comparison } from "@/components/sections/Comparison";
 import { Pricing } from "@/components/sections/Pricing";
 import { Community } from "@/components/sections/Community";
 import { Footer } from "@/components/sections/Footer";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 
 export default function Home() {
   return (
@@ -28,6 +29,7 @@ export default function Home() {
         <Community />
       </main>
       <Footer />
+      <ScrollToTop />
     </div>
   );
 }
