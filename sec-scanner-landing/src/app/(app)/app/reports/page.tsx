@@ -9,6 +9,9 @@ import {
   Loader2,
   Plus,
   ShieldAlert,
+  ShieldCheck,
+  Share2,
+  CheckCircle2,
   X,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
@@ -20,6 +23,7 @@ import { Badge } from "@/components/ui/Badge";
 // ─── Types ──────────────────────────────────────────────────────────────
 
 type ReportType = "executive" | "technical" | "compliance";
+type ExportFormat = "pdf" | "html" | "json" | "sarif" | "markdown" | "csv";
 
 interface DemoReport {
   id: string;
@@ -310,6 +314,39 @@ function generateDemoFindings(report: DemoReport, locale: string): DemoFinding[]
   return pool[report.type] || pool.executive;
 }
 
+function generateSARIFReport(report: DemoReport, t: (k: string) => string, locale: string): string {
+  const findings = generateDemoFindings(report, locale);
+  const sarif = {
+    $schema: "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+    version: "2.1.0",
+    runs: [{
+      tool: {
+        driver: {
+          name: "SIP Security Intelligence Platform",
+          version: "1.0.0",
+          informationUri: "https://sec-scanner.pro",
+        },
+      },
+      results: findings.map((f, i) => ({
+        ruleId: `SIP-${report.id}-${i + 1}`,
+        level: f.severity === "Critical" || f.severity === "Критический" ? "error" : f.severity === "High" || f.severity === "Высокий" ? "warning" : "note",
+        message: { text: `${f.title}: ${f.description}` },
+        fixes: f.recommendation ? [{ description: { text: f.recommendation } }] : [],
+      })),
+    }],
+  };
+  return JSON.stringify(sarif, null, 2);
+}
+
+function generateCSVReport(report: DemoReport, t: (k: string) => string, locale: string): string {
+  const findings = generateDemoFindings(report, locale);
+  const header = "Title,Severity,Description,Recommendation";
+  const rows = findings.map(f =>
+    `"${f.title.replace(/"/g, '""')}","${f.severity}","${f.description.replace(/"/g, '""')}","${f.recommendation.replace(/"/g, '""')}"`
+  );
+  return [header, ...rows].join("\n");
+}
+
 // ─── Component ──────────────────────────────────────────────────────────
 
 export default function ReportsPage() {
@@ -321,40 +358,55 @@ export default function ReportsPage() {
   const [generating, setGenerating] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [selectedType, setSelectedType] = useState<ReportType>("executive");
+  const [showFormatPicker, setShowFormatPicker] = useState<string | null>(null);
+  const [lastDownloaded, setLastDownloaded] = useState<string | null>(null);
 
   // ── Real file download ──────────────────────────────────────────────
 
   const downloadReport = useCallback(
-    (report: DemoReport) => {
+    (report: DemoReport, format: ExportFormat = "html") => {
       setDownloading((prev) => new Set(prev).add(report.id));
 
-      // Simulate brief preparation delay
       setTimeout(() => {
         let content: string;
         let mimeType: string;
         let extension: string;
 
-        // Choose format based on report type
-        switch (report.type) {
-          case "executive":
+        switch (format) {
+          case "pdf":
             content = generateHTMLReport(report, t, locale);
             mimeType = "text/html";
             extension = "html";
             break;
-          case "technical":
-            content = generateMarkdownReport(report, t, locale);
-            mimeType = "text/markdown";
-            extension = "md";
+          case "html":
+            content = generateHTMLReport(report, t, locale);
+            mimeType = "text/html";
+            extension = "html";
             break;
-          case "compliance":
+          case "json":
             content = generateJSONReport(report, t, locale);
             mimeType = "application/json";
             extension = "json";
             break;
-          default:
+          case "sarif":
+            content = generateSARIFReport(report, t, locale);
+            mimeType = "application/json";
+            extension = "sarif.json";
+            break;
+          case "markdown":
             content = generateMarkdownReport(report, t, locale);
             mimeType = "text/markdown";
             extension = "md";
+            break;
+          case "csv":
+            content = generateCSVReport(report, t, locale);
+            mimeType = "text/csv";
+            extension = "csv";
+            break;
+          default:
+            content = generateHTMLReport(report, t, locale);
+            mimeType = "text/html";
+            extension = "html";
         }
 
         const blob = new Blob([content], { type: mimeType });
@@ -378,6 +430,8 @@ export default function ReportsPage() {
           title: t("reports.downloaded"),
           description: t("reports.downloaded.desc"),
         });
+
+        setLastDownloaded(report.id);
       }, 800);
     },
     [t, locale, addToast]
@@ -534,19 +588,39 @@ export default function ReportsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => downloadReport(report)}
-                    disabled={isDownloading}
-                    title={t("reports.download")}
-                  >
-                    {isDownloading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFormatPicker(showFormatPicker === report.id ? null : report.id)}
+                      disabled={isDownloading}
+                      title={t("reports.download")}
+                    >
+                      {isDownloading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                    </Button>
+                    {showFormatPicker === report.id && (
+                      <div className="absolute right-0 top-full mt-1 w-44 bg-surface-2 border border-border rounded-lg shadow-xl z-50 py-1 overflow-hidden">
+                        {([
+                          { format: "pdf" as ExportFormat, label: "PDF", desc: locale === "ru" ? "Для печати" : "For printing" },
+                          { format: "html" as ExportFormat, label: "HTML", desc: locale === "ru" ? "Веб-формат" : "Web format" },
+                          { format: "json" as ExportFormat, label: "JSON", desc: locale === "ru" ? "Для интеграций" : "For integrations" },
+                          { format: "sarif" as ExportFormat, label: "SARIF", desc: locale === "ru" ? "Стандарт GitHub" : "GitHub standard" },
+                          { format: "markdown" as ExportFormat, label: "Markdown", desc: locale === "ru" ? "Документация" : "Documentation" },
+                          { format: "csv" as ExportFormat, label: "CSV", desc: locale === "ru" ? "Таблица" : "Spreadsheet" },
+                        ]).map(opt => (
+                          <button key={opt.format} onClick={() => { downloadReport(report, opt.format); setShowFormatPicker(null); }}
+                            className="flex items-center justify-between w-full px-3 py-2 text-sm text-muted-2 hover:text-foreground hover:bg-surface-3 transition-colors">
+                            <span className="font-medium text-foreground">{opt.label}</span>
+                            <span className="text-xs">{opt.desc}</span>
+                          </button>
+                        ))}
+                      </div>
                     )}
-                  </Button>
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -560,6 +634,28 @@ export default function ReportsPage() {
               </motion.div>
             );
           })}
+        </div>
+      )}
+
+      {/* What's next after download */}
+      {lastDownloaded && (
+        <div className="mt-6 p-4 rounded-xl bg-accent-muted/50 border border-accent/20">
+          <div className="flex items-center gap-2 mb-3">
+            <CheckCircle2 className="w-5 h-5 text-accent" />
+            <span className="text-sm font-semibold text-foreground">
+              {locale === "ru" ? "Отчёт скачан. Что дальше?" : "Report downloaded. What's next?"}
+            </span>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <a href="/app/scanner" className="p-3 rounded-lg bg-surface border border-border hover:border-accent/30 transition-all flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-accent" />
+              <span className="text-sm text-foreground">{locale === "ru" ? "Исправьте найденные проблемы" : "Fix found issues"}</span>
+            </a>
+            <a href="/app/demo/knowledge-graph" className="p-3 rounded-lg bg-surface border border-border hover:border-accent/30 transition-all flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-cyan" />
+              <span className="text-sm text-foreground">{locale === "ru" ? "Поделитесь отчётом с командой" : "Share report with your team"}</span>
+            </a>
+          </div>
         </div>
       )}
 
