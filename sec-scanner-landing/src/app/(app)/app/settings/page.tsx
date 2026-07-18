@@ -365,6 +365,7 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-3 mb-4">
           <SettingsIcon className="w-6 h-6 text-accent" />
           {t("settings.title")}
+          <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">Demo</span>
         </h1>
 
         {/* Demo notice banner */}
@@ -372,8 +373,8 @@ export default function SettingsPage() {
           <AlertTriangle className="w-4 h-4 text-amber shrink-0" />
           <span className="text-amber">
             {locale === "ru"
-              ? "Это демонстрационная версия. Изменения сохраняются локально в текущей сессии."
-              : "This is a demo version. Changes are saved locally in the current session."}
+              ? "Демонстрационная версия. Некоторые функции недоступны и отмечены соответствующим образом."
+              : "Demo version. Some features are unavailable and marked accordingly."}
           </span>
         </div>
 
@@ -446,7 +447,10 @@ export default function SettingsPage() {
             </section>
 
             {/* ─── 2. Team ─────────────────────────────────────────── */}
-            <section id="team" className="p-6 rounded-xl bg-surface border border-border scroll-mt-24">
+            <section id="team" className="p-6 rounded-xl bg-surface border border-border scroll-mt-24 relative">
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">{locale === "ru" ? "Будет доступно в версии 2.0" : "Available in v2.0"}</span>
+              </div>
               <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-cyan" />
@@ -643,7 +647,10 @@ export default function SettingsPage() {
             </section>
 
             {/* ─── 7. Security ──────────────────────────────────────── */}
-            <section id="security" className="p-6 rounded-xl bg-surface border border-border scroll-mt-24">
+            <section id="security" className="p-6 rounded-xl bg-surface border border-border scroll-mt-24 relative">
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">{locale === "ru" ? "Будет доступно в версии 2.0" : "Available in v2.0"}</span>
+              </div>
               <div className="flex items-center gap-3 mb-5">
                 <Shield className="w-5 h-5 text-red" />
                 <h2 className="text-base font-semibold text-foreground">{t("settings.security")}</h2>
@@ -753,7 +760,10 @@ export default function SettingsPage() {
             </section>
 
             {/* ─── 10. Billing ──────────────────────────────────────── */}
-            <section id="billing" className="p-6 rounded-xl bg-surface border border-border scroll-mt-24">
+            <section id="billing" className="p-6 rounded-xl bg-surface border border-border scroll-mt-24 relative">
+              <div className="absolute top-4 right-4">
+                <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">{locale === "ru" ? "Будет доступно в версии 2.0" : "Available in v2.0"}</span>
+              </div>
               <div className="flex items-center gap-3 mb-5">
                 <CreditCard className="w-5 h-5 text-accent" />
                 <h2 className="text-base font-semibold text-foreground">{t("settings.billing")}</h2>

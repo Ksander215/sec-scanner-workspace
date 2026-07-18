@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { TermTooltip } from "@/components/ui/TermTooltip";
+import { useI18n } from "@/lib/i18n-context";
 import {
   Shield,
   AlertTriangle,
@@ -20,6 +22,9 @@ import {
   ArrowRight,
   Brain,
   MessageSquare,
+  Store,
+  Rocket,
+  BookOpen,
 } from "lucide-react";
 import {
   demoFindings,
@@ -298,6 +303,7 @@ function AICopilot() {
 // ─── Main Dashboard ─────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { t } = useI18n();
   const [activeView, setActiveView] = useState<"overview" | "findings" | "compliance" | "ai">("overview");
 
   const criticalCount = demoFindings.filter((f) => f.severity === "critical").length;
@@ -314,8 +320,9 @@ export default function DashboardPage() {
               <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                 <Activity className="w-5 h-5 text-accent" />
                 Executive Dashboard
+                <span className="ml-2 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">Demo</span>
               </h1>
-              <p className="text-sm text-muted-2 mt-1">Security posture overview — demo data</p>
+              <p className="text-sm text-muted-2 mt-1">{t("dashboard.subtitle")} — demo data</p>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-2">
               <Clock className="w-3.5 h-3.5" />
@@ -379,7 +386,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
                           <div className="text-2xl font-bold text-red">3</div>
-                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">Attack Paths</div>
+                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5 flex items-center justify-center gap-0.5">Attack Paths <TermTooltip termKey="dashboard.term.attackPath" explainKey="dashboard.term.attackPath.explain" /></div>
                         </div>
                         <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
                           <div className="text-2xl font-bold text-amber">{highCount}</div>
@@ -437,7 +444,7 @@ export default function DashboardPage() {
               {/* Risk trend — wide card */}
               <div className="md:col-span-2 p-5 rounded-xl bg-surface border border-border">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-foreground">Risk Score Trend (30 days)</h3>
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5"><TermTooltip termKey="dashboard.term.riskScore" explainKey="dashboard.term.riskScore.explain" /> Trend (30 days)</h3>
                   <span className="text-xs text-muted-2">Updated daily</span>
                 </div>
                 <TrendChart />
@@ -553,7 +560,7 @@ export default function DashboardPage() {
                   <Badge variant={f.severity}>{f.severity}</Badge>
                   <span className="text-sm text-foreground flex-1">{f.title}</span>
                   <span className="text-xs text-muted font-mono">{f.asset}</span>
-                  <span className="text-xs text-muted-2">CVSS {f.cvss}</span>
+                  <span className="text-xs text-muted-2 flex items-center gap-0.5">CVSS {f.cvss} <TermTooltip termKey="dashboard.term.cvss" explainKey="dashboard.term.cvss.explain" /></span>
                   <span className="text-xs text-muted-2">{f.status}</span>
                 </div>
               ))}
@@ -600,6 +607,26 @@ export default function DashboardPage() {
             <AICopilot />
           </div>
         )}
+        {/* ─── Что делать дальше? ──────────────────────────────────────── */}
+        <div className="mt-8 p-5 rounded-xl border border-border bg-surface">
+          <h3 className="text-sm font-semibold text-foreground mb-4">{t("dashboard.whatNext.title")}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { icon: Rocket, label: t("dashboard.whatNext.scan"), href: "/app/scans" },
+              { icon: Store, label: t("dashboard.whatNext.marketplace"), href: "/app/marketplace" },
+              { icon: BookOpen, label: t("dashboard.whatNext.docs"), href: "/app/docs" },
+            ].map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-accent/30 hover:bg-accent-muted/30 transition-all group"
+              >
+                <item.icon className="w-4 h-4 text-accent shrink-0" />
+                <span className="text-sm text-foreground group-hover:text-accent transition-colors">{item.label}</span>
+              </a>
+            ))}
+          </div>
+        </div>
       </Container>
     </div>
   );

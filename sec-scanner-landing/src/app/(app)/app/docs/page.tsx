@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { DocsSidebar } from "@/components/layout/DocsSidebar";
 import { Badge } from "@/components/ui/Badge";
 import { useI18n } from "@/lib/i18n-context";
@@ -37,20 +36,21 @@ const sections = [
 
 export default function DocsPage() {
   const { t } = useI18n();
-  const router = useRouter();
 
   return (
     <div className="flex min-h-[calc(100vh-7rem)]">
       <DocsSidebar />
       <div className="flex-1 py-8 px-8 max-w-4xl">
-        {/* Back button */}
-        <button
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors mb-6 group"
-        >
-          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
-          <span>{t("docs.back")}</span>
-        </button>
+        {/* Back button — always works */}
+        <div className="mb-6">
+          <Link
+            href="/app"
+            className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+            <span>{t("docs.back")}</span>
+          </Link>
+        </div>
 
         <h1 className="text-3xl font-bold text-foreground mb-2">{t("docs.title")}</h1>
         <p className="text-lg text-muted-2 mb-8">
