@@ -76,6 +76,13 @@ const sidebarSections: SidebarSection[] = [
     href: "/app/reports",
   },
   {
+    id: "findings",
+    labelKey: "sidebar.findings",
+    icon: Bug,
+    href: "/app/findings",
+    badge: "12",
+  },
+  {
     id: "knowledge-graph",
     labelKey: "sidebar.infrastructure",
     icon: Network,
@@ -86,13 +93,6 @@ const sidebarSections: SidebarSection[] = [
     labelKey: "sidebar.attackPaths",
     icon: Route,
     href: "/app/demo/attack-paths",
-  },
-  {
-    id: "findings",
-    labelKey: "sidebar.findings",
-    icon: Bug,
-    href: "/app/findings",
-    badge: "12",
   },
   {
     id: "risks",
@@ -108,7 +108,7 @@ const sidebarSections: SidebarSection[] = [
     children: [
       { labelKey: "sidebar.workspace.overview", href: "/app/workspace", icon: Activity },
       { labelKey: "sidebar.workspace.assets", href: "/app/workspace/assets", icon: Database },
-      { labelKey: "sidebar.workspace.pipelines", href: "/app/workspace/pipelines", icon: GitBranch },
+      { labelKey: "sidebar.workspace.stages", href: "/app/workspace/pipelines", icon: GitBranch },
       { labelKey: "sidebar.workspace.history", href: "/app/workspace/history", icon: Clock },
       { labelKey: "sidebar.workspace.jobs", href: "/app/workspace/jobs", icon: Cpu },
       { labelKey: "sidebar.workspace.monitoring", href: "/app/workspace/monitoring", icon: BarChart3 },

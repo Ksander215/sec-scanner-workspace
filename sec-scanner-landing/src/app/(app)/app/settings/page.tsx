@@ -30,6 +30,7 @@ import {
   ExternalLink,
   LogOut,
   Link2,
+  AlertTriangle,
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -361,10 +362,20 @@ export default function SettingsPage() {
     <div className="min-h-[calc(100vh-7rem)]">
       <Container className="py-8">
         {/* Page Header */}
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-3 mb-8">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-3 mb-4">
           <SettingsIcon className="w-6 h-6 text-accent" />
           {t("settings.title")}
         </h1>
+
+        {/* Demo notice banner */}
+        <div className="mb-6 p-3 rounded-lg bg-amber/10 border border-amber/20 flex items-center gap-2.5 text-sm">
+          <AlertTriangle className="w-4 h-4 text-amber shrink-0" />
+          <span className="text-amber">
+            {locale === "ru"
+              ? "Это демонстрационная версия. Изменения сохраняются локально в текущей сессии."
+              : "This is a demo version. Changes are saved locally in the current session."}
+          </span>
+        </div>
 
         <div className="flex gap-8">
           {/* ─── Left Sidebar Navigation ─────────────────────────────── */}

@@ -1,52 +1,61 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
-
-export const metadata: Metadata = {
-  title: "Compliance — Docs — Security Intelligence Platform",
-  description: "Compliance frameworks, automated checks, and audit trail documentation.",
-  openGraph: { title: "Compliance — Docs", description: "Compliance documentation." },
-};
+import { useI18n } from "@/lib/i18n-context";
+import { ArrowLeft } from "lucide-react";
 
 const frameworks = [
-  { name: "PCI DSS 4.0", status: "Supported", description: "Payment Card Industry Data Security Standard with automated requirement mapping." },
-  { name: "SOC 2 Type II", status: "Supported", description: "Service Organization Control with continuous monitoring and evidence collection." },
-  { name: "ISO 27001", status: "Supported", description: "Information security management system with Annex A control mapping." },
-  { name: "GDPR", status: "Supported", description: "General Data Protection Regulation data processing and privacy assessments." },
-  { name: "HIPAA", status: "Beta", description: "Health Insurance Portability and Accountability Act security rule checks." },
-  { name: "NIST CSF", status: "Beta", description: "NIST Cybersecurity Framework core function assessment and scoring." },
+  { nameKey: "docs.comp.fw1.name", statusKey: "docs.comp.status.supported", descKey: "docs.comp.fw1.desc", statusVariant: "low" as const },
+  { nameKey: "docs.comp.fw2.name", statusKey: "docs.comp.status.supported", descKey: "docs.comp.fw2.desc", statusVariant: "low" as const },
+  { nameKey: "docs.comp.fw3.name", statusKey: "docs.comp.status.supported", descKey: "docs.comp.fw3.desc", statusVariant: "low" as const },
+  { nameKey: "docs.comp.fw4.name", statusKey: "docs.comp.status.supported", descKey: "docs.comp.fw4.desc", statusVariant: "low" as const },
+  { nameKey: "docs.comp.fw5.name", statusKey: "docs.comp.status.beta", descKey: "docs.comp.fw5.desc", statusVariant: "medium" as const },
+  { nameKey: "docs.comp.fw6.name", statusKey: "docs.comp.status.beta", descKey: "docs.comp.fw6.desc", statusVariant: "medium" as const },
 ];
 
 export default function CompliancePage() {
+  const { t } = useI18n();
+  const router = useRouter();
+
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Compliance" }]}
-        title="Compliance"
-        description="Automated compliance monitoring and reporting for major security frameworks."
+        breadcrumbs={[{ label: t("docs.breadcrumb.docs"), href: "/app/docs" }, { label: t("docs.comp.title") }]}
+        title={t("docs.comp.title")}
+        description={t("docs.comp.subtitle")}
       />
 
       <Container className="py-16">
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors mb-8 group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>{t("docs.back")}</span>
+        </button>
+
         <div className="max-w-3xl mx-auto space-y-4">
           {frameworks.map((fw) => (
-            <div key={fw.name} className="p-5 rounded-xl bg-surface border border-border flex items-start gap-4">
+            <div key={fw.nameKey} className="p-5 rounded-xl bg-surface border border-border flex items-start gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-base font-semibold text-foreground">{fw.name}</h3>
-                  <Badge variant={fw.status === "Supported" ? "low" : "medium"}>{fw.status}</Badge>
+                  <h3 className="text-base font-semibold text-foreground">{t(fw.nameKey)}</h3>
+                  <Badge variant={fw.statusVariant}>{t(fw.statusKey)}</Badge>
                 </div>
-                <p className="text-sm text-muted-2">{fw.description}</p>
+                <p className="text-sm text-muted-2">{t(fw.descKey)}</p>
               </div>
             </div>
           ))}
         </div>
 
         <div className="mt-12 max-w-3xl mx-auto p-6 rounded-xl bg-surface border border-border">
-          <h3 className="text-lg font-semibold text-foreground mb-3">Audit Trail</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-3">{t("docs.comp.auditTrail")}</h3>
           <p className="text-sm text-muted-2 leading-relaxed">
-            Every scan, finding, user action, and configuration change is logged with timestamps, user identity,
-            and IP addresses. Audit logs are immutable and can be exported to your SIEM for long-term retention.
+            {t("docs.comp.auditTrail.desc")}
           </p>
         </div>
       </Container>

@@ -1,25 +1,23 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Container } from "@/components/ui/Container";
-
-export const metadata: Metadata = {
-  title: "API Reference — Docs — Security Intelligence Platform",
-  description: "REST and GraphQL API documentation with request/response examples.",
-  openGraph: { title: "API Reference — Docs", description: "REST and GraphQL API docs." },
-};
+import { useI18n } from "@/lib/i18n-context";
+import { ArrowLeft } from "lucide-react";
 
 const endpoints = [
-  { method: "GET", path: "/api/v1/scans", description: "List all scans with filtering and pagination" },
-  { method: "POST", path: "/api/v1/scans", description: "Create and start a new scan" },
-  { method: "GET", path: "/api/v1/scans/:id", description: "Get scan details and status" },
-  { method: "DELETE", path: "/api/v1/scans/:id", description: "Cancel or delete a scan" },
-  { method: "GET", path: "/api/v1/findings", description: "List findings across all scans" },
-  { method: "GET", path: "/api/v1/findings/:id", description: "Get finding details with remediation" },
-  { method: "PATCH", path: "/api/v1/findings/:id", description: "Update finding status (accept, reject, remediate)" },
-  { method: "GET", path: "/api/v1/targets", description: "List configured targets" },
-  { method: "POST", path: "/api/v1/targets", description: "Add a new scanning target" },
-  { method: "GET", path: "/api/v1/reports", description: "List and download generated reports" },
-  { method: "POST", path: "/api/v1/graphql", description: "GraphQL endpoint for flexible queries" },
+  { method: "GET", path: "/api/v1/scans", descKey: "docs.api.ep1.desc" },
+  { method: "POST", path: "/api/v1/scans", descKey: "docs.api.ep2.desc" },
+  { method: "GET", path: "/api/v1/scans/:id", descKey: "docs.api.ep3.desc" },
+  { method: "DELETE", path: "/api/v1/scans/:id", descKey: "docs.api.ep4.desc" },
+  { method: "GET", path: "/api/v1/findings", descKey: "docs.api.ep5.desc" },
+  { method: "GET", path: "/api/v1/findings/:id", descKey: "docs.api.ep6.desc" },
+  { method: "PATCH", path: "/api/v1/findings/:id", descKey: "docs.api.ep7.desc" },
+  { method: "GET", path: "/api/v1/targets", descKey: "docs.api.ep8.desc" },
+  { method: "POST", path: "/api/v1/targets", descKey: "docs.api.ep9.desc" },
+  { method: "GET", path: "/api/v1/reports", descKey: "docs.api.ep10.desc" },
+  { method: "POST", path: "/api/v1/graphql", descKey: "docs.api.ep11.desc" },
 ];
 
 const methodColors: Record<string, string> = {
@@ -30,20 +28,32 @@ const methodColors: Record<string, string> = {
 };
 
 export default function ApiPage() {
+  const { t } = useI18n();
+  const router = useRouter();
+
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "API Reference" }]}
-        title="API Reference"
-        description="REST and GraphQL API documentation with request/response examples and authentication guides."
+        breadcrumbs={[{ label: t("docs.breadcrumb.docs"), href: "/app/docs" }, { label: t("docs.api.title") }]}
+        title={t("docs.api.title")}
+        description={t("docs.api.subtitle")}
       />
 
       <Container className="py-16">
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors mb-8 group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>{t("docs.back")}</span>
+        </button>
+
         <div className="max-w-3xl mx-auto">
           <div className="mb-8 p-4 rounded-lg bg-surface border border-border">
-            <h3 className="text-sm font-semibold text-foreground mb-2">Base URL</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-2">{t("docs.api.baseUrl")}</h3>
             <code className="text-sm text-accent font-mono">https://api.sec-scanner.pro/v1</code>
-            <p className="text-xs text-muted mt-2">Authentication via Bearer token in the Authorization header.</p>
+            <p className="text-xs text-muted mt-2">{t("docs.api.auth")}</p>
           </div>
 
           <div className="space-y-2">
@@ -56,7 +66,7 @@ export default function ApiPage() {
                   {ep.method}
                 </span>
                 <code className="text-sm text-foreground font-mono flex-1">{ep.path}</code>
-                <span className="text-sm text-muted-2 hidden sm:block">{ep.description}</span>
+                <span className="text-sm text-muted-2 hidden sm:block">{t(ep.descKey)}</span>
               </div>
             ))}
           </div>
