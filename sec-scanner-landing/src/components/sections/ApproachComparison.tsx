@@ -16,7 +16,7 @@ export function ApproachComparison() {
   ];
 
   return (
-    <section className="relative py-24 sm:py-32 overflow-hidden">
+    <section id="approach" className="relative py-24 sm:py-32 overflow-hidden">
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div

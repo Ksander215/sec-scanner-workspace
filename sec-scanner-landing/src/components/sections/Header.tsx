@@ -19,10 +19,11 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
+    { href: "#how-it-works", label: t("nav.howItWorks") },
     { href: "#platform", label: t("nav.platform") },
-    { href: "#metrics", label: t("nav.metrics") },
     { href: "#demo", label: t("nav.demo") },
-    { href: "#community", label: t("nav.community") },
+    { href: "#pricing", label: t("nav.pricing") },
+    { href: "#trust", label: t("nav.trust") },
   ];
 
   useEffect(() => {

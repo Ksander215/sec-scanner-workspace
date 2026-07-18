@@ -57,7 +57,7 @@ export function Hero() {
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent-border bg-accent-muted text-accent text-xs font-medium tracking-wide uppercase">
             <Shield className="w-3.5 h-3.5" />
-            {t("hero.whatIsItAnswer")}
+            SIP — {t("hero.whatIsItAnswer")}
           </span>
         </motion.div>
 
