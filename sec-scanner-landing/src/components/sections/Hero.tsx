@@ -4,8 +4,11 @@ import { motion } from "framer-motion";
 import { Shield, ArrowRight, Play } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/icons";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
+import { useI18n } from "@/lib/i18n-context";
 
 export function Hero() {
+  const { t } = useI18n();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background effects */}
@@ -25,7 +28,7 @@ export function Hero() {
         >
           <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-accent-border bg-accent-muted text-accent text-xs font-medium tracking-wide uppercase">
             <Shield className="w-3.5 h-3.5" />
-            Платформа корпоративной безопасности
+            {t("hero.badge")}
           </span>
         </motion.div>
 
@@ -38,9 +41,9 @@ export function Hero() {
         >
           <span className="text-accent">SIP</span>
           <br />
-          <span className="text-gradient-accent">Security Intelligence</span>
+          <span className="text-gradient-accent">{t("hero.headline1")}</span>
           <br />
-          <span className="text-foreground">Platform</span>
+          <span className="text-foreground">{t("hero.headline2")}</span>
         </motion.h1>
 
         {/* Tagline — The 30-second value proposition */}
@@ -50,8 +53,7 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mt-6 text-lg sm:text-xl text-muted-2 max-w-2xl mx-auto leading-relaxed"
         >
-          Операционная система для безопасности бизнеса.
-          Находите уязвимости, анализируйте инфраструктуру, получайте рекомендации&nbsp;AI.
+          {t("hero.tagline")}
         </motion.p>
 
         {/* What you can do */}
@@ -61,10 +63,10 @@ export function Hero() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-8 flex flex-wrap items-center justify-center gap-3 text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight"
         >
-          <span className="text-accent">Находите.</span>
-          <span className="text-cyan">Анализируйте.</span>
-          <span className="text-amber">Защищайте.</span>
-          <span className="text-purple">Автоматизируйте.</span>
+          <span className="text-accent">{t("hero.keyword1")}</span>
+          <span className="text-cyan">{t("hero.keyword2")}</span>
+          <span className="text-amber">{t("hero.keyword3")}</span>
+          <span className="text-purple">{t("hero.keyword4")}</span>
         </motion.div>
 
         {/* CTA */}
@@ -79,7 +81,7 @@ export function Hero() {
             className="group inline-flex items-center gap-2 px-8 py-3.5 text-base font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
           >
             <Play className="w-4 h-4" />
-            Открыть платформу
+            {t("nav.openPlatform")}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </a>
           <a
@@ -113,16 +115,16 @@ export function Hero() {
                 --target api.example.com
               </div>
               <div className="text-accent">
-                ✓ Найдено 50 проблем по 3 уровням критичности
+                ✓ {t("hero.terminal.findings")}
               </div>
               <div className="text-cyan">
-                ✓ Оценка риска: 73/100 (Высокий) — 12 критических, 23 высоких, 15 средних
+                ✓ {t("hero.terminal.risk")}
               </div>
               <div className="text-amber">
-                ✓ Путь атаки: API4:2023 → API8:2023 → API1:2023 (цепочка)
+                ✓ {t("hero.terminal.attack")}
               </div>
               <div className="text-purple">
-                ✓ Сгенерировано 8 приоритетных рекомендаций
+                ✓ {t("hero.terminal.recs")}
               </div>
               <div className="text-muted mt-2">
                 $ <span className="text-accent animate-blink">▋</span>
@@ -142,10 +144,10 @@ export function Hero() {
           className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-3xl mx-auto"
         >
           {[
-            { value: 50, suffix: "K+", label: "Сканирований" },
-            { value: 370, suffix: "+", label: "Правил обнаружения" },
-            { value: 99.2, suffix: "%", label: "Точность" },
-            { value: 3, suffix: "с", label: "Среднее время", prefix: "<" },
+            { value: 50, suffix: "K+", label: t("hero.stats.scans") },
+            { value: 370, suffix: "+", label: t("hero.stats.rules") },
+            { value: 99.2, suffix: "%", label: t("hero.stats.accuracy") },
+            { value: 3, suffix: "с", label: t("hero.stats.time"), prefix: "<" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-2xl sm:text-3xl font-bold text-gradient-accent">

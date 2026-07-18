@@ -1,52 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { Shield, Send, MessageCircle, X } from "lucide-react";
+import { Shield, Send, MessageCircle } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/icons";
-
-const footerLinks = [
-  {
-    title: "Продукт",
-    links: [
-      { label: "Платформа", href: "/app/platform" },
-      { label: "Дашборд", href: "/app/dashboard" },
-      { label: "Тарифы", href: "/app/pricing" },
-      { label: "Каталог инструментов", href: "/app/marketplace" },
-      { label: "Демо", href: "/app/dashboard" },
-    ],
-  },
-  {
-    title: "Разработчикам",
-    links: [
-      { label: "Документация", href: "/app/docs" },
-      { label: "API Reference", href: "/app/docs/api" },
-      { label: "CLI", href: "/app/docs/cli" },
-      { label: "SDK", href: "/app/docs/sdk" },
-      { label: "GitHub", href: "https://github.com/Ksander215/sec-scanner-workspace" },
-    ],
-  },
-  {
-    title: "Сообщество",
-    links: [
-      { label: "Telegram", href: "https://t.me/sip_security_platform" },
-      { label: "Discord", href: "https://discord.gg/sip-security" },
-      { label: "GitHub Discussions", href: "https://github.com/Ksander215/sec-scanner-workspace/discussions" },
-      { label: "Дорожная карта", href: "/app/community/roadmap" },
-      { label: "Вклад в проект", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/CONTRIBUTING.md" },
-    ],
-  },
-  {
-    title: "Юридическое",
-    links: [
-      { label: "Политика конфиденциальности", href: "/app/legal/privacy" },
-      { label: "Условия использования", href: "/app/legal/terms" },
-      { label: "Политика безопасности", href: "/app/legal/security" },
-      { label: "Лицензия (MIT)", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/LICENSE" },
-    ],
-  },
-];
+import { useI18n } from "@/lib/i18n-context";
 
 export function Footer() {
+  const { t, locale } = useI18n();
+
+  const footerLinks = [
+    {
+      title: locale === "ru" ? "Продукт" : "Product",
+      links: [
+        { label: t("nav.platform"), href: "/app/platform" },
+        { label: t("nav.dashboard"), href: "/app/dashboard" },
+        { label: t("nav.pricing"), href: "/app/pricing" },
+        { label: t("nav.marketplace"), href: "/app/marketplace" },
+        { label: locale === "ru" ? "Демо" : "Demo", href: "/app/dashboard" },
+      ],
+    },
+    {
+      title: locale === "ru" ? "Разработчикам" : "Developers",
+      links: [
+        { label: t("nav.documentation"), href: "/app/docs" },
+        { label: "API Reference", href: "/app/docs/api" },
+        { label: "CLI", href: "/app/docs/cli" },
+        { label: "SDK", href: "/app/docs/sdk" },
+        { label: "GitHub", href: "https://github.com/Ksander215/sec-scanner-workspace" },
+      ],
+    },
+    {
+      title: t("community.title"),
+      links: [
+        { label: "Telegram", href: "https://t.me/sip_security_platform" },
+        { label: "Discord", href: "https://discord.gg/sip-security" },
+        { label: "GitHub Discussions", href: "https://github.com/Ksander215/sec-scanner-workspace/discussions" },
+        { label: t("community.roadmap"), href: "/app/community/roadmap" },
+        { label: t("community.contributing"), href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/CONTRIBUTING.md" },
+      ],
+    },
+    {
+      title: locale === "ru" ? "Юридическое" : "Legal",
+      links: [
+        { label: locale === "ru" ? "Политика конфиденциальности" : "Privacy Policy", href: "/app/legal/privacy" },
+        { label: locale === "ru" ? "Условия использования" : "Terms of Service", href: "/app/legal/terms" },
+        { label: locale === "ru" ? "Политика безопасности" : "Security Policy", href: "/app/legal/security" },
+        { label: "MIT License", href: "https://github.com/Ksander215/sec-scanner-workspace/blob/main/LICENSE" },
+      ],
+    },
+  ];
+
   return (
     <footer className="relative border-t border-border bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -60,7 +63,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-2 text-xs text-muted">Security Intelligence Platform</p>
-            <p className="mt-1 text-xs text-muted">Операционная система для безопасности бизнеса</p>
+            <p className="mt-1 text-xs text-muted">{t("brand.tagline")}</p>
             <p className="mt-3 text-sm text-muted leading-relaxed">
               Powered by Sec Scanner Engine
             </p>
@@ -119,7 +122,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted">
-            &copy; {new Date().getFullYear()} SIP — Security Intelligence Platform. {footer_allRights}
+            &copy; {new Date().getFullYear()} SIP — Security Intelligence Platform. {locale === "ru" ? "Все права защищены" : "All rights reserved"}.
           </p>
           <a
             href="mailto:hello@sec-scanner.pro"
@@ -132,5 +135,3 @@ export function Footer() {
     </footer>
   );
 }
-
-const footer_allRights = "Все права защищены";

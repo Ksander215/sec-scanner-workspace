@@ -2,99 +2,102 @@
 
 import { motion } from "framer-motion";
 import { Check, X, Zap, Rocket, Building2, Crown } from "lucide-react";
-
-const plans = [
-  {
-    name: "Сообщество",
-    price: "Бесплатно",
-    period: "",
-    description: "Для индивидуальных исследователей",
-    icon: Zap,
-    color: "accent",
-    features: [
-      { label: "Сканирования", value: "100" },
-      { label: "Пользователи", value: "1" },
-      { label: "Проекты", value: "3" },
-      { label: "API доступ", value: false },
-      { label: "Поддержка", value: "Поддержка сообщества" },
-      { label: "SSO/SAML", value: false },
-      { label: "RBAC", value: false },
-      { label: "Аудит логов", value: false },
-    ],
-    cta: "Начать бесплатно",
-    ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
-    ctaHref: "/app/demo",
-    highlight: false,
-  },
-  {
-    name: "Команда",
-    price: "4 900 ₽",
-    period: "/мес",
-    description: "Для security-команд и DevOps",
-    icon: Rocket,
-    color: "cyan",
-    features: [
-      { label: "Сканирования", value: "Безлимит" },
-      { label: "Пользователи", value: "до 10" },
-      { label: "Проекты", value: "20" },
-      { label: "API доступ", value: true },
-      { label: "Поддержка", value: "Email" },
-      { label: "SSO/SAML", value: false },
-      { label: "RBAC", value: true },
-      { label: "Аудит логов", value: false },
-    ],
-    cta: "Выбрать",
-    ctaStyle: "bg-accent text-background hover:bg-accent-hover glow-accent",
-    ctaHref: "/app/demo",
-    highlight: true,
-  },
-  {
-    name: "Бизнес",
-    price: "14 900 ₽",
-    period: "/мес",
-    description: "Для среднего и крупного бизнеса",
-    icon: Building2,
-    color: "purple",
-    features: [
-      { label: "Сканирования", value: "Безлимит" },
-      { label: "Пользователи", value: "до 50" },
-      { label: "Проекты", value: "Безлимит" },
-      { label: "API доступ", value: true },
-      { label: "Поддержка", value: "Приоритетная" },
-      { label: "SSO/SAML", value: true },
-      { label: "RBAC", value: true },
-      { label: "Аудит логов", value: true },
-    ],
-    cta: "Выбрать",
-    ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
-    ctaHref: "/app/demo",
-    highlight: false,
-  },
-  {
-    name: "Корпоративный",
-    price: "По запросу",
-    period: "",
-    description: "Для крупных организаций",
-    icon: Crown,
-    color: "amber",
-    features: [
-      { label: "Сканирования", value: "Безлимит" },
-      { label: "Пользователи", value: "Безлимит" },
-      { label: "Проекты", value: "Безлимит" },
-      { label: "API доступ", value: true },
-      { label: "Поддержка", value: "Выделенный менеджер" },
-      { label: "SSO/SAML", value: true },
-      { label: "RBAC", value: true },
-      { label: "Аудит логов", value: true },
-    ],
-    cta: "Связаться",
-    ctaStyle: "border border-amber/30 bg-amber-muted text-amber hover:bg-amber/20",
-    ctaHref: "mailto:hello@sec-scanner.pro",
-    highlight: false,
-  },
-];
+import { useI18n } from "@/lib/i18n-context";
 
 export function Pricing() {
+  const { t, locale } = useI18n();
+
+  const plans = [
+    {
+      name: t("pricing.community"),
+      price: t("pricing.community.price"),
+      period: "",
+      description: t("pricing.community.desc"),
+      icon: Zap,
+      color: "accent",
+      features: [
+        { label: t("pricing.feature.scans"), value: "100" },
+        { label: t("pricing.feature.users"), value: "1" },
+        { label: t("pricing.feature.projects"), value: "3" },
+        { label: t("pricing.feature.api"), value: false },
+        { label: t("pricing.feature.support"), value: t("pricing.feature.community") },
+        { label: t("pricing.feature.sso"), value: false },
+        { label: t("pricing.feature.rbac"), value: false },
+        { label: t("pricing.feature.audit"), value: false },
+      ],
+      cta: t("common.getStarted"),
+      ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
+      ctaHref: "/app/demo",
+      highlight: false,
+    },
+    {
+      name: t("pricing.team"),
+      price: t("pricing.team.price"),
+      period: locale === "ru" ? "/мес" : "/mo",
+      description: t("pricing.team.desc"),
+      icon: Rocket,
+      color: "cyan",
+      features: [
+        { label: t("pricing.feature.scans"), value: t("pricing.unlimited") },
+        { label: t("pricing.feature.users"), value: locale === "ru" ? "до 10" : "up to 10" },
+        { label: t("pricing.feature.projects"), value: "20" },
+        { label: t("pricing.feature.api"), value: true },
+        { label: t("pricing.feature.support"), value: t("pricing.feature.email") },
+        { label: t("pricing.feature.sso"), value: false },
+        { label: t("pricing.feature.rbac"), value: true },
+        { label: t("pricing.feature.audit"), value: false },
+      ],
+      cta: t("pricing.choose"),
+      ctaStyle: "bg-accent text-background hover:bg-accent-hover glow-accent",
+      ctaHref: "/app/demo",
+      highlight: true,
+    },
+    {
+      name: t("pricing.business"),
+      price: t("pricing.business.price"),
+      period: locale === "ru" ? "/мес" : "/mo",
+      description: t("pricing.business.desc"),
+      icon: Building2,
+      color: "purple",
+      features: [
+        { label: t("pricing.feature.scans"), value: t("pricing.unlimited") },
+        { label: t("pricing.feature.users"), value: locale === "ru" ? "до 50" : "up to 50" },
+        { label: t("pricing.feature.projects"), value: t("pricing.unlimited") },
+        { label: t("pricing.feature.api"), value: true },
+        { label: t("pricing.feature.support"), value: t("pricing.feature.priority") },
+        { label: t("pricing.feature.sso"), value: true },
+        { label: t("pricing.feature.rbac"), value: true },
+        { label: t("pricing.feature.audit"), value: true },
+      ],
+      cta: t("pricing.choose"),
+      ctaStyle: "border border-border-light hover:bg-surface-2 text-foreground",
+      ctaHref: "/app/demo",
+      highlight: false,
+    },
+    {
+      name: t("pricing.enterprise"),
+      price: t("pricing.enterprise.price"),
+      period: "",
+      description: t("pricing.enterprise.desc"),
+      icon: Crown,
+      color: "amber",
+      features: [
+        { label: t("pricing.feature.scans"), value: t("pricing.unlimited") },
+        { label: t("pricing.feature.users"), value: t("pricing.unlimited") },
+        { label: t("pricing.feature.projects"), value: t("pricing.unlimited") },
+        { label: t("pricing.feature.api"), value: true },
+        { label: t("pricing.feature.support"), value: t("pricing.feature.dedicated") },
+        { label: t("pricing.feature.sso"), value: true },
+        { label: t("pricing.feature.rbac"), value: true },
+        { label: t("pricing.feature.audit"), value: true },
+      ],
+      cta: t("pricing.contact"),
+      ctaStyle: "border border-amber/30 bg-amber-muted text-amber hover:bg-amber/20",
+      ctaHref: "mailto:hello@sec-scanner.pro",
+      highlight: false,
+    },
+  ];
+
   return (
     <section id="pricing" className="relative py-24 sm:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,16 +108,19 @@ export function Pricing() {
           className="text-center max-w-3xl mx-auto"
         >
           <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            Тарифы
+            {t("pricing.title")}
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            Прозрачные
-            <br />
-            <span className="text-gradient-accent">тарифы</span>
+            {locale === "ru" ? (
+              <>Прозрачные<br /><span className="text-gradient-accent">тарифы</span></>
+            ) : (
+              <>Transparent<br /><span className="text-gradient-accent">Pricing</span></>
+            )}
           </h2>
           <p className="mt-6 text-lg text-muted-2 leading-relaxed">
-            Начните бесплатно, масштабируйтесь по мере роста. Никаких скрытых платежей,
-            никаких сюрпризов в счёте.
+            {locale === "ru"
+              ? "Начните бесплатно, масштабируйтесь по мере роста. Никаких скрытых платежей, никаких сюрпризов в счёте."
+              : "Start for free, scale as you grow. No hidden fees, no surprise bills."}
           </p>
         </motion.div>
 
@@ -134,7 +140,7 @@ export function Pricing() {
             >
               {plan.highlight && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-medium bg-accent text-background rounded-full">
-                  Популярный
+                  {locale === "ru" ? "Популярный" : "Popular"}
                 </span>
               )}
               <div className="flex items-center gap-3 mb-4">
@@ -191,7 +197,9 @@ export function Pricing() {
           className="mt-10 text-center"
         >
           <p className="text-sm text-muted">
-            Оплата через: Stripe, Robokassa, Telegram Stars
+            {locale === "ru"
+              ? "Оплата через: Stripe, Robokassa, Telegram Stars"
+              : "Payment via: Stripe, Robokassa, Telegram Stars"}
           </p>
         </motion.div>
       </div>
