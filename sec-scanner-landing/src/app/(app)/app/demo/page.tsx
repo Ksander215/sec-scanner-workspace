@@ -22,6 +22,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { demoFindings, pipelineStages, type Finding, type PipelineStage, type Severity } from "@/lib/demo-data";
+import { useI18n } from "@/lib/i18n-context";
 
 // ─── Severity helpers ───────────────────────────────────────────────────────
 
@@ -191,6 +192,8 @@ function FindingRow({ finding, expanded, onToggle }: { finding: Finding; expande
 type DataSource = "demo" | "upload" | "dataset";
 
 export default function DemoWorkspacePage() {
+  const { locale } = useI18n();
+  const isEn = locale === "en";
   const [dataSource, setDataSource] = useState<DataSource>("demo");
   const [pipelineRunning, setPipelineRunning] = useState(false);
   const [pipelineComplete, setPipelineComplete] = useState(false);
@@ -682,42 +685,60 @@ export default function DemoWorkspacePage() {
           <div className="space-y-8 max-w-3xl mx-auto text-center">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-                Что делать дальше?
+                {isEn ? "What's next?" : "Что делать дальше?"}
               </h2>
               <p className="mt-3 text-base text-muted-2">
-                Вы ознакомились с основными возможностями SIP. Вот что можно сделать прямо сейчас:
+                {isEn
+                  ? "You've explored SIP's capabilities. Now try it on your own project:"
+                  : "Вы ознакомились с возможностями SIP. Теперь попробуйте на своём проекте:"}
               </p>
+            </div>
+
+            {/* Primary CTA — Try on your project */}
+            <div className="p-6 rounded-xl bg-accent-muted border border-accent/30 text-left">
+              <div className="flex items-center gap-3 mb-3">
+                <Play className="w-6 h-6 text-accent" />
+                <h3 className="text-lg font-bold text-foreground">{isEn ? "Try on your project" : "Попробуйте на своём проекте"}</h3>
+              </div>
+              <p className="text-sm text-muted-2 mb-4">
+                {isEn
+                  ? "Connect your Git repository, Docker image, or website URL to run a real security scan. SIP will analyze your infrastructure, find vulnerabilities, and build attack paths."
+                  : "Подключите ваш Git-репозиторий, Docker-образ или URL сайта для запуска реального сканирования. SIP проанализирует инфраструктуру, найдёт уязвимости и построит пути атак."}
+              </p>
+              <a href="/app/scanner" className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors">
+                {isEn ? "Start Scanning" : "Начать сканирование"} <ChevronRight className="w-4 h-4" />
+              </a>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
               {[
                 {
                   icon: Store,
-                  title: "Открыть каталог",
-                  desc: "Выберите инструменты для вашей инфраструктуры",
+                  title: isEn ? "Browse Marketplace" : "Открыть каталог",
+                  desc: isEn ? "Install additional scanning tools for your stack" : "Установите дополнительные инструменты для вашего стека",
                   href: "/app/marketplace",
                   color: "accent",
                 },
                 {
                   icon: FolderPlus,
-                  title: "Создать проект",
-                  desc: "Добавьте свой первый проект для сканирования",
+                  title: isEn ? "Create a Project" : "Создать проект",
+                  desc: isEn ? "Set up your first project and connect data sources" : "Настройте первый проект и подключите источники данных",
                   href: "/app/projects",
                   color: "cyan",
                 },
                 {
-                  icon: Play,
-                  title: "Запустить проверку",
-                  desc: "Запустите первый анализ безопасности",
-                  href: "/app/scans",
-                  color: "amber",
-                },
-                {
                   icon: BookOpen,
-                  title: "Почитать документацию",
-                  desc: "Узнайте, как настроить и использовать SIP",
+                  title: isEn ? "Read Documentation" : "Документация",
+                  desc: isEn ? "Learn how to configure and deploy SIP" : "Узнайте, как настроить и развернуть SIP",
                   href: "/app/docs",
                   color: "purple",
+                },
+                {
+                  icon: ExternalLink,
+                  title: isEn ? "View Demo Report" : "Демо-отчёт",
+                  desc: isEn ? "See a sample security report with real structure" : "Посмотрите пример отчёта безопасности",
+                  href: "/app/reports",
+                  color: "amber",
                 },
               ].map((item) => {
                 const colorClasses: Record<string, { bg: string; text: string }> = {
@@ -745,6 +766,12 @@ export default function DemoWorkspacePage() {
                   </a>
                 );
               })}
+            </div>
+
+            {/* Demo scenario label */}
+            <div className="p-3 rounded-lg bg-amber/10 border border-amber/20 flex items-start gap-2.5 text-sm text-left">
+              <span className="text-amber font-medium shrink-0">{isEn ? "⚠ Demo Scenario" : "⚠ Демо-сценарий"}</span>
+              <span className="text-muted-2">{isEn ? "This demo uses simulated data. After connecting real tools and sources, all results will be generated from actual scans." : "Этот демо-режим использует симулированные данные. После подключения реальных инструментов все результаты будут формироваться из реальных сканирований."}</span>
             </div>
           </div>
         )}
