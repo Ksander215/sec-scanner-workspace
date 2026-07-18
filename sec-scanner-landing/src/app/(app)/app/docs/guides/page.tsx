@@ -1,38 +1,48 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
-
-export const metadata: Metadata = {
-  title: "Guides — Docs — Security Intelligence Platform",
-  description: "Step-by-step tutorials for common security scanning and monitoring tasks.",
-  openGraph: { title: "Guides — Docs", description: "Step-by-step tutorials." },
-};
+import { useI18n } from "@/lib/i18n-context";
+import { ArrowLeft } from "lucide-react";
 
 const guides = [
-  { title: "Configure Authenticated Scanning", description: "Set up login flows and session management for scanning behind authentication." },
-  { title: "CI/CD Pipeline Integration", description: "Integrate security scanning into your GitHub Actions, GitLab CI, or Jenkins pipelines." },
-  { title: "Custom Rule Development", description: "Write and test custom detection rules using the YAML rule format." },
-  { title: "Compliance Report Generation", description: "Generate compliance reports for PCI DSS, SOC 2, and ISO 27001." },
-  { title: "Multi-Target Scanning", description: "Configure and schedule scans across multiple targets with different profiles." },
-  { title: "Webhook & Notification Setup", description: "Configure Slack, email, and webhook notifications for critical findings." },
-  { title: "Plugin Development Walkthrough", description: "Build your first plugin from scratch with the Plugin SDK." },
-  { title: "Kubernetes Deployment", description: "Deploy the platform on Kubernetes with Helm charts and production best practices." },
+  { titleKey: "docs.guides.g1.title", descKey: "docs.guides.g1.desc" },
+  { titleKey: "docs.guides.g2.title", descKey: "docs.guides.g2.desc" },
+  { titleKey: "docs.guides.g3.title", descKey: "docs.guides.g3.desc" },
+  { titleKey: "docs.guides.g4.title", descKey: "docs.guides.g4.desc" },
+  { titleKey: "docs.guides.g5.title", descKey: "docs.guides.g5.desc" },
+  { titleKey: "docs.guides.g6.title", descKey: "docs.guides.g6.desc" },
+  { titleKey: "docs.guides.g7.title", descKey: "docs.guides.g7.desc" },
+  { titleKey: "docs.guides.g8.title", descKey: "docs.guides.g8.desc" },
 ];
 
 export default function GuidesPage() {
+  const { t } = useI18n();
+  const router = useRouter();
+
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Guides" }]}
-        title="Guides"
-        description="Step-by-step tutorials for common tasks, integrations, and advanced configurations."
+        breadcrumbs={[{ label: t("docs.breadcrumb.docs"), href: "/app/docs" }, { label: t("docs.guides.title") }]}
+        title={t("docs.guides.title")}
+        description={t("docs.guides.subtitle")}
       />
 
       <Container className="py-16">
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors mb-8 group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>{t("docs.back")}</span>
+        </button>
+
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {guides.map((guide) => (
-            <Card key={guide.title} title={guide.title} description={guide.description} />
+            <Card key={guide.titleKey} title={t(guide.titleKey)} description={t(guide.descKey)} />
           ))}
         </div>
       </Container>

@@ -33,8 +33,11 @@ import {
   Shield,
   Lightbulb,
   Monitor,
+  Info,
+  Circle,
 } from "lucide-react";
 import { kgNodes, kgEdges, type KGNodeType, type KGNode, type Severity } from "@/lib/demo-data";
+import { useI18n } from "@/lib/i18n-context";
 
 // ─── Node color/icon mapping ────────────────────────────────────────────────
 
@@ -154,6 +157,7 @@ function computeLayout(): { nodes: Node[]; edges: Edge[] } {
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function KnowledgeGraphPage() {
+  const { t } = useI18n();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme !== "light";
   const layout = useMemo(() => computeLayout(), []);
@@ -212,6 +216,14 @@ export default function KnowledgeGraphPage() {
     { key: "cve", label: "CVEs" },
     { key: "credential", label: "Creds" },
     { key: "recommendation", label: "Recs" },
+  ];
+
+  // "What you see" guide
+  const whatYouSee = [
+    { color: "#00d4ff", label: t("graph.guide.node"), icon: Server },
+    { color: "#ff4444", label: t("graph.guide.redEdge"), icon: AlertTriangle },
+    { color: "#ffb800", label: t("graph.guide.yellowEdge"), icon: Bug },
+    { color: "#00ff88", label: t("graph.guide.greenEdge"), icon: Lightbulb },
   ];
 
   return (
@@ -373,6 +385,29 @@ export default function KnowledgeGraphPage() {
               <div className="w-4 h-0.5 bg-accent" />
               <span className="text-xs text-muted-2">Remediates</span>
             </div>
+          </div>
+        </div>
+
+        {/* What you see — explanatory guide overlay */}
+        <div className="absolute top-4 left-4 max-w-xs p-4 rounded-xl bg-surface/95 border border-border backdrop-blur-sm shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <Info className="w-4 h-4 text-accent" />
+            <span className="text-sm font-semibold text-foreground">{t("graph.guide.title")}</span>
+          </div>
+          <div className="space-y-2">
+            {whatYouSee.map((item) => (
+              <div key={item.label} className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-sm flex items-center justify-center" style={{ background: item.color + "20", border: `1px solid ${item.color}40` }}>
+                  <item.icon className="w-2 h-2" style={{ color: item.color }} />
+                </div>
+                <span className="text-xs text-muted-2">{item.label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 pt-2 border-t border-border">
+            <p className="text-xs text-muted-2">
+              <span className="text-foreground font-medium">{t("graph.guide.whyTitle")}</span> {t("graph.guide.whyDesc")}
+            </p>
           </div>
         </div>
       </div>

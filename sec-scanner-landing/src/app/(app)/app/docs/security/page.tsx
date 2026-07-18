@@ -1,50 +1,59 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Container } from "@/components/ui/Container";
-
-export const metadata: Metadata = {
-  title: "Security — Docs — Security Intelligence Platform",
-  description: "Security best practices, hardening guide, and vulnerability disclosure policy.",
-  openGraph: { title: "Security — Docs", description: "Security best practices." },
-};
+import { useI18n } from "@/lib/i18n-context";
+import { ArrowLeft } from "lucide-react";
 
 export default function DocsSecurityPage() {
+  const { t } = useI18n();
+  const router = useRouter();
+
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Security" }]}
-        title="Security"
-        description="Security best practices, platform hardening, and vulnerability disclosure policy."
+        breadcrumbs={[{ label: t("docs.breadcrumb.docs"), href: "/app/docs" }, { label: t("docs.sec.title") }]}
+        title={t("docs.sec.title")}
+        description={t("docs.sec.subtitle")}
       />
 
       <Container className="py-16">
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors mb-8 group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>{t("docs.back")}</span>
+        </button>
+
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="p-6 rounded-xl bg-surface border border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-3">Responsible Disclosure</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-3">{t("docs.sec.disclosure")}</h3>
             <p className="text-sm text-muted-2 leading-relaxed">
-              We take security seriously. If you discover a vulnerability in the platform, please report it responsibly
-              to <a href="mailto:security@sec-scanner.pro" className="text-accent hover:underline">security@sec-scanner.pro</a>.
-              We commit to acknowledging reports within 24 hours and providing a fix timeline within 72 hours.
+              {t("docs.sec.disclosure.desc")}{" "}
+              <a href="mailto:security@sec-scanner.pro" className="text-accent hover:underline">security@sec-scanner.pro</a>.{" "}
+              {t("docs.sec.disclosure.commitment")}
             </p>
           </div>
 
           <div className="p-6 rounded-xl bg-surface border border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-3">Platform Hardening</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-3">{t("docs.sec.hardening")}</h3>
             <ul className="space-y-2 text-sm text-muted-2">
-              <li className="flex items-start gap-2"><span className="text-accent">•</span> Enable HTTPS with TLS 1.3 for all communications</li>
-              <li className="flex items-start gap-2"><span className="text-accent">•</span> Configure RBAC with least-privilege principles</li>
-              <li className="flex items-start gap-2"><span className="text-accent">•</span> Enable audit logging for all API operations</li>
-              <li className="flex items-start gap-2"><span className="text-accent">•</span> Set up network policies to isolate scan engines</li>
-              <li className="flex items-start gap-2"><span className="text-accent">•</span> Rotate API keys and secrets regularly</li>
-              <li className="flex items-start gap-2"><span className="text-accent">•</span> Keep the platform and plugins updated</li>
+              <li className="flex items-start gap-2"><span className="text-accent">•</span> {t("docs.sec.hardening.1")}</li>
+              <li className="flex items-start gap-2"><span className="text-accent">•</span> {t("docs.sec.hardening.2")}</li>
+              <li className="flex items-start gap-2"><span className="text-accent">•</span> {t("docs.sec.hardening.3")}</li>
+              <li className="flex items-start gap-2"><span className="text-accent">•</span> {t("docs.sec.hardening.4")}</li>
+              <li className="flex items-start gap-2"><span className="text-accent">•</span> {t("docs.sec.hardening.5")}</li>
+              <li className="flex items-start gap-2"><span className="text-accent">•</span> {t("docs.sec.hardening.6")}</li>
             </ul>
           </div>
 
           <div className="p-6 rounded-xl bg-surface border border-border">
-            <h3 className="text-lg font-semibold text-foreground mb-3">Data Security</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-3">{t("docs.sec.dataSecurity")}</h3>
             <p className="text-sm text-muted-2 leading-relaxed">
-              All scan data and findings are encrypted at rest using AES-256 and in transit using TLS 1.3.
-              The self-hosted version stores all data within your infrastructure — nothing leaves your network.
+              {t("docs.sec.dataSecurity.desc")}
             </p>
           </div>
         </div>

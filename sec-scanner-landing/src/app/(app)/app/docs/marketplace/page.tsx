@@ -1,36 +1,46 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 import { Store, Upload, DollarSign, BarChart3, PackageCheck } from "lucide-react";
-
-export const metadata: Metadata = {
-  title: "Marketplace Docs — Docs — Security Intelligence Platform",
-  description: "Documentation for publishing, managing, and consuming marketplace extensions.",
-  openGraph: { title: "Marketplace Docs", description: "Marketplace documentation." },
-};
+import { useI18n } from "@/lib/i18n-context";
+import { ArrowLeft } from "lucide-react";
 
 const topics = [
-  { icon: Store, title: "Browsing & Installing", description: "How to find, evaluate, and install extensions from the marketplace." },
-  { icon: Upload, title: "Publishing Your Extension", description: "Submit your plugin, rule pack, or connector for community distribution." },
-  { icon: PackageCheck, title: "Review Guidelines", description: "Quality standards, security review process, and approval criteria." },
-  { icon: BarChart3, title: "Analytics & Metrics", description: "Track downloads, ratings, and usage metrics for your published extensions." },
-  { icon: DollarSign, title: "Monetization", description: "Premium extension pricing, licensing, and revenue sharing options." },
+  { icon: Store, titleKey: "docs.mp.browsing.title", descKey: "docs.mp.browsing.desc" },
+  { icon: Upload, titleKey: "docs.mp.publishing.title", descKey: "docs.mp.publishing.desc" },
+  { icon: PackageCheck, titleKey: "docs.mp.review.title", descKey: "docs.mp.review.desc" },
+  { icon: BarChart3, titleKey: "docs.mp.analytics.title", descKey: "docs.mp.analytics.desc" },
+  { icon: DollarSign, titleKey: "docs.mp.monetization.title", descKey: "docs.mp.monetization.desc" },
 ];
 
 export default function DocsMarketplacePage() {
+  const { t } = useI18n();
+  const router = useRouter();
+
   return (
     <>
       <PageHeader
-        breadcrumbs={[{ label: "Docs", href: "/app/docs" }, { label: "Marketplace" }]}
-        title="Marketplace Documentation"
-        description="Everything you need to publish, manage, and consume marketplace extensions."
+        breadcrumbs={[{ label: t("docs.breadcrumb.docs"), href: "/app/docs" }, { label: t("docs.mp.title") }]}
+        title={t("docs.mp.title")}
+        description={t("docs.mp.subtitle")}
       />
 
       <Container className="py-16">
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-2 hover:text-foreground transition-colors mb-8 group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>{t("docs.back")}</span>
+        </button>
+
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {topics.map((topic) => (
-            <Card key={topic.title} icon={topic.icon} title={topic.title} description={topic.description} />
+            <Card key={topic.titleKey} icon={topic.icon} title={t(topic.titleKey)} description={t(topic.descKey)} />
           ))}
         </div>
       </Container>

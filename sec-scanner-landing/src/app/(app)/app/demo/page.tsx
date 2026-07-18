@@ -17,6 +17,9 @@ import {
   XCircle,
   Info,
   ExternalLink,
+  Store,
+  FolderPlus,
+  BookOpen,
 } from "lucide-react";
 import { demoFindings, pipelineStages, type Finding, type PipelineStage, type Severity } from "@/lib/demo-data";
 
@@ -195,7 +198,7 @@ export default function DemoWorkspacePage() {
   const [stageProgress, setStageProgress] = useState(0);
   const [stageOutputs, setStageOutputs] = useState<Record<number, string[]>>({});
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"pipeline" | "findings" | "risk" | "paths">("pipeline");
+  const [activeTab, setActiveTab] = useState<"pipeline" | "findings" | "risk" | "paths" | "next">("pipeline");
 
   const runPipeline = useCallback(() => {
     setPipelineRunning(true);
@@ -372,10 +375,11 @@ export default function DemoWorkspacePage() {
         {/* Tab navigation */}
         <div className="flex items-center gap-1 p-1 mb-6 rounded-lg bg-surface-2 border border-border w-fit">
           {([
-            { key: "pipeline", label: "Pipeline" },
+            { key: "pipeline", label: "Analysis" },
             { key: "findings", label: "Findings" },
             { key: "risk", label: "Risk" },
             { key: "paths", label: "Attack Paths" },
+            { key: "next", label: "What's Next?" },
           ] as const).map(({ key, label }) => (
             <button
               key={key}
@@ -669,6 +673,78 @@ export default function DemoWorkspacePage() {
                 View Interactive Attack Path Visualizer
                 <ExternalLink className="w-4 h-4" />
               </a>
+            </div>
+          </div>
+        )}
+
+        {/* ─── What's Next Tab (after demo) ─────────────────────────────── */}
+        {activeTab === "next" && (
+          <div className="space-y-8 max-w-3xl mx-auto text-center">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
+                Что делать дальше?
+              </h2>
+              <p className="mt-3 text-base text-muted-2">
+                Вы ознакомились с основными возможностями SIP. Вот что можно сделать прямо сейчас:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+              {[
+                {
+                  icon: Store,
+                  title: "Открыть каталог",
+                  desc: "Выберите инструменты для вашей инфраструктуры",
+                  href: "/app/marketplace",
+                  color: "accent",
+                },
+                {
+                  icon: FolderPlus,
+                  title: "Создать проект",
+                  desc: "Добавьте свой первый проект для сканирования",
+                  href: "/app/projects",
+                  color: "cyan",
+                },
+                {
+                  icon: Play,
+                  title: "Запустить проверку",
+                  desc: "Запустите первый анализ безопасности",
+                  href: "/app/scans",
+                  color: "amber",
+                },
+                {
+                  icon: BookOpen,
+                  title: "Почитать документацию",
+                  desc: "Узнайте, как настроить и использовать SIP",
+                  href: "/app/docs",
+                  color: "purple",
+                },
+              ].map((item) => {
+                const colorClasses: Record<string, { bg: string; text: string }> = {
+                  accent: { bg: "bg-accent-muted", text: "text-accent" },
+                  cyan: { bg: "bg-cyan-muted", text: "text-cyan" },
+                  amber: { bg: "bg-amber-muted", text: "text-amber" },
+                  purple: { bg: "bg-purple-muted", text: "text-purple" },
+                };
+                const c = colorClasses[item.color];
+                return (
+                  <a
+                    key={item.title}
+                    href={item.href}
+                    className="group flex items-start gap-4 p-5 rounded-xl bg-surface border border-border hover:border-border-light hover:bg-surface-2 transition-all"
+                  >
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg ${c.bg} ${c.text} flex items-center justify-center`}>
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground group-hover:text-accent transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1 text-xs text-muted-2">{item.desc}</p>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}

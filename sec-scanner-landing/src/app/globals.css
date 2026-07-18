@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: #050507;
-  --color-foreground: #e8e8ed;
-  --color-surface: #0d0d12;
-  --color-surface-2: #14141c;
-  --color-surface-3: #1c1c28;
-  --color-border: #1e1e2e;
-  --color-border-light: #2a2a3d;
-  --color-muted: #6b6b80;
-  --color-muted-2: #8888a0;
+  --color-background: #09090b;
+  --color-foreground: #fafafa;
+  --color-surface: #111113;
+  --color-surface-2: #18181b;
+  --color-surface-3: #1f1f23;
+  --color-border: #27272a;
+  --color-border-light: #3f3f46;
+  --color-muted: #71717a;
+  --color-muted-2: #a1a1aa;
   --color-accent: #00ff88;
   --color-accent-hover: #00e67a;
-  --color-accent-muted: rgba(0, 255, 136, 0.1);
-  --color-accent-border: rgba(0, 255, 136, 0.2);
+  --color-accent-muted: rgba(0, 255, 136, 0.08);
+  --color-accent-border: rgba(0, 255, 136, 0.18);
   --color-cyan: #00d4ff;
-  --color-cyan-muted: rgba(0, 212, 255, 0.1);
+  --color-cyan-muted: rgba(0, 212, 255, 0.08);
   --color-amber: #ffb800;
-  --color-amber-muted: rgba(255, 184, 0, 0.1);
+  --color-amber-muted: rgba(255, 184, 0, 0.08);
   --color-red: #ff4444;
-  --color-red-muted: rgba(255, 68, 68, 0.1);
+  --color-red-muted: rgba(255, 68, 68, 0.08);
   --color-purple: #a855f7;
-  --color-purple-muted: rgba(168, 85, 247, 0.1);
+  --color-purple-muted: rgba(168, 85, 247, 0.08);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -74,11 +74,11 @@ body {
 
 /* Glow effects */
 .glow-accent {
-  box-shadow: 0 0 20px rgba(0, 255, 136, 0.15), 0 0 60px rgba(0, 255, 136, 0.05);
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.12), 0 0 60px rgba(0, 255, 136, 0.04), 0 0 100px rgba(0, 255, 136, 0.02);
 }
 
 :root.light .glow-accent {
-  box-shadow: 0 0 20px rgba(16, 163, 127, 0.12), 0 0 60px rgba(16, 163, 127, 0.04);
+  box-shadow: 0 0 20px rgba(16, 163, 127, 0.1), 0 0 60px rgba(16, 163, 127, 0.03), 0 0 100px rgba(16, 163, 127, 0.01);
 }
 
 .glow-cyan {
@@ -218,19 +218,19 @@ html {
 }
 
 .card-shadow {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .card-shadow-hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 :root.light .card-shadow {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 :root.light .card-shadow-hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .btn-enterprise {
@@ -242,12 +242,12 @@ html {
 }
 
 .hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.03);
 }
 
 :root.light .hover-lift:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0,0,0,0.03);
 }
 
 .brand-mark {

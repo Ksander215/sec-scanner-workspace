@@ -29,8 +29,13 @@ import {
   ChevronRight,
   AlertTriangle,
   X,
+  Info,
+  TrendingUp,
+  Footprints,
+  Flame,
 } from "lucide-react";
 import { attackPathNodes, attackPaths, type AttackPathNode, type Severity } from "@/lib/demo-data";
+import { useI18n } from "@/lib/i18n-context";
 
 // ─── Node type configs ──────────────────────────────────────────────────────
 
@@ -116,6 +121,7 @@ function computePathLayout(pathIndex: number): { nodes: Node[]; edges: Edge[] } 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function AttackPathsPage() {
+  const { t } = useI18n();
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme !== "light";
   const [activePath, setActivePath] = useState(0);
@@ -311,6 +317,42 @@ export default function AttackPathsPage() {
               <div className="w-3 h-0.5 bg-muted animate-pulse" />
               <span className="text-muted-2">Exploitable</span>
             </div>
+          </div>
+        </div>
+
+        {/* Why this scenario? — explanatory panel */}
+        <div className="absolute top-4 right-4 max-w-xs p-4 rounded-xl bg-surface/95 border border-border backdrop-blur-sm shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <Info className="w-4 h-4 text-accent" />
+            <span className="text-sm font-semibold text-foreground">{t("attackPaths.why.title")}</span>
+          </div>
+          <div className="space-y-2.5">
+            <div className="flex items-start gap-2">
+              <TrendingUp className="w-4 h-4 text-red shrink-0 mt-0.5" />
+              <div>
+                <span className="text-xs font-medium text-foreground">{t("attackPaths.why.probability")}</span>
+                <p className="text-[10px] text-muted-2">{t("attackPaths.why.probabilityDesc")}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Footprints className="w-4 h-4 text-amber shrink-0 mt-0.5" />
+              <div>
+                <span className="text-xs font-medium text-foreground">{t("attackPaths.why.steps")}</span>
+                <p className="text-[10px] text-muted-2">{t("attackPaths.why.stepsDesc")}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2">
+              <Flame className="w-4 h-4 text-red shrink-0 mt-0.5" />
+              <div>
+                <span className="text-xs font-medium text-foreground">{t("attackPaths.why.damage")}</span>
+                <p className="text-[10px] text-muted-2">{t("attackPaths.why.damageDesc")}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-border">
+            <p className="text-[10px] text-muted-2">
+              {t("attackPaths.why.switch")}
+            </p>
           </div>
         </div>
       </div>
