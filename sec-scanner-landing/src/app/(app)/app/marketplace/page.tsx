@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +28,7 @@ import {
 import { marketplaceItems, type MarketplaceItem } from "@/lib/demo-data";
 import { useI18n } from "@/lib/i18n-context";
 import { useToast } from "@/components/ui/Toast";
+import { getMarketplaceInstalled, addMarketplaceInstalled, removeMarketplaceInstalled } from "@/lib/utils";
 
 const categoryIcons: Record<string, React.ElementType> = {
   plugins: Puzzle,
@@ -51,6 +52,12 @@ export default function MarketplacePreviewPage() {
   const [installing, setInstalling] = useState<string | null>(null);
   const [installed, setInstalled] = useState<Set<string>>(new Set(["nucleus-engine", "owasp-rules"]));
   const [detailItem, setDetailItem] = useState<MarketplaceItem | null>(null);
+
+  // Load installed state from localStorage on mount
+  useEffect(() => {
+    const saved = getMarketplaceInstalled();
+    if (saved.size > 0) setInstalled(saved);
+  }, []);
 
   const categoryLabels: Record<string, string> = locale === "ru" ? {
     plugins: "Плагины",
@@ -114,7 +121,8 @@ export default function MarketplacePreviewPage() {
   const handleInstall = (item: MarketplaceItem) => {
     if (installed.has(item.id)) {
       // Uninstall
-      setInstalled(prev => { const next = new Set(prev); next.delete(item.id); return next; });
+      const newSet = removeMarketplaceInstalled(item.id);
+      setInstalled(new Set(newSet));
       addToast({
         type: "success",
         title: locale === "ru" ? "Инструмент удалён" : "Tool removed",
@@ -125,7 +133,8 @@ export default function MarketplacePreviewPage() {
     setInstalling(item.id);
     setTimeout(() => {
       setInstalling(null);
-      setInstalled(prev => new Set(prev).add(item.id));
+      const newSet = addMarketplaceInstalled(item.id);
+      setInstalled(new Set(newSet));
       addToast({
         type: "success",
         title: locale === "ru" ? "Инструмент установлен" : "Tool installed",

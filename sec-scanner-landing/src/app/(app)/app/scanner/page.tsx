@@ -37,6 +37,7 @@ import {
 import { demoFindings, pipelineStages, type PipelineStage, type Severity } from "@/lib/demo-data";
 import { demoProjects as portalProjects, type Project } from "@/lib/portal-data";
 import { useI18n } from "@/lib/i18n-context";
+import { getMarketplaceInstalled, MARKETPLACE_TO_SCANNER, SCANNER_PLUGIN_IDS } from "@/lib/utils";
 
 // ─── Severity helpers ───────────────────────────────────────────────────
 
@@ -216,7 +217,7 @@ interface DynamicStage {
   estimatedSec: number;
 }
 
-function buildStages(tools: Set<string>, isEn: boolean): DynamicStage[] {
+function buildStages(tools: Set<string>, isEn: boolean, toolDefs: ScanTool[]): DynamicStage[] {
   const stages: DynamicStage[] = [
     {
       id: "init",
@@ -229,7 +230,7 @@ function buildStages(tools: Set<string>, isEn: boolean): DynamicStage[] {
 
   const selectedTools = Array.from(tools);
   for (const toolId of selectedTools) {
-    const tool = scanTools.find(t => t.id === toolId);
+    const tool = toolDefs.find(t => t.id === toolId);
     if (!tool) continue;
     stages.push({
       id: `tool-${toolId}`,
@@ -392,6 +393,37 @@ export default function ScannerPage() {
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
   const [scanHistory, setScanHistory] = useState<ScanRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [marketplaceInstalled, setMarketplaceInstalled] = useState<Set<string>>(new Set());
+
+  // Load marketplace installed state
+  useEffect(() => {
+    setMarketplaceInstalled(getMarketplaceInstalled());
+    // Listen for storage changes (when user installs in another tab)
+    const handler = () => setMarketplaceInstalled(getMarketplaceInstalled());
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
+  // Build full tool list: built-in + marketplace-installed scanner plugins
+  const allScanTools: ScanTool[] = [
+    ...scanTools,
+    ...Object.entries(MARKETPLACE_TO_SCANNER)
+      .filter(([mplId]) => marketplaceInstalled.has(mplId))
+      .map(([mplId, def]) => ({
+        id: def.id,
+        name: def.name,
+        description: def.description,
+        installed: true,
+        category: def.category as ScanTool["category"],
+        cliCommand: def.cliCommand,
+        sampleOutput: def.sampleOutput,
+      })),
+  ];
+
+  // Marketplace scanner plugins that are NOT yet installed
+  const availableInMarketplace = Object.entries(MARKETPLACE_TO_SCANNER)
+    .filter(([mplId]) => !marketplaceInstalled.has(mplId))
+    .map(([mplId, def]) => def);
   const [dynamicStages, setDynamicStages] = useState<DynamicStage[]>([]);
 
   // Load scan history on mount
@@ -414,7 +446,7 @@ export default function ScannerPage() {
   const projectName = newProjectName.trim() || portalProjects.find(p => p.id === selectedProject)?.name || (isEn ? "New Project" : "Новый проект");
 
   const runPipeline = useCallback(() => {
-    const stages = buildStages(selectedTools, isEn);
+    const stages = buildStages(selectedTools, isEn, allScanTools);
     setDynamicStages(stages);
     setStep(4);
     setPipelineRunning(true);
@@ -468,7 +500,7 @@ export default function ScannerPage() {
           isEn ? `Target: ${sourceValue || "demo"}` : `Цель: ${sourceValue || "demo"}`,
         ] }));
       } else if (stage.type === "tool" && stage.toolId) {
-        const tool = scanTools.find(t => t.id === stage.toolId);
+        const tool = allScanTools.find(t => t.id === stage.toolId);
         if (tool) {
           const cmd = tool.cliCommand.replace("{target}", sourceValue || "demo-target");
           setStageOutputs(prev => ({ ...prev, [stageIdx]: [`$ ${cmd}`] }));
@@ -504,7 +536,7 @@ export default function ScannerPage() {
               let newLine = "";
 
               if (stage.type === "tool" && stage.toolId) {
-                const tool = scanTools.find(t => t.id === stage.toolId);
+                const tool = allScanTools.find(t => t.id === stage.toolId);
                 if (tool) {
                   const outputs = tool.sampleOutput[isEn ? "en" : "ru"];
                   newLine = outputs[Math.min(existing.length - 1, outputs.length - 1)] || outputs[outputs.length - 1];
@@ -766,8 +798,9 @@ export default function ScannerPage() {
             <div>
               <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">{isEn ? "Installed" : "Установлены"}</div>
               <div className="space-y-2">
-                {scanTools.filter(t => t.installed).map((tool) => {
+                {allScanTools.filter(t => t.installed).map((tool) => {
                   const isSelected = selectedTools.has(tool.id);
+                  const fromMarketplace = !scanTools.find(st => st.id === tool.id);
                   return (
                     <button key={tool.id} onClick={() => toggleTool(tool.id)}
                       className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
@@ -782,6 +815,7 @@ export default function ScannerPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-foreground">{tool.name}</span>
                           <Badge variant="default" className="text-[10px]">{tool.category.toUpperCase()}</Badge>
+                          {fromMarketplace && <Badge variant="default" className="text-[10px] text-cyan">{isEn ? "Marketplace" : "Каталог"}</Badge>}
                         </div>
                         <div className="text-xs text-muted-2 mt-0.5">{tool.description[locale]}</div>
                         <div className="text-[10px] text-muted mt-1 font-mono">{tool.cliCommand}</div>
@@ -793,39 +827,64 @@ export default function ScannerPage() {
               </div>
             </div>
 
-            {/* Not yet available tools */}
-            <div>
-              <div className="text-xs font-medium text-muted-2 uppercase tracking-wider mb-2">{isEn ? "Coming Soon — install from Marketplace" : "Скоро — установите из Каталога"}</div>
-              <div className="space-y-2">
-                {scanTools.filter(t => t.inDevelopment).map((tool) => {
-                  const isSelected = selectedTools.has(tool.id);
-                  return (
-                    <button key={tool.id} disabled
-                      className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left opacity-60 cursor-not-allowed ${
-                        "border-border bg-surface/50"
-                      }`}>
-                      <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 border-border">
-                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-background" />}
+            {/* Not yet available built-in tools */}
+            {scanTools.filter(t => t.inDevelopment).length > 0 && (
+              <div>
+                <div className="text-xs font-medium text-muted-2 uppercase tracking-wider mb-2">{isEn ? "Coming Soon" : "Скоро"}</div>
+                <div className="space-y-2">
+                  {scanTools.filter(t => t.inDevelopment).map((tool) => {
+                    return (
+                      <button key={tool.id} disabled
+                        className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left opacity-60 cursor-not-allowed ${
+                          "border-border bg-surface/50"
+                        }`}>
+                        <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 border-border" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-foreground">{tool.name}</span>
+                            <Badge variant="default" className="text-[10px]">{isEn ? "Coming soon" : "Скоро"}</Badge>
+                            <Badge variant="default" className="text-[10px]">{tool.category.toUpperCase()}</Badge>
+                          </div>
+                          <div className="text-xs text-muted-2 mt-0.5">{tool.description[locale]}</div>
+                        </div>
+                        <div className="text-xs text-muted-2 shrink-0">{isEn ? "Not available" : "Недоступен"}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Available marketplace scanner plugins (not yet installed) */}
+            {availableInMarketplace.length > 0 && (
+              <div>
+                <div className="text-xs font-medium text-cyan uppercase tracking-wider mb-2">{isEn ? "Available in Marketplace" : "Доступны в Каталоге"}</div>
+                <div className="space-y-2">
+                  {availableInMarketplace.map((def) => (
+                    <div key={def.id} className="flex items-center gap-4 p-4 rounded-xl border border-cyan/20 bg-cyan-muted/30">
+                      <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 border-cyan/30">
+                        <Store className="w-3.5 h-3.5 text-cyan" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-foreground">{tool.name}</span>
-                          <Badge variant="default" className="text-[10px]">{isEn ? "Coming soon" : "Скоро"}</Badge>
-                          <Badge variant="default" className="text-[10px]">{tool.category.toUpperCase()}</Badge>
+                          <span className="text-sm font-medium text-foreground">{def.name}</span>
+                          <Badge variant="default" className="text-[10px]">{def.category.toUpperCase()}</Badge>
                         </div>
-                        <div className="text-xs text-muted-2 mt-0.5">{tool.description[locale]}</div>
+                        <div className="text-xs text-muted-2 mt-0.5">{def.description[locale]}</div>
                       </div>
-                      <div className="text-xs text-muted-2 shrink-0">{isEn ? "Not available" : "Недоступен"}</div>
-                    </button>
-                  );
-                })}
+                      <a href="/app/marketplace" className="text-xs text-cyan hover:underline flex items-center gap-1 shrink-0">
+                        {isEn ? "Install" : "Установить"} <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Selection summary */}
             <div className="p-3 rounded-lg bg-surface-2 border border-border flex items-center justify-between">
               <span className="text-sm text-muted-2">{isEn ? `Selected: ${selectedTools.size} tools` : `Выбрано: ${selectedTools.size} инстр.`}</span>
-              <span className="text-xs text-accent font-mono">{Array.from(selectedTools).map(id => scanTools.find(t => t.id === id)?.name).join(" + ")}</span>
+              <span className="text-xs text-accent font-mono">{Array.from(selectedTools).map(id => allScanTools.find(t => t.id === id)?.name).join(" + ")}</span>
             </div>
 
             {/* Marketplace CTA */}
@@ -862,7 +921,7 @@ export default function ScannerPage() {
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-2">
               <span className="px-2.5 py-1 rounded-md bg-surface-2 border border-border">{projectName}</span>
               <span className="px-2.5 py-1 rounded-md bg-surface-2 border border-border font-mono">{sourceValue || "demo"}</span>
-              <span className="px-2.5 py-1 rounded-md bg-accent-muted text-accent border border-accent/20">{Array.from(selectedTools).map(id => scanTools.find(t => t.id === id)?.name).join(" + ")}</span>
+              <span className="px-2.5 py-1 rounded-md bg-accent-muted text-accent border border-accent/20">{Array.from(selectedTools).map(id => allScanTools.find(t => t.id === id)?.name).join(" + ")}</span>
               {pipelineComplete && <span className="px-2.5 py-1 rounded-md bg-accent/20 text-accent border border-accent/30 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {isEn ? "Complete" : "Завершено"}</span>}
             </div>
 
