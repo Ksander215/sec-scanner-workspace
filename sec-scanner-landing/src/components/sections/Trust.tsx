@@ -85,7 +85,7 @@ export function Trust() {
   ];
 
   return (
-    <section className="relative py-24 sm:py-32 overflow-hidden">
+    <section id="trust" className="relative py-24 sm:py-32 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface to-transparent" />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

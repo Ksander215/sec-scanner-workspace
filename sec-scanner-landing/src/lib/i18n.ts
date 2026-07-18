@@ -50,6 +50,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "nav.dashboard": "Дашборд",
     "nav.openPlatform": "Открыть платформу",
     "nav.back": "Назад",
+    "nav.howItWorks": "Как работает",
+    "nav.trust": "Доверие",
+    "nav.demo": "Демо",
 
     // ─── Common ─────────────────────────────────────────────────────────
     "common.comingSoon": "Скоро",
@@ -978,7 +981,7 @@ const translations: Record<Locale, Record<string, string>> = {
 
     // ─── INT-027 New Keys ──────────────────────────────────────────────
     "hero.whatIsIt": "Что это?",
-    "hero.whatIsItAnswer": "SIP — Security Intelligence Platform",
+    "hero.whatIsItAnswer": "Security Intelligence Platform",
     "hero.forWhomShort": "Для кого?",
     "hero.forWhomAnswer": "Для компаний, команд разработки и специалистов по безопасности",
     "hero.whatDoes": "Что делает?",
@@ -1099,6 +1102,9 @@ const translations: Record<Locale, Record<string, string>> = {
     "nav.dashboard": "Dashboard",
     "nav.openPlatform": "Open Platform",
     "nav.back": "Back",
+    "nav.howItWorks": "How It Works",
+    "nav.trust": "Trust",
+    "nav.demo": "Demo",
 
     // ─── Common ─────────────────────────────────────────────────────────
     "common.comingSoon": "Coming Soon",
@@ -2027,7 +2033,7 @@ const translations: Record<Locale, Record<string, string>> = {
 
     // ─── INT-027 New Keys ──────────────────────────────────────────────
     "hero.whatIsIt": "What is it?",
-    "hero.whatIsItAnswer": "SIP — Security Intelligence Platform",
+    "hero.whatIsItAnswer": "Security Intelligence Platform",
     "hero.forWhomShort": "For whom?",
     "hero.forWhomAnswer": "For companies, development teams and security professionals",
     "hero.whatDoes": "What does it do?",
