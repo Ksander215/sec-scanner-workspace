@@ -141,3 +141,30 @@ Stage Summary:
 - Production site https://sec-scanner.pro/ now shows INT-024 changes
 - GitHub repository up to date with local commits
 - SIP branding, Russian localization, new terminology all live
+
+---
+Task ID: INT-024-R2
+Agent: Main Agent
+Task: INT-024 Rework per INT-025 Standard — Full i18n for Landing
+
+Work Log:
+- Audit found: 8 Landing components had hardcoded Russian text, no i18n
+- Root cause: I18nProvider only wrapped (app) layout, not root layout
+- Moved I18nProvider from (app)/layout.tsx to root layout.tsx
+- Connected useI18n() to all 8 Landing sections: Header, Hero, Platform, PlatformMetrics, DemoPreview, Community, Pricing, Footer
+- Added 30+ missing i18n keys (metrics.subtitle, metrics.label.*, demo.feature.*, demo.screenshot.*, common.critical, common.high, nav.metrics)
+- Fixed Pricing.tsx: now uses i18n for all text + prices (rubles/dollars switch with locale)
+- Fixed Footer.tsx: removed footer_allRights variable, replaced with locale-aware text
+- Added language toggle button (EN/RU) to Landing Header
+- Added community CTA (Telegram/Discord/GitHub) to Marketplace page
+- Build: 59 pages, 0 errors
+- Deploy: tar.gz (1.4MB) → SFTP → server, 663+ files
+- Git: pushed to origin/landing (commit 52f9bf2)
+- Production verified: all pages HTTP 200, branding confirmed, i18n both locales in JS bundles
+
+Stage Summary:
+- All 17 INT-024 requirements PASS
+- Landing now fully supports language switching (RU/EN)
+- Pricing synchronized across site via i18n
+- All Founder QA items PASS
+- Production: https://sec-scanner.pro/
