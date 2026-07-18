@@ -10,51 +10,7 @@ import {
   Lock,
   ArrowRight,
 } from "lucide-react";
-
-const platformFeatures = [
-  {
-    icon: Radar,
-    title: "Поиск уязвимостей",
-    oneLiner: "Автоматическое обнаружение уязвимостей в API, веб-приложениях и инфраструктуре",
-    color: "accent",
-    href: "/app/scans",
-  },
-  {
-    icon: Brain,
-    title: "AI-рекомендации",
-    oneLiner: "Интеллектуальный анализ результатов и приоритезация рекомендаций",
-    color: "cyan",
-    href: "/app/dashboard",
-  },
-  {
-    icon: Network,
-    title: "Карта инфраструктуры",
-    oneLiner: "Визуализация связей между активами, уязвимостями и путями атаки",
-    color: "purple",
-    href: "/app/demo/knowledge-graph",
-  },
-  {
-    icon: Workflow,
-    title: "Автоматизация",
-    oneLiner: "Настраиваемые конвейеры сканирования и интеграции с CI/CD",
-    color: "amber",
-    href: "/app/workspace/pipelines",
-  },
-  {
-    icon: BarChart3,
-    title: "Оценка рисков",
-    oneLiner: "Автоматический расчёт рисков с приоритезацией по бизнес-влиянию",
-    color: "accent",
-    href: "/app/risks",
-  },
-  {
-    icon: Lock,
-    title: "Корпоративные возможности",
-    oneLiner: "SSO, RBAC, API, аудит и соответствие требованиям",
-    color: "red",
-    href: "/app/platform",
-  },
-];
+import { useI18n } from "@/lib/i18n-context";
 
 const colorMap: Record<string, { bg: string; text: string; border: string; glow: string }> = {
   accent: { bg: "bg-accent-muted", text: "text-accent", border: "border-accent-border", glow: "hover:shadow-[0_0_30px_rgba(0,255,136,0.08)]" },
@@ -65,6 +21,53 @@ const colorMap: Record<string, { bg: string; text: string; border: string; glow:
 };
 
 export function Platform() {
+  const { t } = useI18n();
+
+  const platformFeatures = [
+    {
+      icon: Radar,
+      title: t("platform.scanning.title"),
+      oneLiner: t("platform.scanning.desc"),
+      color: "accent",
+      href: "/app/scans",
+    },
+    {
+      icon: Brain,
+      title: t("platform.ai.title"),
+      oneLiner: t("platform.ai.desc"),
+      color: "cyan",
+      href: "/app/dashboard",
+    },
+    {
+      icon: Network,
+      title: t("platform.graph.title"),
+      oneLiner: t("platform.graph.desc"),
+      color: "purple",
+      href: "/app/demo/knowledge-graph",
+    },
+    {
+      icon: Workflow,
+      title: t("platform.workflows.title"),
+      oneLiner: t("platform.workflows.desc"),
+      color: "amber",
+      href: "/app/workspace/pipelines",
+    },
+    {
+      icon: BarChart3,
+      title: t("platform.risk.title"),
+      oneLiner: t("platform.risk.desc"),
+      color: "accent",
+      href: "/app/risks",
+    },
+    {
+      icon: Lock,
+      title: t("platform.enterprise.title"),
+      oneLiner: t("platform.enterprise.desc"),
+      color: "red",
+      href: "/app/platform",
+    },
+  ];
+
   return (
     <section id="platform" className="relative py-24 sm:py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -76,12 +79,10 @@ export function Platform() {
           className="text-center max-w-3xl mx-auto"
         >
           <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            Возможности платформы
+            {t("platform.title")}
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            Всё, что нужно для
-            <br />
-            <span className="text-gradient-accent">управления безопасностью в одном месте</span>
+            {t("platform.subtitle")}
           </h2>
         </motion.div>
 
@@ -111,7 +112,7 @@ export function Platform() {
                   {feature.oneLiner}
                 </p>
                 <div className={`mt-5 inline-flex items-center gap-1.5 text-sm font-medium ${colors.text} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                  Подробнее <ArrowRight className="w-3.5 h-3.5" />
+                  {t("common.learnMore")} <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </motion.a>
             );

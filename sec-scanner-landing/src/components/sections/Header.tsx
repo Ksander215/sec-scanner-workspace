@@ -11,17 +11,19 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/icons";
-
-const navLinks = [
-  { href: "#platform", label: "Платформа" },
-  { href: "#metrics", label: "Метрики" },
-  { href: "#demo", label: "Демо" },
-  { href: "#community", label: "Сообщество" },
-];
+import { useI18n } from "@/lib/i18n-context";
 
 export function Header() {
+  const { t } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: "#platform", label: t("nav.platform") },
+    { href: "#metrics", label: t("nav.metrics") },
+    { href: "#demo", label: t("nav.demo") },
+    { href: "#community", label: t("nav.community") },
+  ];
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -68,13 +70,13 @@ export function Header() {
               href="/app/dashboard"
               className="px-3 py-2 text-sm text-muted-2 hover:text-foreground transition-colors rounded-lg hover:bg-surface-2"
             >
-              Дашборд
+              {t("nav.dashboard")}
             </Link>
             <Link
               href="/app/docs"
               className="px-3 py-2 text-sm text-muted-2 hover:text-foreground transition-colors rounded-lg hover:bg-surface-2"
             >
-              Документация
+              {t("nav.documentation")}
             </Link>
           </nav>
 
@@ -94,7 +96,7 @@ export function Header() {
               href="/app/dashboard"
               className="hidden sm:inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors"
             >
-              Открыть платформу
+              {t("nav.openPlatform")}
               <ArrowRight className="w-4 h-4" />
             </Link>
             <button
@@ -133,14 +135,14 @@ export function Header() {
                 onClick={() => setMobileOpen(false)}
                 className="px-4 py-2.5 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
               >
-                Дашборд
+                {t("nav.dashboard")}
               </Link>
               <Link
                 href="/app/docs"
                 onClick={() => setMobileOpen(false)}
                 className="px-4 py-2.5 text-sm text-muted-2 hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors"
               >
-                Документация
+                {t("nav.documentation")}
               </Link>
               <div className="flex gap-3 mt-3 pt-3 border-t border-border">
                 <a
@@ -156,7 +158,7 @@ export function Header() {
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-accent text-background rounded-lg"
                 >
-                  Открыть платформу <ArrowRight className="w-4 h-4" />
+                  {t("nav.openPlatform")} <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </nav>

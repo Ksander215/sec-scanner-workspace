@@ -3,17 +3,20 @@
 import { motion } from "framer-motion";
 import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 import { CheckCircle2, Code2, TestTube2, Shield, Unlock, Rocket } from "lucide-react";
-
-const metrics = [
-  { value: 20, suffix: "", label: "Модулей", color: "text-accent", icon: Shield, description: "Сканирование, анализ, корреляция, отчёты", href: "/app/docs" },
-  { value: 370, suffix: "+", label: "Файлов исходного кода", color: "text-cyan", icon: Code2, description: "Продакшн-код на TypeScript", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
-  { value: 2350, suffix: "+", label: "Тестов", color: "text-amber", icon: TestTube2, description: "Unit, интеграционные и E2E", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
-  { value: 0, suffix: "", label: "Ошибок TypeScript", color: "text-accent", icon: CheckCircle2, description: "Ноль ошибок компиляции", href: "/app/docs" },
-  { value: 100, suffix: "%", label: "Открытый исходный код", color: "text-purple", icon: Unlock, description: "MIT лицензия, полная прозрачность", href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
-  { value: 1, suffix: "", label: "Команда для установки", color: "text-cyan", icon: Rocket, description: "sip scan — готово за 30 секунд", href: "/app/playground" },
-];
+import { useI18n } from "@/lib/i18n-context";
 
 export function PlatformMetrics() {
+  const { t } = useI18n();
+
+  const metrics = [
+    { value: 20, suffix: "", label: t("metrics.label.modules"), color: "text-accent", icon: Shield, description: t("metrics.desc.modules"), href: "/app/docs" },
+    { value: 370, suffix: "+", label: t("metrics.label.sourceFiles"), color: "text-cyan", icon: Code2, description: t("metrics.desc.sourceFiles"), href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
+    { value: 2350, suffix: "+", label: t("metrics.label.tests"), color: "text-amber", icon: TestTube2, description: t("metrics.desc.tests"), href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
+    { value: 0, suffix: "", label: t("metrics.label.tsErrors"), color: "text-accent", icon: CheckCircle2, description: t("metrics.desc.tsErrors"), href: "/app/docs" },
+    { value: 100, suffix: "%", label: t("metrics.label.opensource"), color: "text-purple", icon: Unlock, description: t("metrics.desc.opensource"), href: "https://github.com/Ksander215/sec-scanner-workspace", external: true },
+    { value: 1, suffix: "", label: t("metrics.label.oneCommand"), color: "text-cyan", icon: Rocket, description: t("metrics.desc.oneCommand"), href: "/app/playground" },
+  ];
+
   return (
     <section id="metrics" className="relative py-24 overflow-hidden">
       <div className="absolute inset-0 bg-surface/50" />
@@ -28,10 +31,10 @@ export function PlatformMetrics() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
-            Платформа <span className="text-gradient-accent">в цифрах</span>
+            {t("metrics.title")}
           </h2>
           <p className="mt-4 text-lg text-muted-2 max-w-2xl mx-auto">
-            Открытый исходный код. Готов к продакшену. Никаких компромиссов.
+            {t("metrics.subtitle")}
           </p>
         </motion.div>
 
