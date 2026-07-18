@@ -11,6 +11,10 @@ import {
   Lightbulb,
   Eye,
   BarChart3,
+  LayoutDashboard,
+  Store,
+  Rocket,
+  BookOpen,
 } from "lucide-react";
 
 type DemoTab = "findings" | "risk" | "attack" | "recommend" | "explain";
@@ -55,8 +59,8 @@ export function Demo() {
             viewport={{ once: true }}
             className="max-w-3xl mx-auto"
           >
-            <span className="text-sm font-medium text-amber uppercase tracking-wider">
-              Interactive Demo
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-muted text-amber text-xs font-medium uppercase tracking-wider border border-amber/20">
+              Demo
             </span>
             <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
               Попробуйте
@@ -65,12 +69,11 @@ export function Demo() {
             </h2>
             <p className="mt-6 text-lg text-muted-2 leading-relaxed">
               Запустите демо и увидьте, как платформа анализирует 50 находок, строит граф
-              риска, обнаруживает цепочки атак и генерирует рекомендации — всё в реальном
-              времени.
+              риска, обнаруживает цепочки атак и генерирует рекомендации.
             </p>
             <button
               onClick={() => setLaunched(true)}
-              className="mt-10 group inline-flex items-center gap-3 px-10 py-4 text-lg font-semibold bg-accent text-background rounded-2xl hover:bg-accent-hover transition-all glow-accent"
+              className="mt-10 group inline-flex items-center gap-3 px-10 py-4 text-lg font-semibold bg-accent text-background rounded-2xl hover:bg-accent-hover transition-all"
             >
               <Play className="w-5 h-5" />
               Launch Demo
@@ -90,8 +93,8 @@ export function Demo() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center max-w-3xl mx-auto mb-10"
         >
-          <span className="text-sm font-medium text-amber uppercase tracking-wider">
-            Live Demo
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-muted text-amber text-xs font-medium uppercase tracking-wider border border-amber/20">
+            Demo
           </span>
           <h2 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight">
             Демо-отчёт сканирования API
@@ -127,7 +130,6 @@ export function Demo() {
                 exit={{ opacity: 0, x: 20 }}
                 className="p-6"
               >
-                {/* Summary bar */}
                 <div className="flex flex-wrap gap-4 mb-6">
                   {[
                     { label: "Critical", count: 2, color: "text-red bg-red-muted" },
@@ -143,7 +145,6 @@ export function Demo() {
                     </span>
                   ))}
                 </div>
-                {/* Findings list */}
                 <div className="space-y-2">
                   {demoFindings.map((f) => (
                     <div
@@ -181,7 +182,6 @@ export function Demo() {
                 className="p-6"
               >
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Risk score */}
                   <div className="flex flex-col items-center justify-center p-8 rounded-2xl bg-surface-2">
                     <div className="relative w-32 h-32">
                       <svg className="w-32 h-32 -rotate-90" viewBox="0 0 120 120">
@@ -197,7 +197,6 @@ export function Demo() {
                     <div className="text-xs text-muted">High Risk</div>
                   </div>
 
-                  {/* Risk by category */}
                   <div className="col-span-2 p-6 rounded-2xl bg-surface-2">
                     <h4 className="text-sm font-semibold text-foreground mb-4">Risk by Category</h4>
                     <div className="space-y-4">
@@ -251,7 +250,6 @@ export function Demo() {
                     </span>
                   </div>
 
-                  {/* Attack path visualization */}
                   <div className="flex flex-col sm:flex-row items-stretch gap-3">
                     {[
                       { step: "1", name: "Resource Consumption", id: "API4:2023", color: "#ff4444" },
@@ -444,34 +442,42 @@ export function Demo() {
                       to trusted origins.
                     </p>
                   </div>
-
-                  {/* Link to full interactive demo */}
-                  <div className="mt-6 text-center">
-                    <a
-                      href="/app/demo"
-                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold bg-accent text-background rounded-xl hover:bg-accent-hover transition-all glow-accent"
-                    >
-                      <Play className="w-4 h-4" />
-                      Open Full Interactive Demo
-                      <ChevronRight className="w-4 h-4" />
-                    </a>
-                    <div className="mt-3 flex items-center justify-center gap-4">
-                      <a href="/app/demo/knowledge-graph" className="text-xs text-cyan hover:text-cyan/80 transition-colors">
-                        Knowledge Graph
-                      </a>
-                      <a href="/app/demo/attack-paths" className="text-xs text-amber hover:text-amber/80 transition-colors">
-                        Attack Paths
-                      </a>
-                      <a href="/app/dashboard" className="text-xs text-purple hover:text-purple/80 transition-colors">
-                        Dashboard
-                      </a>
-                    </div>
-                  </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+
+        {/* ─── Next Steps after Demo ─────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-10 p-6 rounded-2xl border border-border bg-surface"
+        >
+          <h3 className="text-base font-semibold text-foreground mb-4">
+            Что делать дальше?
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { icon: LayoutDashboard, label: "Открыть Dashboard", href: "/app/dashboard" },
+              { icon: Store, label: "Открыть Marketplace", href: "/app/marketplace" },
+              { icon: Rocket, label: "Запустить первое сканирование", href: "/app/scans" },
+              { icon: BookOpen, label: "Изучить документацию", href: "/app/docs" },
+            ].map((item) => (
+              <a
+                key={item.label}
+                href={item.href}
+                className="flex items-center gap-3 p-4 rounded-xl border border-border hover:border-accent/30 hover:bg-accent-muted/30 transition-all group"
+              >
+                <item.icon className="w-5 h-5 text-accent shrink-0" />
+                <span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors">
+                  {item.label}
+                </span>
+              </a>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </section>
   );

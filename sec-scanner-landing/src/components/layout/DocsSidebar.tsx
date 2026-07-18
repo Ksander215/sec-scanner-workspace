@@ -37,7 +37,7 @@ export function DocsSidebar() {
   const { t } = useI18n();
 
   return (
-    <nav className="w-56 shrink-0 py-6 pr-6 border-r border-border overflow-y-auto sticky top-0 h-[calc(100vh-7rem)]">
+    <nav className="w-56 shrink-0 py-6 pr-6 border-r border-border overflow-y-auto sticky top-0 h-[calc(100vh-7rem)] bg-background">
       {/* Back button */}
       <div className="mb-4 px-3">
         <Link

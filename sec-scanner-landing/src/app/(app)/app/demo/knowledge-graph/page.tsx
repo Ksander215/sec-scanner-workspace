@@ -229,6 +229,38 @@ export default function KnowledgeGraphPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header */}
+      {/* Explanation block */}
+      <div className="border-b border-border bg-accent-muted/20">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">Demo</span>
+            <h2 className="text-sm font-semibold text-foreground">{t("graph.guide.title")}</h2>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="p-3 rounded-lg bg-surface border border-border">
+              <span className="text-xs font-medium text-foreground">{t("graph.whatShows")}</span>
+              <p className="text-xs text-muted-2 mt-1">{t("graph.whatShowsAnswer")}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-surface border border-border">
+              <span className="text-xs font-medium text-foreground">{t("graph.whatConnections")}</span>
+              <p className="text-xs text-muted-2 mt-1">{t("graph.whatConnectionsAnswer")}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-surface border border-border">
+              <span className="text-xs font-medium text-foreground">{t("graph.whyRed")}</span>
+              <p className="text-xs text-muted-2 mt-1">{t("graph.whyRedAnswer")}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-surface border border-border">
+              <span className="text-xs font-medium text-foreground">{t("graph.whatNext")}</span>
+              <p className="text-xs text-muted-2 mt-1">
+                {t("graph.whatNextAnswer")}{" "}
+                <a href="/app/demo/attack-paths" className="text-accent hover:underline">Attack Paths</a>{" "}
+                <a href="/app/findings" className="text-accent hover:underline">Findings</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="border-b border-border bg-surface/80 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FolderPlus, Store, Zap, Sparkles } from "lucide-react";
+import { FolderPlus, Store, Zap, Sparkles, ArrowDown } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
 export function HowItWorks() {
@@ -30,19 +30,18 @@ export function HowItWorks() {
     },
   ];
 
-  const colorStyles: Record<string, { bg: string; text: string; ring: string; num: string }> = {
-    accent: { bg: "bg-accent-muted", text: "text-accent", ring: "ring-accent/30", num: "text-accent" },
-    cyan: { bg: "bg-cyan-muted", text: "text-cyan", ring: "ring-cyan/30", num: "text-cyan" },
-    amber: { bg: "bg-amber-muted", text: "text-amber", ring: "ring-amber/30", num: "text-amber" },
-    purple: { bg: "bg-purple-muted", text: "text-purple", ring: "ring-purple/30", num: "text-purple" },
+  const colorStyles: Record<string, { bg: string; text: string; ring: string }> = {
+    accent: { bg: "bg-accent-muted", text: "text-accent", ring: "ring-accent/30" },
+    cyan: { bg: "bg-cyan-muted", text: "text-cyan", ring: "ring-cyan/30" },
+    amber: { bg: "bg-amber-muted", text: "text-amber", ring: "ring-amber/30" },
+    purple: { bg: "bg-purple-muted", text: "text-purple", ring: "ring-purple/30" },
   };
 
   return (
     <section className="relative py-24 sm:py-32 overflow-hidden">
-      {/* Subtle background accent */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface to-transparent" />
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -61,43 +60,48 @@ export function HowItWorks() {
           </p>
         </motion.div>
 
-        {/* Steps — horizontal on desktop, vertical on mobile */}
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
+        {/* Steps — vertical flow with arrows */}
+        <div className="mt-16 flex flex-col gap-0">
           {steps.map((step, i) => {
             const styles = colorStyles[step.color];
             return (
               <motion.div
                 key={step.key}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
-                className="relative group"
+                transition={{ delay: i * 0.1 }}
+                className="relative"
               >
-                {/* Connector line (desktop only) */}
-                {i < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-12 left-[calc(50%+40px)] w-[calc(100%-80px)] h-px bg-border" />
-                )}
-
-                <div className="relative flex flex-col items-center text-center p-6 rounded-2xl border border-border bg-surface hover:bg-surface-2 transition-all duration-300">
-                  {/* Step number */}
-                  <div className={`flex items-center justify-center w-12 h-12 rounded-xl ${styles.bg} ${styles.text} ring-4 ${styles.ring} font-bold text-lg`}>
-                    {i + 1}
+                <div className="flex items-center gap-6">
+                  {/* Step number + icon */}
+                  <div className="flex-shrink-0 flex flex-col items-center">
+                    <div className={`flex items-center justify-center w-14 h-14 rounded-2xl ${styles.bg} ${styles.text} ring-4 ${styles.ring}`}>
+                      <step.icon className="w-6 h-6" />
+                    </div>
                   </div>
-
-                  {/* Icon */}
-                  <div className={`mt-4 inline-flex items-center justify-center w-10 h-10 rounded-lg ${styles.bg} ${styles.text}`}>
-                    <step.icon className="w-5 h-5" />
-                  </div>
-
                   {/* Text */}
-                  <h3 className="mt-3 text-base font-semibold text-foreground">
-                    {t(`${step.key}.title`)}
-                  </h3>
-                  <p className="mt-2 text-sm text-muted-2 leading-relaxed">
-                    {t(`${step.key}.desc`)}
-                  </p>
+                  <div className="flex-1 p-5 rounded-xl border border-border bg-surface">
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-bold ${styles.text} uppercase tracking-wider`}>
+                        {i + 1}
+                      </span>
+                      <h3 className="text-base font-semibold text-foreground">
+                        {t(`${step.key}.title`)}
+                      </h3>
+                    </div>
+                    <p className="mt-2 text-sm text-muted-2 leading-relaxed">
+                      {t(`${step.key}.desc`)}
+                    </p>
+                  </div>
                 </div>
+
+                {/* Arrow between steps */}
+                {i < steps.length - 1 && (
+                  <div className="flex justify-center py-3 pl-7">
+                    <ArrowDown className="w-5 h-5 text-muted" />
+                  </div>
+                )}
               </motion.div>
             );
           })}

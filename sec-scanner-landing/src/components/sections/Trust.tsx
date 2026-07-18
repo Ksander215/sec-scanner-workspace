@@ -9,6 +9,10 @@ import {
   FileCheck,
   Cpu,
   CheckCircle2,
+  Server,
+  Code2,
+  Activity,
+  Cloud,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -42,9 +46,34 @@ export function Trust() {
       desc: t("trust.verified.desc"),
     },
     {
-      icon: Lock,
+      icon: Activity,
       title: t("trust.audit.title"),
       desc: t("trust.audit.desc"),
+    },
+    {
+      icon: Lock,
+      title: t("trust.secureStorage"),
+      desc: t("trust.secureStorage.desc"),
+    },
+    {
+      icon: Server,
+      title: t("trust.localRun"),
+      desc: t("trust.localRun.desc"),
+    },
+    {
+      icon: Cloud,
+      title: t("trust.selfHosted"),
+      desc: t("trust.selfHosted.desc"),
+    },
+    {
+      icon: Code2,
+      title: t("trust.api"),
+      desc: t("trust.api.desc"),
+    },
+    {
+      icon: Activity,
+      title: t("trust.auditLogFeature"),
+      desc: t("trust.auditLogFeature.desc"),
     },
   ];
 
@@ -71,7 +100,7 @@ export function Trust() {
             {t("trust.label")}
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
-            {t("trust.title")}
+            {t("trust.whyTrust")}
           </h2>
           <p className="mt-4 text-lg text-muted-2">
             {t("trust.subtitle")}
@@ -79,25 +108,25 @@ export function Trust() {
         </motion.div>
 
         {/* Trust items grid */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {trustItems.map((item, i) => (
             <motion.div
               key={item.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="relative group p-6 rounded-2xl border border-border bg-surface hover:bg-surface-2 transition-all duration-300"
+              transition={{ delay: i * 0.05 }}
+              className="p-5 rounded-xl border border-border bg-surface hover:bg-surface-2 transition-all duration-300"
             >
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-xl bg-accent-muted text-accent">
-                  <item.icon className="w-5 h-5" />
+                <div className="flex-shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg bg-accent-muted text-accent">
+                  <item.icon className="w-4.5 h-4.5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-foreground">
+                  <h3 className="text-sm font-semibold text-foreground">
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-sm text-muted-2 leading-relaxed">
+                  <p className="mt-1 text-sm text-muted-2 leading-relaxed">
                     {item.desc}
                   </p>
                 </div>

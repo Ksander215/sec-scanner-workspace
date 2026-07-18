@@ -127,7 +127,7 @@ export default function MarketplacePreviewPage() {
       addToast({
         type: "success",
         title: locale === "ru" ? "Инструмент установлен" : "Tool installed",
-        description: `${item.name} ${locale === "ru" ? "установлен в проект «Демо-проект»" : "installed to project \"Demo Project\""}`,
+        description: `${item.name} ${locale === "ru" ? "установлен в проект «Демо-проект»" : "installed to project \"Demo Project\""} (${locale === "ru" ? "Демонстрационная установка" : "Demo installation"})`,
       });
     }, 1500);
   };
@@ -172,6 +172,12 @@ export default function MarketplacePreviewPage() {
             </div>
 
             <p className="text-sm text-muted-2 leading-relaxed mb-6">{detailItem.description}</p>
+
+            {/* Demo installation banner */}
+            <div className="mb-6 p-3 rounded-lg bg-amber/10 border border-amber/20 flex items-center gap-2.5 text-sm">
+              <span className="text-amber font-medium">{locale === "ru" ? "⚠ Демонстрационная установка" : "⚠ Demo installation"}</span>
+              <span className="text-muted-2">— {locale === "ru" ? "изменения сохраняются только в текущей сессии" : "changes are saved in current session only"}</span>
+            </div>
 
             {/* Install details */}
             <div className="space-y-3 mb-6">

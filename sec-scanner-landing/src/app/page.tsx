@@ -1,6 +1,7 @@
 import { Header } from "@/components/sections/Header";
 import { Hero } from "@/components/sections/Hero";
 import { HowItWorks } from "@/components/sections/HowItWorks";
+import { ApproachComparison } from "@/components/sections/ApproachComparison";
 import { Platform } from "@/components/sections/Platform";
 import { PlatformMetrics } from "@/components/sections/PlatformMetrics";
 import { DemoPreview } from "@/components/sections/DemoPreview";
@@ -17,6 +18,7 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <HowItWorks />
+        <ApproachComparison />
         <Platform />
         <PlatformMetrics />
         <DemoPreview />
