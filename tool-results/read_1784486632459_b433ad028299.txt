@@ -1,0 +1,1085 @@
+     1→"use client";
+     2→
+     3→import { useState, useCallback, useEffect } from "react";
+     4→import { Container } from "@/components/ui/Container";
+     5→import { Badge } from "@/components/ui/Badge";
+     6→import { Button } from "@/components/ui/Button";
+     7→import {
+     8→  Play,
+     9→  ChevronRight,
+    10→  ChevronLeft,
+    11→  CheckCircle2,
+    12→  Loader2,
+    13→  FolderPlus,
+    14→  GitBranch,
+    15→  Folder,
+    16→  Globe,
+    17→  Shield,
+    18→  ShieldCheck,
+    19→  XCircle,
+    20→  AlertTriangle,
+    21→  Info,
+    22→  ExternalLink,
+    23→  Store,
+    24→  BookOpen,
+    25→  Clock,
+    26→  BarChart3,
+    27→  Zap,
+    28→  Radio,
+    29→  FileText,
+    30→  ArrowRight,
+    31→  Plus,
+    32→  History,
+    33→  RefreshCw,
+    34→  Terminal,
+    35→  ShieldAlert,
+    36→} from "lucide-react";
+    37→import { demoFindings, pipelineStages, type PipelineStage, type Severity } from "@/lib/demo-data";
+    38→import { demoProjects as portalProjects, type Project } from "@/lib/portal-data";
+    39→import { useI18n } from "@/lib/i18n-context";
+    40→import { getMarketplaceInstalled, MARKETPLACE_TO_SCANNER, SCANNER_PLUGIN_IDS } from "@/lib/utils";
+    41→
+    42→// ─── Severity helpers ───────────────────────────────────────────────────
+    43→
+    44→const severityIcon: Record<Severity, React.ReactNode> = {
+    45→  critical: <XCircle className="w-4 h-4 text-red" />,
+    46→  high: <AlertTriangle className="w-4 h-4 text-amber" />,
+    47→  medium: <AlertTriangle className="w-4 h-4 text-amber" />,
+    48→  low: <Info className="w-4 h-4 text-accent" />,
+    49→  info: <Info className="w-4 h-4 text-cyan" />,
+    50→};
+    51→
+    52→const severityColors: Record<Severity, string> = {
+    53→  critical: "text-red",
+    54→  high: "text-amber",
+    55→  medium: "text-amber",
+    56→  low: "text-accent",
+    57→  info: "text-cyan",
+    58→};
+    59→
+    60→const severityBg: Record<Severity, string> = {
+    61→  critical: "bg-red-muted border-red/20",
+    62→  high: "bg-amber-muted border-amber/20",
+    63→  medium: "bg-amber-muted border-amber/20",
+    64→  low: "bg-accent-muted border-accent/20",
+    65→  info: "bg-cyan-muted border-cyan/20",
+    66→};
+    67→
+    68→// ─── Scan Tool definition ───────────────────────────────────────────────
+    69→
+    70→interface ScanTool {
+    71→  id: string;
+    72→  name: string;
+    73→  description: { ru: string; en: string };
+    74→  installed: boolean;
+    75→  inDevelopment?: boolean;
+    76→  category: "network" | "web" | "container" | "code" | "api";
+    77→  cliCommand: string;
+    78→  sampleOutput: { ru: string[]; en: string[] };
+    79→}
+    80→
+    81→const scanTools: ScanTool[] = [
+    82→  {
+    83→    id: "nmap",
+    84→    name: "Nmap",
+    85→    description: { ru: "Сетевой сканер портов и сервисов", en: "Network port and service scanner" },
+    86→    installed: true,
+    87→    category: "network",
+    88→    cliCommand: "sip scan --engine nmap --target {target} --ports top-1000",
+    89→    sampleOutput: {
+    90→      ru: ["nmap: Сканирование портов...", "22/tcp  open  ssh     OpenSSH 8.9", "80/tcp  open  http    nginx 1.24", "443/tcp open  https   nginx 1.24", "3306/tcp open  mysql  MySQL 8.0.35", "Обнаружено 4 открытых порта"],
+    91→      en: ["nmap: Scanning ports...", "22/tcp  open  ssh     OpenSSH 8.9", "80/tcp  open  http    nginx 1.24", "443/tcp open  https   nginx 1.24", "3306/tcp open  mysql  MySQL 8.0.35", "4 open ports found"],
+    92→    },
+    93→  },
+    94→  {
+    95→    id: "nuclei",
+    96→    name: "Nuclei",
+    97→    description: { ru: "Сканер уязвимостей на основе шаблонов", en: "Template-based vulnerability scanner" },
+    98→    installed: true,
+    99→    category: "web",
+   100→    cliCommand: "sip scan --engine nuclei --target {target} --templates cves,vulnerabilities",
+   101→    sampleOutput: {
+   102→      ru: ["nuclei: Загрузка 6841 шаблонов...", "[CVE-2024-23956] SQL Injection в /api/v1/users [critical]", "[CVE-2024-11234] XSS в /search [high]", "[misconfig] Отсутствуют заголовки безопасности [medium]", "3 уязвимости обнаружено (1 critical, 1 high, 1 medium)"],
+   103→      en: ["nuclei: Loading 6841 templates...", "[CVE-2024-23956] SQL Injection at /api/v1/users [critical]", "[CVE-2024-11234] XSS at /search [high]", "[misconfig] Missing security headers [medium]", "3 vulnerabilities found (1 critical, 1 high, 1 medium)"],
+   104→    },
+   105→  },
+   106→  {
+   107→    id: "trivy",
+   108→    name: "Trivy",
+   109→    description: { ru: "Сканер контейнеров и зависимостей", en: "Container and dependency scanner" },
+   110→    installed: true,
+   111→    category: "container",
+   112→    cliCommand: "sip scan --engine trivy --target {target} --severity CRITICAL,HIGH",
+   113→    sampleOutput: {
+   114→      ru: ["trivy: Анализ зависимостей и образов...", "CVE-2024-21626 (runc) — CRITICAL — CVSS 9.8", "CVE-2024-23652 (buildkit) — HIGH — CVSS 7.5", "npm/lodash <4.17.21 — Prototype Pollution", "3 уязвимости в зависимостях, 2 в контейнере"],
+   115→      en: ["trivy: Analyzing dependencies and images...", "CVE-2024-21626 (runc) — CRITICAL — CVSS 9.8", "CVE-2024-23652 (buildkit) — HIGH — CVSS 7.5", "npm/lodash <4.17.21 — Prototype Pollution", "3 dependency vulnerabilities, 2 container vulnerabilities"],
+   116→    },
+   117→  },
+   118→  {
+   119→    id: "owasp-zap",
+   120→    name: "OWASP ZAP",
+   121→    description: { ru: "Веб-сканер безопасности приложений (DAST)", en: "Web application security scanner (DAST)" },
+   122→    installed: false,
+   123→    inDevelopment: true,
+   124→    category: "web",
+   125→    cliCommand: "sip scan --engine zap --target {target} --mode active",
+   126→    sampleOutput: {
+   127→      ru: ["zap: Активное сканирование...", "SQL Injection подтверждён в /api/v1/users", "Cross-Site Scripting в /search", "Небезопасные Cookie-флаги"],
+   128→      en: ["zap: Active scanning...", "SQL Injection confirmed at /api/v1/users", "Cross-Site Scripting at /search", "Insecure cookie flags detected"],
+   129→    },
+   130→  },
+   131→  {
+   132→    id: "semgrep",
+   133→    name: "Semgrep",
+   134→    description: { ru: "Статический анализатор кода (SAST)", en: "Static code analyzer (SAST)" },
+   135→    installed: false,
+   136→    inDevelopment: true,
+   137→    category: "code",
+   138→    cliCommand: "sip scan --engine semgrep --target {target} --config auto",
+   139→    sampleOutput: {
+   140→      ru: ["semgrep: Статический анализ кода...", "sql-injection: Параметр 'id' в SQL-запросе", "xss-reflected: Несанитизированный вывод в /search", "hardcoded-secret: API-ключ в config.py"],
+   141→      en: ["semgrep: Static code analysis...", "sql-injection: 'id' param in SQL query", "xss-reflected: Unsanitized output in /search", "hardcoded-secret: API key in config.py"],
+   142→    },
+   143→  },
+   144→  {
+   145→    id: "nikto",
+   146→    name: "Nikto",
+   147→    description: { ru: "Сканер веб-серверов", en: "Web server scanner" },
+   148→    installed: false,
+   149→    inDevelopment: true,
+   150→    category: "web",
+   151→    cliCommand: "sip scan --engine nikto --target {target} --tuning 123",
+   152→    sampleOutput: {
+   153→      ru: ["nikto: Сканирование веб-сервера...", "Server: nginx/1.24.0 — устаревшая версия", "/.git/ — обнаружен Git-репозиторий", "/admin — панель администратора доступна"],
+   154→      en: ["nikto: Web server scanning...", "Server: nginx/1.24.0 — outdated version", "/.git/ — Git repository exposed", "/admin — admin panel accessible"],
+   155→    },
+   156→  },
+   157→];
+   158→
+   159→// ─── Data Source options ────────────────────────────────────────────────
+   160→
+   161→interface DataSourceOption {
+   162→  id: string;
+   163→  name: { ru: string; en: string };
+   164→  description: { ru: string; en: string };
+   165→  icon: React.ElementType;
+   166→  placeholder: { ru: string; en: string };
+   167→  color: string;
+   168→}
+   169→
+   170→const dataSources: DataSourceOption[] = [
+   171→  { id: "git", name: { ru: "Git-репозиторий", en: "Git Repository" }, description: { ru: "Клонировать и просканировать репозиторий", en: "Clone and scan a repository" }, icon: GitBranch, placeholder: { ru: "https://github.com/company/project", en: "https://github.com/company/project" }, color: "text-purple" },
+   172→  { id: "folder", name: { ru: "Локальная папка", en: "Local Folder" }, description: { ru: "Указать путь к папке на сервере", en: "Specify a folder path on the server" }, icon: Folder, placeholder: { ru: "/var/www/project", en: "/var/www/project" }, color: "text-amber" },
+   173→  { id: "docker", name: { ru: "Docker-образ", en: "Docker Image" }, description: { ru: "Просканировать Docker-образ на уязвимости", en: "Scan a Docker image for vulnerabilities" }, icon: Globe, placeholder: { ru: "nginx:latest", en: "nginx:latest" }, color: "text-cyan" },
+   174→  { id: "website", name: { ru: "Веб-сайт / API", en: "Website / API" }, description: { ru: "Указать URL для сканирования", en: "Specify a URL to scan" }, icon: Globe, placeholder: { ru: "https://example.com", en: "https://example.com" }, color: "text-accent" },
+   175→  { id: "api", name: { ru: "API-эндпоинт", en: "API Endpoint" }, description: { ru: "Указать API для тестирования", en: "Specify an API to test" }, icon: Radio, placeholder: { ru: "https://api.example.com/v1", en: "https://api.example.com/v1" }, color: "text-amber" },
+   176→];
+   177→
+   178→// ─── Scan History (localStorage) ────────────────────────────────────────
+   179→
+   180→interface ScanRecord {
+   181→  id: string;
+   182→  projectName: string;
+   183→  sourceType: string;
+   184→  sourceValue: string;
+   185→  tools: string[];
+   186→  startedAt: string;
+   187→  completedAt: string;
+   188→  findingsCount: number;
+   189→  riskScore: number;
+   190→  status: "completed" | "running";
+   191→}
+   192→
+   193→const HISTORY_KEY = "sip_scan_history";
+   194→
+   195→function loadHistory(): ScanRecord[] {
+   196→  if (typeof window === "undefined") return [];
+   197→  try {
+   198→    return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+   199→  } catch {
+   200→    return [];
+   201→  }
+   202→}
+   203→
+   204→function saveHistory(records: ScanRecord[]) {
+   205→  if (typeof window === "undefined") return;
+   206→  localStorage.setItem(HISTORY_KEY, JSON.stringify(records.slice(0, 20)));
+   207→}
+   208→
+   209→// ─── Dynamic pipeline stage builder ─────────────────────────────────────
+   210→
+   211→interface DynamicStage {
+   212→  id: string;
+   213→  label: { ru: string; en: string };
+   214→  description: { ru: string; en: string };
+   215→  type: "init" | "tool" | "correlate" | "graph" | "risk" | "paths" | "recommend" | "report";
+   216→  toolId?: string;
+   217→  estimatedSec: number;
+   218→}
+   219→
+   220→function buildStages(tools: Set<string>, isEn: boolean, toolDefs: ScanTool[]): DynamicStage[] {
+   221→  const stages: DynamicStage[] = [
+   222→    {
+   223→      id: "init",
+   224→      label: { ru: "Инициализация", en: "Initialize" },
+   225→      description: { ru: "Загрузка проекта, подготовка окружения, валидация цели", en: "Load project, prepare environment, validate target" },
+   226→      type: "init",
+   227→      estimatedSec: 3,
+   228→    },
+   229→  ];
+   230→
+   231→  const selectedTools = Array.from(tools);
+   232→  for (const toolId of selectedTools) {
+   233→    const tool = toolDefs.find(t => t.id === toolId);
+   234→    if (!tool) continue;
+   235→    stages.push({
+   236→      id: `tool-${toolId}`,
+   237→      label: { ru: tool.name, en: tool.name },
+   238→      description: { ru: tool.description.ru, en: tool.description.en },
+   239→      type: "tool",
+   240→      toolId,
+   241→      estimatedSec: 4 + Math.floor(Math.random() * 3),
+   242→    });
+   243→  }
+   244→
+   245→  stages.push(
+   246→    {
+   247→      id: "correlate",
+   248→      label: { ru: "Корреляция", en: "Correlation" },
+   249→      description: { ru: "Сведение результатов всех сканеров, удаление дубликатов", en: "Merge results from all scanners, remove duplicates" },
+   250→      type: "correlate",
+   251→      estimatedSec: 3,
+   252→    },
+   253→    {
+   254→      id: "graph",
+   255→      label: { ru: "Граф знаний", en: "Knowledge Graph" },
+   256→      description: { ru: "Построение графа связей: активы → сервисы → уязвимости → CVE", en: "Build entity graph: assets → services → findings → CVEs" },
+   257→      type: "graph",
+   258→      estimatedSec: 4,
+   259→    },
+   260→    {
+   261→      id: "risk",
+   262→      label: { ru: "Оценка риска", en: "Risk Scoring" },
+   263→      description: { ru: "Расчёт оценок на основе CVSS, эксплуатируемости, критичности активов", en: "Compute scores based on CVSS, exploitability, asset criticality" },
+   264→      type: "risk",
+   265→      estimatedSec: 2,
+   266→    },
+   267→    {
+   268→      id: "paths",
+   269→      label: { ru: "Пути атак", en: "Attack Paths" },
+   270→      description: { ru: "Трассировка путей атак от внешних сервисов к критичным активам", en: "Trace attack paths from external services to critical assets" },
+   271→      type: "paths",
+   272→      estimatedSec: 3,
+   273→    },
+   274→    {
+   275→      id: "recommend",
+   276→      label: { ru: "Рекомендации", en: "Recommendations" },
+   277→      description: { ru: "Приоритизированные шаги по устранению с примерами кода", en: "Prioritized remediation steps with code examples" },
+   278→      type: "recommend",
+   279→      estimatedSec: 2,
+   280→    },
+   281→    {
+   282→      id: "report",
+   283→      label: { ru: "Отчёт", en: "Report" },
+   284→      description: { ru: "Компиляция результатов в структурированный отчёт", en: "Compile findings into a structured report" },
+   285→      type: "report",
+   286→      estimatedSec: 2,
+   287→    },
+   288→  );
+   289→
+   290→  return stages;
+   291→}
+   292→
+   293→// ─── Pipeline stage component ───────────────────────────────────────────
+   294→
+   295→function PipelineStageCard({
+   296→  stage,
+   297→  index,
+   298→  status,
+   299→  progress,
+   300→  outputs,
+   301→  isLast,
+   302→  isEn,
+   303→}: {
+   304→  stage: DynamicStage;
+   305→  index: number;
+   306→  status: "pending" | "running" | "completed";
+   307→  progress: number;
+   308→  outputs: string[];
+   309→  isLast: boolean;
+   310→  isEn: boolean;
+   311→}) {
+   312→  const stageIcon: Record<string, React.ReactNode> = {
+   313→    init: <Zap className="w-4 h-4" />,
+   314→    tool: <Terminal className="w-4 h-4" />,
+   315→    correlate: <RefreshCw className="w-4 h-4" />,
+   316→    graph: <ShieldCheck className="w-4 h-4" />,
+   317→    risk: <BarChart3 className="w-4 h-4" />,
+   318→    paths: <AlertTriangle className="w-4 h-4" />,
+   319→    recommend: <BookOpen className="w-4 h-4" />,
+   320→    report: <FileText className="w-4 h-4" />,
+   321→  };
+   322→
+   323→  return (
+   324→    <div className="flex items-start gap-3">
+   325→      <div className="flex flex-col items-center">
+   326→        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+   327→          status === "running" ? "bg-accent text-background" : status === "completed" ? "bg-accent/20 text-accent" : "bg-surface-2 text-muted border border-border"
+   328→        }`}>
+   329→          {status === "completed" ? <CheckCircle2 className="w-4 h-4" /> : status === "running" ? <Loader2 className="w-4 h-4 animate-spin" /> : stageIcon[stage.type] || index + 1}
+   330→        </div>
+   331→        {!isLast && (
+   332→          <div className={`w-0.5 h-6 mt-1 transition-colors duration-300 ${status === "completed" ? "bg-accent/40" : "bg-border"}`} />
+   333→        )}
+   334→      </div>
+   335→
+   336→      <div className={`flex-1 p-3 rounded-lg transition-all duration-300 ${
+   337→        status === "running" ? "bg-accent-muted border border-accent/30" : status === "completed" ? "bg-surface border border-border" : "bg-surface/50 border border-border/50 opacity-50"
+   338→      }`}>
+   339→        <div className="flex items-center justify-between mb-1">
+   340→          <span className={`text-sm font-medium ${status === "running" ? "text-accent" : status === "completed" ? "text-foreground" : "text-muted"}`}>
+   341→            {stage.label[isEn ? "en" : "ru"]}
+   342→          </span>
+   343→          {status === "running" && <span className="text-xs text-accent font-mono">{Math.round(progress)}%</span>}
+   344→          {status === "completed" && <span className="text-xs text-accent/60">✓</span>}
+   345→        </div>
+   346→        <p className="text-xs text-muted-2">{stage.description[isEn ? "en" : "ru"]}</p>
+   347→        {status === "running" && (
+   348→          <div className="mt-2 h-1 rounded-full bg-surface-2 overflow-hidden">
+   349→            <div className="h-full bg-accent rounded-full transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
+   350→          </div>
+   351→        )}
+   352→        {outputs.length > 0 && (
+   353→          <div className="mt-2 font-mono text-[11px] text-accent/70 space-y-0.5 bg-surface-2/50 rounded px-2 py-1.5">
+   354→            {outputs.map((line, i) => <div key={i}>{line}</div>)}
+   355→          </div>
+   356→        )}
+   357→      </div>
+   358→    </div>
+   359→  );
+   360→}
+   361→
+   362→// ─── Project status badge ───────────────────────────────────────────────
+   363→
+   364→function projectStatusBadge(status: Project["status"], isEn: boolean) {
+   365→  const map: Record<string, { label: string; color: string }> = {
+   366→    healthy: { label: isEn ? "Healthy" : "Здоров", color: "bg-accent-muted text-accent border-accent/20" },
+   367→    warning: { label: isEn ? "Warning" : "Внимание", color: "bg-amber-muted text-amber border-amber/20" },
+   368→    critical: { label: isEn ? "Critical" : "Критично", color: "bg-red-muted text-red border-red/20" },
+   369→    idle: { label: isEn ? "Idle" : "Неактивен", color: "bg-surface-2 text-muted-2 border-border" },
+   370→  };
+   371→  const info = map[status] || map.idle;
+   372→  return <span className={`text-[10px] px-1.5 py-0.5 rounded border ${info.color}`}>{info.label}</span>;
+   373→}
+   374→
+   375→// ─── Main component ─────────────────────────────────────────────────────
+   376→
+   377→export default function ScannerPage() {
+   378→  const { locale } = useI18n();
+   379→  const isEn = locale === "en";
+   380→
+   381→  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+   382→  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+   383→  const [newProjectName, setNewProjectName] = useState("");
+   384→  const [selectedSource, setSelectedSource] = useState<string | null>(null);
+   385→  const [sourceValue, setSourceValue] = useState("");
+   386→  const [selectedTools, setSelectedTools] = useState<Set<string>>(new Set(["nmap", "nuclei", "trivy"]));
+   387→  const [pipelineRunning, setPipelineRunning] = useState(false);
+   388→  const [pipelineComplete, setPipelineComplete] = useState(false);
+   389→  const [currentStage, setCurrentStage] = useState(0);
+   390→  const [stageProgress, setStageProgress] = useState<Record<number, number>>({});
+   391→  const [stageOutputs, setStageOutputs] = useState<Record<number, string[]>>({});
+   392→  const [activeResultTab, setActiveResultTab] = useState<"pipeline" | "findings" | "next">("pipeline");
+   393→  const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
+   394→  const [scanHistory, setScanHistory] = useState<ScanRecord[]>([]);
+   395→  const [showHistory, setShowHistory] = useState(false);
+   396→  const [marketplaceInstalled, setMarketplaceInstalled] = useState<Set<string>>(new Set());
+   397→
+   398→  // Load marketplace installed state
+   399→  useEffect(() => {
+   400→    setMarketplaceInstalled(getMarketplaceInstalled());
+   401→    // Listen for storage changes (when user installs in another tab)
+   402→    const handler = () => setMarketplaceInstalled(getMarketplaceInstalled());
+   403→    window.addEventListener("storage", handler);
+   404→    return () => window.removeEventListener("storage", handler);
+   405→  }, []);
+   406→
+   407→  // Build full tool list: built-in + marketplace-installed scanner plugins
+   408→  const allScanTools: ScanTool[] = [
+   409→    ...scanTools,
+   410→    ...Object.entries(MARKETPLACE_TO_SCANNER)
+   411→      .filter(([mplId]) => marketplaceInstalled.has(mplId))
+   412→      .map(([mplId, def]) => ({
+   413→        id: def.id,
+   414→        name: def.name,
+   415→        description: def.description,
+   416→        installed: true,
+   417→        category: def.category as ScanTool["category"],
+   418→        cliCommand: def.cliCommand,
+   419→        sampleOutput: def.sampleOutput,
+   420→      })),
+   421→  ];
+   422→
+   423→  // Marketplace scanner plugins that are NOT yet installed
+   424→  const availableInMarketplace = Object.entries(MARKETPLACE_TO_SCANNER)
+   425→    .filter(([mplId]) => !marketplaceInstalled.has(mplId))
+   426→    .map(([mplId, def]) => def);
+   427→  const [dynamicStages, setDynamicStages] = useState<DynamicStage[]>([]);
+   428→
+   429→  // Load scan history on mount
+   430→  useEffect(() => {
+   431→    setScanHistory(loadHistory());
+   432→  }, []);
+   433→
+   434→  const step1Valid = selectedProject !== null || newProjectName.trim().length > 0;
+   435→  const step2Valid = selectedSource !== null && sourceValue.trim().length > 0;
+   436→  const step3Valid = selectedTools.size > 0;
+   437→
+   438→  const toggleTool = (id: string) => {
+   439→    setSelectedTools(prev => {
+   440→      const next = new Set(prev);
+   441→      if (next.has(id)) next.delete(id); else next.add(id);
+   442→      return next;
+   443→    });
+   444→  };
+   445→
+   446→  const projectName = newProjectName.trim() || portalProjects.find(p => p.id === selectedProject)?.name || (isEn ? "New Project" : "Новый проект");
+   447→
+   448→  const runPipeline = useCallback(() => {
+   449→    const stages = buildStages(selectedTools, isEn, allScanTools);
+   450→    setDynamicStages(stages);
+   451→    setStep(4);
+   452→    setPipelineRunning(true);
+   453→    setPipelineComplete(false);
+   454→    setCurrentStage(0);
+   455→    setStageProgress({});
+   456→    setStageOutputs({});
+   457→    setActiveResultTab("pipeline");
+   458→
+   459→    const selectedToolArr = Array.from(selectedTools);
+   460→    let stageIdx = 0;
+   461→    const totalStages = stages.length;
+   462→
+   463→    const scanId = `SCAN-${String(Date.now()).slice(-6)}`;
+   464→    const startTime = new Date().toISOString();
+   465→
+   466→    const advanceStage = () => {
+   467→      if (stageIdx >= totalStages) {
+   468→        setPipelineRunning(false);
+   469→        setPipelineComplete(true);
+   470→        setActiveResultTab("next");
+   471→
+   472→        // Save to history
+   473→        const record: ScanRecord = {
+   474→          id: scanId,
+   475→          projectName,
+   476→          sourceType: selectedSource || "unknown",
+   477→          sourceValue: sourceValue || "demo",
+   478→          tools: selectedToolArr,
+   479→          startedAt: startTime,
+   480→          completedAt: new Date().toISOString(),
+   481→          findingsCount: demoFindings.length,
+   482→          riskScore: 78,
+   483→          status: "completed",
+   484→        };
+   485→        const updated = [record, ...loadHistory()].slice(0, 20);
+   486→        saveHistory(updated);
+   487→        setScanHistory(updated);
+   488→        return;
+   489→      }
+   490→
+   491→      setCurrentStage(stageIdx);
+   492→      let progress = 0;
+   493→      const stage = stages[stageIdx];
+   494→
+   495→      // Set initial output based on stage type
+   496→      if (stage.type === "init") {
+   497→        setStageOutputs(prev => ({ ...prev, [stageIdx]: [
+   498→          `$ sip init --project "${projectName}"`,
+   499→          isEn ? "Loading project configuration..." : "Загрузка конфигурации проекта...",
+   500→          isEn ? `Target: ${sourceValue || "demo"}` : `Цель: ${sourceValue || "demo"}`,
+   501→        ] }));
+   502→      } else if (stage.type === "tool" && stage.toolId) {
+   503→        const tool = allScanTools.find(t => t.id === stage.toolId);
+   504→        if (tool) {
+   505→          const cmd = tool.cliCommand.replace("{target}", sourceValue || "demo-target");
+   506→          setStageOutputs(prev => ({ ...prev, [stageIdx]: [`$ ${cmd}`] }));
+   507→        }
+   508→      } else if (stage.type === "correlate") {
+   509→        setStageOutputs(prev => ({ ...prev, [stageIdx]: [isEn ? "Merging results from all scanners..." : "Сведение результатов всех сканеров..."] }));
+   510→      } else if (stage.type === "graph") {
+   511→        setStageOutputs(prev => ({ ...prev, [stageIdx]: [isEn ? "Building knowledge graph entities..." : "Построение сущностей графа знаний..."] }));
+   512→      } else if (stage.type === "risk") {
+   513→        setStageOutputs(prev => ({ ...prev, [stageIdx]: [isEn ? "Calculating risk scores..." : "Расчёт оценок рисков..."] }));
+   514→      } else if (stage.type === "paths") {
+   515→        setStageOutputs(prev => ({ ...prev, [stageIdx]: [isEn ? "Tracing attack paths..." : "Трассировка путей атак..."] }));
+   516→      } else if (stage.type === "recommend") {
+   517→        setStageOutputs(prev => ({ ...prev, [stageIdx]: [isEn ? "Generating remediation steps..." : "Генерация шагов по устранению..."] }));
+   518→      } else if (stage.type === "report") {
+   519→        setStageOutputs(prev => ({ ...prev, [stageIdx]: [isEn ? "Compiling final report..." : "Компиляция финального отчёта..."] }));
+   520→      }
+   521→
+   522→      const progressInterval = setInterval(() => {
+   523→        progress += Math.random() * 18 + 5;
+   524→        if (progress >= 100) {
+   525→          progress = 100;
+   526→          clearInterval(progressInterval);
+   527→          setStageProgress(prev => ({ ...prev, [stageIdx]: 100 }));
+   528→          setTimeout(() => { stageIdx++; advanceStage(); }, 300);
+   529→        } else {
+   530→          setStageProgress(prev => ({ ...prev, [stageIdx]: progress }));
+   531→
+   532→          // Add tool-specific or stage-specific output lines
+   533→          if (Math.random() > 0.5) {
+   534→            setStageOutputs(prev => {
+   535→              const existing = prev[stageIdx] || [];
+   536→              let newLine = "";
+   537→
+   538→              if (stage.type === "tool" && stage.toolId) {
+   539→                const tool = allScanTools.find(t => t.id === stage.toolId);
+   540→                if (tool) {
+   541→                  const outputs = tool.sampleOutput[isEn ? "en" : "ru"];
+   542→                  newLine = outputs[Math.min(existing.length - 1, outputs.length - 1)] || outputs[outputs.length - 1];
+   543→                }
+   544→              } else {
+   545→                const genericLines = stage.type === "correlate"
+   546→                  ? [isEn ? "4 duplicate findings merged" : "4 дубликата объединено", isEn ? "3 new correlations found" : "3 новые корреляции найдены", isEn ? "Unique findings: 8" : "Уникальных находок: 8"]
+   547→                  : stage.type === "graph"
+   548→                  ? [isEn ? "34 nodes created" : "34 узла создано", isEn ? "29 edges mapped" : "29 связей построено", isEn ? "3 critical paths identified" : "3 критических пути выявлено"]
+   549→                  : stage.type === "risk"
+   550→                  ? [isEn ? "Overall risk: 78/100 (HIGH)" : "Общий риск: 78/100 (ВЫСОКИЙ)", isEn ? "3 critical-risk assets" : "3 актива с критическим риском", isEn ? "CVSS avg: 7.2" : "CVSS среднее: 7.2"]
+   551→                  : stage.type === "paths"
+   552→                  ? [isEn ? "Path 1: SQLi → DB → Admin panel" : "Путь 1: SQLi → БД → Панель администратора", isEn ? "Path 2: XSS → Session hijack" : "Путь 2: XSS → Перехват сессии", isEn ? "Path 3: Exposed .git → Source code" : "Путь 3: Открытый .git → Исходный код"]
+   553→                  : stage.type === "recommend"
+   554→                  ? [isEn ? "6 recommendations generated" : "6 рекомендаций сгенерировано", isEn ? "Top: Parameterize SQL queries" : "Приоритет: Параметризация SQL-запросов", isEn ? "Est. remediation: 4 hours" : "Примерное устранение: 4 часа"]
+   555→                  : stage.type === "report"
+   556→                  ? [isEn ? "Executive summary: ready" : "Резюме для руководства: готово", isEn ? "Technical details: ready" : "Технические детали: готовы", isEn ? "8 findings, 3 attack paths" : "8 находок, 3 пути атак"]
+   557→                  : [isEn ? "Processing..." : "Обработка..."];
+   558→                newLine = genericLines[Math.floor(Math.random() * genericLines.length)];
+   559→              }
+   560→
+   561→              return { ...prev, [stageIdx]: [...existing.slice(-4), newLine] };
+   562→            });
+   563→          }
+   564→        }
+   565→      }, 120);
+   566→    };
+   567→
+   568→    advanceStage();
+   569→  }, [selectedTools, sourceValue, isEn, selectedSource, projectName]);
+   570→
+   571→  const steps = [
+   572→    { num: 1, label: isEn ? "Project" : "Проект", icon: FolderPlus },
+   573→    { num: 2, label: isEn ? "Source" : "Источник", icon: Globe },
+   574→    { num: 3, label: isEn ? "Tools" : "Инструменты", icon: Shield },
+   575→    { num: 4, label: isEn ? "Run" : "Запуск", icon: Play },
+   576→  ];
+   577→
+   578→  return (
+   579→    <div className="min-h-[calc(100vh-4rem)]">
+   580→      {/* Header */}
+   581→      <div className="border-b border-border bg-surface/80 backdrop-blur-sm">
+   582→        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+   583→          <div className="flex items-center justify-between">
+   584→            <div>
+   585→              <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+   586→                <Shield className="w-5 h-5 text-accent" />
+   587→                {isEn ? "Scanner" : "Сканер"}
+   588→              </h1>
+   589→              <p className="text-sm text-muted-2 mt-1">
+   590→                {isEn ? "Configure and run security scans" : "Настройте и запустите сканирование безопасности"}
+   591→              </p>
+   592→            </div>
+   593→            <div className="flex items-center gap-2">
+   594→              {scanHistory.length > 0 && (
+   595→                <button onClick={() => setShowHistory(!showHistory)}
+   596→                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-2 text-muted-2 hover:text-foreground border border-border transition-colors">
+   597→                  <History className="w-3.5 h-3.5" />
+   598→                  {isEn ? `History (${scanHistory.length})` : `История (${scanHistory.length})`}
+   599→                </button>
+   600→              )}
+   601→              <div className="hidden sm:flex items-center gap-1">
+   602→                {steps.map((s, i) => (
+   603→                  <div key={s.num} className="flex items-center">
+   604→                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+   605→                      step === s.num ? "bg-accent text-background" : step > s.num ? "bg-accent/20 text-accent" : "bg-surface-2 text-muted-2"
+   606→                    }`}>
+   607→                      {step > s.num ? <CheckCircle2 className="w-3.5 h-3.5" /> : <s.icon className="w-3.5 h-3.5" />}
+   608→                      {s.label}
+   609→                    </div>
+   610→                    {i < steps.length - 1 && <ChevronRight className="w-4 h-4 text-muted mx-0.5" />}
+   611→                  </div>
+   612→                ))}
+   613→              </div>
+   614→            </div>
+   615→          </div>
+   616→        </div>
+   617→      </div>
+   618→
+   619→      <Container className="py-6 max-w-5xl">
+   620→        {/* Scan History Panel */}
+   621→        {showHistory && scanHistory.length > 0 && (
+   622→          <div className="mb-6 p-4 rounded-xl bg-surface border border-border">
+   623→            <div className="flex items-center justify-between mb-3">
+   624→              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+   625→                <History className="w-4 h-4 text-accent" />
+   626→                {isEn ? "Recent Scans" : "Недавние сканирования"}
+   627→              </h3>
+   628→              <button onClick={() => { saveHistory([]); setScanHistory([]); setShowHistory(false); }}
+   629→                className="text-xs text-muted-2 hover:text-red transition-colors">
+   630→                {isEn ? "Clear" : "Очистить"}
+   631→              </button>
+   632→            </div>
+   633→            <div className="space-y-2 max-h-48 overflow-y-auto">
+   634→              {scanHistory.map((rec) => (
+   635→                <div key={rec.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-surface-2 border border-border text-xs">
+   636→                  <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+   637→                  <div className="flex-1 min-w-0">
+   638→                    <div className="font-medium text-foreground truncate">{rec.projectName}</div>
+   639→                    <div className="text-muted-2 truncate">{rec.sourceValue} · {rec.tools.join(", ")}</div>
+   640→                  </div>
+   641→                  <div className="text-right shrink-0">
+   642→                    <div className="font-mono text-accent">{rec.riskScore}/100</div>
+   643→                    <div className="text-muted-2">{rec.findingsCount} {isEn ? "findings" : "находок"}</div>
+   644→                  </div>
+   645→                </div>
+   646→              ))}
+   647→            </div>
+   648→          </div>
+   649→        )}
+   650→
+   651→        {/* STEP 1 — Project Selection */}
+   652→        {step === 1 && (
+   653→          <div className="space-y-6">
+   654→            <div>
+   655→              <h2 className="text-lg font-semibold text-foreground mb-1">{isEn ? "Select a project" : "Выберите проект"}</h2>
+   656→              <p className="text-sm text-muted-2">{isEn ? "Choose an existing project or create a new one. Each project groups assets, scans, and findings." : "Выберите существующий проект или создайте новый. Каждый проект объединяет активы, сканирования и находки."}</p>
+   657→            </div>
+   658→
+   659→            {/* Real projects from portal-data */}
+   660→            <div className="space-y-2">
+   661→              {portalProjects.map((project) => {
+   662→                const isSelected = selectedProject === project.id;
+   663→                return (
+   664→                  <button key={project.id} onClick={() => { setSelectedProject(project.id); setNewProjectName(""); }}
+   665→                    className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
+   666→                      isSelected ? "border-accent/50 bg-accent-muted" : "border-border hover:border-border-light bg-surface"
+   667→                    }`}>
+   668→                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isSelected ? "bg-accent text-background" : "bg-surface-2 text-muted-2"}`}>
+   669→                      <FolderPlus className="w-5 h-5" />
+   670→                    </div>
+   671→                    <div className="flex-1 min-w-0">
+   672→                      <div className="flex items-center gap-2">
+   673→                        <span className="text-sm font-medium text-foreground">{project.name}</span>
+   674→                        {projectStatusBadge(project.status, isEn)}
+   675→                      </div>
+   676→                      <div className="text-xs text-muted-2 mt-0.5">
+   677→                        {isEn ? `${project.assets} assets · Score: ${project.securityScore}/100 · Last scan: ${project.lastScan}` : `${project.assets} активов · Оценка: ${project.securityScore}/100 · Последнее: ${project.lastScan}`}
+   678→                      </div>
+   679→                    </div>
+   680→                    <div className="flex items-center gap-3 shrink-0">
+   681→                      <div className="w-12 h-12 relative">
+   682→                        <svg viewBox="0 0 36 36" className="w-12 h-12 -rotate-90">
+   683→                          <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" className="text-border" strokeWidth="3" />
+   684→                          <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor"
+   685→                            className={project.securityScore >= 80 ? "text-accent" : project.securityScore >= 60 ? "text-amber" : "text-red"}
+   686→                            strokeWidth="3" strokeDasharray={`${project.securityScore}, 100`} />
+   687→                        </svg>
+   688→                        <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${
+   689→                          project.securityScore >= 80 ? "text-accent" : project.securityScore >= 60 ? "text-amber" : "text-red"
+   690→                        }`}>{project.securityScore}</span>
+   691→                      </div>
+   692→                      {isSelected && <CheckCircle2 className="w-5 h-5 text-accent" />}
+   693→                    </div>
+   694→                  </button>
+   695→                );
+   696→              })}
+   697→            </div>
+   698→
+   699→            <div className="flex items-center gap-3">
+   700→              <div className="flex-1 h-px bg-border" />
+   701→              <span className="text-xs text-muted-2">{isEn ? "or create new" : "или создайте новый"}</span>
+   702→              <div className="flex-1 h-px bg-border" />
+   703→            </div>
+   704→
+   705→            <div className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${newProjectName.trim() ? "border-accent/50 bg-accent-muted" : "border-border bg-surface"}`}>
+   706→              <Plus className="w-5 h-5 text-muted-2 shrink-0" />
+   707→              <input type="text" value={newProjectName} onChange={(e) => { setNewProjectName(e.target.value); setSelectedProject(null); }}
+   708→                placeholder={isEn ? "New project name..." : "Название нового проекта..."}
+   709→                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted focus:outline-none" />
+   710→            </div>
+   711→
+   712→            {/* Next-step hint */}
+   713→            <div className="p-3 rounded-lg bg-cyan-muted border border-cyan/20 flex items-start gap-2.5 text-sm">
+   714→              <ArrowRight className="w-4 h-4 text-cyan shrink-0 mt-0.5" />
+   715→              <span className="text-muted-2">
+   716→                {isEn
+   717→                  ? "After selecting a project, you'll choose a data source — where SIP should scan."
+   718→                  : "После выбора проекта вы укажете источник данных — откуда SIP будет собирать информацию."}
+   719→              </span>
+   720→            </div>
+   721→
+   722→            <div className="flex justify-end">
+   723→              <Button onClick={() => setStep(2)} disabled={!step1Valid}>{isEn ? "Next" : "Далее"} <ChevronRight className="w-4 h-4" /></Button>
+   724→            </div>
+   725→          </div>
+   726→        )}
+   727→
+   728→        {/* STEP 2 — Data Source */}
+   729→        {step === 2 && (
+   730→          <div className="space-y-6">
+   731→            <div>
+   732→              <h2 className="text-lg font-semibold text-foreground mb-1">{isEn ? "Data source" : "Источник данных"}</h2>
+   733→              <p className="text-sm text-muted-2">{isEn ? "Where should SIP scan? The source type determines which tools can be used." : "Откуда SIP будет собирать данные? Тип источника определяет доступные инструменты."}</p>
+   734→            </div>
+   735→            <div className="grid sm:grid-cols-2 gap-3">
+   736→              {dataSources.map((source) => {
+   737→                const Icon = source.icon;
+   738→                const isSelected = selectedSource === source.id;
+   739→                return (
+   740→                  <button key={source.id} onClick={() => setSelectedSource(source.id)}
+   741→                    className={`flex items-start gap-3 p-4 rounded-xl border transition-all text-left ${
+   742→                      isSelected ? "border-accent/50 bg-accent-muted" : "border-border hover:border-border-light bg-surface"
+   743→                    }`}>
+   744→                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isSelected ? "bg-accent text-background" : "bg-surface-2 text-muted-2"}`}>
+   745→                      <Icon className={`w-5 h-5 ${!isSelected ? source.color : ""}`} />
+   746→                    </div>
+   747→                    <div className="flex-1">
+   748→                      <div className="text-sm font-medium text-foreground">{source.name[locale]}</div>
+   749→                      <div className="text-xs text-muted-2 mt-0.5">{source.description[locale]}</div>
+   750→                    </div>
+   751→                    {isSelected && <CheckCircle2 className="w-5 h-5 text-accent shrink-0 ml-auto" />}
+   752→                  </button>
+   753→                );
+   754→              })}
+   755→            </div>
+   756→            {selectedSource && (
+   757→              <div className="p-4 rounded-xl border border-border bg-surface">
+   758→                <label className="text-sm font-medium text-foreground mb-2 block">{isEn ? "Target" : "Цель"}</label>
+   759→                <input type="text" value={sourceValue} onChange={(e) => setSourceValue(e.target.value)}
+   760→                  placeholder={dataSources.find(s => s.id === selectedSource)?.placeholder[locale]}
+   761→                  className="w-full px-3 py-2.5 rounded-lg bg-surface-2 border border-border text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent/40 font-mono" />
+   762→                <p className="text-xs text-muted-2 mt-2">
+   763→                  {selectedSource === "website" && (isEn ? "SIP will scan the specified URL and its subpaths for vulnerabilities." : "SIP просканирует указанный URL и его подпути на уязвимости.")}
+   764→                  {selectedSource === "git" && (isEn ? "SIP will clone the repository and analyze its contents for security issues." : "SIP склонирует репозиторий и проанализирует его содержимое на проблемы безопасности.")}
+   765→                  {selectedSource === "docker" && (isEn ? "SIP will pull and scan the Docker image for known CVEs and misconfigurations." : "SIP загрузит и просканирует Docker-образ на известные CVE и ошибки конфигурации.")}
+   766→                  {selectedSource === "folder" && (isEn ? "SIP will scan the specified folder on the server for code and config issues." : "SIP просканирует указанную папку на сервере на проблемы в коде и конфигурации.")}
+   767→                  {selectedSource === "api" && (isEn ? "SIP will test the API endpoint for common vulnerabilities (BOLA, injection, auth bypass)." : "SIP протестирует API-эндпоинт на типичные уязвимости (BOLA, инъекции, обход авторизации).")}
+   768→                </p>
+   769→              </div>
+   770→            )}
+   771→
+   772→            {/* Next-step hint */}
+   773→            <div className="p-3 rounded-lg bg-cyan-muted border border-cyan/20 flex items-start gap-2.5 text-sm">
+   774→              <ArrowRight className="w-4 h-4 text-cyan shrink-0 mt-0.5" />
+   775→              <span className="text-muted-2">
+   776→                {isEn
+   777→                  ? "Next you'll select which scanning engines to run. More tools = deeper analysis."
+   778→                  : "Далее вы выберете движки сканирования. Больше инструментов = глубже анализ."}
+   779→              </span>
+   780→            </div>
+   781→
+   782→            <div className="flex justify-between">
+   783→              <Button variant="outline" onClick={() => setStep(1)}><ChevronLeft className="w-4 h-4" /> {isEn ? "Back" : "Назад"}</Button>
+   784→              <Button onClick={() => setStep(3)} disabled={!step2Valid}>{isEn ? "Next" : "Далее"} <ChevronRight className="w-4 h-4" /></Button>
+   785→            </div>
+   786→          </div>
+   787→        )}
+   788→
+   789→        {/* STEP 3 — Tool Selection */}
+   790→        {step === 3 && (
+   791→          <div className="space-y-6">
+   792→            <div>
+   793→              <h2 className="text-lg font-semibold text-foreground mb-1">{isEn ? "Select scan tools" : "Выберите инструменты"}</h2>
+   794→              <p className="text-sm text-muted-2">{isEn ? "Choose which engines will run. Each tool covers a different attack surface." : "Выберите движки для сканирования. Каждый инструмент покрывает свою поверхность атаки."}</p>
+   795→            </div>
+   796→
+   797→            {/* Installed tools */}
+   798→            <div>
+   799→              <div className="text-xs font-medium text-accent uppercase tracking-wider mb-2">{isEn ? "Installed" : "Установлены"}</div>
+   800→              <div className="space-y-2">
+   801→                {allScanTools.filter(t => t.installed).map((tool) => {
+   802→                  const isSelected = selectedTools.has(tool.id);
+   803→                  const fromMarketplace = !scanTools.find(st => st.id === tool.id);
+   804→                  return (
+   805→                    <button key={tool.id} onClick={() => toggleTool(tool.id)}
+   806→                      className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
+   807→                        isSelected ? "border-accent/50 bg-accent-muted" : "border-border hover:border-border-light bg-surface"
+   808→                      }`}>
+   809→                      <div className={`w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 transition-all ${
+   810→                        isSelected ? "border-accent bg-accent" : "border-muted-2"
+   811→                      }`}>
+   812→                        {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-background" />}
+   813→                      </div>
+   814→                      <div className="flex-1">
+   815→                        <div className="flex items-center gap-2">
+   816→                          <span className="text-sm font-medium text-foreground">{tool.name}</span>
+   817→                          <Badge variant="default" className="text-[10px]">{tool.category.toUpperCase()}</Badge>
+   818→                          {fromMarketplace && <Badge variant="default" className="text-[10px] text-cyan">{isEn ? "Marketplace" : "Каталог"}</Badge>}
+   819→                        </div>
+   820→                        <div className="text-xs text-muted-2 mt-0.5">{tool.description[locale]}</div>
+   821→                        <div className="text-[10px] text-muted mt-1 font-mono">{tool.cliCommand}</div>
+   822→                      </div>
+   823→                      <div className="text-xs text-accent shrink-0">{isEn ? "Available" : "Доступен"}</div>
+   824→                    </button>
+   825→                  );
+   826→                })}
+   827→              </div>
+   828→            </div>
+   829→
+   830→            {/* Not yet available built-in tools */}
+   831→            {scanTools.filter(t => t.inDevelopment).length > 0 && (
+   832→              <div>
+   833→                <div className="text-xs font-medium text-muted-2 uppercase tracking-wider mb-2">{isEn ? "Coming Soon" : "Скоро"}</div>
+   834→                <div className="space-y-2">
+   835→                  {scanTools.filter(t => t.inDevelopment).map((tool) => {
+   836→                    return (
+   837→                      <button key={tool.id} disabled
+   838→                        className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-left opacity-60 cursor-not-allowed ${
+   839→                          "border-border bg-surface/50"
+   840→                        }`}>
+   841→                        <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 border-border" />
+   842→                        <div className="flex-1">
+   843→                          <div className="flex items-center gap-2">
+   844→                            <span className="text-sm font-medium text-foreground">{tool.name}</span>
+   845→                            <Badge variant="default" className="text-[10px]">{isEn ? "Coming soon" : "Скоро"}</Badge>
+   846→                            <Badge variant="default" className="text-[10px]">{tool.category.toUpperCase()}</Badge>
+   847→                          </div>
+   848→                          <div className="text-xs text-muted-2 mt-0.5">{tool.description[locale]}</div>
+   849→                        </div>
+   850→                        <div className="text-xs text-muted-2 shrink-0">{isEn ? "Not available" : "Недоступен"}</div>
+   851→                      </button>
+   852→                    );
+   853→                  })}
+   854→                </div>
+   855→              </div>
+   856→            )}
+   857→
+   858→            {/* Available marketplace scanner plugins (not yet installed) */}
+   859→            {availableInMarketplace.length > 0 && (
+   860→              <div>
+   861→                <div className="text-xs font-medium text-cyan uppercase tracking-wider mb-2">{isEn ? "Available in Marketplace" : "Доступны в Каталоге"}</div>
+   862→                <div className="space-y-2">
+   863→                  {availableInMarketplace.map((def) => (
+   864→                    <div key={def.id} className="flex items-center gap-4 p-4 rounded-xl border border-cyan/20 bg-cyan-muted/30">
+   865→                      <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 border-cyan/30">
+   866→                        <Store className="w-3.5 h-3.5 text-cyan" />
+   867→                      </div>
+   868→                      <div className="flex-1">
+   869→                        <div className="flex items-center gap-2">
+   870→                          <span className="text-sm font-medium text-foreground">{def.name}</span>
+   871→                          <Badge variant="default" className="text-[10px]">{def.category.toUpperCase()}</Badge>
+   872→                        </div>
+   873→                        <div className="text-xs text-muted-2 mt-0.5">{def.description[locale]}</div>
+   874→                      </div>
+   875→                      <a href="/app/marketplace" className="text-xs text-cyan hover:underline flex items-center gap-1 shrink-0">
+   876→                        {isEn ? "Install" : "Установить"} <ExternalLink className="w-3 h-3" />
+   877→                      </a>
+   878→                    </div>
+   879→                  ))}
+   880→                </div>
+   881→              </div>
+   882→            )}
+   883→
+   884→            {/* Selection summary */}
+   885→            <div className="p-3 rounded-lg bg-surface-2 border border-border flex items-center justify-between">
+   886→              <span className="text-sm text-muted-2">{isEn ? `Selected: ${selectedTools.size} tools` : `Выбрано: ${selectedTools.size} инстр.`}</span>
+   887→              <span className="text-xs text-accent font-mono">{Array.from(selectedTools).map(id => allScanTools.find(t => t.id === id)?.name).join(" + ")}</span>
+   888→            </div>
+   889→
+   890→            {/* Marketplace CTA */}
+   891→            <div className="p-4 rounded-xl border border-accent/20 bg-accent-muted/30 flex items-center gap-3">
+   892→              <Store className="w-5 h-5 text-accent shrink-0" />
+   893→              <div className="flex-1">
+   894→                <span className="text-sm font-medium text-foreground">{isEn ? "Need more tools?" : "Нужно больше инструментов?"}</span>
+   895→                <span className="text-xs text-muted-2 block">{isEn ? "Install additional scanners from the Marketplace." : "Установите дополнительные сканеры из Каталога."}</span>
+   896→              </div>
+   897→              <a href="/app/marketplace" className="text-xs text-accent hover:underline flex items-center gap-1">{isEn ? "Browse" : "Каталог"} <ExternalLink className="w-3 h-3" /></a>
+   898→            </div>
+   899→
+   900→            {/* Next-step hint */}
+   901→            <div className="p-3 rounded-lg bg-accent-muted border border-accent/20 flex items-start gap-2.5 text-sm">
+   902→              <Play className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+   903→              <span className="text-muted-2">
+   904→                {isEn
+   905→                  ? "Ready to scan! Each tool will run sequentially, then SIP will correlate results, build a knowledge graph, trace attack paths, and generate a report."
+   906→                  : "Готово к сканированию! Каждый инструмент запустится последовательно, затем SIP скоррелирует результаты, построит граф знаний, отследит пути атак и сгенерирует отчёт."}
+   907→              </span>
+   908→            </div>
+   909→
+   910→            <div className="flex justify-between">
+   911→              <Button variant="outline" onClick={() => setStep(2)}><ChevronLeft className="w-4 h-4" /> {isEn ? "Back" : "Назад"}</Button>
+   912→              <Button onClick={runPipeline} disabled={!step3Valid}><Play className="w-4 h-4" /> {isEn ? "Start Scan" : "Начать сканирование"}</Button>
+   913→            </div>
+   914→          </div>
+   915→        )}
+   916→
+   917→        {/* STEP 4 — Pipeline & Results */}
+   918→        {step === 4 && (
+   919→          <div className="space-y-6">
+   920→            {/* Scan context badges */}
+   921→            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-2">
+   922→              <span className="px-2.5 py-1 rounded-md bg-surface-2 border border-border">{projectName}</span>
+   923→              <span className="px-2.5 py-1 rounded-md bg-surface-2 border border-border font-mono">{sourceValue || "demo"}</span>
+   924→              <span className="px-2.5 py-1 rounded-md bg-accent-muted text-accent border border-accent/20">{Array.from(selectedTools).map(id => allScanTools.find(t => t.id === id)?.name).join(" + ")}</span>
+   925→              {pipelineComplete && <span className="px-2.5 py-1 rounded-md bg-accent/20 text-accent border border-accent/30 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {isEn ? "Complete" : "Завершено"}</span>}
+   926→            </div>
+   927→
+   928→            {/* Result tabs */}
+   929→            <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 border border-border">
+   930→              {[
+   931→                { key: "pipeline", label: isEn ? "Pipeline" : "Пайплайн", icon: Terminal },
+   932→                { key: "findings", label: isEn ? "Findings" : "Находки", icon: ShieldAlert },
+   933→                { key: "next", label: isEn ? "What's next?" : "Что дальше?", icon: ArrowRight },
+   934→              ].map(tab => (
+   935→                <button key={tab.key} onClick={() => setActiveResultTab(tab.key as "pipeline" | "findings" | "next")}
+   936→                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium rounded-md transition-all ${
+   937→                    activeResultTab === tab.key ? "bg-accent text-background" : "text-muted-2 hover:text-foreground"
+   938→                  }`}>
+   939→                  <tab.icon className="w-3.5 h-3.5" />
+   940→                  {tab.label}
+   941→                </button>
+   942→              ))}
+   943→            </div>
+   944→
+   945→            {/* Pipeline Tab */}
+   946→            {activeResultTab === "pipeline" && (
+   947→              <div className="space-y-2">
+   948→                {dynamicStages.map((stage, i) => (
+   949→                  <PipelineStageCard key={stage.id} stage={stage} index={i}
+   950→                    status={pipelineComplete ? "completed" : currentStage > i ? "completed" : currentStage === i ? "running" : "pending"}
+   951→                    progress={stageProgress[i] || 0} outputs={stageOutputs[i] || []} isLast={i === dynamicStages.length - 1}
+   952→                    isEn={isEn} />
+   953→                ))}
+   954→                {pipelineComplete && (
+   955→                  <div className="mt-4 p-4 rounded-xl bg-accent-muted border border-accent/20">
+   956→                    <div className="flex items-center gap-2 mb-3">
+   957→                      <CheckCircle2 className="w-5 h-5 text-accent" />
+   958→                      <span className="text-sm font-semibold text-foreground">{isEn ? "Scan complete!" : "Сканирование завершено!"}</span>
+   959→                    </div>
+   960→                    <div className="grid grid-cols-4 gap-3 mb-3">
+   961→                      <div className="p-2.5 rounded-lg bg-surface border border-border text-center">
+   962→                        <div className="text-xl font-bold text-red">{demoFindings.filter(f => f.severity === "critical").length}</div>
+   963→                        <div className="text-[10px] text-muted-2 uppercase">Critical</div>
+   964→                      </div>
+   965→                      <div className="p-2.5 rounded-lg bg-surface border border-border text-center">
+   966→                        <div className="text-xl font-bold text-amber">{demoFindings.filter(f => f.severity === "high").length}</div>
+   967→                        <div className="text-[10px] text-muted-2 uppercase">High</div>
+   968→                      </div>
+   969→                      <div className="p-2.5 rounded-lg bg-surface border border-border text-center">
+   970→                        <div className="text-xl font-bold text-amber">{demoFindings.filter(f => f.severity === "medium").length}</div>
+   971→                        <div className="text-[10px] text-muted-2 uppercase">Medium</div>
+   972→                      </div>
+   973→                      <div className="p-2.5 rounded-lg bg-surface border border-border text-center">
+   974→                        <div className="text-xl font-bold text-accent">{78}</div>
+   975→                        <div className="text-[10px] text-muted-2 uppercase">{isEn ? "Risk Score" : "Риск"}</div>
+   976→                      </div>
+   977→                    </div>
+   978→                    <div className="flex items-center gap-2">
+   979→                      <button onClick={() => setActiveResultTab("findings")} className="text-xs text-accent hover:underline flex items-center gap-1">
+   980→                        {isEn ? "View all findings" : "Смотреть все находки"} <ChevronRight className="w-3 h-3" />
+   981→                      </button>
+   982→                      <span className="text-muted-2">·</span>
+   983→                      <button onClick={() => setActiveResultTab("next")} className="text-xs text-accent hover:underline flex items-center gap-1">
+   984→                        {isEn ? "What's next?" : "Что дальше?"} <ChevronRight className="w-3 h-3" />
+   985→                      </button>
+   986→                    </div>
+   987→                  </div>
+   988→                )}
+   989→              </div>
+   990→            )}
+   991→
+   992→            {/* Findings Tab */}
+   993→            {activeResultTab === "findings" && (
+   994→              <div className="space-y-3">
+   995→                <div className="grid grid-cols-5 gap-2">
+   996→                  {(["critical", "high", "medium", "low", "info"] as Severity[]).map(sev => {
+   997→                    const count = demoFindings.filter(f => f.severity === sev).length;
+   998→                    return (
+   999→                      <div key={sev} className={`p-3 rounded-lg border text-center ${severityBg[sev]}`}>
+  1000→                        <div className={`text-xl font-bold ${severityColors[sev]}`}>{count}</div>
+  1001→                        <div className="text-[10px] text-muted-2 uppercase mt-1">{sev}</div>
+  1002→                      </div>
+  1003→                    );
+  1004→                  })}
+  1005→                </div>
+  1006→                {demoFindings.map((finding) => (
+  1007→                  <div key={finding.id} className="p-4 rounded-xl bg-surface border border-border hover:border-border-light transition-all cursor-pointer"
+  1008→                    onClick={() => setExpandedFinding(expandedFinding === finding.id ? null : finding.id)}>
+  1009→                    <div className="flex items-center gap-3">
+  1010→                      {severityIcon[finding.severity]}
+  1011→                      <div className="flex-1 min-w-0">
+  1012→                        <div className="text-sm font-medium text-foreground truncate">{finding.title}</div>
+  1013→                        <div className="text-xs text-muted-2 mt-0.5">{finding.asset} · CVSS {finding.cvss}</div>
+  1014→                      </div>
+  1015→                      <Badge variant={finding.severity === "critical" ? "critical" : finding.severity === "high" ? "high" : "default"}>{finding.severity.toUpperCase()}</Badge>
+  1016→                    </div>
+  1017→                    {expandedFinding === finding.id && (
+  1018→                      <div className="mt-3 pt-3 border-t border-border space-y-2">
+  1019→                        <div><span className="text-xs text-muted-2">{isEn ? "Description:" : "Описание:"}</span><p className="text-sm text-foreground mt-0.5">{finding.description}</p></div>
+  1020→                        {finding.recommendation && <div><span className="text-xs text-muted-2">{isEn ? "Recommendation:" : "Рекомендация:"}</span><p className="text-sm text-foreground mt-0.5">{finding.recommendation}</p></div>}
+  1021→                        {(finding.cve || finding.mitre) && <div className="flex items-center gap-2 flex-wrap">{finding.cve && <Badge variant="default">{finding.cve}</Badge>}{finding.mitre && <Badge variant="default">MITRE {finding.mitre}</Badge>}</div>}
+  1022→                        <div className="flex items-center gap-2 mt-2">
+  1023→                          <a href="/app/demo/knowledge-graph" className="text-xs text-accent hover:underline flex items-center gap-1">
+  1024→                            {isEn ? "View in Knowledge Graph" : "Смотреть в графе знаний"} <ExternalLink className="w-3 h-3" />
+  1025→                          </a>
+  1026→                          <a href="/app/demo/attack-paths" className="text-xs text-accent hover:underline flex items-center gap-1">
+  1027→                            {isEn ? "Attack Paths" : "Пути атак"} <ExternalLink className="w-3 h-3" />
+  1028→                          </a>
+  1029→                        </div>
+  1030→                      </div>
+  1031→                    )}
+  1032→                  </div>
+  1033→                ))}
+  1034→              </div>
+  1035→            )}
+  1036→
+  1037→            {/* What's Next Tab */}
+  1038→            {activeResultTab === "next" && pipelineComplete && (
+  1039→              <div className="space-y-4">
+  1040→                <div className="p-4 rounded-xl bg-accent-muted border border-accent/20">
+  1041→                  <h3 className="text-sm font-semibold text-foreground mb-1">{isEn ? "Scan completed successfully!" : "Сканирование успешно завершено!"}</h3>
+  1042→                  <p className="text-xs text-muted-2">{isEn ? "Here's what you can do next:" : "Вот что вы можете сделать:"}</p>
+  1043→                </div>
+  1044→                <div className="grid sm:grid-cols-2 gap-3">
+  1045→                  <a href="/app/demo/knowledge-graph" className="p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-all group">
+  1046→                    <div className="flex items-center gap-2 mb-2"><ShieldCheck className="w-5 h-5 text-accent" /><span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors">{isEn ? "Explore Knowledge Graph" : "Открыть граф знаний"}</span></div>
+  1047→                    <p className="text-xs text-muted-2">{isEn ? "See the map of your infrastructure — assets, services, vulnerabilities, and how they connect." : "Карта инфраструктуры — активы, сервисы, уязвимости и связи между ними."}</p>
+  1048→                  </a>
+  1049→                  <a href="/app/demo/attack-paths" className="p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-all group">
+  1050→                    <div className="flex items-center gap-2 mb-2"><AlertTriangle className="w-5 h-5 text-amber" /><span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors">{isEn ? "Analyze Attack Paths" : "Анализ путей атак"}</span></div>
+  1051→                    <p className="text-xs text-muted-2">{isEn ? "See how an attacker could chain vulnerabilities to reach critical assets." : "Посмотрите, как злоумышленник может объединить уязвимости для доступа к критичным активам."}</p>
+  1052→                  </a>
+  1053→                  <a href="/app/reports" className="p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-all group">
+  1054→                    <div className="flex items-center gap-2 mb-2"><BookOpen className="w-5 h-5 text-purple" /><span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors">{isEn ? "Generate Report" : "Создать отчёт"}</span></div>
+  1055→                    <p className="text-xs text-muted-2">{isEn ? "Download a structured report — Executive Summary, Technical, or SARIF format." : "Скачайте структурированный отчёт — Резюме, Технический или SARIF."}</p>
+  1056→                  </a>
+  1057→                  <a href="/app/marketplace" className="p-4 rounded-xl bg-surface border border-border hover:border-accent/30 transition-all group">
+  1058→                    <div className="flex items-center gap-2 mb-2"><Store className="w-5 h-5 text-cyan" /><span className="text-sm font-medium text-foreground group-hover:text-accent transition-colors">{isEn ? "Install More Tools" : "Установить инструменты"}</span></div>
+  1059→                    <p className="text-xs text-muted-2">{isEn ? "Expand scanning capabilities — SAST, DAST, API testing, and more from the Marketplace." : "Расширьте возможности — SAST, DAST, тестирование API и другие из Каталога."}</p>
+  1060→                  </a>
+  1061→                </div>
+  1062→
+  1063→                {/* Demo label */}
+  1064→                <div className="p-3 rounded-lg bg-amber/10 border border-amber/20 flex items-start gap-2.5 text-sm">
+  1065→                  <span className="text-amber font-medium shrink-0">{isEn ? "⚠ Demo Scenario" : "⚠ Демо-сценарий"}</span>
+  1066→                  <span className="text-muted-2">{isEn ? "This scan uses simulated data to demonstrate SIP's capabilities. After connecting real tools and data sources, all findings, attack paths, and reports will be generated from actual scan results." : "Это сканирование использует симулированные данные для демонстрации возможностей SIP. После подключения реальных инструментов и источников данных все находки, пути атак и отчёты будут сформированы из реальных результатов."}</span>
+  1067→                </div>
+  1068→
+  1069→                <div className="flex justify-center gap-3 pt-2">
+  1070→                  <Button variant="outline" onClick={() => { setStep(1); setPipelineComplete(false); setPipelineRunning(false); }}>
+  1071→                    <Play className="w-4 h-4" /> {isEn ? "New Scan" : "Новое сканирование"}
+  1072→                  </Button>
+  1073→                  <Button onClick={() => setActiveResultTab("findings")}>
+  1074→                    {isEn ? "View Findings" : "Смотреть находки"} <ChevronRight className="w-4 h-4" />
+  1075→                  </Button>
+  1076→                </div>
+  1077→              </div>
+  1078→            )}
+  1079→          </div>
+  1080→        )}
+  1081→      </Container>
+  1082→    </div>
+  1083→  );
+  1084→}
+  1085→
