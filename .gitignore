@@ -1,3 +1,11 @@
 skills/
 node_modules/
 sip-repo/
+tool-results/
+sec-scanner-landing/sip-server/dist/
+sec-scanner-landing/sip-server/node_modules/
+sec-scanner-landing/.next/
+sec-scanner-landing/out/
+agent-ctx/
+download/
+upload/

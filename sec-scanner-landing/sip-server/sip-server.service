@@ -1,0 +1,18 @@
+[Unit]
+Description=SIP Core Engine — Backend API Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/sec-scanner-workspace/sip-server
+ExecStart=/usr/bin/node /root/sec-scanner-workspace/sip-server/dist/index.js
+Restart=on-failure
+RestartSec=5
+Environment=SIP_PORT=3001
+Environment=SIP_CORS_ORIGIN=https://sec-scanner.pro
+Environment=SIP_DATA_DIR=/var/lib/sip
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
