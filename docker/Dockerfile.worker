@@ -1,0 +1,15 @@
+FROM node:20-alpine AS backend-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine
+RUN apk add --no-cache nmap nmap-scripts nmap-ncat
+WORKDIR /app
+COPY --from=backend-builder /app/dist ./dist
+COPY --from=backend-builder /app/package*.json ./
+RUN npm ci --production
+RUN mkdir -p /var/lib/sip
+CMD ["node", "dist/worker.js"]

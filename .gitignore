@@ -1,17 +1,21 @@
 # Dependencies
 node_modules/
-**/node_modules/
 
-# Build output
+# Build outputs
 .next/
 out/
-sec-scanner-landing/.next/
-sec-scanner-landing/out/
-sec-scanner-landing/sip-server/dist/
+dist/
+landing/out/
+landing/.next/
+backend/dist/
 
-# Secrets — NEVER commit
+# Environment
 .env
 .env.*
+.env.local
+!.env.example
+
+# Secrets
 id_ed25519*
 *.pem
 *.key
@@ -20,35 +24,35 @@ id_ed25519*
 deploy.tar.gz
 deploy.tar
 
-# Screenshots & images (not part of source)
+# Images (managed separately)
 *.png
-!sec-scanner-landing/public/**/*.png
-!sec-scanner-landing/brand/**/*.png
+!landing/public/**/*.png
+!docs/brand/**/*.png
 
-# Generated / temp
+# Temp files
 tool-results/
 agent-ctx/
 download/
 upload/
-sip-repo/
-pylib/
-scripts/
-skills/
+tmp/
+.cache/
+logs/
+*.log
+*.tmp
 
 # IDE
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db
 
-# JSON snapshots (not source)
+# Coverage
+coverage/
+
+# Misc
+sip-repo/
+pylib/
+scripts/deploy_fast.py
 sec-scanner-current.json
 sec-scanner-new.json
-
-# Lock files (keep package-lock.json for reproducibility)
-# bun.lock
-
-# Logs
-*.log
+*.cache

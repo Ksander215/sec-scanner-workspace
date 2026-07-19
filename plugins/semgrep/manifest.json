@@ -1,0 +1,16 @@
+{
+  "id": "semgrep",
+  "name": "Semgrep",
+  "version": "1.0.0",
+  "description": "Static analysis (SAST) with pattern-based rules",
+  "category": "sast",
+  "icon": "icon.svg",
+  "author": "SIP Team",
+  "homepage": "https://semgrep.dev",
+  "command": "semgrep",
+  "args": ["--config", "auto", "--json", "{{target}}"],
+  "targetRequired": true,
+  "outputFormat": "json",
+  "severities": ["critical", "high", "medium", "low", "info"],
+  "tags": ["sast", "static-analysis", "code-review", "security"]
+}
