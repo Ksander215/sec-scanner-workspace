@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import { useTheme } from "next-themes";
 import {
   ReactFlow,
   Background,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
   type Node,
@@ -27,14 +25,21 @@ import {
   Box,
   HardDrive,
   ChevronRight,
-  AlertTriangle,
   X,
   Info,
   TrendingUp,
   Footprints,
   Flame,
+  ScanSearch,
 } from "lucide-react";
-import { attackPathNodes, attackPaths, type AttackPathNode, type Severity } from "@/lib/demo-data";
+import {
+  buildAttackPaths,
+  getLatestFindings,
+  type AttackPathNode,
+  type AttackPathEdge,
+  type AttackPath,
+  type Severity,
+} from "@/lib/engine";
 import { useI18n } from "@/lib/i18n-context";
 
 // ─── Node type configs ──────────────────────────────────────────────────────
@@ -89,11 +94,16 @@ const nodeTypes = { attackNode: AttackNode };
 
 // ─── Compute layout for attack path ─────────────────────────────────────────
 
-function computePathLayout(pathIndex: number): { nodes: Node[]; edges: Edge[] } {
-  const path = attackPaths[pathIndex];
+function computePathLayout(
+  pathIndex: number,
+  apNodes: AttackPathNode[],
+  apPaths: AttackPath[]
+): { nodes: Node[]; edges: Edge[] } {
+  const path = apPaths[pathIndex];
+  if (!path) return { nodes: [], edges: [] };
   const highlightNodeIds = new Set(path.edges.map((e) => e.source).concat(path.edges.map((e) => e.target)));
 
-  const nodes: Node[] = attackPathNodes.map((node, i) => ({
+  const nodes: Node[] = apNodes.map((node, i) => ({
     id: node.id,
     type: "attackNode",
     position: { x: 0, y: i * 120 },
@@ -122,26 +132,63 @@ function computePathLayout(pathIndex: number): { nodes: Node[]; edges: Edge[] } 
 
 export default function AttackPathsPage() {
   const { t } = useI18n();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme !== "light";
+
+  // Build attack paths from engine using latest findings
+  const { apNodes, apPaths, hasFindings } = useMemo(() => {
+    const findings = getLatestFindings();
+    const result = buildAttackPaths(findings);
+    return {
+      apNodes: result.nodes as AttackPathNode[],
+      apPaths: result.paths,
+      hasFindings: findings.length > 0,
+    };
+  }, []);
+
   const [activePath, setActivePath] = useState(0);
-  const layout = useMemo(() => computePathLayout(activePath), [activePath]);
+  const layout = useMemo(() => computePathLayout(activePath, apNodes, apPaths), [activePath, apNodes, apPaths]);
   const [nodes, , onNodesChange] = useNodesState(layout.nodes);
   const [edges, , onEdgesChange] = useEdgesState(layout.edges);
-  const [selectedEdge, setSelectedEdge] = useState<(typeof attackPaths[0]["edges"][0]) | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<AttackPathEdge | null>(null);
 
   const onEdgeClick = useCallback(
     (_: React.MouseEvent, edge: Edge) => {
-      const path = attackPaths[activePath];
-      const edgeData = path.edges.find((e) => e.id === edge.id);
+      const path = apPaths[activePath];
+      const edgeData = path?.edges.find((e) => e.id === edge.id);
       if (edgeData) setSelectedEdge(edgeData);
     },
-    [activePath]
+    [activePath, apPaths]
   );
 
   const onPaneClick = useCallback(() => {
     setSelectedEdge(null);
   }, []);
+
+  // ─── Empty state when no findings ────────────────────────────────────────
+  if (!hasFindings) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-4">
+            <ScanSearch className="w-8 h-8 text-muted" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            {t("attackPaths.why.title")}
+          </h2>
+          <p className="text-sm text-muted-2 mb-6">
+            Run a scan to generate attack paths from real findings.
+            Attack paths trace how an attacker could move from the internet to your critical assets.
+          </p>
+          <a
+            href="/app/scanner"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent text-background hover:bg-accent/90 transition-colors"
+          >
+            <ScanSearch className="w-4 h-4" />
+            Run a Scan
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -149,7 +196,7 @@ export default function AttackPathsPage() {
       <div className="border-b border-border bg-accent-muted/20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 mb-3">
-            <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">Demo</span>
+            <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-accent-muted text-accent rounded border border-accent/20">Live</span>
             <h2 className="text-sm font-semibold text-foreground">{t("attackPaths.why.title")}</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -191,7 +238,7 @@ export default function AttackPathsPage() {
 
             {/* Path selector */}
             <div className="flex items-center gap-2">
-              {attackPaths.map((ap, idx) => (
+              {apPaths.map((ap, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
@@ -246,9 +293,9 @@ export default function AttackPathsPage() {
             </div>
 
             <h3 className="text-sm font-semibold text-foreground mb-3">
-              {attackPathNodes.find((n) => n.id === selectedEdge.source)?.label}
+              {apNodes.find((n) => n.id === selectedEdge.source)?.label || selectedEdge.source}
               <ChevronRight className="w-3 h-3 inline mx-1 text-muted" />
-              {attackPathNodes.find((n) => n.id === selectedEdge.target)?.label}
+              {apNodes.find((n) => n.id === selectedEdge.target)?.label || selectedEdge.target}
             </h3>
 
             <div className="space-y-3">
@@ -310,9 +357,9 @@ export default function AttackPathsPage() {
               <div>
                 <span className="text-xs text-muted uppercase tracking-wider">MITRE ATT&CK</span>
                 <div className="mt-1 flex flex-wrap gap-1.5">
-                  {selectedEdge.techniques.map((t) => (
-                    <span key={t} className="text-xs font-mono px-2 py-1 rounded bg-purple/10 text-purple border border-purple/20">
-                      {t}
+                  {selectedEdge.techniques.map((tech) => (
+                    <span key={tech} className="text-xs font-mono px-2 py-1 rounded bg-purple/10 text-purple border border-purple/20">
+                      {tech}
                     </span>
                   ))}
                 </div>
@@ -323,10 +370,9 @@ export default function AttackPathsPage() {
 
         {/* Path info panel */}
         <div className="absolute bottom-4 left-4 p-4 rounded-xl bg-surface/90 border border-border backdrop-blur-sm max-w-sm">
-          <h4 className="text-sm font-semibold text-foreground mb-2">{attackPaths[activePath].name}</h4>
+          <h4 className="text-sm font-semibold text-foreground mb-2">{apPaths[activePath]?.name || "No path"}</h4>
           <p className="text-xs text-muted-2 mb-3">
-            This path traces from the public internet through your infrastructure to critical assets.
-            Each edge shows the probability of successful exploitation at that step.
+            {apPaths[activePath]?.description || "This path traces from the public internet through your infrastructure to critical assets."}
           </p>
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center gap-1.5 text-xs">
