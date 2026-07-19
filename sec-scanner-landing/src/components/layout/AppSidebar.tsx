@@ -30,6 +30,11 @@ import {
   Clock,
   Cpu,
   BarChart3,
+  Cable,
+  Key,
+  Bell,
+  Terminal,
+  Server,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -44,10 +49,16 @@ interface SidebarSection {
 
 const sidebarSections: SidebarSection[] = [
   {
-    id: "marketplace",
-    labelKey: "sidebar.catalog",
-    icon: Store,
-    href: "/app/marketplace",
+    id: "dashboard",
+    labelKey: "sidebar.dashboard",
+    icon: LayoutDashboard,
+    href: "/app/dashboard",
+  },
+  {
+    id: "projects",
+    labelKey: "sidebar.projects",
+    icon: FolderKanban,
+    href: "/app/projects",
   },
   {
     id: "scans",
@@ -57,17 +68,11 @@ const sidebarSections: SidebarSection[] = [
     badge: "5",
   },
   {
-    id: "projects",
-    labelKey: "sidebar.projects",
-    icon: FolderKanban,
-    href: "/app/projects",
-  },
-  {
-    id: "dashboard",
-    labelKey: "sidebar.dashboard",
-    icon: LayoutDashboard,
-    href: "/app/dashboard",
-    badge: "3",
+    id: "findings",
+    labelKey: "sidebar.findings",
+    icon: Bug,
+    href: "/app/findings",
+    badge: "12",
   },
   {
     id: "reports",
@@ -76,11 +81,23 @@ const sidebarSections: SidebarSection[] = [
     href: "/app/reports",
   },
   {
-    id: "findings",
-    labelKey: "sidebar.findings",
-    icon: Bug,
-    href: "/app/findings",
-    badge: "12",
+    id: "marketplace",
+    labelKey: "sidebar.catalog",
+    icon: Store,
+    href: "/app/marketplace",
+  },
+  {
+    id: "integrations",
+    labelKey: "sidebar.integrations",
+    icon: Cable,
+    href: "/app/integrations",
+    children: [
+      { labelKey: "sidebar.integrations.hub", href: "/app/integrations", icon: Cable },
+      { labelKey: "sidebar.integrations.repositories", href: "/app/repositories", icon: GitBranch },
+      { labelKey: "sidebar.integrations.ssh", href: "/app/integrations/ssh", icon: Terminal },
+      { labelKey: "sidebar.integrations.apiKeys", href: "/app/api-keys", icon: Key },
+      { labelKey: "sidebar.integrations.notifications", href: "/app/notifications", icon: Bell },
+    ],
   },
   {
     id: "knowledge-graph",
@@ -131,12 +148,6 @@ const sidebarSections: SidebarSection[] = [
     labelKey: "sidebar.community",
     icon: Users,
     href: "/app/community",
-  },
-  {
-    id: "downloads",
-    labelKey: "downloads.title",
-    icon: Download,
-    href: "/app/downloads",
   },
   {
     id: "settings",

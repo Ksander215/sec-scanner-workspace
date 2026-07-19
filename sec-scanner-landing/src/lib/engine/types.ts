@@ -2,6 +2,7 @@
  * SIP Core Engine — Unified Types
  * All domain models for the Security Intelligence Platform.
  * No tool-specific models — only the unified Finding type.
+ * INT-029: Added Integration, Repository, SSH, API Keys, Team, Notification types.
  */
 
 // ─── Severity ─────────────────────────────────────────────────────────────
@@ -27,6 +28,10 @@ export interface Finding {
   status: "open" | "acknowledged" | "remediated" | "false_positive";
   discoveredAt: string;   // ISO 8601
   metadata?: Record<string, string>; // tool-specific extra fields
+  // INT-029: Team collaboration
+  assignedTo?: string;    // team member id
+  deadline?: string;      // ISO 8601
+  discussionCount?: number;
 }
 
 // ─── Plugin Manifest ──────────────────────────────────────────────────────
@@ -66,10 +71,14 @@ export interface RegistryEntry {
   manifest: PluginManifest;
   status: InstallStatus;
   installedAt?: string;             // ISO 8601
+  installedBy?: string;             // user who installed
   version?: string;
   lastRun?: string;                 // ISO 8601
   health: "healthy" | "degraded" | "error" | "unknown";
   signature?: string;               // verification hash
+  dependencies?: string[];          // required dependencies
+  license?: string;                 // license type
+  updateAvailable?: string;         // new version available
 }
 
 // ─── Scan ─────────────────────────────────────────────────────────────────
@@ -118,6 +127,10 @@ export interface Project {
   findings: string[];               // Finding IDs (latest)
   installedTools: string[];         // PluginManifest IDs
   settings: ProjectSettings;
+  // INT-029: Business integration
+  repository?: Repository;          // connected repository
+  servers?: SSHConnection[];        // connected servers
+  notificationChannels?: string[];  // active notification channels
 }
 
 export interface ProjectSettings {
@@ -249,4 +262,249 @@ export interface ServiceInfo {
   name: string;
   version?: string;
   port?: number;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INT-029 — Business Integration Platform Types
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ─── Integration ──────────────────────────────────────────────────────────
+
+export type IntegrationType =
+  // Source Control
+  | "github" | "gitlab" | "bitbucket" | "azure-devops"
+  // Messaging
+  | "slack" | "telegram" | "discord" | "teams"
+  // Auth
+  | "ldap" | "saml"
+  // Infrastructure
+  | "docker" | "kubernetes" | "aws" | "azure" | "gcp"
+  // Issue Tracking
+  | "jira" | "linear" | "youtrack"
+  // Communication
+  | "email" | "webhook"
+  // SSH
+  | "ssh";
+
+export type IntegrationCategory =
+  | "source-control" | "messaging" | "auth" | "infrastructure"
+  | "issue-tracking" | "communication" | "ssh";
+
+export type IntegrationStatus = "connected" | "not_connected" | "error" | "syncing";
+
+export interface Integration {
+  id: string;
+  type: IntegrationType;
+  name: string;
+  category: IntegrationCategory;
+  status: IntegrationStatus;
+  lastSync?: string;                // ISO 8601
+  connectedAt?: string;             // ISO 8601
+  config: Record<string, string>;   // type-specific config (tokens, URLs, etc.)
+  error?: string;
+  icon?: string;
+}
+
+// ─── Repository ───────────────────────────────────────────────────────────
+
+export type RepositoryType = "github" | "gitlab" | "bitbucket" | "azure-devops" | "local" | "ssh" | "private";
+export type RepositoryAuthType = "token" | "ssh" | "basic" | "none";
+
+export interface Repository {
+  id: string;
+  type: RepositoryType;
+  url: string;
+  branch: string;
+  authType: RepositoryAuthType;
+  name: string;
+  connectedAt: string;              // ISO 8601
+  lastCommit?: string;              // commit hash
+  lastCommitDate?: string;          // ISO 8601
+  fileCount?: number;
+  languages?: string[];
+  dependencies?: DependencyInfo[];
+  secrets?: SecretInfo[];
+  sbom?: SBOMEntry[];
+  contributors?: Contributor[];
+  status: IntegrationStatus;
+}
+
+export interface DependencyInfo {
+  name: string;
+  version: string;
+  type: string;                     // npm, pip, maven, etc.
+  vulnerabilities?: number;
+}
+
+export interface SecretInfo {
+  type: string;                     // api_key, password, token, etc.
+  file: string;
+  line: number;
+  severity: Severity;
+}
+
+export interface SBOMEntry {
+  name: string;
+  version: string;
+  supplier?: string;
+  license?: string;
+  vulnerabilities?: number;
+}
+
+export interface Contributor {
+  name: string;
+  email: string;
+  commits: number;
+}
+
+// ─── SSH Connection ───────────────────────────────────────────────────────
+
+export type SSHServerType = "ubuntu" | "debian" | "centos" | "docker-host" | "kubernetes" | "windows";
+
+export interface SSHKey {
+  id: string;
+  name: string;
+  type: "ed25519" | "rsa" | "ecdsa";
+  publicKey: string;
+  createdAt: string;                // ISO 8601
+  lastUsed?: string;                // ISO 8601
+}
+
+export interface SSHConnection {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  authType: "key" | "password";
+  keyId?: string;                   // SSHKey id
+  serverType: SSHServerType;
+  status: IntegrationStatus;
+  connectedAt?: string;             // ISO 8601
+  lastUsed?: string;                // ISO 8601
+  os?: string;
+  uptime?: string;
+}
+
+// ─── API Keys ─────────────────────────────────────────────────────────────
+
+export type APIKeyScope = "rest" | "graphql" | "webhook" | "cli" | "sdk" | "admin" | "read" | "write";
+
+export interface APIKey {
+  id: string;
+  name: string;
+  key: string;                      // masked display key
+  scopes: APIKeyScope[];
+  expiresAt?: string;               // ISO 8601
+  createdAt: string;                // ISO 8601
+  lastUsed?: string;                // ISO 8601
+  status: "active" | "disabled" | "expired" | "rotated";
+  createdBy?: string;
+}
+
+// ─── Email Reports ────────────────────────────────────────────────────────
+
+export type ReportShareChannel = "email" | "slack" | "telegram" | "teams" | "webhook" | "download";
+
+export interface EmailReport {
+  id: string;
+  scanId: string;
+  reportId: string;
+  channel: ReportShareChannel;
+  recipients?: string[];            // email addresses
+  subject?: string;
+  template?: string;
+  attachments: ExportFormat[];
+  sentAt: string;                   // ISO 8601
+  status: "sent" | "failed" | "pending";
+  sentBy?: string;
+}
+
+// ─── Team Collaboration ───────────────────────────────────────────────────
+
+export type FindingDiscussionStatus = "open" | "in_progress" | "resolved" | "closed";
+
+export interface DiscussionComment {
+  id: string;
+  findingId: string;
+  author: TeamMember;
+  content: string;
+  createdAt: string;                // ISO 8601
+  updatedAt?: string;               // ISO 8601
+  attachments?: Attachment[];
+  mentions?: string[];              // mentioned member ids
+  reactions?: Record<string, string[]>; // emoji → member ids
+}
+
+export interface FindingDiscussion {
+  findingId: string;
+  status: FindingDiscussionStatus;
+  assignedTo?: TeamMember;
+  deadline?: string;                // ISO 8601
+  comments: DiscussionComment[];
+  watchers: string[];               // member ids
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+  role: "admin" | "manager" | "member" | "viewer";
+  status: "active" | "inactive" | "invited";
+  joinedAt: string;                 // ISO 8601
+}
+
+export interface Attachment {
+  id: string;
+  name: string;
+  type: string;                     // mime type
+  size: number;
+  url: string;
+  uploadedAt: string;               // ISO 8601
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────
+
+export type NotificationChannel = "telegram" | "slack" | "discord" | "teams" | "email" | "webhook";
+export type NotificationTrigger = "scan_complete" | "critical_finding" | "high_finding" | "new_finding" | "remediation" | "assignment";
+
+export interface NotificationRule {
+  id: string;
+  name: string;
+  channel: NotificationChannel;
+  triggers: NotificationTrigger[];
+  config: Record<string, string>;   // channel-specific config
+  enabled: boolean;
+  createdAt: string;                // ISO 8601
+  lastTriggered?: string;           // ISO 8601
+}
+
+export interface NotificationEvent {
+  id: string;
+  ruleId: string;
+  channel: NotificationChannel;
+  trigger: NotificationTrigger;
+  title: string;
+  message: string;
+  findingId?: string;
+  scanId?: string;
+  sentAt: string;                   // ISO 8601
+  status: "sent" | "failed" | "pending";
+}
+
+// ─── Pricing / Subscription ───────────────────────────────────────────────
+
+export type SubscriptionTier = "free" | "professional" | "enterprise";
+
+export interface Subscription {
+  tier: SubscriptionTier;
+  expiresAt?: string;               // ISO 8601
+  features: string[];
+  limits: {
+    projects: number;               // -1 for unlimited
+    users: number;                  // -1 for unlimited
+    scans: number;                  // -1 for unlimited
+    apiCalls: number;               // -1 for unlimited
+  };
 }
