@@ -1,0 +1,16 @@
+{
+  "id": "nuclei",
+  "name": "Nuclei",
+  "version": "1.0.0",
+  "description": "Template-based vulnerability scanner",
+  "category": "vulnerability",
+  "icon": "icon.svg",
+  "author": "SIP Team",
+  "homepage": "https://nuclei.projectdiscovery.io",
+  "command": "nuclei",
+  "args": ["-u", "{{target}}", "-json", "-severity", "critical,high,medium,low,info"],
+  "targetRequired": true,
+  "outputFormat": "json",
+  "severities": ["critical", "high", "medium", "low", "info"],
+  "tags": ["vulnerability", "templates", "scanner", "cve"]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "zap",
+  "name": "OWASP ZAP",
+  "version": "1.0.0",
+  "description": "Web application security scanner",
+  "category": "web",
+  "icon": "icon.svg",
+  "author": "SIP Team",
+  "homepage": "https://www.zaproxy.org",
+  "command": "zap-cli",
+  "args": ["quick-scan", "--self-contained", "-t", "{{target}}", "-f", "json"],
+  "targetRequired": true,
+  "outputFormat": "json",
+  "severities": ["critical", "high", "medium", "low", "info"],
+  "tags": ["web", "owasp", "dast", "scanner", "proxy"]
+}

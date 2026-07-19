@@ -1,0 +1,16 @@
+{
+  "id": "trivy",
+  "name": "Trivy",
+  "version": "1.0.0",
+  "description": "Container image and filesystem vulnerability scanner",
+  "category": "container",
+  "icon": "icon.svg",
+  "author": "SIP Team",
+  "homepage": "https://trivy.dev",
+  "command": "trivy",
+  "args": ["image", "--format", "json", "--severity", "CRITICAL,HIGH,MEDIUM,LOW", "{{target}}"],
+  "targetRequired": true,
+  "outputFormat": "json",
+  "severities": ["critical", "high", "medium", "low", "info"],
+  "tags": ["container", "docker", "vulnerability", "cis", "misconfiguration"]
+}

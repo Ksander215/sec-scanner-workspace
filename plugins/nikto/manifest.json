@@ -1,0 +1,16 @@
+{
+  "id": "nikto",
+  "name": "Nikto",
+  "version": "1.0.0",
+  "description": "Web server vulnerability and misconfiguration scanner",
+  "category": "web",
+  "icon": "icon.svg",
+  "author": "SIP Team",
+  "homepage": "https://github.com/sullo/nikto",
+  "command": "nikto",
+  "args": ["-h", "{{target}}", "-Format", "json", "-Tuning", "1234567890"],
+  "targetRequired": true,
+  "outputFormat": "json",
+  "severities": ["critical", "high", "medium", "low", "info"],
+  "tags": ["web", "server", "misconfiguration", "headers", "cgi"]
+}

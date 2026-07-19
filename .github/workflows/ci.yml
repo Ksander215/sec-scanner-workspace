@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies (landing)
+        working-directory: landing
+        run: npm ci
+
+      - name: Install dependencies (backend)
+        working-directory: backend
+        run: npm ci
+
+      - name: Build frontend (landing)
+        working-directory: landing
+        run: npm run build
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: Lint frontend
+        working-directory: landing
+        run: npm run lint --if-present
+
+      - name: Lint backend
+        working-directory: backend
+        run: npm run lint --if-present
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test --if-present

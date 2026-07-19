@@ -1,0 +1,16 @@
+{
+  "id": "nmap",
+  "name": "Nmap",
+  "version": "1.0.0",
+  "description": "Network discovery and security auditing",
+  "category": "network",
+  "icon": "icon.svg",
+  "author": "SIP Team",
+  "homepage": "https://nmap.org",
+  "command": "nmap",
+  "args": ["-sV", "-sC", "--script", "vuln", "{{target}}"],
+  "targetRequired": true,
+  "outputFormat": "xml",
+  "severities": ["critical", "high", "medium", "low", "info"],
+  "tags": ["network", "discovery", "audit", "ports"]
+}
