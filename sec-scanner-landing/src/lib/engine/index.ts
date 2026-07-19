@@ -11,6 +11,7 @@
  * - Attack Paths are generated from Graph + Findings + MITRE
  * - AI Recommendations use real Findings + CVSS + Business Context
  * - Project Workspace persists everything
+ * - INT-029: Integrations, Repositories, SSH, API Keys, Team, Notifications
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -44,6 +45,36 @@ export type {
   AssetStatus,
   PortInfo,
   ServiceInfo,
+  // INT-029 types
+  IntegrationType,
+  IntegrationCategory,
+  IntegrationStatus,
+  Integration,
+  RepositoryType,
+  RepositoryAuthType,
+  Repository,
+  DependencyInfo,
+  SecretInfo,
+  SBOMEntry,
+  Contributor,
+  SSHServerType,
+  SSHKey,
+  SSHConnection,
+  APIKeyScope,
+  APIKey,
+  ReportShareChannel,
+  EmailReport,
+  FindingDiscussionStatus,
+  DiscussionComment,
+  FindingDiscussion,
+  TeamMember,
+  Attachment,
+  NotificationChannel,
+  NotificationTrigger,
+  NotificationRule,
+  NotificationEvent,
+  SubscriptionTier,
+  Subscription,
 } from "./types";
 
 // ─── Plugin Manifests ─────────────────────────────────────────────────────
