@@ -1225,6 +1225,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "repositories.noReposDesc": "Подключите первый репозиторий для начала анализа безопасности",
     "repositories.entries": "записей",
     "repositories.credentialPlaceholder": "Введите учётные данные",
+    "repositories.sevCritical": "крит",
+    "repositories.sevHigh": "высок",
+    "repositories.sevMedium": "средн",
+    "repositories.sevLow": "низк",
+    "repositories.repoCountOne": "репозиторий",
+    "repositories.repoCountFew": "репозитория",
+    "repositories.repoCountMany": "репозиториев",
+    "repositories.files": "файлов",
+    "repositories.secretsFound": "обнаружено",
 
     // ─── INT-029: SSH Integration ──────────────────────────────────────
     "ssh.title": "SSH-подключение",
@@ -2867,6 +2876,15 @@ const translations: Record<Locale, Record<string, string>> = {
     "repositories.noReposDesc": "Connect your first repository to start security analysis",
     "repositories.entries": "entries",
     "repositories.credentialPlaceholder": "Enter credentials",
+    "repositories.sevCritical": "crit",
+    "repositories.sevHigh": "high",
+    "repositories.sevMedium": "med",
+    "repositories.sevLow": "low",
+    "repositories.repoCountOne": "repository",
+    "repositories.repoCountFew": "repositories",
+    "repositories.repoCountMany": "repositories",
+    "repositories.files": "files",
+    "repositories.secretsFound": "found",
 
     // ─── INT-029: SSH Integration ──────────────────────────────────────
     "ssh.title": "SSH Connection",

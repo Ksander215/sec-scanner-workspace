@@ -1,90 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopBar } from "./AppTopBar";
 import { SearchModal } from "./SearchModal";
 import { AppBreadcrumbs, type BreadcrumbItem } from "./AppBreadcrumbs";
 import { usePathname } from "next/navigation";
+import { useI18n } from "@/lib/i18n-context";
 
-function pathToBreadcrumbs(pathname: string): BreadcrumbItem[] {
-  if (!pathname || pathname === "/" || pathname === "/app") return [];
-
-  const segments = pathname.split("/").filter(Boolean);
-  const nameMap: Record<string, string> = {
-    app: "App",
-    dashboard: "Dashboard",
-    demo: "Demo",
-    "knowledge-graph": "Knowledge Graph",
-    "attack-paths": "Attack Paths",
-    playground: "Playground",
-    marketplace: "Marketplace",
-    plugins: "Plugins",
-    rules: "Rules",
-    connectors: "Connectors",
-    templates: "Templates",
-    dashboards: "Dashboards",
-    integrations: "Integrations",
-    themes: "Themes",
-    "ai-prompts": "AI Prompts",
-    docs: "Documentation",
-    api: "API Reference",
-    cli: "CLI",
-    sdk: "SDK",
-    architecture: "Architecture",
-    deployment: "Deployment",
-    security: "Security",
-    compliance: "Compliance",
-    "getting-started": "Getting Started",
-    guides: "Guides",
-    community: "Community",
-    contributing: "Contributing",
-    roadmap: "Roadmap",
-    "feature-requests": "Feature Requests",
-    platform: "Platform",
-    capabilities: "Capabilities",
-    pricing: "Pricing",
-    downloads: "Downloads",
-    download: "Downloads",
-    cloud: "Cloud",
-    legal: "Legal",
-    privacy: "Privacy Policy",
-    terms: "Terms of Service",
-    blog: "Blog",
-    changelog: "Changelog",
-    examples: "Examples",
-    settings: "Settings",
-    workspace: "Workspace",
-    assets: "Assets",
-    pipelines: "Pipelines",
-    history: "History",
-    jobs: "Jobs",
-    monitoring: "Monitoring",
-    projects: "Projects",
-    scans: "Scans",
-    findings: "Findings",
-    risks: "Risks",
-    reports: "Reports",
-  };
-
-  // Skip "app" segment for breadcrumbs (it's always present)
-  const filteredSegments = segments.filter((s) => s !== "app");
-
-  return filteredSegments.map((seg, i) => ({
-    label: nameMap[seg] || seg.charAt(0).toUpperCase() + seg.slice(1),
-    href:
-      i === filteredSegments.length - 1
-        ? undefined
-        : "/app/" + segments.slice(1, segments.indexOf(seg) + 1).join("/"),
-  }));
-}
+// Map URL segments to i18n keys for translatable breadcrumbs
+const SEGMENT_I18N_KEYS: Record<string, string> = {
+  app: "sidebar.dashboard",
+  dashboard: "sidebar.dashboard",
+  demo: "nav.demo",
+  "knowledge-graph": "sidebar.infrastructure",
+  "attack-paths": "sidebar.attackPaths",
+  playground: "sidebar.playground",
+  marketplace: "sidebar.catalog",
+  plugins: "sidebar.catalog",
+  integrations: "sidebar.integrations",
+  repositories: "sidebar.integrations.repositories",
+  ssh: "sidebar.integrations.ssh",
+  "api-keys": "sidebar.integrations.apiKeys",
+  notifications: "sidebar.integrations.notifications",
+  docs: "sidebar.documentation",
+  community: "sidebar.community",
+  contributing: "sidebar.community",
+  platform: "nav.platform",
+  pricing: "nav.pricing",
+  settings: "sidebar.settings",
+  workspace: "sidebar.workspace",
+  assets: "sidebar.workspace.assets",
+  pipelines: "sidebar.workspace.pipelines",
+  history: "sidebar.workspace.history",
+  jobs: "sidebar.workspace.jobs",
+  monitoring: "sidebar.workspace.monitoring",
+  projects: "sidebar.projects",
+  scans: "sidebar.scan",
+  findings: "sidebar.findings",
+  risks: "sidebar.risks",
+  reports: "sidebar.reports",
+};
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const breadcrumbs = pathToBreadcrumbs(pathname);
+  const { t } = useI18n();
+
+  const breadcrumbs = useMemo<BreadcrumbItem[]>(() => {
+    if (!pathname || pathname === "/" || pathname === "/app") return [];
+
+    const segments = pathname.split("/").filter(Boolean);
+    // Skip "app" segment for breadcrumbs (it's always present)
+    const filteredSegments = segments.filter((s) => s !== "app");
+
+    return filteredSegments.map((seg, i) => {
+      const i18nKey = SEGMENT_I18N_KEYS[seg];
+      const label = i18nKey ? t(i18nKey) : seg.charAt(0).toUpperCase() + seg.slice(1);
+      return {
+        label,
+        href:
+          i === filteredSegments.length - 1
+            ? undefined
+            : "/app/" + segments.slice(1, segments.indexOf(seg) + 1).join("/"),
+      };
+    });
+  }, [pathname, t]);
 
   return (
     <div className="flex min-h-screen">
