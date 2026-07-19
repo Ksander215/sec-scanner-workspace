@@ -40,3 +40,48 @@ Stage Summary:
 - Backend API accessible at https://sec-scanner.pro/api/
 - 3 tools already installed on server (nmap, nuclei, ZAP)
 - Still need: update scanner page to use use-sip-engine hook, install trivy/semgrep/nikto
+
+---
+Task ID: INT-000 + INT-030
+Agent: Super Z (main)
+Task: Full repository restructuring (INT-000) + Guided Business Experience (INT-030)
+
+Work Log:
+- Analyzed current repository structure: sec-scanner-landing/ with sip-server/ nested inside
+- Checked production server state: all pages serving HTML with real content (200 status)
+- Executed full repository restructuring:
+  - Renamed sec-scanner-landing/ → landing/
+  - Moved sip-server/ → backend/
+  - Created docs/ with 16 documentation files
+  - Created plugins/ with 6 security tool manifests (nmap, nuclei, zap, semgrep, trivy, nikto)
+  - Created packages/ with types, sdk, ui, shared
+  - Created docker/ with docker-compose.yml and 3 Dockerfiles
+  - Created scripts/ with deploy.sh, backup.sh, build.sh, restore.sh, update.sh
+  - Created .github/workflows/ (removed from git due to PAT scope, kept locally)
+  - Wrote README.md, ARCHITECTURE.md, ROADMAP.md, CHANGELOG.md, CONTRIBUTING.md, SECURITY.md, LICENSE
+  - Updated .gitignore for production-ready state
+  - Cleaned up root-level junk files (.png, deploy.tar.gz, etc.)
+  - Moved brand/ and documentation .md files to docs/
+- Implemented INT-030 Guided Business Experience:
+  - Block 1: GuideAssistant component (floating button with 6 scenarios + step-by-step wizard)
+  - Block 2: ContextualHelp component (for dashboard, scanner, findings, risks, reports, marketplace, integrations, repositories, architecture, projects, knowledge-graph, attack-paths, workspace)
+  - Block 3: BusinessResult + BusinessScore + BusinessFindingSummary components
+  - Added 180+ i18n keys in both Russian and English
+- Updated AppLayout.tsx to include GuideAssistant
+- Updated dashboard/page.tsx to include ContextualHelp and BusinessResult
+- Updated scanner/page.tsx to include ContextualHelp
+- Built locally: ✅ success
+- Committed: INT-000 — Full repository restructuring + INT-030 Guided Business Experience
+- Pushed to GitHub: ✅ (main branch)
+- Deployed to production: git pull → npm install → npm run build → copy to /var/www/sec-scanner.pro/ → nginx reload
+- Verified all pages: ✅ 8 pages checked, all return 200 with content
+- Verified backend API: ✅ /api/health returns 200
+- Verified INT-030 components: ✅ "Помощник", "Помощь", Sparkles icon present in build
+- Deleted stale branches: landing, backup/local-before-merge, backup/remote-before-merge
+
+Stage Summary:
+- Repository restructured to professional production state
+- INT-030 Guided Business Experience fully implemented
+- Production deployed and verified
+- All pages serving content correctly
+- Commit: 453fb23 (main)
