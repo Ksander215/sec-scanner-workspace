@@ -1,11 +1,54 @@
-skills/
+# Dependencies
 node_modules/
-sip-repo/
-tool-results/
-sec-scanner-landing/sip-server/dist/
-sec-scanner-landing/sip-server/node_modules/
+**/node_modules/
+
+# Build output
+.next/
+out/
 sec-scanner-landing/.next/
 sec-scanner-landing/out/
+sec-scanner-landing/sip-server/dist/
+
+# Secrets — NEVER commit
+.env
+.env.*
+id_ed25519*
+*.pem
+*.key
+
+# Deploy artifacts
+deploy.tar.gz
+deploy.tar
+
+# Screenshots & images (not part of source)
+*.png
+!sec-scanner-landing/public/**/*.png
+!sec-scanner-landing/brand/**/*.png
+
+# Generated / temp
+tool-results/
 agent-ctx/
 download/
 upload/
+sip-repo/
+pylib/
+scripts/
+skills/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# JSON snapshots (not source)
+sec-scanner-current.json
+sec-scanner-new.json
+
+# Lock files (keep package-lock.json for reproducibility)
+# bun.lock
+
+# Logs
+*.log
