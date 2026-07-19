@@ -52,12 +52,40 @@ app.use("/api/analysis", analysisRouter);
 
 // ─── Health check ─────────────────────────────────────────────────────────
 
-app.get("/api/health", async (_req, res) => {
-  // Check which tools are available on the server
-  const toolStatus: Record<string, { installed: boolean; version?: string }> = {};
-  for (const manifest of ALL_MANIFESTS) {
-    toolStatus[manifest.id] = await verifyTool(manifest.id);
+// ─── Tool status cache ────────────────────────────────────────────────────
+
+let cachedToolStatus: Record<string, { installed: boolean; version?: string }> | null = null;
+let lastToolCheck = 0;
+const TOOL_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+async function getToolStatus(): Promise<Record<string, { installed: boolean; version?: string }>> {
+  const now = Date.now();
+  if (cachedToolStatus && (now - lastToolCheck) < TOOL_CHECK_INTERVAL) {
+    return cachedToolStatus;
   }
+
+  const status: Record<string, { installed: boolean; version?: string }> = {};
+  // Run checks in parallel with Promise.allSettled
+  const results = await Promise.allSettled(
+    ALL_MANIFESTS.map(async (manifest) => {
+      const result = await verifyTool(manifest.id);
+      return { id: manifest.id, ...result };
+    })
+  );
+
+  for (const result of results) {
+    if (result.status === "fulfilled") {
+      status[result.value.id] = { installed: result.value.installed, version: result.value.version };
+    }
+  }
+
+  cachedToolStatus = status;
+  lastToolCheck = now;
+  return status;
+}
+
+app.get("/api/health", async (_req, res) => {
+  const toolStatus = await getToolStatus();
 
   res.json({
     status: "ok",
