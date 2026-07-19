@@ -45,7 +45,7 @@ def main():
 
     # Step 2: Install backend dependencies
     print("\n[2/7] Installing backend dependencies...")
-    run_cmd(client, "cd /root/sec-scanner-workspace/sec-scanner-landing/sip-server && npm install --production", 120)
+    run_cmd(client, "cd /root/sec-scanner-workspace/sec-scanner-landing/sip-server && npm install", 120)
 
     # Step 3: Build backend
     print("\n[3/7] Building backend server...")
