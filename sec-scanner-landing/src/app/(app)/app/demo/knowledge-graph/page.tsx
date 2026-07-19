@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useTheme } from "next-themes";
 import {
   ReactFlow,
   Background,
@@ -16,15 +15,9 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Container } from "@/components/ui/Container";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import {
   Search,
-  Filter,
-  ZoomIn,
-  ZoomOut,
-  Maximize,
   X,
   Server,
   AlertTriangle,
@@ -34,9 +27,16 @@ import {
   Lightbulb,
   Monitor,
   Info,
-  Circle,
+  ScanSearch,
 } from "lucide-react";
-import { kgNodes, kgEdges, type KGNodeType, type KGNode, type Severity } from "@/lib/demo-data";
+import {
+  buildKnowledgeGraph,
+  getLatestFindings,
+  type KGNode,
+  type KGEdge,
+  type KGNodeType,
+  type Severity,
+} from "@/lib/engine";
 import { useI18n } from "@/lib/i18n-context";
 
 // ─── Node color/icon mapping ────────────────────────────────────────────────
@@ -49,13 +49,16 @@ const nodeConfig: Record<KGNodeType, { color: string; bg: string; border: string
   credential: { color: "#ff4444", bg: "rgba(255,68,68,0.08)", border: "rgba(255,68,68,0.25)", icon: Key },
   asset: { color: "#00ff88", bg: "rgba(0,255,136,0.08)", border: "rgba(0,255,136,0.25)", icon: Shield },
   recommendation: { color: "#00ff88", bg: "rgba(0,255,136,0.08)", border: "rgba(0,255,136,0.25)", icon: Lightbulb },
+  dependency: { color: "#a855f7", bg: "rgba(168,85,247,0.08)", border: "rgba(168,85,247,0.25)", icon: Monitor },
+  port: { color: "#00d4ff", bg: "rgba(0,212,255,0.08)", border: "rgba(0,212,255,0.25)", icon: Server },
 };
 
 // ─── Custom Node Component ──────────────────────────────────────────────────
 
 function KnowledgeGraphNode({ data, selected }: NodeProps) {
   const nodeData = data as unknown as KGNode & { nodeType: KGNodeType };
-  const config = nodeConfig[nodeData.nodeType];
+  const nodeType = nodeData.nodeType || nodeData.type;
+  const config = nodeConfig[nodeType] || nodeConfig.host;
   const Icon = config.icon;
 
   return (
@@ -101,14 +104,15 @@ const nodeTypes = { kgNode: KnowledgeGraphNode };
 
 // ─── Layout positions ───────────────────────────────────────────────────────
 
-function computeLayout(): { nodes: Node[]; edges: Edge[] } {
-  const typeOrder: KGNodeType[] = ["cve", "finding", "credential", "recommendation", "host", "service", "asset"];
+function computeLayout(graphNodes: KGNode[], graphEdges: KGEdge[]): { nodes: Node[]; edges: Edge[] } {
+  const typeOrder: KGNodeType[] = ["cve", "finding", "credential", "recommendation", "dependency", "host", "service", "asset", "port"];
 
   const grouped = new Map<KGNodeType, KGNode[]>();
-  kgNodes.forEach((n) => {
-    const list = grouped.get(n.type) || [];
+  graphNodes.forEach((n) => {
+    const nodeType = n.nodeType || n.type;
+    const list = grouped.get(nodeType) || [];
     list.push(n);
-    grouped.set(n.type, list);
+    grouped.set(nodeType, list);
   });
 
   const nodes: Node[] = [];
@@ -123,13 +127,13 @@ function computeLayout(): { nodes: Node[]; edges: Edge[] } {
         id: node.id,
         type: "kgNode",
         position: { x: xStart + i * 320, y },
-        data: { ...node, nodeType: node.type },
+        data: { ...node, nodeType: node.nodeType || node.type },
       });
     });
     y += 160;
   });
 
-  const edges: Edge[] = kgEdges.map((e) => ({
+  const edges: Edge[] = graphEdges.map((e) => ({
     id: e.id,
     source: e.source,
     target: e.target,
@@ -158,11 +162,21 @@ function computeLayout(): { nodes: Node[]; edges: Edge[] } {
 
 export default function KnowledgeGraphPage() {
   const { t } = useI18n();
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme !== "light";
-  const layout = useMemo(() => computeLayout(), []);
+
+  // Build graph from engine using latest findings
+  const { graphNodes, graphEdges, hasFindings } = useMemo(() => {
+    const findings = getLatestFindings();
+    const graph = buildKnowledgeGraph(findings);
+    return {
+      graphNodes: graph.nodes,
+      graphEdges: graph.edges,
+      hasFindings: findings.length > 0,
+    };
+  }, []);
+
+  const layout = useMemo(() => computeLayout(graphNodes, graphEdges), [graphNodes, graphEdges]);
   const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+  const [edges, , onEdgesChange] = useEdgesState(layout.edges);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<KGNodeType | "all">("all");
   const [selectedNode, setSelectedNode] = useState<KGNode | null>(null);
@@ -188,7 +202,8 @@ export default function KnowledgeGraphPage() {
       setNodes((nds) =>
         nds.map((n) => {
           const data = n.data as unknown as KGNode;
-          const matches = type === "all" || data.nodeType === type;
+          const nodeType = data.nodeType || data.type;
+          const matches = type === "all" || nodeType === type;
           return { ...n, style: { ...n.style, opacity: matches ? 1 : 0.15 } };
         })
       );
@@ -216,6 +231,7 @@ export default function KnowledgeGraphPage() {
     { key: "cve", label: "CVEs" },
     { key: "credential", label: "Creds" },
     { key: "recommendation", label: "Recs" },
+    { key: "dependency", label: "Deps" },
   ];
 
   // "What you see" guide
@@ -226,6 +242,33 @@ export default function KnowledgeGraphPage() {
     { color: "#00ff88", label: t("graph.guide.greenEdge"), icon: Lightbulb },
   ];
 
+  // ─── Empty state when no findings ────────────────────────────────────────
+  if (!hasFindings) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-border flex items-center justify-center mx-auto mb-4">
+            <ScanSearch className="w-8 h-8 text-muted" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            {t("graph.guide.title")}
+          </h2>
+          <p className="text-sm text-muted-2 mb-6">
+            Run a scan first to generate a knowledge graph from real findings.
+            The graph will show assets, services, vulnerabilities, and their connections.
+          </p>
+          <a
+            href="/app/scanner"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent text-background hover:bg-accent/90 transition-colors"
+          >
+            <ScanSearch className="w-4 h-4" />
+            Run a Scan
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header */}
@@ -233,7 +276,7 @@ export default function KnowledgeGraphPage() {
       <div className="border-b border-border bg-accent-muted/20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 mb-3">
-            <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">Demo</span>
+            <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-accent-muted text-accent rounded border border-accent/20">Live</span>
             <h2 className="text-sm font-semibold text-foreground">{t("graph.guide.title")}</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -279,10 +322,10 @@ export default function KnowledgeGraphPage() {
             {/* Stats bar */}
             <div className="flex items-center gap-3">
               {[
-                { label: "Nodes", value: kgNodes.length, color: "text-cyan" },
-                { label: "Edges", value: kgEdges.length, color: "text-accent" },
+                { label: "Nodes", value: graphNodes.length, color: "text-cyan" },
+                { label: "Edges", value: graphEdges.length, color: "text-accent" },
                 { label: "Types", value: Object.keys(nodeConfig).length, color: "text-purple" },
-                { label: "Critical", value: kgNodes.filter(n => n.severity === "critical").length, color: "text-red" },
+                { label: "Critical", value: graphNodes.filter(n => n.severity === "critical").length, color: "text-red" },
               ].map((stat) => (
                 <div key={stat.label} className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-2 border border-border">
                   <span className={`text-sm font-bold ${stat.color}`}>{stat.value}</span>
@@ -376,11 +419,11 @@ export default function KnowledgeGraphPage() {
             <div className="mt-4">
               <span className="text-xs text-muted uppercase tracking-wider">Connections</span>
               <div className="mt-2 space-y-1">
-                {kgEdges
+                {graphEdges
                   .filter((e) => e.source === selectedNode.id || e.target === selectedNode.id)
                   .map((e) => {
                     const connectedId = e.source === selectedNode.id ? e.target : e.source;
-                    const connectedNode = kgNodes.find((n) => n.id === connectedId);
+                    const connectedNode = graphNodes.find((n) => n.id === connectedId);
                     return connectedNode ? (
                       <div key={e.id} className="flex items-center gap-2 text-xs">
                         <span className="text-muted-2">{e.label}:</span>

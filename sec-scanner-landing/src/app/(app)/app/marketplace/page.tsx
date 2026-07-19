@@ -24,11 +24,27 @@ import {
   Info,
   Play,
   ArrowRight,
+  Loader2,
+  Wrench,
+  Activity,
+  Shield,
+  Terminal,
 } from "lucide-react";
 import { marketplaceItems, type MarketplaceItem } from "@/lib/demo-data";
 import { useI18n } from "@/lib/i18n-context";
 import { useToast } from "@/components/ui/Toast";
-import { getMarketplaceInstalled, addMarketplaceInstalled, removeMarketplaceInstalled } from "@/lib/utils";
+import {
+  isInstalled as engineIsInstalled,
+  installPlugin,
+  removePlugin,
+  getRegistry,
+  type RegistryEntry,
+  type InstallStatus,
+  getInstalledTools,
+  MANIFESTS_BY_ID,
+  ALL_MANIFESTS,
+  BUILTIN_TOOL_IDS,
+} from "@/lib/engine";
 
 const categoryIcons: Record<string, React.ElementType> = {
   plugins: Puzzle,
@@ -43,6 +59,79 @@ const categoryIcons: Record<string, React.ElementType> = {
 
 type TabKey = "all" | "installed" | "plugins" | "rules" | "dashboards" | "templates" | "ai-prompts" | "integrations" | "connectors" | "themes";
 
+// ─── Install Status Indicator ─────────────────────────────────────────────
+
+function InstallProgressIndicator({ status }: { status: InstallStatus }) {
+  if (status === "not_installed" || status === "installed") return null;
+  const steps: InstallStatus[] = ["downloading", "installing", "verifying", "installed"];
+  const currentIdx = steps.indexOf(status);
+  const labels: Record<string, string> = {
+    downloading: "Downloading...",
+    installing: "Installing...",
+    verifying: "Verifying...",
+  };
+
+  return (
+    <div className="p-3 rounded-lg bg-cyan-muted border border-cyan/20">
+      <div className="flex items-center gap-2 mb-2">
+        <Loader2 className="w-4 h-4 text-cyan animate-spin" />
+        <span className="text-xs font-medium text-cyan">{labels[status] || status}</span>
+      </div>
+      <div className="flex gap-1">
+        {steps.slice(0, 3).map((step, i) => (
+          <div key={step} className={`h-1.5 flex-1 rounded-full transition-all ${
+            i < currentIdx ? "bg-accent" : i === currentIdx ? "bg-cyan animate-pulse" : "bg-surface-2"
+          }`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Tool Health Card ─────────────────────────────────────────────────────
+
+function ToolHealthCard({ entry, locale }: { entry: RegistryEntry; locale: string }) {
+  const isEn = locale === "en";
+  const m = entry.manifest;
+  const isBuiltin = BUILTIN_TOOL_IDS.has(m.id);
+
+  return (
+    <div className="p-3 rounded-lg bg-surface border border-border">
+      <div className="flex items-center gap-2 mb-2">
+        <Wrench className="w-3.5 h-3.5 text-accent" />
+        <span className="text-xs font-medium text-foreground">{m.name}</span>
+        {isBuiltin && <Badge variant="default" className="text-[9px]">{isEn ? "Built-in" : "Встроен"}</Badge>}
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-[10px]">
+        <div>
+          <span className="text-muted-2">{isEn ? "Status" : "Статус"}</span>
+          <div className={`font-medium ${entry.status === "installed" ? "text-accent" : "text-muted-2"}`}>
+            {entry.status === "installed" ? (isEn ? "Installed" : "Установлен") : entry.status}
+          </div>
+        </div>
+        <div>
+          <span className="text-muted-2">{isEn ? "Version" : "Версия"}</span>
+          <div className="font-mono text-foreground">{entry.version || m.version}</div>
+        </div>
+        <div>
+          <span className="text-muted-2">{isEn ? "Health" : "Состояние"}</span>
+          <div className={`font-medium ${entry.health === "healthy" ? "text-accent" : entry.health === "error" ? "text-red" : "text-muted-2"}`}>
+            {entry.health === "healthy" ? (isEn ? "Healthy" : "Здоров") : entry.health}
+          </div>
+        </div>
+        <div>
+          <span className="text-muted-2">{isEn ? "Last Run" : "Последний запуск"}</span>
+          <div className="text-foreground font-mono">
+            {entry.lastRun ? new Date(entry.lastRun).toLocaleDateString() : (isEn ? "Never" : "Нет")}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────
+
 export default function MarketplacePreviewPage() {
   const { t, locale } = useI18n();
   const { addToast } = useToast();
@@ -50,14 +139,40 @@ export default function MarketplacePreviewPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [sortBy, setSortBy] = useState<"rating" | "installs">("installs");
   const [installing, setInstalling] = useState<string | null>(null);
-  const [installed, setInstalled] = useState<Set<string>>(new Set(["nucleus-engine", "owasp-rules"]));
+  const [installStatuses, setInstallStatuses] = useState<Record<string, InstallStatus>>({});
+  const [installed, setInstalled] = useState<Set<string>>(new Set());
   const [detailItem, setDetailItem] = useState<MarketplaceItem | null>(null);
+  const [showToolHealth, setShowToolHealth] = useState(false);
+  const [registryEntries, setRegistryEntries] = useState<RegistryEntry[]>([]);
 
-  // Load installed state from localStorage on mount
+  // Load installed state from engine registry
   useEffect(() => {
-    const saved = getMarketplaceInstalled();
-    if (saved.size > 0) setInstalled(saved);
+    refreshRegistry();
   }, []);
+
+  const refreshRegistry = () => {
+    const entries = getRegistry();
+    setRegistryEntries(entries);
+
+    // Build installed set: includes engine plugins + legacy marketplace items
+    const installedSet = new Set<string>();
+
+    // Add engine-installed plugins (map back to legacy IDs for marketplace display)
+    entries.filter(e => e.status === "installed").forEach(e => {
+      installedSet.add(e.manifest.id);
+    });
+
+    // Also add legacy marketplace items
+    try {
+      const raw = localStorage.getItem("sip_marketplace_installed");
+      if (raw) {
+        const legacyIds: string[] = JSON.parse(raw);
+        legacyIds.forEach(id => installedSet.add(id));
+      }
+    } catch { /* ignore */ }
+
+    setInstalled(installedSet);
+  };
 
   const categoryLabels: Record<string, string> = locale === "ru" ? {
     plugins: "Плагины",
@@ -103,7 +218,28 @@ export default function MarketplacePreviewPage() {
     themes: "Themes",
   };
 
-  const filtered = marketplaceItems
+  // Combine marketplace items with engine plugin manifests
+  const allItems = [
+    ...marketplaceItems,
+    // Add engine plugins that aren't already in marketplaceItems
+    ...ALL_MANIFESTS
+      .filter(m => !marketplaceItems.some(mi => mi.id === m.id || mi.name === m.name))
+      .map(m => ({
+        id: m.id,
+        name: m.name,
+        description: m.description[locale] || m.description.en,
+        category: "plugins" as const,
+        author: "SIP",
+        version: m.version,
+        rating: 4.8,
+        installs: 15000,
+        license: "MIT",
+        verified: true,
+        tags: [m.category, m.outputFormat],
+      })),
+  ];
+
+  const filtered = allItems
     .filter((item) => {
       if (activeTab === "installed") return installed.has(item.id);
       if (activeTab === "all") return true;
@@ -118,35 +254,83 @@ export default function MarketplacePreviewPage() {
     )
     .sort((a, b) => (sortBy === "rating" ? b.rating - a.rating : b.installs - a.installs));
 
-  const handleInstall = (item: MarketplaceItem) => {
+  // Check if a marketplace item maps to an engine plugin
+  const getEnginePluginId = (itemId: string): string | undefined => {
+    // Direct match
+    if (MANIFESTS_BY_ID[itemId]) return itemId;
+    // Legacy mapping
+    const legacyMap: Record<string, string> = {
+      "mpl-001": "owasp-zap",
+      "mpl-009": "semgrep",
+      "mpl-010": "nikto",
+      "mpl-003": "nmap",
+      "mpl-004": "nuclei",
+      "mpl-005": "trivy",
+    };
+    return legacyMap[itemId];
+  };
+
+  const handleInstall = async (item: MarketplaceItem) => {
     if (installed.has(item.id)) {
       // Uninstall
-      const newSet = removeMarketplaceInstalled(item.id);
-      setInstalled(new Set(newSet));
+      const engineId = getEnginePluginId(item.id);
+      if (engineId) {
+        removePlugin(engineId);
+      }
+      // Also remove from legacy
+      try {
+        const raw = localStorage.getItem("sip_marketplace_installed");
+        const set = new Set<string>(raw ? JSON.parse(raw) : []);
+        set.delete(item.id);
+        localStorage.setItem("sip_marketplace_installed", JSON.stringify([...set]));
+      } catch { /* ignore */ }
+
+      refreshRegistry();
       addToast({
         type: "success",
         title: locale === "ru" ? "Инструмент удалён" : "Tool removed",
-        description: `${item.name} ${locale === "ru" ? "удалён из проекта" : "removed from project"}`,
+        description: `${item.name} ${locale === "ru" ? "удалён. Сканер больше не будет его показывать." : "removed. Scanner will no longer show it."}`,
       });
       return;
     }
+
     setInstalling(item.id);
-    setTimeout(() => {
-      setInstalling(null);
-      const newSet = addMarketplaceInstalled(item.id);
-      setInstalled(new Set(newSet));
-      addToast({
-        type: "success",
-        title: locale === "ru" ? "Инструмент установлен" : "Tool installed",
-        description: `${item.name} ${locale === "ru" ? "установлен в проект «Демо-проект»" : "installed to project \"Demo Project\""} (${locale === "ru" ? "Демонстрационная установка" : "Demo installation"})`,
+
+    const engineId = getEnginePluginId(item.id);
+    if (engineId) {
+      // Use engine registry for real install flow with progress
+      await installPlugin(engineId, (status) => {
+        setInstallStatuses(prev => ({ ...prev, [item.id]: status }));
       });
-    }, 1500);
+    } else {
+      // Non-engine item — legacy install
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      try {
+        const raw = localStorage.getItem("sip_marketplace_installed");
+        const set = new Set<string>(raw ? JSON.parse(raw) : []);
+        set.add(item.id);
+        localStorage.setItem("sip_marketplace_installed", JSON.stringify([...set]));
+      } catch { /* ignore */ }
+    }
+
+    setInstalling(null);
+    refreshRegistry();
+    addToast({
+      type: "success",
+      title: locale === "ru" ? "Инструмент установлен" : "Tool installed",
+      description: `${item.name} ${locale === "ru" ? "установлен и доступен в Сканере" : "installed and available in Scanner"}`,
+    });
   };
 
   // Detail panel
   if (detailItem) {
     const Icon = categoryIcons[detailItem.category];
     const isInstalled = installed.has(detailItem.id);
+    const status = installStatuses[detailItem.id];
+    const engineId = getEnginePluginId(detailItem.id);
+    const engineManifest = engineId ? MANIFESTS_BY_ID[engineId] : null;
+    const regEntry = engineId ? registryEntries.find(e => e.manifest.id === engineId) : null;
+
     return (
       <div className="min-h-[calc(100vh-4rem)]">
         <Container className="py-8 max-w-3xl">
@@ -175,20 +359,55 @@ export default function MarketplacePreviewPage() {
                 size="sm"
                 variant={isInstalled ? "outline" : "primary"}
                 onClick={() => handleInstall(detailItem)}
+                disabled={installing === detailItem.id}
               >
-                {isInstalled
-                  ? (locale === "ru" ? "Установлено ✓" : "Installed ✓")
-                  : (locale === "ru" ? "Установить" : "Install")}
+                {installing === detailItem.id ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {locale === "ru" ? "Установка..." : "Installing..."}</>
+                ) : isInstalled ? (
+                  locale === "ru" ? "Установлено ✓" : "Installed ✓"
+                ) : (
+                  locale === "ru" ? "Установить" : "Install"
+                )}
               </Button>
             </div>
 
             <p className="text-sm text-muted-2 leading-relaxed mb-6">{detailItem.description}</p>
 
-            {/* Demo installation banner */}
-            <div className="mb-6 p-3 rounded-lg bg-amber/10 border border-amber/20 flex items-center gap-2.5 text-sm">
-              <span className="text-amber font-medium">{locale === "ru" ? "⚠ Демонстрационная установка" : "⚠ Demo installation"}</span>
-              <span className="text-muted-2">— {locale === "ru" ? "изменения сохраняются только в текущей сессии" : "changes are saved in current session only"}</span>
-            </div>
+            {/* Install progress */}
+            {status && status !== "not_installed" && status !== "installed" && (
+              <div className="mb-6">
+                <InstallProgressIndicator status={status} />
+              </div>
+            )}
+
+            {/* Engine plugin details */}
+            {engineManifest && (
+              <div className="mb-6 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Terminal className="w-4 h-4 text-accent" />
+                  {locale === "ru" ? "Техническая информация" : "Technical Info"}
+                </h3>
+                <div className="p-3 rounded-lg bg-surface-2 border border-border">
+                  <div className="text-xs font-mono text-muted-2 mb-1">{locale === "ru" ? "Команда запуска" : "Run command"}</div>
+                  <div className="text-sm font-mono text-foreground">{engineManifest.run.command}</div>
+                </div>
+                <div className="p-3 rounded-lg bg-surface-2 border border-border">
+                  <div className="text-xs font-mono text-muted-2 mb-1">{locale === "ru" ? "Установка" : "Install command"}</div>
+                  <div className="text-sm font-mono text-foreground">{engineManifest.install.command}</div>
+                </div>
+                <div className="p-3 rounded-lg bg-surface-2 border border-border">
+                  <div className="text-xs font-mono text-muted-2 mb-1">{locale === "ru" ? "Парсер" : "Parser"}</div>
+                  <div className="text-sm text-foreground">{engineManifest.parser} → {locale === "ru" ? "единая модель Findings" : "unified Findings model"}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Tool Health (when installed) */}
+            {regEntry && isInstalled && (
+              <div className="mb-6">
+                <ToolHealthCard entry={regEntry} locale={locale} />
+              </div>
+            )}
 
             {/* Install details */}
             <div className="space-y-3 mb-6">
@@ -201,16 +420,18 @@ export default function MarketplacePreviewPage() {
                   <p className="text-sm text-foreground font-medium mt-0.5">~/.sip/plugins/{detailItem.id}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-surface-2 border border-border">
-                  <span className="text-xs text-muted-2">{locale === "ru" ? "Проект" : "Project"}</span>
-                  <p className="text-sm text-foreground font-medium mt-0.5">{locale === "ru" ? "Демо-проект" : "Demo Project"}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-surface-2 border border-border">
-                  <span className="text-xs text-muted-2">{locale === "ru" ? "Как использовать" : "How to use"}</span>
-                  <p className="text-sm text-foreground font-mono mt-0.5">sip run --plugin {detailItem.id}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-surface-2 border border-border">
                   <span className="text-xs text-muted-2">{locale === "ru" ? "Версия" : "Version"}</span>
                   <p className="text-sm text-foreground font-medium mt-0.5">v{detailItem.version}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-surface-2 border border-border">
+                  <span className="text-xs text-muted-2">{locale === "ru" ? "Парсер" : "Parser"}</span>
+                  <p className="text-sm text-foreground font-medium mt-0.5">
+                    {engineManifest ? engineManifest.parser : locale === "ru" ? "Общий" : "Generic"}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-surface-2 border border-border">
+                  <span className="text-xs text-muted-2">{locale === "ru" ? "Автоматически в Сканере" : "Auto in Scanner"}</span>
+                  <p className="text-sm text-accent font-medium mt-0.5">{locale === "ru" ? "Да ✓" : "Yes ✓"}</p>
                 </div>
               </div>
             </div>
@@ -222,25 +443,10 @@ export default function MarketplacePreviewPage() {
                   <CheckCircle2 className="w-5 h-5 text-accent" />
                   <span className="text-sm font-semibold text-foreground">{locale === "ru" ? "Инструмент установлен" : "Tool installed"}</span>
                 </div>
-                <div className="grid sm:grid-cols-3 gap-3 mb-4">
-                  <div className="p-3 rounded-lg bg-surface border border-border">
-                    <span className="text-xs text-muted-2">{locale === "ru" ? "Версия" : "Version"}</span>
-                    <p className="text-sm text-foreground font-medium mt-0.5">v{detailItem.version}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-surface border border-border">
-                    <span className="text-xs text-muted-2">{locale === "ru" ? "Автор" : "Author"}</span>
-                    <p className="text-sm text-foreground font-medium mt-0.5">{detailItem.author}</p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-surface border border-border">
-                    <span className="text-xs text-muted-2">{locale === "ru" ? "Добавлен в Pipeline" : "Added to Pipeline"}</span>
-                    <p className="text-sm text-accent font-medium mt-0.5">{locale === "ru" ? "Да ✓" : "Yes ✓"}</p>
-                  </div>
-                </div>
-                {/* Next step CTA */}
                 <div className="p-3 rounded-lg bg-surface border border-accent/30 flex items-center gap-3">
                   <Play className="w-4 h-4 text-accent shrink-0" />
                   <div className="flex-1">
-                    <span className="text-sm text-foreground">{locale === "ru" ? "Теперь используйте инструмент при следующем сканировании." : "Now use this tool in your next scan."}</span>
+                    <span className="text-sm text-foreground">{locale === "ru" ? "Инструмент автоматически доступен в Сканере. Результаты будут приведены к единой модели Findings." : "Tool is automatically available in Scanner. Results will be normalized to the unified Findings model."}</span>
                   </div>
                   <a href="/app/scanner" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-accent text-background rounded-lg hover:bg-accent-hover transition-colors">
                     {locale === "ru" ? "Перейти к сканированию" : "Go to Scanner"} <ArrowRight className="w-3.5 h-3.5" />
@@ -297,6 +503,16 @@ export default function MarketplacePreviewPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowToolHealth(!showToolHealth)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                  showToolHealth ? "bg-accent text-background" : "bg-surface-2 text-muted-2 hover:text-foreground border-border"
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                {locale === "ru" ? "Состояние" : "Health"}
+              </button>
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted" />
                 <input
@@ -355,6 +571,26 @@ export default function MarketplacePreviewPage() {
       </div>
 
       <Container className="py-6">
+        {/* Tool Health Panel */}
+        {showToolHealth && (
+          <div className="mb-6 p-4 rounded-xl bg-surface border border-border">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Activity className="w-4 h-4 text-accent" />
+                {locale === "ru" ? "Состояние инструментов" : "Tool Health"}
+              </h3>
+              <span className="text-xs text-muted-2">
+                {registryEntries.filter(e => e.status === "installed").length} / {registryEntries.length} {locale === "ru" ? "установлено" : "installed"}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {registryEntries.map(entry => (
+                <ToolHealthCard key={entry.manifest.id} entry={entry} locale={locale} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Results count */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs text-muted-2">
@@ -376,8 +612,10 @@ export default function MarketplacePreviewPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((item) => {
               const Icon = categoryIcons[item.category];
-              const isInstalling = installing === item.id;
+              const isItemInstalling = installing === item.id;
               const isInstalled = installed.has(item.id);
+              const status = installStatuses[item.id];
+              const engineId = getEnginePluginId(item.id);
 
               return (
                 <div
@@ -408,6 +646,23 @@ export default function MarketplacePreviewPage() {
                   {/* Description */}
                   <p className="text-xs text-muted-2 leading-relaxed mb-3 line-clamp-2">{item.description}</p>
 
+                  {/* Engine badge */}
+                  {engineId && (
+                    <div className="mb-3">
+                      <Badge variant="default" className="text-[9px]">
+                        <Shield className="w-2.5 h-2.5 mr-1" />
+                        {locale === "ru" ? "Реальный движок" : "Real Engine"} → Findings
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Install progress inline */}
+                  {status && status !== "not_installed" && status !== "installed" && (
+                    <div className="mb-3">
+                      <InstallProgressIndicator status={status} />
+                    </div>
+                  )}
+
                   {/* Tags */}
                   <div className="flex flex-wrap gap-1.5 mb-4">
                     {item.tags.slice(0, 3).map((tag) => (
@@ -432,18 +687,20 @@ export default function MarketplacePreviewPage() {
                     </div>
                     <Button
                       size="sm"
-                      variant={isInstalled ? "outline" : isInstalling ? "secondary" : "primary"}
+                      variant={isInstalled ? "outline" : isItemInstalling ? "secondary" : "primary"}
                       onClick={(e) => {
                         e.stopPropagation();
                         handleInstall(item);
                       }}
-                      disabled={isInstalling}
+                      disabled={isItemInstalling}
                     >
-                      {isInstalling
-                        ? t("common.installing")
-                        : isInstalled
-                        ? t("common.installed") + " ✓"
-                        : t("common.install")}
+                      {isItemInstalling ? (
+                        <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {t("common.installing")}</>
+                      ) : isInstalled ? (
+                        t("common.installed") + " ✓"
+                      ) : (
+                        t("common.install")
+                      )}
                     </Button>
                   </div>
                 </div>

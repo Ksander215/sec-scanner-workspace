@@ -1,8 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { demoFindings, type Severity } from "@/lib/demo-data";
+import {
+  getLatestFindings,
+  type Finding,
+  type Severity,
+} from "@/lib/engine";
 import { Bug, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 const severityConfig: Record<Severity, { color: string; bg: string }> = {
   critical: { color: "text-red", bg: "bg-red-muted" },
@@ -20,6 +26,62 @@ const statusColors: Record<string, string> = {
 };
 
 export default function FindingsPage() {
+  const [findings, setFindings] = useState<Finding[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const latest = getLatestFindings();
+    setFindings(latest);
+    setLoaded(true);
+  }, []);
+
+  if (!loaded) {
+    return (
+      <div className="animate-page-in">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-foreground">Findings</h1>
+          <p className="mt-2 text-muted-2">Browse and manage security findings and vulnerabilities.</p>
+        </div>
+        <div className="flex items-center justify-center py-20">
+          <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (findings.length === 0) {
+    return (
+      <div className="animate-page-in">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-foreground">Findings</h1>
+          <p className="mt-2 text-muted-2">Browse and manage security findings and vulnerabilities.</p>
+        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center justify-center py-20 text-center"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-surface-2 flex items-center justify-center mb-4">
+            <Bug className="w-8 h-8 text-muted-2" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            No findings yet
+          </h2>
+          <p className="text-sm text-muted-2 max-w-md mb-6">
+            Run a scan first to discover security findings and vulnerabilities.
+          </p>
+          <Link
+            href="/app/scanner"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-accent text-accent-foreground font-medium text-sm hover:bg-accent/90 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Go to Scanner
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-page-in">
       <div className="mb-8">
@@ -40,7 +102,7 @@ export default function FindingsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {demoFindings.map((finding, i) => {
+            {findings.map((finding, i) => {
               const sev = severityConfig[finding.severity];
               return (
                 <motion.tr
