@@ -305,7 +305,7 @@ function RepoCard({
                 <span>{repo.lastCommitDate}</span>
                 <span className="flex items-center gap-1">
                   <FileCode2 className="w-3.5 h-3.5" />
-                  {repo.fileCount.toLocaleString()} {t("repositories.fileCount").toLowerCase()}
+                  {repo.fileCount.toLocaleString()} {t("repositories.files")}
                 </span>
               </div>
             </div>
@@ -335,10 +335,10 @@ function RepoCard({
             <KeyRound className="w-3.5 h-3.5 text-muted" />
             <span className="text-xs text-muted-2">{t("repositories.secrets")}: <span className={`font-medium ${repo.secretCount > 0 ? "text-amber" : "text-foreground"}`}>{repo.secretCount}</span></span>
             {repo.secretSeverities.critical > 0 && (
-              <Badge variant="critical">{repo.secretSeverities.critical} crit</Badge>
+              <Badge variant="critical">{repo.secretSeverities.critical} {t("repositories.sevCritical")}</Badge>
             )}
             {repo.secretSeverities.high > 0 && (
-              <Badge variant="high">{repo.secretSeverities.high} high</Badge>
+              <Badge variant="high">{repo.secretSeverities.high} {t("repositories.sevHigh")}</Badge>
             )}
           </div>
           <div className="flex items-center gap-1.5">
@@ -809,10 +809,10 @@ function RepoDetailView({
               <Panel title={t("repositories.secrets")}>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-2">{repo.secretCount} {t("repositories.secrets").toLowerCase()}</span>
-                  {repo.secretSeverities.critical > 0 && <Badge variant="critical">{repo.secretSeverities.critical} critical</Badge>}
-                  {repo.secretSeverities.high > 0 && <Badge variant="high">{repo.secretSeverities.high} high</Badge>}
-                  {repo.secretSeverities.medium > 0 && <Badge variant="medium">{repo.secretSeverities.medium} medium</Badge>}
-                  {repo.secretSeverities.low > 0 && <Badge variant="low">{repo.secretSeverities.low} low</Badge>}
+                  {repo.secretSeverities.critical > 0 && <Badge variant="critical">{repo.secretSeverities.critical} {t("repositories.sevCritical")}</Badge>}
+                  {repo.secretSeverities.high > 0 && <Badge variant="high">{repo.secretSeverities.high} {t("repositories.sevHigh")}</Badge>}
+                  {repo.secretSeverities.medium > 0 && <Badge variant="medium">{repo.secretSeverities.medium} {t("repositories.sevMedium")}</Badge>}
+                  {repo.secretSeverities.low > 0 && <Badge variant="low">{repo.secretSeverities.low} {t("repositories.sevLow")}</Badge>}
                 </div>
               </Panel>
             )}
@@ -1039,7 +1039,7 @@ export default function RepositoriesPage() {
             {t("repositories.connect")}
           </Button>
           <span className="text-sm text-muted-2">
-            {repos.length} {t("repositories.title").toLowerCase()}
+            {repos.length} {repos.length === 1 ? t("repositories.repoCountOne") : repos.length >= 2 && repos.length <= 4 ? t("repositories.repoCountFew") : t("repositories.repoCountMany")}
           </span>
         </div>
       </PageHeader>
