@@ -19,6 +19,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { architectureLayers, type ArchLayer } from "@/lib/demo-data";
+import { useI18n } from "@/lib/i18n-context";
 import { ContextualHelp } from "@/components/ui/ContextualHelp";
 import { SectionFAQ } from "@/components/ui/SectionFAQ";
 import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
@@ -156,11 +157,12 @@ function ArchitectureLayer({
 
 export default function InteractiveArchitecturePage() {
   const [expandedLayer, setExpandedLayer] = useState<string | null>("domain");
+  const { t } = useI18n();
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header */}
-      <div className="border-b border-border bg-surface/80 backdrop-blur-sm">
+      <div id="architecture-header" data-scroll-section={t("scroll.arch.overview")} className="border-b border-border bg-surface/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
             <Layers className="w-5 h-5 text-accent" />
@@ -175,7 +177,7 @@ export default function InteractiveArchitecturePage() {
       </div>
 
       <Container className="py-8">
-        <div className="max-w-3xl mx-auto space-y-2">
+        <div id="architecture-layers" data-scroll-section={t("scroll.arch.layers")} className="max-w-3xl mx-auto space-y-2">
           {architectureLayers.map((layer, i) => (
             <ArchitectureLayer
               key={layer.id}
@@ -188,7 +190,7 @@ export default function InteractiveArchitecturePage() {
         </div>
 
         {/* Deployment options */}
-        <div className="mt-12 max-w-3xl mx-auto p-6 rounded-xl bg-surface border border-border">
+        <div id="architecture-deployment" data-scroll-section={t("scroll.arch.deployment")} className="mt-12 max-w-3xl mx-auto p-6 rounded-xl bg-surface border border-border">
           <h3 className="text-lg font-bold text-foreground mb-4">Deployment Options</h3>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
@@ -216,7 +218,7 @@ export default function InteractiveArchitecturePage() {
         </div>
       </Container>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="architecture-faq" data-scroll-section={t("scroll.arch.faq")} className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="architecture" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["architecture"]} />
       </div>

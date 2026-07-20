@@ -1356,7 +1356,7 @@ export default function ProjectsPage() {
   return (
     <div className="animate-page-in">
       <PageHeader
-        id="projects-header"
+        id="projects-header" data-scroll-section={t("scroll.projects.overview")}
         title={t("projects.title")}
         description={t("projects.subtitle")}
       >
@@ -1379,7 +1379,7 @@ export default function ProjectsPage() {
           {projects.length === 0 ? (
             <EmptyState onCreate={() => setWizardOpen(true)} t={t} />
           ) : (
-            <div id="projects-list" className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div id="projects-list" data-scroll-section={t("scroll.projects.list")} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {projects.map((project, i) => {
                 const mockData = mockProjectData[project.id] || {
                   totalFindings: 0,
@@ -1423,7 +1423,7 @@ export default function ProjectsPage() {
         t={t}
       />
 
-      <div id="projects-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="projects-faq" data-scroll-section={t("scroll.projects.faq")} className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="projects" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["projects"]} />
       </div>

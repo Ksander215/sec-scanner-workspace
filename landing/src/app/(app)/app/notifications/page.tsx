@@ -537,7 +537,7 @@ export default function NotificationsPage() {
   return (
     <div className="animate-page-in min-h-[calc(100vh-7rem)]">
       {/* ─── Page Header ──────────────────────────────────────────────── */}
-      <div id="notifications-header" className="border-b border-border bg-surface/50">
+      <div id="notifications-header" className="border-b border-border bg-surface/50" data-scroll-section={t("scroll.notifications.overview")}>
         <Container className="py-8 sm:py-12">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -569,7 +569,7 @@ export default function NotificationsPage() {
       {/* ─── Main Content ─────────────────────────────────────────────── */}
       <Container className="py-6 space-y-8">
         {/* ─── Notification Rules ──────────────────────────────────────── */}
-        <section id="notifications-rules">
+        <section id="notifications-rules" data-scroll-section={t("scroll.notifications.rules")}>
           <h2 className="text-lg font-semibold text-foreground mb-4">
             {t("notifications.createRule")}
           </h2>
@@ -839,7 +839,7 @@ export default function NotificationsPage() {
         </section>
 
         {/* ─── Notification History ────────────────────────────────────── */}
-        <section id="notifications-history">
+        <section id="notifications-history" data-scroll-section={t("scroll.notifications.history")}>
           <h2 className="text-lg font-semibold text-foreground mb-4">
             {t("notifications.history")}
           </h2>
@@ -1181,7 +1181,7 @@ export default function NotificationsPage() {
         )}
       </AnimatePresence>
 
-      <div id="notifications-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="notifications-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4" data-scroll-section={t("scroll.notifications.faq")}>
         <SectionFAQ section="notifications" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["notifications"]} />
       </div>

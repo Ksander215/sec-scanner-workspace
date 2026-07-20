@@ -275,7 +275,7 @@ export default function KnowledgeGraphPage() {
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header */}
       {/* Explanation block */}
-      <div id="kg-header" className="border-b border-border bg-accent-muted/20">
+      <div id="kg-header" data-scroll-section={t("scroll.kg.overview")} className="border-b border-border bg-accent-muted/20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 mb-3">
             <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-accent-muted text-accent rounded border border-accent/20">Live</span>
@@ -306,7 +306,7 @@ export default function KnowledgeGraphPage() {
         </div>
       </div>
 
-      <div id="kg-filters" className="border-b border-border bg-surface/80 backdrop-blur-sm">
+      <div id="kg-filters" data-scroll-section={t("scroll.kg.filters")} className="border-b border-border bg-surface/80 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -368,7 +368,7 @@ export default function KnowledgeGraphPage() {
         </div>
       </div>
 
-      <div id="kg-graph" className="relative" style={{ height: "calc(100vh - 10rem)" }}>
+      <div id="kg-graph" data-scroll-section={t("scroll.kg.graph")} className="relative" style={{ height: "calc(100vh - 10rem)" }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -489,7 +489,7 @@ export default function KnowledgeGraphPage() {
         </div>
       </div>
 
-      <div id="kg-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="kg-faq" data-scroll-section={t("scroll.kg.faq")} className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="knowledge-graph" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["knowledge-graph"]} />
       </div>
