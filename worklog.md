@@ -144,3 +144,42 @@ Stage Summary:
 - Production fully redeployed with all INT-030 components
 - All 63 pages verified accessible (HTTP 200)
 - Commits: b3872be (main)
+
+---
+Task ID: INT-031
+Agent: Super Z (main)
+Task: Business Trust & Guided Experience Platform — 10-block transformation
+
+Work Log:
+- Created 4 new UI components:
+  - SectionFAQ.tsx — Interactive FAQ with 5-6 questions per section (17 sections)
+  - DemoBadge.tsx + DemoNotice — Honest demo data labeling
+  - VisualFlow.tsx — Mini flow diagrams for guide scenarios
+  - SmartNextStep.tsx — Smart recommendation chains with next logical steps
+- Updated existing components:
+  - GuideAssistant — 4 new scenarios (notifications, integrations, control, api-access)
+  - ContextualHelp — 4 missing sections added (notifications, api-keys, settings, pricing)
+  - BusinessResult — 5 new business psychology types (scan_complete, report_ready, connected, configured, organized)
+- Added ContextualHelp + SectionFAQ + SmartNextStep to ALL 15 pages:
+  - findings, risks, marketplace, integrations, repositories, projects
+  - notifications, api-keys, workspace, architecture, settings, reports, pricing
+  - demo/knowledge-graph, demo/attack-paths
+- Added DemoBadge to 9 pages with mock data
+- Added BusinessResult to 7 pages with business-oriented result types
+- Expanded i18n.ts with 746+ new keys (RU+EN):
+  - 85 FAQ entries (5-6 per section × 17 sections)
+  - 4 missing help sections (notifications, api-keys, settings, pricing)
+  - 5 new business result types
+  - 4 new guide scenarios
+  - 17 next-step chains
+  - 9 visual flow labels
+  - Demo transparency labels
+- Build: ✅ Clean build, 65 pages generated
+- Deploy: ✅ Server built + deployed + nginx reloaded
+- Production: ✅ 19 pages verified HTTP 200, all INT-031 components confirmed in JS
+
+Stage Summary:
+- Before: 2/15 pages had ContextualHelp, 0/15 had FAQ, 0/15 had DemoBadge
+- After: 15/15 pages have ContextualHelp + FAQ + SmartNextStep, 9/15 have DemoBadge, 7/15 have BusinessResult
+- 25 files changed, 3425 insertions
+- Commit: 00fd97b (main)
