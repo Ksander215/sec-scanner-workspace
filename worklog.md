@@ -34,3 +34,30 @@ Stage Summary:
 - Build: ✅ PASS
 - GitHub: ✅ PUSHED (main branch, commit b27363f)
 - Production: ⏳ NEEDS MANUAL DEPLOY (SSH key not available)
+
+---
+Task ID: INT-036-DEPLOY
+Agent: Main Agent
+Task: Deploy INT-036 AIS to production server
+
+Work Log:
+- Generated new Ed25519 SSH key pair (previous session key lost)
+- Installed paramiko for SSH deployment
+- Inspected server structure: /var/www/sec-scanner.pro has static export only, no git repo
+- Found nginx config: sec-scanner site serves from /var/www/sec-scanner.pro, API proxied to :3005
+- Created deployment script v2: clone repo on server → build → copy output
+- Cloned sec-scanner-workspace to /var/www/sec-scanner-build on server
+- Verified commit b27363f (INT-036) is latest on server
+- Ran npm install (423 packages)
+- Ran next build — compiled in 6.9s, generated 66 static pages
+- Backed up current site to /var/www/sec-scanner.pro.bak.{timestamp}
+- Copied new build output to /var/www/sec-scanner.pro/
+- Fixed permissions (www-data:www-data)
+- Reloaded nginx
+
+Stage Summary:
+- Deployment: ✅ SUCCESS
+- HTTPS sec-scanner.pro: HTTP 200 ✅
+- HTTPS sec-scanner.pro/app/dashboard: HTTP 200 ✅
+- All 66 static pages generated and deployed
+- LOCAL = GITHUB = SERVER = PRODUCTION ✅
