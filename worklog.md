@@ -305,3 +305,51 @@ Stage Summary:
 - Marketplace page now has full smart scroll navigation
 - 13 pages total now support SmartScrollNavigator
 - LOCAL = GITHUB = SERVER = PRODUCTION ✅
+
+---
+Task ID: INT-033.1
+Agent: Super Z (main)
+Task: Intelligent Page Navigation — complete SmartScrollNavigator rewrite per INT-033.1
+
+Work Log:
+- Complete rewrite of SmartScrollNavigator.tsx (345 → 380 lines)
+- Removed hardcoded PAGE_SCROLL_CONFIGS (all 14 page configs with section lists)
+- Added auto-discovery: scans DOM for data-scroll-section elements, fallback to h2/h3 headings
+- New visual: compact FAB (bottom-right) with circular progress ring + percentage
+- Expandable navigation panel: section list + ↑ Наверх + ❓ Ваш помощник + ➡ Следующий шаг
+- Viewed section tracking: ✓ viewed / ● current / ○ not viewed
+- Intelligent idle hint: after 40s on a section, show contextual assistant suggestion
+- Micro-animations: smooth scroll + section highlight (scroll-nav-highlight CSS animation)
+- Business language completion messages per page (13 unique messages RU + EN)
+- Auto-detection threshold: scrollHeight > 2.5 viewport (was 2x)
+- Excluded pages: Dashboard, Settings, API Keys, Marketplace, Login, Register
+- onSectionChange callback for future GuideAssistant integration
+- "Остались вопросы?" prompt near page bottom
+
+- Added data-scroll-section attributes to all 13 active pages:
+  scanner (5), findings (4), risks (3), reports (3), repositories (3),
+  integrations (3), notifications (4), projects (3), workspace (4),
+  pricing (4), knowledge-graph (4), attack-paths (4), architecture (4)
+- Architecture page: added 4 new section IDs + data-scroll-section
+- Added useI18n import to risks/page.tsx and architecture/page.tsx
+- Added `t` to scanner/page.tsx destructuring
+
+- i18n: +33 new keys (RU + EN)
+  - 13 completion messages (scroll.completion.*)
+  - 7 idle hints (scroll.hint.*)
+  - 3 hint action labels (explain, showStep, later)
+  - 1 assistant question prompt
+  - 1 architecture deployment section label
+
+- Build: successful
+- Commit: 09d235b (main)
+- Deploy: git push → server pull → build → copy → nginx reload
+- Verification: 13 pages HTTP 200, data-scroll-section confirmed in HTML,
+  JS chunks contain all new features (auto-discovery, micro-animation, hints, completion)
+
+Stage Summary:
+- 15 files changed, 524 insertions, 400 deletions
+- SmartScrollNavigator now auto-discovers sections from page markup
+- Business-language completion messages replace generic "Вы дошли до конца"
+- Intelligent idle hints proactively help users stuck on sections
+- LOCAL = GITHUB = SERVER = PRODUCTION ✅
