@@ -282,3 +282,26 @@ Stage Summary:
 - Full integration with GuideAssistant
 - Commit: df57f77 (main)
 - LOCAL = GITHUB = SERVER = PRODUCTION ✅
+
+---
+Task ID: INT-033-marketplace
+Agent: Super Z (main)
+Task: Add SmartScrollNavigator to Marketplace (каталог инструментов) page
+
+Work Log:
+- Added marketplace page config to PAGE_SCROLL_CONFIGS in SmartScrollNavigator.tsx
+  - 4 section anchors: marketplace-header, marketplace-catalog, marketplace-community, marketplace-faq
+  - Next step: "Запустить сканирование" → /app/scanner
+  - Assistant: "Неясно, какой инструмент выбрать?" → "Подобрать под задачу"
+- Added id attributes to marketplace page sections (marketplace-header, marketplace-catalog, marketplace-community, marketplace-faq)
+- Wrapped Container in div for id="marketplace-catalog" (Container doesn't accept id prop)
+- Added i18n keys for RU and EN: scroll.marketplace.overview/catalog/community/faq + scroll.assistant.marketplaceQuestion/marketplaceAction
+- Build: successful
+- Commit: 4cee586 (main)
+- Deploy: git push → server pull → build → copy → nginx reload
+- Verification: /app/marketplace HTTP 200, all 4 section IDs present in HTML, other pages unchanged
+
+Stage Summary:
+- Marketplace page now has full smart scroll navigation
+- 13 pages total now support SmartScrollNavigator
+- LOCAL = GITHUB = SERVER = PRODUCTION ✅
