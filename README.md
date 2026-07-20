@@ -218,16 +218,56 @@ Full roadmap: [ROADMAP.md](./ROADMAP.md)
 
 ---
 
+## For New Developers
+
+If you're joining the project for the first time, read the documentation in this order:
+
+1. **[docs/HANDOFF.md](./docs/HANDOFF.md)** — Start here. Project overview, current state, next tasks.
+2. **[docs/CURRENT_STATE.md](./docs/CURRENT_STATE.md)** — Live status of every module and component.
+3. **[docs/PRODUCT_PRINCIPLES.md](./docs/PRODUCT_PRINCIPLES.md)** — Product philosophy and non-negotiable rules.
+4. **[docs/DEVELOPMENT_RULES.md](./docs/DEVELOPMENT_RULES.md)** — Mandatory development workflow and checks.
+5. **[docs/RELEASE_CHECKLIST.md](./docs/RELEASE_CHECKLIST.md)** — What must pass before any task is "done".
+
+After reading these five documents, you can start development without needing any previous chat history.
+
+---
+
 ## Documentation
 
+### Core (read first)
 | Document | Description |
 |---|---|
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design, data flow, component interaction |
-| [ROADMAP.md](./ROADMAP.md) | Development timeline and planned features |
-| [CHANGELOG.md](./CHANGELOG.md) | Version history and release notes |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute, code standards, PR process |
-| [SECURITY.md](./SECURITY.md) | Security policy and vulnerability reporting |
-| [docs/](./docs/) | Full documentation directory |
+| [docs/HANDOFF.md](./docs/HANDOFF.md) | **Start here** — project handoff, current state, next steps |
+| [docs/CURRENT_STATE.md](./docs/CURRENT_STATE.md) | Live status of every module, debts, risks |
+| [docs/PRODUCT_VISION.md](./docs/PRODUCT_VISION.md) | Product vision and what we sell |
+| [docs/PRODUCT_PRINCIPLES.md](./docs/PRODUCT_PRINCIPLES.md) | 11 non-negotiable product principles |
+| [docs/DEVELOPMENT_RULES.md](./docs/DEVELOPMENT_RULES.md) | Mandatory development rules and workflow |
+| [docs/RELEASE_CHECKLIST.md](./docs/RELEASE_CHECKLIST.md) | Release checklist — must pass before "done" |
+
+### Specifications
+| Document | Description |
+|---|---|
+| [docs/AIS_SPECIFICATION.md](./docs/AIS_SPECIFICATION.md) | Adaptive Intelligence System full spec |
+| [docs/UX_GUIDELINES.md](./docs/UX_GUIDELINES.md) | UX guidelines, colors, typography, animations |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System architecture and data flow |
+| [docs/END_TO_END_CHECKLIST.md](./docs/END_TO_END_CHECKLIST.md) | E2E test scenarios for every page |
+
+### Records
+| Document | Description |
+|---|---|
+| [docs/DECISIONS.md](./docs/DECISIONS.md) | Architecture Decision Records (ADR) |
+| [docs/GLOSSARY.md](./docs/GLOSSARY.md) | Project glossary and terminology |
+| [docs/ROADMAP.md](./docs/ROADMAP.md) | Development roadmap and priorities |
+| [docs/CHANGELOG_PRODUCT.md](./docs/CHANGELOG_PRODUCT.md) | User-visible changes only |
+
+### Technical
+| Document | Description |
+|---|---|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System architecture deep-dive (root level) |
+| [ROADMAP.md](./ROADMAP.md) | Strategic roadmap (root level) |
+| [CHANGELOG.md](./CHANGELOG.md) | Version history |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribution guidelines |
+| [SECURITY.md](./SECURITY.md) | Security policy |
 | [docs/api.md](./docs/api.md) | API reference |
 | [docs/deployment.md](./docs/deployment.md) | Deployment guide |
 | [docs/plugins.md](./docs/plugins.md) | Plugin development guide |
