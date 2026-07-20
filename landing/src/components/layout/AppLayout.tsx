@@ -5,7 +5,8 @@ import { AppSidebar } from "./AppSidebar";
 import { AppTopBar } from "./AppTopBar";
 import { SearchModal } from "./SearchModal";
 import { AppBreadcrumbs, type BreadcrumbItem } from "./AppBreadcrumbs";
-import { GuideAssistant } from "@/components/ui/GuideAssistant";
+import { AISAssistant } from "@/components/ui/AISAssistant";
+import { SoloNotificationProvider } from "@/components/ui/SoloNotification";
 import { SmartScrollNavigator } from "@/components/ui/SmartScrollNavigator";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n-context";
@@ -77,50 +78,52 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <AppSidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-      />
-
-      {/* Main area */}
-      <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${
-          sidebarCollapsed ? "md:ml-16" : "md:ml-60"
-        }`}
-      >
-        {/* Top bar */}
-        <AppTopBar
-          sidebarCollapsed={sidebarCollapsed}
-          onSearchOpen={() => setSearchOpen(true)}
-          onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+    <SoloNotificationProvider>
+      <div className="flex min-h-screen">
+        {/* Sidebar */}
+        <AppSidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
         />
 
-        {/* Content */}
-        <main className="flex-1 mt-14">
-          {/* Breadcrumbs */}
-          {breadcrumbs.length > 0 && (
-            <div className="px-6 py-3 border-b border-border bg-surface/30">
-              <AppBreadcrumbs items={breadcrumbs} />
-            </div>
-          )}
+        {/* Main area */}
+        <div
+          className={`flex-1 flex flex-col transition-all duration-300 ${
+            sidebarCollapsed ? "md:ml-16" : "md:ml-60"
+          }`}
+        >
+          {/* Top bar */}
+          <AppTopBar
+            sidebarCollapsed={sidebarCollapsed}
+            onSearchOpen={() => setSearchOpen(true)}
+            onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
+          />
 
-          {/* Page content */}
-          <div className="flex-1 p-6">{children}</div>
-        </main>
+          {/* Content */}
+          <main className="flex-1 mt-14">
+            {/* Breadcrumbs */}
+            {breadcrumbs.length > 0 && (
+              <div className="px-6 py-3 border-b border-border bg-surface/30">
+                <AppBreadcrumbs items={breadcrumbs} />
+              </div>
+            )}
+
+            {/* Page content */}
+            <div className="flex-1 p-6">{children}</div>
+          </main>
+        </div>
+
+        {/* Search modal */}
+        <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
+
+        {/* AIS — Intelligent Assistant (INT-036) */}
+        <AISAssistant externalOpen={assistantOpen} onExternalClose={() => setAssistantOpen(false)} />
+
+        {/* Smart Scroll Navigator — INT-033 */}
+        <SmartScrollNavigator onOpenAssistant={handleOpenAssistant} />
       </div>
-
-      {/* Search modal */}
-      <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
-
-      {/* Guide assistant — INT-032 */}
-      <GuideAssistant externalOpen={assistantOpen} onExternalClose={() => setAssistantOpen(false)} />
-
-      {/* Smart Scroll Navigator — INT-033 */}
-      <SmartScrollNavigator onOpenAssistant={handleOpenAssistant} />
-    </div>
+    </SoloNotificationProvider>
   );
 }
