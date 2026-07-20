@@ -26,7 +26,7 @@ const recentActivity = [
 export default function WorkspaceOverviewPage() {
   return (
     <div className="animate-page-in">
-      <div className="mb-8">
+      <div id="workspace-header" className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Workspace Overview</h1>
         <p className="mt-2 text-muted-2">Monitor and manage your security workspace activities.</p>
         <div className="flex items-center gap-2 mt-2">
@@ -35,7 +35,7 @@ export default function WorkspaceOverviewPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div id="workspace-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -56,7 +56,7 @@ export default function WorkspaceOverviewPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+        <div id="workspace-activity" className="lg:col-span-2">
           <div className="rounded-xl bg-surface border border-border">
             <div className="px-5 py-4 border-b border-border">
               <h2 className="text-base font-semibold text-foreground">Recent Activity</h2>
@@ -77,7 +77,7 @@ export default function WorkspaceOverviewPage() {
           </div>
         </div>
 
-        <div>
+        <div id="workspace-actions">
           <div className="rounded-xl bg-surface border border-border">
             <div className="px-5 py-4 border-b border-border">
               <h2 className="text-base font-semibold text-foreground">Quick Actions</h2>

@@ -828,7 +828,7 @@ export default function IntegrationsHubPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Page Header */}
-      <div className="border-b border-border bg-surface/50">
+      <div id="integrations-header" className="border-b border-border bg-surface/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -872,7 +872,7 @@ export default function IntegrationsHubPage() {
           </div>
 
           {/* Tabs + Search */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-6">
+          <div id="integrations-tabs" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-6">
             <div className="flex items-center gap-1 p-1 rounded-xl bg-surface-2 border border-border">
               {tabs.map((tab) => (
                 <button
@@ -1007,7 +1007,7 @@ export default function IntegrationsHubPage() {
         )}
       </AnimatePresence>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="integrations-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="integrations" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["integrations"]} />
       </div>

@@ -166,7 +166,7 @@ export default function PricingPage() {
   return (
     <>
       {/* Header */}
-      <div className="border-b border-border bg-surface/50">
+      <div id="pricing-header" className="border-b border-border bg-surface/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.h1
             initial={{ opacity: 0, y: -10 }}
@@ -191,7 +191,7 @@ export default function PricingPage() {
 
       <Container className="py-12">
         {/* ── Pricing cards ── */}
-        <div className="grid lg:grid-cols-3 gap-6 items-start">
+        <div id="pricing-plans" className="grid lg:grid-cols-3 gap-6 items-start">
           {plans.map((plan, idx) => {
             const Icon = plan.icon;
             return (
@@ -303,7 +303,7 @@ export default function PricingPage() {
         </motion.p>
 
         {/* ── Feature comparison table ── */}
-        <motion.section
+        <motion.section id="pricing-comparison"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -359,7 +359,7 @@ export default function PricingPage() {
         </motion.section>
       </Container>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="pricing-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="pricing" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["pricing"]} />
       </div>

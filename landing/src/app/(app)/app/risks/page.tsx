@@ -31,7 +31,7 @@ const TrendIcon = ({ trend }: { trend: string }) => {
 export default function RisksPage() {
   return (
     <div className="animate-page-in">
-      <div className="mb-8">
+      <div id="risks-header" className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Risks</h1>
         <p className="mt-2 text-muted-2">Risk assessment and management for your security posture.</p>
         <div className="flex items-center gap-2 mt-2">
@@ -41,7 +41,7 @@ export default function RisksPage() {
         <BusinessResult type="risks_known" className="mt-4" />
       </div>
 
-      <div className="space-y-3">
+      <div id="risks-list" className="space-y-3">
         {risks.map((risk, i) => {
           const config = severityConfig[risk.severity] || severityConfig.medium;
           return (
@@ -76,7 +76,7 @@ export default function RisksPage() {
         })}
       </div>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="risks-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="risks" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["risks"]} />
       </div>

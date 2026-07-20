@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopBar } from "./AppTopBar";
 import { SearchModal } from "./SearchModal";
 import { AppBreadcrumbs, type BreadcrumbItem } from "./AppBreadcrumbs";
 import { GuideAssistant } from "@/components/ui/GuideAssistant";
+import { SmartScrollNavigator } from "@/components/ui/SmartScrollNavigator";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -47,6 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const pathname = usePathname();
   const { t } = useI18n();
 
@@ -69,6 +71,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       };
     });
   }, [pathname, t]);
+
+  const handleOpenAssistant = useCallback(() => {
+    setAssistantOpen(true);
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -110,8 +116,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Search modal */}
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-      {/* Guide assistant — INT-030 */}
-      <GuideAssistant />
+      {/* Guide assistant — INT-032 */}
+      <GuideAssistant externalOpen={assistantOpen} onExternalClose={() => setAssistantOpen(false)} />
+
+      {/* Smart Scroll Navigator — INT-033 */}
+      <SmartScrollNavigator onOpenAssistant={handleOpenAssistant} />
     </div>
   );
 }
