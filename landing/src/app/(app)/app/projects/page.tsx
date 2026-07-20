@@ -1372,7 +1372,7 @@ export default function ProjectsPage() {
         <ContextualHelp section="projects" />
         <DemoBadge />
       </div>
-      <BusinessResult type="organized" className="mt-4" />
+      {projects.length > 0 && <BusinessResult type="organized" className="mt-4" />}
 
       <Container>
         <div className="py-8">

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { scanJobs } from "@/lib/portal-data";
 import { Cpu, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 const statusConfig: Record<string, { icon: React.ElementType; color: string; bg: string }> = {
   running: { icon: Loader2, color: "text-cyan", bg: "bg-cyan-muted" },
@@ -16,6 +17,7 @@ export default function WorkspaceJobsPage() {
     <div className="animate-page-in">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Jobs</h1>
+        <DemoBadge className="mt-2" />
         <p className="mt-2 text-muted-2">Monitor running and queued jobs.</p>
       </div>
 

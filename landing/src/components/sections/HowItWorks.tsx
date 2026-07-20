@@ -49,10 +49,7 @@ export function HowItWorks() {
           viewport={{ once: true }}
           className="text-center max-w-2xl mx-auto"
         >
-          <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            {t("howItWorks.label")}
-          </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
             {t("howItWorks.title")}
           </h2>
           <p className="mt-4 text-lg text-muted-2">

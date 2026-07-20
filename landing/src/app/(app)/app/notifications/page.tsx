@@ -555,7 +555,7 @@ export default function NotificationsPage() {
                   <ContextualHelp section="notifications" />
                   <DemoBadge />
                 </div>
-                <BusinessResult type="configured" className="mt-4" />
+                {rules.length > 0 && <BusinessResult type="configured" className="mt-4" />}
               </div>
             </div>
             <Button onClick={handleOpenCreate}>

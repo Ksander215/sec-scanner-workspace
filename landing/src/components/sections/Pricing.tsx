@@ -107,10 +107,7 @@ export function Pricing() {
           viewport={{ once: true }}
           className="text-center max-w-3xl mx-auto"
         >
-          <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            {t("pricing.title")}
-          </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
             {locale === "ru" ? (
               <>Прозрачные<br /><span className="text-gradient-accent">тарифы</span></>
             ) : (

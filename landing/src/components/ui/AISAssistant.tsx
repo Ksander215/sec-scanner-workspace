@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   Eye,
   Shield,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -448,6 +449,17 @@ function GuideTab({ ais, pathname }: { ais: AISState; pathname: string | null })
     (tip) => pathname?.startsWith(tip.route)
   );
 
+  // Feature Registry integration (INT-038 Block 7)
+  const pageCompliance = pathname ? (() => {
+    try {
+      const { getPageCompliance } = require("@/lib/feature-registry");
+      return getPageCompliance(pathname);
+    } catch { return null; }
+  })() : null;
+
+  const isFullyCompliant = pageCompliance && pageCompliance.total > 0 && pageCompliance.implemented === pageCompliance.total;
+  const hasMissing = pageCompliance && pageCompliance.missing.length > 0;
+
   return (
     <motion.div
       key="guide"
@@ -456,6 +468,48 @@ function GuideTab({ ais, pathname }: { ais: AISState; pathname: string | null })
       exit={{ opacity: 0, y: -10 }}
       className="space-y-4"
     >
+      {/* Page Feature Status (INT-038 Block 7) */}
+      {pageCompliance && pageCompliance.total > 0 && (
+        <div className={`p-3 rounded-lg border ${
+          isFullyCompliant
+            ? "bg-emerald-500/5 border-emerald-500/10"
+            : "bg-amber-500/5 border-amber-500/10"
+        }`}>
+          <div className="flex items-center gap-2 mb-2">
+            {isFullyCompliant ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            ) : (
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+            )}
+            <span className="text-xs font-semibold text-foreground">
+              {isFullyCompliant ? "Page Compliant" : "Page Status"}
+            </span>
+          </div>
+          {isFullyCompliant ? (
+            <p className="text-xs text-foreground/70">
+              This page fully meets platform standards.
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              <p className="text-xs text-foreground/60">
+                {pageCompliance.implemented}/{pageCompliance.total} features implemented
+              </p>
+              {pageCompliance.missing.slice(0, 3).map((f: { id: string; name: string; status: string }) => (
+                <div key={f.id} className="flex items-center gap-1.5 text-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    f.status === "in_progress" ? "bg-amber-500" : "bg-foreground/20"
+                  }`} />
+                  <span className="text-foreground/50">{f.name}</span>
+                  <span className="text-foreground/30 text-[10px] ml-auto">
+                    {f.status === "in_progress" ? "In Progress" : "Planned"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Current page tip */}
       {pageTips.length > 0 && (
         <div className="p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">

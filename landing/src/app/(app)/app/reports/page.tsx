@@ -296,7 +296,7 @@ export default function ReportsPage() {
           <div className="flex items-center gap-2 mt-2">
             <ContextualHelp section="reports" />
           </div>
-          <BusinessResult type="report_ready" className="mt-4" />
+          {hasFindings && <BusinessResult type="report_ready" className="mt-4" />}
         </div>
         <Button onClick={() => setShowDialog(true)} disabled={generating}>
           {generating ? (

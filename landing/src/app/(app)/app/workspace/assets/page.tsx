@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { workspaceAssets, type WorkspaceAsset } from "@/lib/portal-data";
 import { Database, Server, Globe, Container, Cloud, Mail } from "lucide-react";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 const typeIcons: Record<string, React.ElementType> = {
   host: Server,
@@ -40,6 +41,7 @@ export default function WorkspaceAssetsPage() {
     <div className="animate-page-in">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Workspace Assets</h1>
+        <DemoBadge className="mt-2" />
         <p className="mt-2 text-muted-2">Manage and monitor all assets in your workspace.</p>
       </div>
 
