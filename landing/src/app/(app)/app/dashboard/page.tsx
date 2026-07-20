@@ -10,7 +10,9 @@ import { BusinessResult } from "@/components/ui/BusinessResult";
 import { ConfidenceScore } from "@/components/ui/ConfidenceScore";
 import { CompanyProgress } from "@/components/ui/CompanyProgress";
 import { WhyImportant } from "@/components/ui/WhyImportant";
+import { PersonalGoalCard } from "@/components/ui/PersonalGoalCard";
 import { useI18n } from "@/lib/i18n-context";
+import { useAIS } from "@/hooks/useAIS";
 import {
   Shield,
   AlertTriangle,
@@ -30,6 +32,8 @@ import {
   Store,
   Rocket,
   BookOpen,
+  Target,
+  Eye,
 } from "lucide-react";
 import {
   demoFindings,
@@ -309,11 +313,23 @@ function AICopilot() {
 
 export default function DashboardPage() {
   const { t } = useI18n();
+  const ais = useAIS();
   const [activeView, setActiveView] = useState<"overview" | "findings" | "compliance" | "ai">("overview");
 
   const criticalCount = demoFindings.filter((f) => f.severity === "critical").length;
   const highCount = demoFindings.filter((f) => f.severity === "high").length;
   const openCount = demoFindings.filter((f) => f.status === "open").length;
+
+  // BLOCK 7+8: Adaptive terminology based on role
+  const isExecutive = ais.isExecutive;
+  const scoreLabel = isExecutive ? t("ais.summary.stat.attentionPoints") : "Security Score";
+  const criticalLabel = isExecutive ? t("ais.summary.stat.businessRisk") : "Critical";
+  const highLabel = isExecutive ? t("confidence.level.needsAttention") : "High";
+  const incidentsLabel = isExecutive ? t("ais.trust.whatHappened") : "Active Incidents";
+
+  // BLOCK 9: Adaptive dashboard layout based on role
+  const showTechDetails = ais.isEngineer;
+  const showBusinessView = isExecutive;
 
   return (
     <div className="min-h-[calc(100vh-4rem)]">
@@ -324,8 +340,8 @@ export default function DashboardPage() {
             <div>
               <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
                 <Activity className="w-5 h-5 text-accent" />
-                Executive Dashboard
-                <span className="ml-2 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">Demo</span>
+                {isExecutive ? t("dashboard.subtitle") : "Executive Dashboard"}
+                <span className="ml-2 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded border border-violet-500/20">{t(`ais.role.${ais.role}`)}</span>
               </h1>
               <p className="text-sm text-muted-2 mt-1">{t("dashboard.subtitle")} — demo data</p>
               <div className="mt-2"><ContextualHelp section="dashboard" /></div>
@@ -336,11 +352,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* View tabs */}
+          {/* View tabs — adapt labels for role */}
           <div className="flex items-center gap-1 mt-4 p-1 rounded-lg bg-surface-2 border border-border w-fit">
             {([
-              { key: "overview", label: "Overview", icon: BarChart3 },
-              { key: "findings", label: "Findings", icon: AlertTriangle },
+              { key: "overview", label: isExecutive ? t("ais.tab.guide") : "Overview", icon: BarChart3 },
+              { key: "findings", label: isExecutive ? t("ais.summary.stat.attentionPoints") : "Findings", icon: AlertTriangle },
               { key: "compliance", label: "Compliance", icon: CheckCircle2 },
               { key: "ai", label: "AI Copilot", icon: Brain },
             ] as const).map(({ key, label, icon: Icon }) => (
@@ -360,6 +376,13 @@ export default function DashboardPage() {
       </div>
 
       <Container className="py-6">
+        {/* ─── AIS: Personal Goal Card (BLOCK 6) ──────────────────────── */}
+        {ais.goals.length > 0 && ais.goals[0].completedSteps < ais.goals[0].targetSteps && (
+          <div className="mb-6">
+            <PersonalGoalCard goal={ais.goals[0]} />
+          </div>
+        )}
+
         {/* ─── Overview ──────────────────────────────────────────────────── */}
         {activeView === "overview" && (
           <div className="space-y-6">
@@ -371,13 +394,13 @@ export default function DashboardPage() {
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-4">
                     <Shield className="w-5 h-5 text-accent" />
-                    <span className="text-xs text-muted uppercase tracking-wider font-medium">Today's Overview</span>
+                    <span className="text-xs text-muted uppercase tracking-wider font-medium">{isExecutive ? t("confidence.level.good") : "Today's Overview"}</span>
                     <span className="ml-auto text-xs text-muted-2 flex items-center gap-1"><Clock className="w-3 h-3" />Updated 2 min ago</span>
                   </div>
                   <div className="flex items-end gap-6">
                     <div>
                       <div className="text-6xl font-bold text-amber">78</div>
-                      <div className="text-sm text-muted-2 mt-1">Security Score out of 100</div>
+                      <div className="text-sm text-muted-2 mt-1">{scoreLabel} out of 100</div>
                       <div className="flex items-center gap-1 mt-2 text-xs">
                         <TrendingDown className="w-3 h-3 text-red" />
                         <span className="text-red">-3</span>
@@ -391,15 +414,15 @@ export default function DashboardPage() {
                       <div className="grid grid-cols-3 gap-3">
                         <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
                           <div className="text-2xl font-bold text-red">{criticalCount}</div>
-                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">Critical</div>
+                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">{criticalLabel}</div>
                         </div>
                         <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
                           <div className="text-2xl font-bold text-red">3</div>
-                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5 flex items-center justify-center gap-0.5">Attack Paths <TermTooltip termKey="dashboard.term.attackPath" explainKey="dashboard.term.attackPath.explain" /></div>
+                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5 flex items-center justify-center gap-0.5">{isExecutive ? t("ais.trust.whatHappened") : "Attack Paths"} <TermTooltip termKey="dashboard.term.attackPath" explainKey="dashboard.term.attackPath.explain" /></div>
                         </div>
                         <div className="p-3 rounded-lg bg-surface-2 border border-border text-center">
                           <div className="text-2xl font-bold text-amber">{highCount}</div>
-                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">High</div>
+                          <div className="text-[10px] text-muted uppercase tracking-wider mt-0.5">{highLabel}</div>
                         </div>
                       </div>
                     </div>
@@ -408,41 +431,41 @@ export default function DashboardPage() {
               </div>
 
               {/* Active Incidents — tall card */}
-              <div className="p-6 rounded-xl bg-surface border border-red/20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-red/5 rounded-full blur-[60px]" />
+              <div className="p-6 rounded-xl bg-surface border border-amber/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber/5 rounded-full blur-[60px]" />
                 <div className="relative">
                   <div className="flex items-center gap-2 mb-4">
-                    <AlertTriangle className="w-5 h-5 text-red" />
-                    <span className="text-xs text-muted uppercase tracking-wider font-medium">Active Incidents</span>
+                    <Eye className="w-5 h-5 text-amber" />
+                    <span className="text-xs text-muted uppercase tracking-wider font-medium">{incidentsLabel}</span>
                   </div>
-                  <div className="text-4xl font-bold text-red">{openCount}</div>
-                  <div className="text-sm text-muted-2 mt-1">Open findings require attention</div>
+                  <div className="text-4xl font-bold text-amber">{openCount}</div>
+                  <div className="text-sm text-muted-2 mt-1">{isExecutive ? t("ais.summary.stat.attentionPoints") : "Open findings require attention"}</div>
                   <div className="mt-4 space-y-2">
                     {demoFindings.filter(f => f.severity === "critical").slice(0, 3).map((f) => (
-                      <div key={f.id} className="flex items-center gap-2 p-2 rounded-lg bg-red-muted/50 border border-red/10">
-                        <div className="w-2 h-2 rounded-full bg-red animate-pulse shrink-0" />
+                      <div key={f.id} className="flex items-center gap-2 p-2 rounded-lg bg-amber-muted/50 border border-amber/10">
+                        <div className="w-2 h-2 rounded-full bg-amber shrink-0" />
                         <span className="text-xs text-foreground truncate flex-1">{f.title}</span>
                       </div>
                     ))}
                   </div>
-                  <a href="/app/findings" className="mt-3 text-xs text-red hover:text-red/80 flex items-center gap-1">
-                    View all incidents <ArrowRight className="w-3 h-3" />
+                  <a href="/app/findings" className="mt-3 text-xs text-amber hover:text-amber/80 flex items-center gap-1">
+                    {isExecutive ? t("ais.summary.reviewPriority") : "View all incidents"} <ArrowRight className="w-3 h-3" />
                   </a>
                 </div>
               </div>
             </div>
 
             {/* AI Recommendations — full-width banner */}
-            <div className="p-5 rounded-xl bg-gradient-to-r from-purple-muted/30 to-cyan-muted/30 border border-purple/20">
+            <div className="p-5 rounded-xl bg-gradient-to-r from-violet-muted/30 to-cyan-muted/30 border border-violet/20">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-muted flex items-center justify-center shrink-0">
-                  <Brain className="w-5 h-5 text-purple" />
+                <div className="w-10 h-10 rounded-lg bg-violet-muted flex items-center justify-center shrink-0">
+                  <Brain className="w-5 h-5 text-violet" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-foreground">AI Recommendation</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{isExecutive ? t("ais.trust.whyImportant") : "AI Recommendation"}</h3>
                   <p className="text-xs text-muted-2 mt-0.5">Enable Redis authentication on production-cluster — this will eliminate 1 critical attack path in under 5 minutes.</p>
                 </div>
-                <a href="/app/dashboard" onClick={() => setActiveView("ai")} className="shrink-0 px-4 py-2 text-xs font-medium bg-purple text-foreground rounded-lg hover:bg-purple/80 transition-colors">
+                <a href="/app/dashboard" onClick={() => setActiveView("ai")} className="shrink-0 px-4 py-2 text-xs font-medium bg-violet text-foreground rounded-lg hover:bg-violet/80 transition-colors">
                   Ask AI Copilot
                 </a>
               </div>
