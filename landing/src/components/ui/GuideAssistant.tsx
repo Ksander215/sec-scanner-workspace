@@ -345,14 +345,17 @@ const PAGE_CONTEXTS: PageExplanation[] = [
     resultKey: "assistant.result.marketplace",
     nextActionKey: "assistant.next.marketplace",
     flowSteps: [
-      { labelKey: "assistant.flow.mp.browse" },
-      { labelKey: "assistant.flow.mp.install" },
-      { labelKey: "assistant.flow.mp.configure" },
-      { labelKey: "assistant.flow.mp.use" },
+      { labelKey: "flow.solutions.select" },
+      { labelKey: "flow.solutions.connect" },
+      { labelKey: "flow.solutions.scan" },
+      { labelKey: "flow.solutions.report" },
+      { labelKey: "flow.solutions.fix" },
     ],
     faqItems: [
       { qKey: "faq.marketplace.q1", aKey: "faq.marketplace.a1" },
       { qKey: "faq.marketplace.q2", aKey: "faq.marketplace.a2" },
+      { qKey: "faq.marketplace.q3", aKey: "faq.marketplace.a3" },
+      { qKey: "faq.marketplace.q4", aKey: "faq.marketplace.a4" },
     ],
     progressSteps: [
       { labelKey: "assistant.progress.browsePlugins", href: "/app/marketplace" },
