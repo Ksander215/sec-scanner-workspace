@@ -17,7 +17,8 @@ type BusinessResultType =
   | "report_ready"
   | "connected"
   | "configured"
-  | "organized";
+  | "organized"
+  | "confidence_boost";
 
 interface BusinessResultProps {
   type: BusinessResultType;
@@ -83,6 +84,11 @@ const RESULT_CONFIG: Record<BusinessResultType, {
     icon: <Target className="w-5 h-5" />,
     titleKey: "business.organized.title",
     descKey: "business.organized.desc",
+  },
+  confidence_boost: {
+    icon: <ShieldCheck className="w-5 h-5" />,
+    titleKey: "business.confidenceBoost.title",
+    descKey: "business.confidenceBoost.desc",
   },
 };
 
