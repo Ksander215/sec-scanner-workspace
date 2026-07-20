@@ -164,3 +164,36 @@ Stage Summary:
 - AIS reads Feature Registry and reports page compliance to users
 - All visual and notification defects fixed
 - Production verified and live
+
+---
+Task ID: INT-038-V2
+Agent: Main Agent
+Task: Zero Trust Product Verification & Recovery — Bug fixes + honest Feature Registry
+
+Work Log:
+- Performed complete platform audit: 63 pages, 61 components, 5 AIS modules
+- Found 5 critical/high bugs and fixed all:
+  1. SoloNotification i18n: titleKey/descKey/action.labelKey rendered as raw text, not translated → added t() calls + useI18n in Provider
+  2. AISAssistant Trust Builder: always showed generic default text → created ContextualTrustBuilder with 7 page-specific contexts (dashboard, scanner, findings, reports, marketplace, integrations, risks, architecture) + i18n keys (RU + EN)
+  3. AISAssistant prediction/tip conflict: context prediction overwrote proactive tip state → separated into proactiveTip + predictionTip, prediction only shows if no proactive tip active
+  4. memory.ts role score re-accumulation: action bonuses applied on every page visit after threshold → added actionBonuses one-time flags
+  5. useAIS.ts side effect during render: setGoals called during render phase → moved to useEffect
+- Updated Feature Registry to honest v2: 22 implemented, 15 in_progress, 6 planned (was inflated)
+- Added 3 new features to registry: I18N-001, THEME-001, NAV-001
+- Build: ✅ PASS (all 66+ static pages)
+- Git: ✅ COMMIT 3ca4a99 + PUSH to main
+- Deploy: ✅ Cloned on server, built, copied, nginx reloaded
+- Production verification:
+  - Dashboard: HTTP 200 ✅
+  - AIS FAB + panel: works ✅
+  - Trust Builder contextual: shows page-specific text ✅
+  - Platform Status: 75% overall, per-category percentages ✅
+  - Debug Features: HTTP 200 ✅
+  - All pages: HTTP 200 ✅
+
+Stage Summary:
+- 5 critical bugs fixed (SoloNotification i18n, Trust Builder context, tip/prediction conflict, role scores, render side effect)
+- Feature Registry v2 with honest statuses (33 implemented features inflated → 22 real implemented)
+- Platform Status shows 75% overall readiness (accurate reflection of code state)
+- Contextual Trust Builder: 7 pages have specific guidance, fallback for unknown pages
+- LOCAL = GITHUB = SERVER = PRODUCTION ✅
