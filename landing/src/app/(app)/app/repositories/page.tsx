@@ -1035,6 +1035,7 @@ export default function RepositoriesPage() {
     <div className="animate-page-in">
       <PageHeader
         id="repos-header"
+        data-scroll-section={t("scroll.repos.overview")}
         title={t("repositories.title")}
         description={t("repositories.subtitle")}
       >
@@ -1076,7 +1077,7 @@ export default function RepositoriesPage() {
             </Button>
           </motion.div>
         ) : (
-          <div id="repos-list" className="space-y-4">
+          <div id="repos-list" className="space-y-4" data-scroll-section={t("scroll.repos.list")}>
             {repos.map((repo) => (
               <RepoCard
                 key={repo.id}
@@ -1099,7 +1100,7 @@ export default function RepositoriesPage() {
         onConnected={handleConnected}
       />
 
-      <div id="repos-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="repos-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4" data-scroll-section={t("scroll.repos.faq")}>
         <SectionFAQ section="repositories" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["repositories"]} />
       </div>

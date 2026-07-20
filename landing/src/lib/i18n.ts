@@ -2589,6 +2589,39 @@ const translations: Record<Locale, Record<string, string>> = {
     "scroll.assistant.marketplaceQuestion": "Неясно, какой инструмент выбрать?",
     "scroll.assistant.marketplaceAction": "Подобрать под задачу",
 
+    // Completion messages (business language)
+    "scroll.completion.scanner": "Вы уже понимаете, как сканер помогает контролировать безопасность компании. Следующий шаг поможет превратить эти данные в конкретные управленческие решения.",
+    "scroll.completion.findings": "Вы разобрались с обнаруженными проблемами. Теперь оцените риски, чтобы понять, что требует внимания в первую очередь.",
+    "scroll.completion.risks": "Вы видите полную картину рисков компании. Следующий шаг — создать отчёт для руководства.",
+    "scroll.completion.reports": "Отчёты помогают принимать обоснованные решения. Запустите сканирование, чтобы получить актуальные данные.",
+    "scroll.completion.repos": "Репозитории подключены. Запустите сканирование, чтобы проверить код на уязвимости.",
+    "scroll.completion.integrations": "Интеграции настроены. Подключите репозитории для автоматического анализа кода.",
+    "scroll.completion.notifications": "Уведомления настроены. Настройте интеграции для полной автоматизации.",
+    "scroll.completion.projects": "Проекты созданы. Запустите первое сканирование для оценки безопасности.",
+    "scroll.completion.workspace": "Рабочее пространство настроено. Запустите сканирование для начала работы.",
+    "scroll.completion.pricing": "Вы изучили тарифные планы. Попробуйте бесплатно, чтобы оценить возможности платформы.",
+    "scroll.completion.kg": "Граф знаний показывает связи между активами. Изучите пути атак для понимания угроз.",
+    "scroll.completion.ap": "Пути атак показывают векторы угроз. Оцените риски для приоритизации защиты.",
+    "scroll.completion.arch": "Архитектура платформы понятна. Изучите граф знаний для практического примера.",
+
+    // Idle hints (40 seconds on a section)
+    "scroll.hint.scannerSource": "Похоже, вы изучаете раздел «Источники данных». Хотите за 30 секунд понять, какие источники лучше выбрать для первого сканирования?",
+    "scroll.hint.scannerTools": "Похоже, вы выбираете инструменты проверки. Именно здесь определяется глубина анализа. Для первого сканирования рекомендуем оставить настройки по умолчанию.",
+    "scroll.hint.scannerResults": "Похоже, вы изучаете результаты сканирования. Хотите понять, что означает каждый показатель?",
+    "scroll.hint.findingsList": "Похоже, вы изучаете обнаруженные проблемы. Хотите узнать, какие из них критичны для бизнеса?",
+    "scroll.hint.integrationsCatalog": "Похоже, вы выбираете интеграцию. Хотите увидеть пошаговую инструкцию по подключению?",
+    "scroll.hint.kgGraph": "Похоже, вы изучаете граф знаний. Хотите за 30 секунд понять, что показывает этот граф?",
+    "scroll.hint.apGraph": "Похоже, вы изучаете пути атак. Хотите понять, как читать эту визуализацию?",
+    "scroll.hint.explain": "Объяснить за 30 секунд",
+    "scroll.hint.showStep": "Показать пошагово",
+    "scroll.hint.later": "Позже",
+
+    // Assistant bottom prompt
+    "scroll.assistantQuestion": "Остались вопросы?",
+
+    // Architecture deployment section
+    "scroll.arch.deployment": "Варианты развёртывания",
+
   },
 
   en: {
@@ -5151,6 +5184,39 @@ const translations: Record<Locale, Record<string, string>> = {
     "scroll.assistant.apAction": "Explain simply",
     "scroll.assistant.marketplaceQuestion": "Not sure which tool to choose?",
     "scroll.assistant.marketplaceAction": "Recommend for your task",
+
+    // Completion messages (business language)
+    "scroll.completion.scanner": "You now understand how the scanner helps control your company's security. The next step will help turn this data into concrete management decisions.",
+    "scroll.completion.findings": "You've reviewed the discovered issues. Now assess the risks to understand what needs attention first.",
+    "scroll.completion.risks": "You see the complete picture of company risks. The next step is to create a report for management.",
+    "scroll.completion.reports": "Reports help make informed decisions. Run a scan to get up-to-date data.",
+    "scroll.completion.repos": "Repositories are connected. Run a scan to check code for vulnerabilities.",
+    "scroll.completion.integrations": "Integrations are configured. Connect repositories for automatic code analysis.",
+    "scroll.completion.notifications": "Notifications are set up. Configure integrations for full automation.",
+    "scroll.completion.projects": "Projects are created. Run your first scan to assess security.",
+    "scroll.completion.workspace": "Workspace is configured. Run a scan to get started.",
+    "scroll.completion.pricing": "You've reviewed the pricing plans. Try for free to evaluate the platform's capabilities.",
+    "scroll.completion.kg": "The knowledge graph shows relationships between assets. Explore attack paths to understand threats.",
+    "scroll.completion.ap": "Attack paths show threat vectors. Assess risks to prioritize protection.",
+    "scroll.completion.arch": "The platform architecture is clear. Explore the knowledge graph for a practical example.",
+
+    // Idle hints (40 seconds on a section)
+    "scroll.hint.scannerSource": "Looks like you're exploring the Data Sources section. Want a 30-second explanation of which sources are best for your first scan?",
+    "scroll.hint.scannerTools": "Looks like you're choosing scan tools. This is where analysis depth is determined. For your first scan, we recommend leaving the default settings.",
+    "scroll.hint.scannerResults": "Looks like you're reviewing scan results. Want to understand what each metric means?",
+    "scroll.hint.findingsList": "Looks like you're reviewing discovered issues. Want to know which ones are critical for your business?",
+    "scroll.hint.integrationsCatalog": "Looks like you're choosing an integration. Want to see a step-by-step setup guide?",
+    "scroll.hint.kgGraph": "Looks like you're exploring the knowledge graph. Want a 30-second explanation of what this graph shows?",
+    "scroll.hint.apGraph": "Looks like you're exploring attack paths. Want to understand how to read this visualization?",
+    "scroll.hint.explain": "Explain in 30 seconds",
+    "scroll.hint.showStep": "Show step by step",
+    "scroll.hint.later": "Later",
+
+    // Assistant bottom prompt
+    "scroll.assistantQuestion": "Still have questions?",
+
+    // Architecture deployment section
+    "scroll.arch.deployment": "Deployment Options",
 
 },
 };

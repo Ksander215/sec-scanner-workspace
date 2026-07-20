@@ -223,7 +223,7 @@ function installStatusBadge(status: InstallStatus, isEn: boolean) {
 // ─── Main component ─────────────────────────────────────────────────────
 
 export default function ScannerPage() {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const isEn = locale === "en";
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -366,7 +366,7 @@ export default function ScannerPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header */}
-      <div id="scanner-header" className="border-b border-border bg-surface/80 backdrop-blur-sm">
+      <div id="scanner-header" data-scroll-section={t("scroll.scanner.project")} className="border-b border-border bg-surface/80 backdrop-blur-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -515,7 +515,7 @@ export default function ScannerPage() {
 
         {/* STEP 2 — Data Source */}
         {step === 2 && (
-          <div id="scanner-source" className="space-y-6">
+          <div id="scanner-source" data-scroll-section={t("scroll.scanner.source")} className="space-y-6">
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-1">{isEn ? "Data source" : "Источник данных"}</h2>
               <p className="text-sm text-muted-2">{isEn ? "Where should SIP scan? The source type determines which tools can be used." : "Откуда SIP будет собирать данные? Тип источника определяет доступные инструменты."}</p>
@@ -579,7 +579,7 @@ export default function ScannerPage() {
 
         {/* STEP 3 — Tool Selection (from Engine Registry) */}
         {step === 3 && (
-          <div id="scanner-tools" className="space-y-6">
+          <div id="scanner-tools" data-scroll-section={t("scroll.scanner.tools")} className="space-y-6">
             <div>
               <h2 className="text-lg font-semibold text-foreground mb-1">{isEn ? "Select scan tools" : "Выберите инструменты"}</h2>
               <p className="text-sm text-muted-2">{isEn ? "Choose which engines will run. Each tool covers a different attack surface. Install more from the Marketplace." : "Выберите движки для сканирования. Каждый инструмент покрывает свою поверхность атаки. Установите дополнительные из Каталога."}</p>
@@ -710,7 +710,7 @@ export default function ScannerPage() {
 
         {/* STEP 4 — Pipeline & Results */}
         {step === 4 && (
-          <div id="scanner-results" className="space-y-6">
+          <div id="scanner-results" data-scroll-section={t("scroll.scanner.results")} className="space-y-6">
             {/* Scan context badges */}
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-2">
               <span className="px-2.5 py-1 rounded-md bg-surface-2 border border-border">{projectName}</span>
@@ -868,7 +868,7 @@ export default function ScannerPage() {
 
             {/* What's Next Tab */}
             {activeResultTab === "next" && pipelineComplete && (
-              <div id="scanner-next" className="space-y-4">
+              <div id="scanner-next" data-scroll-section={t("scroll.scanner.next")} className="space-y-4">
                 <div className="p-4 rounded-xl bg-accent-muted border border-accent/20">
                   <h3 className="text-sm font-semibold text-foreground mb-1">{isEn ? "Scan completed successfully!" : "Сканирование успешно завершено!"}</h3>
                   <p className="text-xs text-muted-2">{isEn ? "Here's what you can do next:" : "Вот что вы можете сделать:"}</p>
