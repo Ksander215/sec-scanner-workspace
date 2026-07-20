@@ -68,10 +68,7 @@ export function Community() {
           viewport={{ once: true }}
           className="text-center max-w-3xl mx-auto"
         >
-          <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            Community
-          </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
             {t("community.title")}
           </h2>
           <p className="mt-6 text-lg text-muted-2 leading-relaxed">

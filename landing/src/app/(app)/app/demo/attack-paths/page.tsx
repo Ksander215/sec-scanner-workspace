@@ -198,7 +198,6 @@ export default function AttackPathsPage() {
       <div id="ap-header" data-scroll-section={t("scroll.ap.overview")} className="border-b border-border bg-accent-muted/20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 mb-3">
-            <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-accent-muted text-accent rounded border border-accent/20">Live</span>
             <h2 className="text-sm font-semibold text-foreground">{t("attackPaths.why.title")}</h2>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">

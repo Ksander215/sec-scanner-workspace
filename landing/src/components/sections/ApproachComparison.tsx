@@ -25,10 +25,7 @@ export function ApproachComparison() {
           viewport={{ once: true }}
           className="text-center max-w-2xl mx-auto"
         >
-          <span className="text-sm font-medium text-accent uppercase tracking-wider">
-            {t("approachComparison.label")}
-          </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight">
             {t("approachComparison.title")}
           </h2>
           <p className="mt-4 text-lg text-muted-2">
@@ -80,9 +77,7 @@ export function ApproachComparison() {
 
             {/* Right: SIP unified */}
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-accent uppercase tracking-wider mb-4">
-                {t("approachComparison.unified")}
-              </h3>
+
               <div className="p-6 rounded-2xl border-2 border-accent/30 bg-accent-muted/30 h-full flex flex-col justify-center">
                 <div className="flex items-center gap-3 mb-4">
                   <Layers className="w-6 h-6 text-accent" />

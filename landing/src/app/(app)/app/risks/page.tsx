@@ -40,7 +40,7 @@ export default function RisksPage() {
           <ContextualHelp section="risks" />
           <DemoBadge />
         </div>
-        <BusinessResult type="risks_known" className="mt-4" />
+        {risks.length > 0 && <BusinessResult type="risks_known" className="mt-4" />}
       </div>
 
       <div id="risks-list" data-scroll-section={t("scroll.risks.list")} className="space-y-3">

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Clock, CheckCircle, XCircle, SkipForward } from "lucide-react";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 const historyItems = [
   { id: "HIST-001", name: "Full Scan — Production", type: "full", status: "completed", startedAt: "Jul 17, 10:00", duration: "23 min", findings: 4 },
@@ -29,6 +30,7 @@ export default function WorkspaceHistoryPage() {
     <div className="animate-page-in">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Scan History</h1>
+        <DemoBadge className="mt-2" />
         <p className="mt-2 text-muted-2">View past scan runs and their results.</p>
       </div>
 

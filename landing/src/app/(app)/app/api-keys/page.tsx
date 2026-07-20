@@ -304,7 +304,7 @@ export default function ApiKeysPage() {
                   <ContextualHelp section="api-keys" />
                   <DemoBadge />
                 </div>
-                <BusinessResult type="configured" className="mt-4" />
+                {keys.length > 0 && <BusinessResult type="configured" className="mt-4" />}
               </div>
             </div>
             <Button onClick={() => setShowCreateDialog(true)}>

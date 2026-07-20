@@ -221,7 +221,7 @@ export default function FindingsPage() {
         <div className="flex items-center gap-2 mt-2">
           <ContextualHelp section="findings" />
         </div>
-        <BusinessResult type="risks_known" className="mt-4" />
+        {findings.length > 0 && <BusinessResult type="risks_known" className="mt-4" />}
       </div>
 
       {/* ─── Stats / Filter Bar ─────────────────────────────────────────────────── */}

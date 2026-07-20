@@ -35,6 +35,7 @@ import {
   Bell,
   Terminal,
   Server,
+  Gauge,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -148,6 +149,12 @@ const sidebarSections: SidebarSection[] = [
     labelKey: "sidebar.community",
     icon: Users,
     href: "/app/community",
+  },
+  {
+    id: "platform-status",
+    labelKey: "sidebar.platformStatus",
+    icon: Gauge,
+    href: "/app/platform-status",
   },
   {
     id: "settings",

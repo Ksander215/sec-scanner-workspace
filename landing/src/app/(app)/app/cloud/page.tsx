@@ -24,6 +24,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cloudProjects, demoFindings, demoAssets } from "@/lib/demo-data";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 type CloudTab = "projects" | "assets" | "pipelines" | "reports" | "team" | "billing" | "api-keys";
 
@@ -51,6 +52,7 @@ export default function CloudWorkspacePage() {
                 <Zap className="w-5 h-5 text-accent" />
                 Cloud Workspace
               </h1>
+              <DemoBadge className="mt-1" />
               <p className="text-sm text-muted-2 mt-1">SaaS deployment — full platform access</p>
             </div>
             <div className="flex items-center gap-2">

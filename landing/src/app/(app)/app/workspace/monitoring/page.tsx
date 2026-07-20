@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { BarChart3, Activity, AlertTriangle, CheckCircle, Server } from "lucide-react";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 const monitors = [
   { name: "API Health Check", endpoint: "https://api.sec-scanner.pro/health", status: "healthy", uptime: "99.97%", latency: "45ms" },
@@ -28,6 +29,7 @@ export default function WorkspaceMonitoringPage() {
     <div className="animate-page-in">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Monitoring</h1>
+        <DemoBadge className="mt-2" />
         <p className="mt-2 text-muted-2">Real-time monitoring and health status of platform components.</p>
       </div>
 

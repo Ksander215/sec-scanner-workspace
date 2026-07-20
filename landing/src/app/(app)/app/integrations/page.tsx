@@ -846,7 +846,7 @@ export default function IntegrationsHubPage() {
                   <ContextualHelp section="integrations" />
                   <DemoBadge />
                 </div>
-                <BusinessResult type="connected" className="mt-4" />
+                {integrations.filter((i: { status: string }) => i.status === "connected").length > 0 && <BusinessResult type="connected" className="mt-4" />}
               </div>
             </div>
 

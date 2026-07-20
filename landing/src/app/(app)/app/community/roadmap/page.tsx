@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { roadmapItems, type RoadmapStatus, type RoadmapItem } from "@/lib/demo-data";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 type StatusFilter = RoadmapStatus | "all";
 
@@ -124,6 +125,7 @@ export default function InteractiveRoadmapPage() {
             <Clock className="w-5 h-5 text-accent" />
             Interactive Roadmap
           </h1>
+          <DemoBadge className="mt-1" />
           <p className="text-sm text-muted-2 mt-1">See what we&apos;re building, what&apos;s next, and suggest features</p>
 
           {/* Status filter */}

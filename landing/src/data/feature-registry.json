@@ -1,0 +1,516 @@
+{
+  "version": "INT-038",
+  "lastUpdated": "2026-07-21",
+  "features": [
+    {
+      "id": "AIS-001",
+      "name": "Adaptive Intelligence Assistant",
+      "description": "Floating AIS button with proactive tips, trust builder, and context prediction",
+      "status": "implemented",
+      "pages": ["/app/dashboard", "/app/scanner", "/app/reports", "/app/findings", "/app/integrations", "/app/marketplace", "/app/repositories", "/app/architecture"],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "AIS-002",
+      "name": "Confidence Score",
+      "description": "Real-time confidence scoring based on user actions and platform engagement",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "AIS-003",
+      "name": "Context Prediction",
+      "description": "Predicts user next action based on page time and navigation patterns",
+      "status": "implemented",
+      "pages": ["/app/dashboard", "/app/scanner", "/app/reports"],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "AIS-004",
+      "name": "Adaptive Memory",
+      "description": "Persistent memory of user actions, page visits, and preferences across sessions",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "AIS-005",
+      "name": "Sound Notifications",
+      "description": "Audio feedback for notifications, achievements, tips, and system events",
+      "status": "implemented",
+      "pages": [],
+      "category": "AIS",
+      "required": false,
+      "version": "INT-036"
+    },
+    {
+      "id": "AIS-006",
+      "name": "Personalized Guidance",
+      "description": "Role-based guidance and goal tracking (CEO, CTO, Developer, DevOps, Pentester)",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "AIS-007",
+      "name": "SOLO LEVELING Notifications",
+      "description": "Branded notification system with glow effects, sounds, and achievement tracking",
+      "status": "implemented",
+      "pages": [],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "AIS-008",
+      "name": "Developer Overlay",
+      "description": "Ctrl+Shift+D developer mode showing feature status per page",
+      "status": "implemented",
+      "pages": ["/app/debug/features"],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-038"
+    },
+    {
+      "id": "AIS-009",
+      "name": "Feature Status in AIS",
+      "description": "AIS reads Feature Registry and reports page compliance status to users",
+      "status": "implemented",
+      "pages": [],
+      "category": "AIS",
+      "required": true,
+      "version": "INT-038"
+    },
+    {
+      "id": "UX-001",
+      "name": "Contextual Help",
+      "description": "Expandable help panels with business explanations on key pages",
+      "status": "implemented",
+      "pages": ["/app/risks", "/app/architecture", "/app/marketplace", "/app/reports", "/app/settings", "/app/notifications", "/app/integrations", "/app/api-keys", "/app/workspace"],
+      "category": "UX",
+      "required": true,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-002",
+      "name": "Business Result",
+      "description": "Business-oriented result blocks showing ROI, cost savings, and impact",
+      "status": "implemented",
+      "pages": ["/app/risks", "/app/marketplace", "/app/reports", "/app/integrations", "/app/api-keys", "/app/notifications"],
+      "category": "UX",
+      "required": true,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-003",
+      "name": "Executive Summary",
+      "description": "AI-generated executive summary for security posture and business impact",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "UX",
+      "required": true,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-004",
+      "name": "Section FAQ",
+      "description": "Collapsible FAQ sections on key pages for self-service support",
+      "status": "implemented",
+      "pages": ["/app/risks", "/app/architecture", "/app/reports", "/app/settings", "/app/integrations", "/app/notifications", "/app/api-keys", "/app/workspace"],
+      "category": "UX",
+      "required": true,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-005",
+      "name": "Smart Next Step",
+      "description": "Intelligent next step recommendations after completing actions",
+      "status": "implemented",
+      "pages": ["/app/risks", "/app/architecture", "/app/reports", "/app/settings", "/app/integrations", "/app/notifications", "/app/api-keys", "/app/workspace"],
+      "category": "UX",
+      "required": true,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-006",
+      "name": "Visual Flow",
+      "description": "Visual pipeline and workflow diagrams for complex processes",
+      "status": "implemented",
+      "pages": ["/app/marketplace"],
+      "category": "UX",
+      "required": false,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-007",
+      "name": "Smart Scroll Navigator",
+      "description": "Scroll-aware navigation indicator with AIS integration",
+      "status": "implemented",
+      "pages": [],
+      "category": "UX",
+      "required": true,
+      "version": "INT-033"
+    },
+    {
+      "id": "UX-008",
+      "name": "Demo Badge",
+      "description": "Warning badge indicating demo/mock data on pages",
+      "status": "implemented",
+      "pages": ["/app/risks", "/app/architecture", "/app/workspace", "/app/projects", "/app/repositories", "/app/integrations", "/app/api-keys", "/app/notifications", "/app/settings"],
+      "category": "UX",
+      "required": true,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-009",
+      "name": "Term Tooltip",
+      "description": "Hoverable tooltips for security and business terminology",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "UX",
+      "required": false,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-010",
+      "name": "Why Important",
+      "description": "Context blocks explaining why a feature or metric matters",
+      "status": "implemented",
+      "pages": ["/app/marketplace"],
+      "category": "UX",
+      "required": false,
+      "version": "INT-030"
+    },
+    {
+      "id": "UX-011",
+      "name": "Personal Goal Card",
+      "description": "Personalized goal tracking card on dashboard",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "UX",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "UX-012",
+      "name": "Company Progress",
+      "description": "Company-wide security progress indicator on dashboard",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "UX",
+      "required": false,
+      "version": "INT-036"
+    },
+    {
+      "id": "SCAN-001",
+      "name": "Security Scanner",
+      "description": "Full scan wizard with data source selection, tool selection, pipeline stages, and live execution",
+      "status": "implemented",
+      "pages": ["/app/scanner"],
+      "category": "Scanner",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "SCAN-002",
+      "name": "Scan History",
+      "description": "View past scan results with real localStorage data and demo scenarios tab",
+      "status": "implemented",
+      "pages": ["/app/scans"],
+      "category": "Scanner",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "SCAN-003",
+      "name": "Findings List",
+      "description": "Filterable findings with severity badges, detail panels, comments, and assignments",
+      "status": "implemented",
+      "pages": ["/app/findings"],
+      "category": "Scanner",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "RPT-001",
+      "name": "Report Generation",
+      "description": "Generate reports in HTML, JSON, SARIF, Markdown, CSV formats from scan data",
+      "status": "implemented",
+      "pages": ["/app/reports"],
+      "category": "Reports",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "RPT-002",
+      "name": "Email Report Sharing",
+      "description": "Configure email channels, templates, and send report simulations",
+      "status": "in_progress",
+      "pages": ["/app/reports/email"],
+      "category": "Reports",
+      "required": false,
+      "version": "INT-025"
+    },
+    {
+      "id": "MKT-001",
+      "name": "Marketplace",
+      "description": "Protection marketplace with categories, search, install/uninstall from engine",
+      "status": "implemented",
+      "pages": ["/app/marketplace"],
+      "category": "Marketplace",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "MKT-002",
+      "name": "Marketplace Sub-categories",
+      "description": "Plugin, Dashboard, Integration, AI Prompt, Connector, Rule, Template, Theme cards",
+      "status": "in_progress",
+      "pages": ["/app/marketplace/plugins", "/app/marketplace/dashboards", "/app/marketplace/integrations", "/app/marketplace/ai-prompts", "/app/marketplace/connectors", "/app/marketplace/rules", "/app/marketplace/templates", "/app/marketplace/themes"],
+      "category": "Marketplace",
+      "required": false,
+      "version": "INT-025"
+    },
+    {
+      "id": "REPO-001",
+      "name": "Repository Management",
+      "description": "Repository connection, scan, dependency analysis, secrets detection",
+      "status": "in_progress",
+      "pages": ["/app/repositories"],
+      "category": "Repository",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "DASH-001",
+      "name": "Adaptive Dashboard",
+      "description": "Role-adaptive dashboard with sparklines, risk scores, severity distribution, compliance",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "Dashboard",
+      "required": true,
+      "version": "INT-036"
+    },
+    {
+      "id": "DASH-002",
+      "name": "Risk Overview",
+      "description": "Risk list with severity, trend, score, and business context",
+      "status": "in_progress",
+      "pages": ["/app/risks"],
+      "category": "Dashboard",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "BIZ-001",
+      "name": "Business Language Mode",
+      "description": "Executive-friendly language replacing technical jargon with business terms",
+      "status": "implemented",
+      "pages": ["/app/dashboard"],
+      "category": "Business UX",
+      "required": true,
+      "version": "INT-030"
+    },
+    {
+      "id": "INT-001",
+      "name": "Integration Hub",
+      "description": "Integration catalog with connection forms for security tools",
+      "status": "in_progress",
+      "pages": ["/app/integrations"],
+      "category": "Integrations",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "INT-002",
+      "name": "SSH Key Management",
+      "description": "SSH key generation, management, and connection testing",
+      "status": "in_progress",
+      "pages": ["/app/integrations/ssh"],
+      "category": "Integrations",
+      "required": false,
+      "version": "INT-025"
+    },
+    {
+      "id": "INT-003",
+      "name": "API Key Management",
+      "description": "API key CRUD with scope selection, expiration, masked keys",
+      "status": "in_progress",
+      "pages": ["/app/api-keys"],
+      "category": "Integrations",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "NTF-001",
+      "name": "Notification Rules",
+      "description": "Notification rule CRUD, history, and channel configuration",
+      "status": "in_progress",
+      "pages": ["/app/notifications"],
+      "category": "Notifications",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "PLAT-001",
+      "name": "Platform Status Center",
+      "description": "Platform-wide readiness overview with per-module percentages built from Feature Registry",
+      "status": "implemented",
+      "pages": ["/app/platform-status"],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-038"
+    },
+    {
+      "id": "PLAT-002",
+      "name": "Feature Registry",
+      "description": "Single source of truth for all platform features with status tracking",
+      "status": "implemented",
+      "pages": [],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-038"
+    },
+    {
+      "id": "PLAT-003",
+      "name": "Project Management",
+      "description": "Project CRUD with onboarding wizard and project details",
+      "status": "in_progress",
+      "pages": ["/app/projects"],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "PLAT-004",
+      "name": "Settings Panel",
+      "description": "9-tab settings for Profile, Team, SSH Keys, Sessions, Tokens, Notifications, Integrations, Theme, Language",
+      "status": "in_progress",
+      "pages": ["/app/settings"],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "PLAT-005",
+      "name": "Workspace",
+      "description": "Workspace overview with stats, activity, and quick actions",
+      "status": "in_progress",
+      "pages": ["/app/workspace"],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-025"
+    },
+    {
+      "id": "PLAT-006",
+      "name": "Cloud Workspace",
+      "description": "Cloud project management with projects, assets, pipelines, billing",
+      "status": "planned",
+      "pages": ["/app/cloud"],
+      "category": "Platform",
+      "required": false,
+      "version": ""
+    },
+    {
+      "id": "PLAT-007",
+      "name": "Pricing Page",
+      "description": "3-plan pricing with feature comparison table",
+      "status": "implemented",
+      "pages": ["/app/pricing"],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "INF-001",
+      "name": "Knowledge Graph",
+      "description": "ReactFlow-based knowledge graph from scan findings with search, filter, node detail",
+      "status": "implemented",
+      "pages": ["/app/demo/knowledge-graph"],
+      "category": "Scanner",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "INF-002",
+      "name": "Attack Paths",
+      "description": "ReactFlow-based attack path visualizer from scan findings",
+      "status": "implemented",
+      "pages": ["/app/demo/attack-paths"],
+      "category": "Scanner",
+      "required": true,
+      "version": "INT-020"
+    },
+    {
+      "id": "INF-003",
+      "name": "Architecture View",
+      "description": "Interactive expandable architecture layers with deployment options",
+      "status": "in_progress",
+      "pages": ["/app/architecture"],
+      "category": "Scanner",
+      "required": false,
+      "version": "INT-025"
+    },
+    {
+      "id": "PLAT-008",
+      "name": "Enterprise SSO",
+      "description": "Single sign-on integration for enterprise customers",
+      "status": "planned",
+      "pages": [],
+      "category": "Platform",
+      "required": false,
+      "version": ""
+    },
+    {
+      "id": "PLAT-009",
+      "name": "Compliance Frameworks",
+      "description": "SOC2, ISO 27001, GDPR compliance mapping and reporting",
+      "status": "planned",
+      "pages": [],
+      "category": "Platform",
+      "required": false,
+      "version": ""
+    },
+    {
+      "id": "PLAT-010",
+      "name": "RBAC",
+      "description": "Role-based access control with granular permissions",
+      "status": "planned",
+      "pages": [],
+      "category": "Platform",
+      "required": false,
+      "version": ""
+    },
+    {
+      "id": "PLAT-011",
+      "name": "SIEM Integration",
+      "description": "Security information and event management integration",
+      "status": "planned",
+      "pages": [],
+      "category": "Platform",
+      "required": false,
+      "version": ""
+    },
+    {
+      "id": "PLAT-012",
+      "name": "Audit Trail",
+      "description": "Complete audit trail of all platform actions",
+      "status": "planned",
+      "pages": [],
+      "category": "Platform",
+      "required": false,
+      "version": ""
+    }
+  ]
+}
