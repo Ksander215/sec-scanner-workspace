@@ -215,7 +215,7 @@ export default function FindingsPage() {
 
   return (
     <div className="animate-page-in">
-      <div className="mb-6">
+      <div id="findings-header" className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">{t("findings.title")}</h1>
         <p className="mt-2 text-muted-2">{t("findings.subtitle")}</p>
         <div className="flex items-center gap-2 mt-2">
@@ -224,8 +224,8 @@ export default function FindingsPage() {
         <BusinessResult type="risks_known" className="mt-4" />
       </div>
 
-      {/* ─── Filter Bar ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      {/* ─── Stats / Filter Bar ─────────────────────────────────────────────────── */}
+      <div id="findings-stats" className="flex flex-wrap items-center gap-3 mb-4">
         {/* Search */}
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
@@ -366,7 +366,7 @@ export default function FindingsPage() {
           <p className="text-sm text-muted-2">{t("findings.noResults")}</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-surface border border-border overflow-hidden">
+        <div id="findings-list" className="rounded-xl bg-surface border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -698,7 +698,7 @@ export default function FindingsPage() {
         )}
       </AnimatePresence>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="findings-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="findings" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["findings"]} />
       </div>

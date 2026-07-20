@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n-context";
 import { motion, AnimatePresence } from "framer-motion";
@@ -535,13 +535,31 @@ type AssistantTab = "explain" | "flow" | "faq" | "progress";
 
 /* ─── Component ────────────────────────────────────────────────────────── */
 
-export function GuideAssistant() {
+export function GuideAssistant({
+  externalOpen,
+  onExternalClose,
+}: {
+  externalOpen?: boolean;
+  onExternalClose?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<AssistantTab>("explain");
   const [faqOpenItems, setFaqOpenItems] = useState<Set<number>>(new Set());
   const [completedProgress, setCompletedProgress] = useState<Set<number>>(new Set());
   const pathname = usePathname();
   const { t } = useI18n();
+
+  // Handle external open/close from SmartScrollNavigator
+  useEffect(() => {
+    if (externalOpen) {
+      setOpen(true);
+    }
+  }, [externalOpen]);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+    if (onExternalClose) onExternalClose();
+  }, [onExternalClose]);
 
   // Find the current page context
   const pageContext = useMemo(() => {
@@ -609,7 +627,7 @@ export function GuideAssistant() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
+            onClick={() => handleClose()}
           >
             <motion.div
               initial={{ opacity: 0, x: 50 }}
@@ -636,7 +654,7 @@ export function GuideAssistant() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setOpen(false)}
+                    onClick={() => handleClose()}
                     className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
                   >
                     <X className="w-4 h-4" />
@@ -676,7 +694,7 @@ export function GuideAssistant() {
                       <Link
                         href="/app/dashboard"
                         className="flex items-center gap-2 p-3 rounded-xl hover:bg-muted/80 transition-colors"
-                        onClick={() => setOpen(false)}
+                        onClick={() => handleClose()}
                       >
                         <div className="w-8 h-8 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center">
                           <Target className="w-4 h-4" />
@@ -687,7 +705,7 @@ export function GuideAssistant() {
                       <Link
                         href="/app/scanner"
                         className="flex items-center gap-2 p-3 rounded-xl hover:bg-muted/80 transition-colors"
-                        onClick={() => setOpen(false)}
+                        onClick={() => handleClose()}
                       >
                         <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                           <Lightbulb className="w-4 h-4" />
@@ -895,7 +913,7 @@ export function GuideAssistant() {
                                 {!isCompleted && (
                                   <Link
                                     href={step.href}
-                                    onClick={() => setOpen(false)}
+                                    onClick={() => handleClose()}
                                     className="text-xs text-violet-600 dark:text-violet-400 hover:underline"
                                   >
                                     {t("assistant.go")} →

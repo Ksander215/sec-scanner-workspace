@@ -287,7 +287,7 @@ export default function ReportsPage() {
   return (
     <Container as="main" className="py-8 animate-page-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div id="reports-header" className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
             {t("reports.title")}
@@ -384,7 +384,7 @@ export default function ReportsPage() {
 
       {/* Report list */}
       {reports.length > 0 && (
-        <div className="space-y-3">
+        <div id="reports-list" className="space-y-3">
           {reports.map((report, i) => {
             const isDownloading = downloading.has(report.id);
             const rv = riskVariant(report.riskScore);
@@ -590,7 +590,7 @@ export default function ReportsPage() {
         )}
       </AnimatePresence>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="reports-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="reports" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["reports"]} />
       </div>

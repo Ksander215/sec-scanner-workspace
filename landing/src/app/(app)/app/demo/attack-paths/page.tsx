@@ -195,7 +195,7 @@ export default function AttackPathsPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Explanation block */}
-      <div className="border-b border-border bg-accent-muted/20">
+      <div id="ap-header" className="border-b border-border bg-accent-muted/20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 mb-3">
             <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-accent-muted text-accent rounded border border-accent/20">Live</span>
@@ -239,7 +239,7 @@ export default function AttackPathsPage() {
             </div>
 
             {/* Path selector */}
-            <div className="flex items-center gap-2">
+            <div id="ap-paths" className="flex items-center gap-2">
               {apPaths.map((ap, idx) => (
                 <button
                   key={idx}
@@ -261,7 +261,7 @@ export default function AttackPathsPage() {
         </div>
       </div>
 
-      <div className="relative" style={{ height: "calc(100vh - 12rem)" }}>
+      <div id="ap-graph" className="relative" style={{ height: "calc(100vh - 12rem)" }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -433,7 +433,7 @@ export default function AttackPathsPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div id="ap-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionFAQ section="attack-paths" />
         <SmartNextStep {...RECOMMENDATION_CHAINS["attack-paths"]} />
       </div>
