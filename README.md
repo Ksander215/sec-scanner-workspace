@@ -1,120 +1,249 @@
-# SIP — Security Intelligence Platform
+<div align="center">
 
-> Операционная система для безопасности бизнеса
+# SIP
+
+### Security Intelligence Platform
+
+**Unified Security Platform for Business Infrastructure**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
+
+[Live Demo](https://sec-scanner.pro) · [Documentation](./docs/) · [Architecture](./ARCHITECTURE.md) · [Roadmap](./ROADMAP.md)
+
+</div>
 
 ---
 
-## Что такое SIP
+## What SIP Does
 
-SIP — это платформа управления безопасностью, которая объединяет сканирование уязвимостей, анализ рисков, карты атак и рекомендации ИИ в единую систему. Компании получают прозрачную картину своей безопасности и чёткие инструкции — что делать, в каком порядке и почему.
+SIP is an open-source security operations platform that consolidates vulnerability assessment, infrastructure analysis, risk quantification, and AI-driven recommendations into a single system. Instead of juggling ten disconnected tools, security teams get one dashboard that shows what matters, why it matters, and exactly what to do next.
 
-## Какие проблемы решает
+**Core Capabilities:**
 
-- **Разрозненные инструменты** — вместо 10 отдельных утилит всё работает из одного интерфейса
-- **Непонятные отчёты** — результаты сканирования переводятся на язык бизнеса: какие риски, насколько критичны, что делать
-- **Реакция вместо предотвращения** — автоматическое сканирование находит уязвимости до того, как ими воспользуются
-- **Нет приоритетов** — ИИ определяет, какие проблемы требуют внимания в первую очередь
+| Capability | Description |
+|---|---|
+| Vulnerability Assessment | Automated scanning with nmap, nuclei, ZAP, semgrep, trivy, nikto |
+| DAST | Dynamic Application Security Testing through integrated proxy engine |
+| Repository Security | Scan source code for secrets, misconfigurations, and dependency risks |
+| Infrastructure Security | Network topology analysis with Knowledge Graph visualization |
+| Knowledge Graph | Interactive graph mapping relationships between assets and vulnerabilities |
+| Attack Paths | Visualize exploitation chains from entry point to critical asset |
+| Reports | Business-oriented reports in PDF, JSON, and dashboard formats |
+| Marketplace | Extensible plugin system with community and custom scanners |
+| Integrations | SSH, API keys, CI/CD webhooks, and third-party tool connectors |
 
-## Для кого создан
+---
 
-- **Владельцы бизнеса** — прозрачность безопасности без технического жаргона
-- **CISO и руководители ИБ** — контроль над всей инфраструктурой из одной точки
-- **DevOps-инженеры** — интеграция сканирования в CI/CD пайплайн
-- **Специалисты по безопасности** — профессиональные инструменты с расширенными настройками
+## Screenshots
 
-## Почему отличается от конкурентов
+| | | |
+|:---:|:---:|:---:|
+| **Hero / Landing** | **Dashboard** | **Scanner** |
+| *First impression — value proposition and call to action* | *Real-time security posture overview with critical metrics* | *Step-by-step scan wizard with plugin selection and live results* |
+| **Marketplace** | **Reports** | **Knowledge Graph** |
+| *Browse and install scanner plugins, dashboards, and templates* | *Business-focused findings with risk scores and remediation* | *Interactive graph of infrastructure nodes and vulnerability edges* |
+| **Attack Paths** | | |
+| *Visual chain from external attacker to internal critical asset* | | |
 
-| Возможность | SIP | Типичные решения |
-|---|---|---|
-| Единая платформа | ✅ Все инструменты в одном месте | ❌ Отдельные продукты для каждой задачи |
-| Бизнес-ориентированные отчёты | ✅ Язык рисков и рекомендаций | ❌ Технические отчёты, непонятные руководству |
-| Карта атак | ✅ Визуализация цепочек атак | ❌ Только список уязвимостей |
-| ИИ-рекомендации | ✅ Приоритизированные действия | ❌ Общие советы без контекста |
-| Расширяемость | ✅ Плагины для любых инструментов | ❌ Ограниченный набор сканеров |
-| Открытый код | ✅ Полная прозрачность | ❌ Закрытые проприетарные решения |
+> All screenshots are from the live deployment at [sec-scanner.pro](https://sec-scanner.pro)
 
-## Архитектура
+---
+
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    SIP Platform                              │
-├──────────────┬──────────────┬───────────────────────────────┤
-│   Landing    │   Frontend   │         Backend               │
-│   (Next.js)  │   (React)    │     (Express + TypeScript)    │
-│              │              │                               │
-│  Маркетинг   │  Дашборд     │  API сервер                   │
-│  Тарифы      │  Сканер      │  Plugin Runtime               │
-│  Документация│  Отчёты      │  Knowledge Graph              │
-│              │  Marketplace │  Attack Path Engine            │
-│              │  Интеграции  │  AI Recommendations           │
-├──────────────┴──────────────┴───────────────────────────────┤
-│                     Plugin System                            │
-│  nmap · nuclei · zap · semgrep · trivy · nikto              │
-├─────────────────────────────────────────────────────────────┤
-│                   Shared Packages                            │
-│  types · sdk · ui · shared                                  │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        SIP Platform                               │
+├────────────────┬────────────────┬────────────────────────────────┤
+│   Landing      │   Frontend     │         Backend                │
+│   (Next.js)    │   (React)      │     (Express + TypeScript)     │
+│                │                │                                │
+│  Marketing     │  Dashboard     │  API Server                    │
+│  Pricing       │  Scanner       │  Plugin Runtime                │
+│  Documentation │  Reports       │  Knowledge Graph Engine        │
+│                │  Marketplace   │  Attack Path Engine            │
+│                │  Integrations  │  AI Recommendations            │
+├────────────────┴────────────────┴────────────────────────────────┤
+│                      Plugin System                                │
+│  nmap · nuclei · zap · semgrep · trivy · nikto                   │
+├──────────────────────────────────────────────────────────────────┤
+│                     Shared Packages                               │
+│  @sip/types · @sip/sdk · @sip/ui · @sip/shared                  │
+├──────────────────────────────────────────────────────────────────┤
+│                     Parser Engine                                 │
+│  JSON · XML · SARIF · Custom regex-based extractors              │
+├──────────────────────────────────────────────────────────────────┤
+│                     AI Engine                                     │
+│  Risk scoring · Prioritization · Natural-language explanations    │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-Подробная архитектура описана в [ARCHITECTURE.md](./ARCHITECTURE.md).
+### Frontend Stack
 
-## Как запустить
+- **Next.js 16** with Turbopack and static export
+- **React 19** with Server Components
+- **Tailwind CSS 4** with custom design tokens
+- **Framer Motion** for interactive animations
+- **TypeScript 5** strict mode
+- **i18n** — Russian + English with context-aware translations
 
-### Docker (рекомендуется)
+### Backend Stack
+
+- **Express.js** REST API server
+- **Plugin Runtime** — dynamic loading and execution of scanner plugins
+- **Knowledge Graph** — auto-constructed from scan results
+- **Attack Path Engine** — multi-hop exploitation chain analysis
+- **AI Recommendations** — context-aware remediation priorities
+
+### Plugin Runtime
+
+Each plugin runs in isolation with a defined manifest:
+
+```json
+{
+  "id": "nmap",
+  "name": "Nmap Network Scanner",
+  "version": "1.0.0",
+  "type": "network",
+  "binary": "nmap",
+  "args": "-sV -sC -oX {output}",
+  "parser": "xml"
+}
+```
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm 9+
+- Git
+
+### Clone and Run
 
 ```bash
 git clone https://github.com/Ksander215/sec-scanner-workspace.git
 cd sec-scanner-workspace
-docker compose up -d
-```
 
-### Backend
+# Frontend
+cd landing
+npm install
+npm run dev
+# → http://localhost:3000
 
-```bash
-cd backend
+# Backend (optional)
+cd ../backend
 npm install
 npm run build
 npm start
-# Сервер запускается на http://localhost:3001
+# → http://localhost:3001
 ```
 
-### Frontend
+### Docker
+
+```bash
+docker compose up -d
+```
+
+### Production Build
 
 ```bash
 cd landing
 npm install
-npm run dev
-# Приложение доступно на http://localhost:3000
+npm run build
+# Static export lands in landing/out/
+# Deploy the out/ directory to any static host (nginx, S3, Cloudflare Pages)
 ```
 
-### Marketplace
+---
 
-Marketplace доступен по адресу `/app/marketplace` после запуска платформы. Каталог содержит плагины сканирования, дашборды, шаблоны отчётов и AI-промпты.
+## Project Structure
 
-### Scanner
-
-```bash
-# Через CLI
-sip scan --target api.example.com
-
-# Через веб-интерфейс
-Откройте /app/scanner и следуйте пошаговому мастеру
+```
+sec-scanner-workspace/
+├── landing/              # Next.js frontend (static export)
+│   ├── src/
+│   │   ├── app/          # 63 pages — dashboard, scanner, marketplace, reports...
+│   │   ├── components/   # UI components, layouts, sections
+│   │   └── lib/          # Engine, i18n, API client, demo data
+│   ├── public/           # Static assets
+│   └── out/              # Production build output
+├── backend/              # Express API server
+│   └── src/
+│       ├── routes/       # REST endpoints
+│       ├── services/     # Scanner, KG, attack paths, reports
+│       ├── plugins/      # Plugin runtime + manifests
+│       └── parsers/      # Output format parsers
+├── plugins/              # Scanner plugin definitions
+│   ├── nmap/
+│   ├── nuclei/
+│   ├── zap/
+│   ├── semgrep/
+│   ├── trivy/
+│   └── nikto/
+├── packages/             # Shared packages
+│   ├── types/            # @sip/types
+│   ├── sdk/              # @sip/sdk
+│   ├── ui/               # @sip/ui
+│   └── shared/           # @sip/shared
+├── docker/               # Dockerfiles and compose
+├── scripts/              # Deploy, build, audit utilities
+├── docs/                 # Documentation + brand book
+├── ARCHITECTURE.md       # System architecture deep-dive
+├── ROADMAP.md            # Development roadmap
+├── CHANGELOG.md          # Release history
+└── CONTRIBUTING.md       # Contribution guidelines
 ```
 
-### Knowledge Graph
-
-Knowledge Graph автоматически строится из результатов сканирования. Визуализация доступна по адресу `/app/demo/knowledge-graph`.
+---
 
 ## Roadmap
 
-Подробный план развития — в [ROADMAP.md](./ROADMAP.md).
+| Version | Focus | Status |
+|---|---|---|
+| v0.1 | Landing + Dashboard + Basic Scanner | ✅ Shipped |
+| v0.2 | Plugin System + Marketplace | ✅ Shipped |
+| v0.3 | Knowledge Graph + Attack Paths | ✅ Shipped |
+| v0.4 | AI Recommendations + Business Reports | ✅ Shipped |
+| v0.5 | CI/CD Integration + API Keys | ✅ Shipped |
+| v0.6 | Team Collaboration + RBAC | 🔜 Planned |
+| v0.7 | Compliance Frameworks (ISO 27001, SOC 2) | 🔜 Planned |
+| v0.8 | Custom Dashboards + Widget Builder | 🔜 Planned |
 
-- **v0.1** — Базовый сканер + лендинг + дашборд
-- **v0.2** — Plugin System + Marketplace
-- **v0.3** — Knowledge Graph + Attack Paths
-- **v0.4** — AI Recommendations + Business Reports
-- **v0.5** — CI/CD Integration + API Keys
+Full roadmap: [ROADMAP.md](./ROADMAP.md)
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design, data flow, component interaction |
+| [ROADMAP.md](./ROADMAP.md) | Development timeline and planned features |
+| [CHANGELOG.md](./CHANGELOG.md) | Version history and release notes |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | How to contribute, code standards, PR process |
+| [SECURITY.md](./SECURITY.md) | Security policy and vulnerability reporting |
+| [docs/](./docs/) | Full documentation directory |
+| [docs/api.md](./docs/api.md) | API reference |
+| [docs/deployment.md](./docs/deployment.md) | Deployment guide |
+| [docs/plugins.md](./docs/plugins.md) | Plugin development guide |
+
+---
 
 ## License
 
-MIT License — см. [LICENSE](./LICENSE).
+MIT License — see [LICENSE](./LICENSE).
+
+---
+
+<div align="center">
+
+**Built with purpose. Secured by design.**
+
+[sec-scanner.pro](https://sec-scanner.pro) · [GitHub](https://github.com/Ksander215/sec-scanner-workspace)
+
+</div>
