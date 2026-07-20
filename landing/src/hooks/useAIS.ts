@@ -243,10 +243,13 @@ export function useAIS(): AISState {
   const goalsRaw = memory.goals.length > 0 ? memory.goals : getDefaultGoals(role);
   const goals = computeGoalProgress(goalsRaw, memory.metrics);
 
-  // Save initialized goals back
-  if (memory.goals.length === 0 && goals.length > 0) {
-    engine.setGoals(goals);
-  }
+  // Save initialized goals back (useEffect to avoid side effect during render)
+  useEffect(() => {
+    if (memory.goals.length === 0 && goals.length > 0) {
+      engine.setGoals(goals);
+      refresh();
+    }
+  }, [memory.goals.length, goals.length]);
 
   const confidence = computeConfidence();
   const isFirstTime = pathname ? engine.isFirstTimeOnPage(pathname) : false;

@@ -92,6 +92,12 @@ export interface AISMemory {
     engineerMode: boolean;    // force engineer mode
     autoAssistant: boolean;   // allow auto assistant
   };
+  /** One-time action bonuses applied (prevents re-accumulation) */
+  actionBonuses?: {
+    scans?: boolean;
+    integrations?: boolean;
+    reports?: boolean;
+  };
 }
 
 /* ─── Constants ──────────────────────────────────────────────────────── */
@@ -448,21 +454,27 @@ class AdaptiveMemoryEngine {
       }
     }
 
-    // Also add action-based scoring
+    // Also add action-based scoring (one-time bonus, not cumulative)
     const scans = this.memory.metrics.scansPerformed;
     const integrations = this.memory.metrics.connectedIntegrations;
     const reports = this.memory.metrics.reportsGenerated;
 
-    if (scans > 3) {
+    if (scans > 3 && !this.memory.actionBonuses?.scans) {
       this.memory.roleScores.pentester += 1;
       this.memory.roleScores.devsecops += 1;
+      if (!this.memory.actionBonuses) this.memory.actionBonuses = {};
+      this.memory.actionBonuses.scans = true;
     }
-    if (integrations > 2) {
+    if (integrations > 2 && !this.memory.actionBonuses?.integrations) {
       this.memory.roleScores.devops += 1;
+      if (!this.memory.actionBonuses) this.memory.actionBonuses = {};
+      this.memory.actionBonuses.integrations = true;
     }
-    if (reports > 2) {
+    if (reports > 2 && !this.memory.actionBonuses?.reports) {
       this.memory.roleScores.ceo += 2;
       this.memory.roleScores.analyst += 1;
+      if (!this.memory.actionBonuses) this.memory.actionBonuses = {};
+      this.memory.actionBonuses.reports = true;
     }
   }
 
