@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { TermTooltip } from "@/components/ui/TermTooltip";
 import { ContextualHelp } from "@/components/ui/ContextualHelp";
 import { BusinessResult } from "@/components/ui/BusinessResult";
+import { ConfidenceScore } from "@/components/ui/ConfidenceScore";
+import { CompanyProgress } from "@/components/ui/CompanyProgress";
+import { WhyImportant } from "@/components/ui/WhyImportant";
 import { useI18n } from "@/lib/i18n-context";
 import {
   Shield,
@@ -444,6 +447,32 @@ export default function DashboardPage() {
                 </a>
               </div>
             </div>
+
+            {/* INT-035: Confidence Score + Company Progress */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <ConfidenceScore
+                score={78}
+                factors={{
+                  fixedIssues: 26,
+                  coveredServices: 85,
+                  connectedIntegrations: 5,
+                  automationPercent: 81,
+                }}
+              />
+              <CompanyProgress
+                stats={[
+                  { labelKey: "confidence.progress.fixedIssues", value: 26, positive: true },
+                  { labelKey: "confidence.progress.closedPaths", value: 4, positive: true },
+                  { labelKey: "confidence.progress.connectedIntegrations", value: 5, positive: true },
+                  { labelKey: "confidence.progress.automatedChecks", value: "81%", positive: true },
+                ]}
+                trendKey="confidence.progress.trendUp"
+                nextAction={{ labelKey: "confidence.term.recommendations", href: "/app/findings" }}
+              />
+            </div>
+
+            {/* INT-035: Why this matters */}
+            <WhyImportant textKey="confidence.why.scanner" />
 
             {/* Risk Trend (2 cols) + Latest Scans (1 col) */}
             <div className="grid md:grid-cols-3 gap-4">

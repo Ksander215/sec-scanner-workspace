@@ -46,6 +46,7 @@ import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextS
 import { DemoBadge } from "@/components/ui/DemoBadge";
 import { BusinessResult } from "@/components/ui/BusinessResult";
 import { VisualFlow } from "@/components/ui/VisualFlow";
+import { WhyImportant } from "@/components/ui/WhyImportant";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 
@@ -1105,6 +1106,11 @@ export default function SolutionsCenterPage() {
         <div id="marketplace-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <SectionFAQ section="marketplace" />
           <SmartNextStep {...RECOMMENDATION_CHAINS["marketplace"]} />
+        </div>
+
+        {/* INT-035: Why this matters */}
+        <div className="mt-4">
+          <WhyImportant textKey="confidence.why.marketplace" />
         </div>
       </Container>
     </div>
