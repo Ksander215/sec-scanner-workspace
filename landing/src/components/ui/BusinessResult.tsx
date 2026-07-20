@@ -18,7 +18,13 @@ type BusinessResultType =
   | "connected"
   | "configured"
   | "organized"
-  | "confidence_boost";
+  | "confidence_boost"
+  | "solution_connected"
+  | "check_configured"
+  | "repo_connected"
+  | "server_connected"
+  | "integration_ready"
+  | "analysis_complete";
 
 interface BusinessResultProps {
   type: BusinessResultType;
@@ -89,6 +95,36 @@ const RESULT_CONFIG: Record<BusinessResultType, {
     icon: <ShieldCheck className="w-5 h-5" />,
     titleKey: "business.confidenceBoost.title",
     descKey: "business.confidenceBoost.desc",
+  },
+  solution_connected: {
+    icon: <ShieldCheck className="w-5 h-5" />,
+    titleKey: "business.solutionReady.title",
+    descKey: "business.solutionReady.desc",
+  },
+  check_configured: {
+    icon: <Eye className="w-5 h-5" />,
+    titleKey: "business.checkConfigured.title",
+    descKey: "business.checkConfigured.desc",
+  },
+  repo_connected: {
+    icon: <TrendingUp className="w-5 h-5" />,
+    titleKey: "business.repoConnected.title",
+    descKey: "business.repoConnected.desc",
+  },
+  server_connected: {
+    icon: <ShieldCheck className="w-5 h-5" />,
+    titleKey: "business.serverConnected.title",
+    descKey: "business.serverConnected.desc",
+  },
+  integration_ready: {
+    icon: <TrendingUp className="w-5 h-5" />,
+    titleKey: "business.integrationReady.title",
+    descKey: "business.integrationReady.desc",
+  },
+  analysis_complete: {
+    icon: <Brain className="w-5 h-5" />,
+    titleKey: "business.analysisComplete.title",
+    descKey: "business.analysisComplete.desc",
   },
 };
 
