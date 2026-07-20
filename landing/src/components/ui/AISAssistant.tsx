@@ -185,6 +185,7 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
 
   const [internalOpen, setInternalOpen] = useState(false);
   const [proactiveTip, setProactiveTip] = useState<ProactiveTip | null>(null);
+  const [predictionTip, setPredictionTip] = useState<ProactiveTip | null>(null);
   const [showProactive, setShowProactive] = useState(false);
   const [activeTab, setActiveTab] = useState<"guide" | "goal" | "confidence">("guide");
   const tipShownRef = useRef<Record<string, boolean>>({});
@@ -219,15 +220,16 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
     }
   }, [pathname, ais]);
 
-  // BLOCK 12: Context prediction prompt
+  // BLOCK 12: Context prediction prompt (separate from proactive tips)
   useEffect(() => {
     if (!ais.prediction || ais.detailLevel === 0) return;
+    if (!pathname) return;
 
-    // Show prediction as a proactive tip
+    // Only show prediction if no proactive tip is currently visible
     const pred = ais.prediction;
-    if (pred.confidence > 0.6) {
-      setProactiveTip({
-        route: pathname || "",
+    if (pred.confidence > 0.6 && !proactiveTip && !showProactive) {
+      setPredictionTip({
+        route: pathname,
         condition: () => true,
         titleKey: pred.promptKey,
         descKey: "",
@@ -236,7 +238,7 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
       });
       setShowProactive(true);
     }
-  }, [ais.prediction, pathname, ais.detailLevel]);
+  }, [ais.prediction, pathname, ais.detailLevel, proactiveTip, showProactive]);
 
   const handleClose = useCallback(() => {
     setInternalOpen(false);
@@ -261,11 +263,14 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
     return "ais.greeting.default";
   }, [ais.isExecutive, ais.isEngineer]);
 
+  // Active tip = proactive tip OR prediction tip (proactive has priority)
+  const activeTip = proactiveTip || predictionTip;
+
   return (
     <>
       {/* ── Proactive tip (BLOCK 3) ────────────────────────────────── */}
       <AnimatePresence>
-        {showProactive && proactiveTip && !isOpen && (
+        {showProactive && activeTip && !isOpen && (
           <motion.div
             initial={{ opacity: 0, x: 40, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -297,25 +302,25 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
 
                 {/* Message */}
                 <p className="text-sm text-foreground mb-3">
-                  {t(proactiveTip.titleKey)}
+                  {t(activeTip.titleKey)}
                 </p>
-                {proactiveTip.descKey && (
+                {activeTip.descKey && (
                   <p className="text-xs text-foreground/60 mb-3">
-                    {t(proactiveTip.descKey)}
+                    {t(activeTip.descKey)}
                   </p>
                 )}
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <Link
-                    href={proactiveTip.actionHref}
+                    href={activeTip.actionHref}
                     onClick={() => {
                       setShowProactive(false);
                       ais.recordTipEngaged();
                     }}
                     className="text-xs font-medium px-3 py-1.5 rounded-lg bg-violet-500/10 hover:bg-violet-500/20 text-violet-600 dark:text-violet-400 transition-colors"
                   >
-                    {t(proactiveTip.actionLabelKey)}
+                    {t(activeTip.actionLabelKey)}
                   </Link>
                   <button
                     onClick={handleEngageProactive}
@@ -439,6 +444,99 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
   );
 }
 
+/* ─── Contextual Trust Builder ──────────────────────────────────────── */
+
+const TRUST_BUILDER_CONTEXT: Record<string, {
+  whatHappenedKey: string;
+  whyImportantKey: string;
+  whatChangedKey: string;
+  whatNextKey: string;
+  whatNextHref: string;
+}> = {
+  "/app/dashboard": {
+    whatHappenedKey: "ais.trust.dashboard.whatHappened",
+    whyImportantKey: "ais.trust.dashboard.whyImportant",
+    whatChangedKey: "ais.trust.dashboard.whatChanged",
+    whatNextKey: "ais.trust.dashboard.whatNext",
+    whatNextHref: "/app/scanner",
+  },
+  "/app/scanner": {
+    whatHappenedKey: "ais.trust.scanner.whatHappened",
+    whyImportantKey: "ais.trust.scanner.whyImportant",
+    whatChangedKey: "ais.trust.scanner.whatChanged",
+    whatNextKey: "ais.trust.scanner.whatNext",
+    whatNextHref: "/app/scanner",
+  },
+  "/app/findings": {
+    whatHappenedKey: "ais.trust.findings.whatHappened",
+    whyImportantKey: "ais.trust.findings.whyImportant",
+    whatChangedKey: "ais.trust.findings.whatChanged",
+    whatNextKey: "ais.trust.findings.whatNext",
+    whatNextHref: "/app/findings",
+  },
+  "/app/reports": {
+    whatHappenedKey: "ais.trust.reports.whatHappened",
+    whyImportantKey: "ais.trust.reports.whyImportant",
+    whatChangedKey: "ais.trust.reports.whatChanged",
+    whatNextKey: "ais.trust.reports.whatNext",
+    whatNextHref: "/app/reports",
+  },
+  "/app/marketplace": {
+    whatHappenedKey: "ais.trust.marketplace.whatHappened",
+    whyImportantKey: "ais.trust.marketplace.whyImportant",
+    whatChangedKey: "ais.trust.marketplace.whatChanged",
+    whatNextKey: "ais.trust.marketplace.whatNext",
+    whatNextHref: "/app/marketplace",
+  },
+  "/app/integrations": {
+    whatHappenedKey: "ais.trust.integrations.whatHappened",
+    whyImportantKey: "ais.trust.integrations.whyImportant",
+    whatChangedKey: "ais.trust.integrations.whatChanged",
+    whatNextKey: "ais.trust.integrations.whatNext",
+    whatNextHref: "/app/integrations",
+  },
+  "/app/risks": {
+    whatHappenedKey: "ais.trust.risks.whatHappened",
+    whyImportantKey: "ais.trust.risks.whyImportant",
+    whatChangedKey: "ais.trust.risks.whatChanged",
+    whatNextKey: "ais.trust.risks.whatNext",
+    whatNextHref: "/app/risks",
+  },
+  "/app/architecture": {
+    whatHappenedKey: "ais.trust.architecture.whatHappened",
+    whyImportantKey: "ais.trust.architecture.whyImportant",
+    whatChangedKey: "ais.trust.architecture.whatChanged",
+    whatNextKey: "ais.trust.architecture.whatNext",
+    whatNextHref: "/app/demo/knowledge-graph",
+  },
+};
+
+function ContextualTrustBuilder({ pathname }: { pathname: string | null }) {
+  // Find matching context by checking if pathname starts with a key
+  const matchKey = pathname
+    ? Object.keys(TRUST_BUILDER_CONTEXT).find((key) => pathname.startsWith(key))
+    : null;
+  const ctx = matchKey
+    ? TRUST_BUILDER_CONTEXT[matchKey]
+    : {
+        whatHappenedKey: "ais.trust.default.whatHappened",
+        whyImportantKey: "ais.trust.default.whyImportant",
+        whatChangedKey: "ais.trust.default.whatChanged",
+        whatNextKey: "ais.trust.default.whatNext",
+        whatNextHref: "/app/scanner",
+      };
+
+  return (
+    <TrustBuilderBlock
+      whatHappenedKey={ctx.whatHappenedKey}
+      whyImportantKey={ctx.whyImportantKey}
+      whatChangedKey={ctx.whatChangedKey}
+      whatNextKey={ctx.whatNextKey}
+      whatNextHref={ctx.whatNextHref}
+    />
+  );
+}
+
 /* ─── Guide Tab ──────────────────────────────────────────────────────── */
 
 function GuideTab({ ais, pathname }: { ais: AISState; pathname: string | null }) {
@@ -536,18 +634,12 @@ function GuideTab({ ais, pathname }: { ais: AISState; pathname: string | null })
         </div>
       )}
 
-      {/* Trust Builder — always show on guide tab */}
+      {/* Trust Builder — contextual per current page */}
       <div className="p-3 rounded-lg bg-surface border border-border">
         <h4 className="text-xs font-semibold text-foreground mb-3">
           {t("ais.trust.title")}
         </h4>
-        <TrustBuilderBlock
-          whatHappenedKey="ais.trust.default.whatHappened"
-          whyImportantKey="ais.trust.default.whyImportant"
-          whatChangedKey="ais.trust.default.whatChanged"
-          whatNextKey="ais.trust.default.whatNext"
-          whatNextHref="/app/scanner"
-        />
+        <ContextualTrustBuilder pathname={pathname} />
       </div>
 
       {/* Favorite pages */}

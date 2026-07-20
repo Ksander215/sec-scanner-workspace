@@ -1,11 +1,11 @@
 {
-  "version": "INT-038",
+  "version": "INT-038-v2",
   "lastUpdated": "2026-07-21",
   "features": [
     {
       "id": "AIS-001",
       "name": "Adaptive Intelligence Assistant",
-      "description": "Floating AIS button with proactive tips, trust builder, and context prediction",
+      "description": "Floating AIS button with proactive tips, contextual trust builder, and context prediction",
       "status": "implemented",
       "pages": ["/app/dashboard", "/app/scanner", "/app/reports", "/app/findings", "/app/integrations", "/app/marketplace", "/app/repositories", "/app/architecture"],
       "category": "AIS",
@@ -25,7 +25,7 @@
     {
       "id": "AIS-003",
       "name": "Context Prediction",
-      "description": "Predicts user next action based on page time and navigation patterns",
+      "description": "Rule-based next-action prediction based on page time and navigation patterns",
       "status": "implemented",
       "pages": ["/app/dashboard", "/app/scanner", "/app/reports"],
       "category": "AIS",
@@ -35,9 +35,9 @@
     {
       "id": "AIS-004",
       "name": "Adaptive Memory",
-      "description": "Persistent memory of user actions, page visits, and preferences across sessions",
+      "description": "Persistent memory of user actions, page visits, and preferences across sessions (localStorage)",
       "status": "implemented",
-      "pages": ["/app/dashboard"],
+      "pages": [],
       "category": "AIS",
       "required": true,
       "version": "INT-036"
@@ -45,7 +45,7 @@
     {
       "id": "AIS-005",
       "name": "Sound Notifications",
-      "description": "Audio feedback for notifications, achievements, tips, and system events",
+      "description": "Web Audio API audio feedback for notifications, achievements, tips, and system events",
       "status": "implemented",
       "pages": [],
       "category": "AIS",
@@ -65,17 +65,17 @@
     {
       "id": "AIS-007",
       "name": "SOLO LEVELING Notifications",
-      "description": "Branded notification system with glow effects, sounds, and achievement tracking",
+      "description": "Branded notification system with glow effects, sounds, and i18n-translated text",
       "status": "implemented",
       "pages": [],
       "category": "AIS",
       "required": true,
-      "version": "INT-036"
+      "version": "INT-038"
     },
     {
       "id": "AIS-008",
       "name": "Developer Overlay",
-      "description": "Ctrl+Shift+D developer mode showing feature status per page",
+      "description": "Feature status per page at /app/debug/features, built from Feature Registry",
       "status": "implemented",
       "pages": ["/app/debug/features"],
       "category": "AIS",
@@ -95,7 +95,7 @@
     {
       "id": "UX-001",
       "name": "Contextual Help",
-      "description": "Expandable help panels with business explanations on key pages",
+      "description": "Expandable help panels with What/Why/Result for 16 sections on key pages",
       "status": "implemented",
       "pages": ["/app/risks", "/app/architecture", "/app/marketplace", "/app/reports", "/app/settings", "/app/notifications", "/app/integrations", "/app/api-keys", "/app/workspace"],
       "category": "UX",
@@ -116,7 +116,7 @@
       "id": "UX-003",
       "name": "Executive Summary",
       "description": "AI-generated executive summary for security posture and business impact",
-      "status": "implemented",
+      "status": "in_progress",
       "pages": ["/app/dashboard"],
       "category": "UX",
       "required": true,
@@ -155,7 +155,7 @@
     {
       "id": "UX-007",
       "name": "Smart Scroll Navigator",
-      "description": "Scroll-aware navigation indicator with AIS integration",
+      "description": "Scroll-aware navigation indicator with section dots, progress, and AIS integration",
       "status": "implemented",
       "pages": [],
       "category": "UX",
@@ -215,7 +215,7 @@
     {
       "id": "SCAN-001",
       "name": "Security Scanner",
-      "description": "Full scan wizard with data source selection, tool selection, pipeline stages, and live execution",
+      "description": "Multi-step scan wizard with data source selection, tool selection, pipeline stages, and live execution (client-side engine)",
       "status": "implemented",
       "pages": ["/app/scanner"],
       "category": "Scanner",
@@ -225,7 +225,7 @@
     {
       "id": "SCAN-002",
       "name": "Scan History",
-      "description": "View past scan results with real localStorage data and demo scenarios tab",
+      "description": "View past scan results with localStorage data and demo scenarios tab",
       "status": "implemented",
       "pages": ["/app/scans"],
       "category": "Scanner",
@@ -235,8 +235,8 @@
     {
       "id": "SCAN-003",
       "name": "Findings List",
-      "description": "Filterable findings with severity badges, detail panels, comments, and assignments",
-      "status": "implemented",
+      "description": "Filterable findings with severity badges, detail panels, comments, and assignments (client-side)",
+      "status": "in_progress",
       "pages": ["/app/findings"],
       "category": "Scanner",
       "required": true,
@@ -245,7 +245,7 @@
     {
       "id": "RPT-001",
       "name": "Report Generation",
-      "description": "Generate reports in HTML, JSON, SARIF, Markdown, CSV formats from scan data",
+      "description": "Generate reports in HTML, JSON, SARIF, Markdown, CSV formats with real file downloads",
       "status": "implemented",
       "pages": ["/app/reports"],
       "category": "Reports",
@@ -255,7 +255,7 @@
     {
       "id": "RPT-002",
       "name": "Email Report Sharing",
-      "description": "Configure email channels, templates, and send report simulations",
+      "description": "Channel configuration UI — sending is simulated, no real delivery",
       "status": "in_progress",
       "pages": ["/app/reports/email"],
       "category": "Reports",
@@ -265,7 +265,7 @@
     {
       "id": "MKT-001",
       "name": "Marketplace",
-      "description": "Protection marketplace with categories, search, install/uninstall from engine",
+      "description": "Protection marketplace with categories, search, install/uninstall via client-side engine",
       "status": "implemented",
       "pages": ["/app/marketplace"],
       "category": "Marketplace",
@@ -275,7 +275,7 @@
     {
       "id": "MKT-002",
       "name": "Marketplace Sub-categories",
-      "description": "Plugin, Dashboard, Integration, AI Prompt, Connector, Rule, Template, Theme cards",
+      "description": "8 sub-category pages — all show hardcoded 6-item card grids with no real install logic",
       "status": "in_progress",
       "pages": ["/app/marketplace/plugins", "/app/marketplace/dashboards", "/app/marketplace/integrations", "/app/marketplace/ai-prompts", "/app/marketplace/connectors", "/app/marketplace/rules", "/app/marketplace/templates", "/app/marketplace/themes"],
       "category": "Marketplace",
@@ -285,7 +285,7 @@
     {
       "id": "REPO-001",
       "name": "Repository Management",
-      "description": "Repository connection, scan, dependency analysis, secrets detection",
+      "description": "Repository connection UI — all data is hardcoded mock, no real git operations",
       "status": "in_progress",
       "pages": ["/app/repositories"],
       "category": "Repository",
@@ -295,8 +295,8 @@
     {
       "id": "DASH-001",
       "name": "Adaptive Dashboard",
-      "description": "Role-adaptive dashboard with sparklines, risk scores, severity distribution, compliance",
-      "status": "implemented",
+      "description": "Role-adaptive dashboard with sparklines, risk scores, severity distribution, compliance — all from demo data",
+      "status": "in_progress",
       "pages": ["/app/dashboard"],
       "category": "Dashboard",
       "required": true,
@@ -305,7 +305,7 @@
     {
       "id": "DASH-002",
       "name": "Risk Overview",
-      "description": "Risk list with severity, trend, score, and business context",
+      "description": "Risk list — all 5 items are hardcoded inline, no interactivity beyond display",
       "status": "in_progress",
       "pages": ["/app/risks"],
       "category": "Dashboard",
@@ -325,7 +325,7 @@
     {
       "id": "INT-001",
       "name": "Integration Hub",
-      "description": "Integration catalog with connection forms for security tools",
+      "description": "Integration catalog with connection forms — toggles are local state only, no real connections",
       "status": "in_progress",
       "pages": ["/app/integrations"],
       "category": "Integrations",
@@ -335,7 +335,7 @@
     {
       "id": "INT-002",
       "name": "SSH Key Management",
-      "description": "SSH key generation, management, and connection testing",
+      "description": "SSH key wizard UI — all keys and connection tests are simulated",
       "status": "in_progress",
       "pages": ["/app/integrations/ssh"],
       "category": "Integrations",
@@ -345,7 +345,7 @@
     {
       "id": "INT-003",
       "name": "API Key Management",
-      "description": "API key CRUD with scope selection, expiration, masked keys",
+      "description": "API key CRUD with scope selection — client-side only, no backend persistence",
       "status": "in_progress",
       "pages": ["/app/api-keys"],
       "category": "Integrations",
@@ -355,7 +355,7 @@
     {
       "id": "NTF-001",
       "name": "Notification Rules",
-      "description": "Notification rule CRUD, history, and channel configuration",
+      "description": "Notification rule CRUD UI — rules and history are mock, sends are simulated",
       "status": "in_progress",
       "pages": ["/app/notifications"],
       "category": "Notifications",
@@ -375,7 +375,7 @@
     {
       "id": "PLAT-002",
       "name": "Feature Registry",
-      "description": "Single source of truth for all platform features with status tracking",
+      "description": "Single source of truth for all platform features with honest status tracking",
       "status": "implemented",
       "pages": [],
       "category": "Platform",
@@ -385,7 +385,7 @@
     {
       "id": "PLAT-003",
       "name": "Project Management",
-      "description": "Project CRUD with onboarding wizard and project details",
+      "description": "Project CRUD with onboarding wizard — backed by client-side engine store, not real API",
       "status": "in_progress",
       "pages": ["/app/projects"],
       "category": "Platform",
@@ -395,7 +395,7 @@
     {
       "id": "PLAT-004",
       "name": "Settings Panel",
-      "description": "9-tab settings for Profile, Team, SSH Keys, Sessions, Tokens, Notifications, Integrations, Theme, Language",
+      "description": "9-tab settings — theme/language work; team/SSH/sessions/tokens are all mock data",
       "status": "in_progress",
       "pages": ["/app/settings"],
       "category": "Platform",
@@ -405,7 +405,7 @@
     {
       "id": "PLAT-005",
       "name": "Workspace",
-      "description": "Workspace overview with stats, activity, and quick actions",
+      "description": "Workspace overview — all stats and activity are hardcoded mock data",
       "status": "in_progress",
       "pages": ["/app/workspace"],
       "category": "Platform",
@@ -415,7 +415,7 @@
     {
       "id": "PLAT-006",
       "name": "Cloud Workspace",
-      "description": "Cloud project management with projects, assets, pipelines, billing",
+      "description": "Cloud project management — entirely placeholder with hardcoded data",
       "status": "planned",
       "pages": ["/app/cloud"],
       "category": "Platform",
@@ -425,7 +425,7 @@
     {
       "id": "PLAT-007",
       "name": "Pricing Page",
-      "description": "3-plan pricing with feature comparison table",
+      "description": "3-plan pricing with feature comparison table and working CTA links",
       "status": "implemented",
       "pages": ["/app/pricing"],
       "category": "Platform",
@@ -435,7 +435,7 @@
     {
       "id": "INF-001",
       "name": "Knowledge Graph",
-      "description": "ReactFlow-based knowledge graph from scan findings with search, filter, node detail",
+      "description": "ReactFlow-based knowledge graph from engine findings with search, filter, node detail",
       "status": "implemented",
       "pages": ["/app/demo/knowledge-graph"],
       "category": "Scanner",
@@ -445,7 +445,7 @@
     {
       "id": "INF-002",
       "name": "Attack Paths",
-      "description": "ReactFlow-based attack path visualizer from scan findings",
+      "description": "ReactFlow-based attack path visualizer from engine findings with path switching",
       "status": "implemented",
       "pages": ["/app/demo/attack-paths"],
       "category": "Scanner",
@@ -455,7 +455,7 @@
     {
       "id": "INF-003",
       "name": "Architecture View",
-      "description": "Interactive expandable architecture layers with deployment options",
+      "description": "Interactive expandable architecture layers — data from demo-data, not real infra",
       "status": "in_progress",
       "pages": ["/app/architecture"],
       "category": "Scanner",
@@ -511,6 +511,36 @@
       "category": "Platform",
       "required": false,
       "version": ""
+    },
+    {
+      "id": "I18N-001",
+      "name": "Internationalization",
+      "description": "Full Russian/English bilingual support across all pages and components",
+      "status": "implemented",
+      "pages": [],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-010"
+    },
+    {
+      "id": "THEME-001",
+      "name": "Dark/Light Theme",
+      "description": "next-themes powered theme switching with system preference detection",
+      "status": "implemented",
+      "pages": [],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-010"
+    },
+    {
+      "id": "NAV-001",
+      "name": "Search Modal",
+      "description": "Command-palette search modal accessible from app and landing pages",
+      "status": "implemented",
+      "pages": [],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-015"
     }
   ]
 }

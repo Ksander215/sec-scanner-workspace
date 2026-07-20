@@ -135,6 +135,7 @@ const NOTIFICATION_CONFIG: Record<
 /* ─── Provider ───────────────────────────────────────────────────────── */
 
 export function SoloNotificationProvider({ children }: { children: ReactNode }) {
+  const { t } = useI18n();
   const [notifications, setNotifications] = useState<SoloNotification[]>([]);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -220,7 +221,7 @@ export function SoloNotificationProvider({ children }: { children: ReactNode }) 
                     <div className="flex items-center gap-2 mb-1">
                       <Icon className="w-4 h-4 text-foreground/80 shrink-0" />
                       <span className="text-[10px] font-bold tracking-[0.15em] text-foreground/60 uppercase">
-                        {n.systemKey || "SYSTEM"}
+                        {n.systemKey ? t(n.systemKey) : "SYSTEM"}
                       </span>
                       <div className="flex-1" />
                       {/* Sound toggle */}
@@ -254,7 +255,7 @@ export function SoloNotificationProvider({ children }: { children: ReactNode }) 
 
                     {/* Title */}
                     <div className="text-sm font-medium text-foreground">
-                      {n.titleKey}
+                      {t(n.titleKey)}
                     </div>
 
                     {/* Description (collapsible) */}
@@ -268,7 +269,7 @@ export function SoloNotificationProvider({ children }: { children: ReactNode }) 
                           className="overflow-hidden"
                         >
                           <p className="text-xs text-foreground/60 mt-1 leading-relaxed">
-                            {n.descKey}
+                            {t(n.descKey!)}
                           </p>
                         </motion.div>
                       )}
@@ -289,7 +290,7 @@ export function SoloNotificationProvider({ children }: { children: ReactNode }) 
                             }}
                             className="text-xs font-medium px-3 py-1.5 rounded-lg bg-foreground/10 hover:bg-foreground/15 text-foreground/80 transition-colors"
                           >
-                            {action.labelKey}
+                            {t(action.labelKey)}
                           </button>
                         ))}
                       </div>
