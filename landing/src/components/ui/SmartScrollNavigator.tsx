@@ -194,6 +194,19 @@ const PAGE_SCROLL_CONFIGS: PageScrollConfig[] = [
     ],
     nextStep: { labelKey: "scroll.next.kg", href: "/app/demo/knowledge-graph" },
   },
+  {
+    route: "/app/marketplace",
+    enabled: true,
+    sections: [
+      { id: "marketplace-header", labelKey: "scroll.marketplace.overview" },
+      { id: "marketplace-catalog", labelKey: "scroll.marketplace.catalog" },
+      { id: "marketplace-community", labelKey: "scroll.marketplace.community" },
+      { id: "marketplace-faq", labelKey: "scroll.marketplace.faq" },
+    ],
+    nextStep: { labelKey: "scroll.next.scan", href: "/app/scanner" },
+    assistantQuestionKey: "scroll.assistant.marketplaceQuestion",
+    assistantActionKey: "scroll.assistant.marketplaceAction",
+  },
   // Pages where smart scroll is NOT needed:
   // /app/dashboard, /app/settings, /app/api-keys — short pages
   // /app/login, /app/register — auth pages

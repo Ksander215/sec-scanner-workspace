@@ -495,7 +495,7 @@ export default function MarketplacePreviewPage() {
   return (
     <div className="min-h-[calc(100vh-4rem)]">
       {/* Header */}
-      <div className="border-b border-border bg-surface/80 backdrop-blur-sm">
+      <div id="marketplace-header" className="border-b border-border bg-surface/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -578,6 +578,7 @@ export default function MarketplacePreviewPage() {
         </div>
       </div>
 
+      <div id="marketplace-catalog">
       <Container className="py-6">
         {/* Tool Health Panel */}
         {showToolHealth && (
@@ -718,7 +719,7 @@ export default function MarketplacePreviewPage() {
         )}
 
         {/* Community CTA */}
-        <div className="mt-8 p-6 rounded-xl border border-border bg-surface text-center">
+        <div id="marketplace-community" className="mt-8 p-6 rounded-xl border border-border bg-surface text-center">
           <p className="text-sm text-muted-2">
             {locale === "ru" ? "Есть вопросы? Обсудите в" : "Questions? Discuss in"}{" "}
             <a href="https://t.me/sip_security_platform" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">Telegram</a>
@@ -729,11 +730,12 @@ export default function MarketplacePreviewPage() {
           </p>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div id="marketplace-faq" className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
           <SectionFAQ section="marketplace" />
           <SmartNextStep {...RECOMMENDATION_CHAINS["marketplace"]} />
         </div>
       </Container>
+      </div>
     </div>
   );
 }
