@@ -1,30 +1,36 @@
+# SIP Work Log
+
 ---
-Task ID: INT-035
-Agent: Main
-Task: Confidence-Driven UX — Платформа, которой доверяют
+Task ID: INT-036
+Agent: Main Agent
+Task: Adaptive Intelligence System (AIS) — Full implementation
 
 Work Log:
-- Conducted full audit of platform messages: 37+ vulnerability refs, 65+ scan refs, 10+ installed/connected refs
-- Identified 60+ hardcoded Scanner strings, 25+ Dashboard hardcoded strings, 12 Marketplace inline locale strings
-- Created 5 new reusable components:
-  - WhatChanged.tsx — shows what changed after each action (BLOCK 2)
-  - ExecutiveSummary.tsx — auto-summary after analysis (BLOCK 5)
-  - ConfidenceScore.tsx — 5-level confidence metric with factors (BLOCK 7)
-  - CompanyProgress.tsx — monthly progress card (BLOCK 8)
-  - WhyImportant.tsx — business importance on every page (BLOCK 9)
-- Extended BusinessResult.tsx with 6 new types: solution_connected, check_configured, repo_connected, server_connected, integration_ready, analysis_complete
-- Updated i18n.ts with ~100 new translation keys (ru+en) for all confidence-driven blocks
-- Updated toast messages: replaced "Сканирование завершено" → "Проверка завершена. Состояние инфраструктуры стало более прозрачным."
-- Terminology updates: Risk Score → Control Level, Critical → Needs Attention in business score
-- Applied components on Dashboard: ConfidenceScore + CompanyProgress + WhyImportant
-- Applied WhyImportant on Marketplace
-- Built successfully, committed (ef01279), pushed to GitHub
-- Deployed to production: HTTP 200 on /app/dashboard and /app/marketplace
+- Explored full project structure (src/, components, hooks, engine, i18n)
+- Read all existing key files (GuideAssistant, BusinessResult, ConfidenceScore, CompanyProgress, AppLayout, Dashboard, etc.)
+- Created src/lib/ais/memory.ts — Adaptive Memory Engine (localStorage, session tracking, page visits, role scores, goal tracking)
+- Created src/lib/ais/sound.ts — Sound Identity (Web Audio API, 6 sound types: notification, success, error, complete, tip, achievement)
+- Created src/lib/ais/confidence.ts — Confidence Engine (score 0-100, 5 levels, narrative per role, factor breakdown)
+- Created src/lib/ais/context-predictor.ts — Context Prediction (7 prediction rules based on page/time/conditions)
+- Created src/lib/ais/index.ts — Barrel export
+- Created src/hooks/useAIS.ts — Main React hook integrating all AIS subsystems
+- Created src/components/ui/AISAssistant.tsx — Intelligent Guidance (proactive tips, guide/goal/confidence tabs, Trust Builder, AI Personality)
+- Created src/components/ui/SoloNotification.tsx — SOLO LEVELING Notifications (6 types, glow, animation, timer bar, sound)
+- Created src/components/ui/PersonalGoalCard.tsx — Personal Goal with progress bar
+- Created src/components/ui/AIExecutiveSummary.tsx — AI Executive Summary after scans
+- Added 150+ i18n keys (RU + EN) for all AIS features
+- Modified AppLayout.tsx — AISAssistant replaces GuideAssistant, SoloNotificationProvider wraps app
+- Modified dashboard/page.tsx — Adaptive Dashboard with role-based terminology, Personal Goal Card, role badge
+- Build passes cleanly with no TypeScript errors
+- Git commit b27363f pushed to main branch
+- SSH deployment failed (no SSH key available in environment)
+- Production at https://sec-scanner.pro/ returns HTTP 200 (old version still live)
 
 Stage Summary:
-- 5 new reusable components created for confidence-driven UX
-- 6 new BusinessResult types for business-language outcomes
-- ~100 new i18n keys covering confidence levels, priority language, progress tracking, why-important
-- Toast messages now always explain result with business context (no more bare "Done"/"Success")
-- Dashboard now shows Confidence Score (78/100 "Хороший") and Company Progress
-- Production verified: https://sec-scanner.pro/app/dashboard, https://sec-scanner.pro/app/marketplace
+- All 16 blocks implemented (BLOCK 1-15 code + BLOCK 16 partial audit)
+- New files: 10 (ais/ engine, hooks, UI components)
+- Modified files: 4 (AppLayout, Dashboard, i18n, add-ais-i18n script)
+- Total: 3317 lines added, 65 removed
+- Build: ✅ PASS
+- GitHub: ✅ PUSHED (main branch, commit b27363f)
+- Production: ⏳ NEEDS MANUAL DEPLOY (SSH key not available)
