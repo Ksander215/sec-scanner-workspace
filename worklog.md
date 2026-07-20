@@ -128,3 +128,39 @@ Stage Summary:
 - README обновлён с разделом для новых разработчиков
 - LOCAL = GITHUB = SERVER = PRODUCTION = BROWSER ✅
 - Новый агент может продолжить работу, прочитав HANDOFF.md → CURRENT_STATE.md → PRODUCT_PRINCIPLES.md → DEVELOPMENT_RULES.md → RELEASE_CHECKLIST.md
+
+---
+Task ID: INT-038
+Agent: Main Agent
+Task: Platform Audit, Feature Registry & Product Intelligence
+
+Work Log:
+- Explored full project structure: 63 page routes, 61 components, 5 AIS modules
+- Audited all 63 pages for readiness, fake data, missing DemoBadge, green labels, GuideAssistant references
+- Created Feature Registry JSON (46 features across 11 categories)
+- Created Feature Registry helper library (readiness, compliance, matrix computation)
+- Created Platform Status Center page (/app/platform-status) with overview, implemented/in-progress/planned tabs, functional matrix
+- Created Developer Overlay page (/app/debug/features) with per-page feature status
+- Added AIS Feature Registry integration — Guide tab shows page compliance status
+- Added Platform Status to sidebar navigation with i18n keys (RU/EN)
+- Visual audit: removed green overline labels from 7 landing page sections
+- Visual audit: removed "Live" badge from Knowledge Graph and Attack Paths demo pages
+- Visual audit: added DemoBadge to 6 pages with fake data (Cloud, Workspace/Monitoring, History, Jobs, Assets, Community/Roadmap)
+- Visual audit: deleted orphaned GuideAssistant component
+- Notification audit: made all BusinessResult components event-driven (conditional on actual data)
+- Created PRODUCT_AUDIT.md with defect tracking (AUD-001 to AUD-014)
+- Created CHANGELOG_PRODUCT.md with full change history
+- Build: successful, all 68 pages generated, no TypeScript errors
+- Git: committed (5f4dda0, 237ee99), pushed to GitHub main
+- Deploy: cloned on server, built, copied to webroot, nginx reloaded
+- E2E: all 21 key pages return HTTP 200
+- Visual review: Platform Status, Developer Overlay, Dashboard, Cloud, Landing all verified in browser
+- Quality Gate: all 12 checks passed
+
+Stage Summary:
+- Feature Registry is the single source of truth for all platform features
+- Platform Status Center is live at /app/platform-status showing real-time readiness
+- Developer Overlay is live at /app/debug/features for admin feature inspection
+- AIS reads Feature Registry and reports page compliance to users
+- All visual and notification defects fixed
+- Production verified and live
