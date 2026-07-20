@@ -238,3 +238,47 @@ Stage Summary:
 - Business language throughout all assistant messages
 - Commit: e8c503d (main)
 - LOCAL = GITHUB = SERVER = PRODUCTION ✅
+
+---
+Task ID: INT-033
+Agent: Super Z (main)
+Task: Smart Scroll Navigation — интеллектуальная навигация по длинным страницам
+
+Work Log:
+- BLOCK 1: Smart Scroll Detection — FAB появляется только при условиях: страница >2 экранов И прокрутка >30%
+- BLOCK 2: Включена на 12 страницах (Scanner, Findings, Risks, Reports, Repos, Integrations, Notifications, Projects, Workspace, Pricing, KG, Attack Paths)
+- BLOCK 3: Плавающий Navigation FAB (левый нижний угол) с раскрытием:
+  - ↑ Наверх
+  - 📍 Разделы страницы (якоря)
+  - ❓ Ваш помощник
+  - → Следующий шаг
+- BLOCK 4: Section Anchors — добавлены id-атрибуты к 40+ секциям на 12 страницах
+  - PageHeader.tsx обновлён с опциональным id prop
+- BLOCK 5: Индикатор прогресса (правая сторона) — точки секций + прогресс-бар
+  - ✓ Пройденные секции, ● Текущая, ○ Будущие
+- BLOCK 6: Автоскрытие FAB через 2 сек после остановки прокрутки
+- BLOCK 7: Интеграция с «Ваш помощник»
+  - Кнопка «Остались вопросы?» внизу страницы
+  - Контекстные вопросы для Scanner, Findings, Risks, Reports, Repos, Integrations, KG, Attack Paths
+  - GuideAssistant обновлён с externalOpen/onExternalClose props
+- BLOCK 8: Следующий логичный шаг при возврате наверх
+  - Scanner → Изучить обнаружения
+  - Findings → Оценить риски
+  - Risks → Создать отчёт
+  - Reports → Каталог инструментов
+- BLOCK 9: Business UX — «Всё просмотрено» при достижении 92%+ прокрутки
+  - Сообщение: «Безопасность компании стала прозрачной и управляемой»
+  - Ссылка на следующий этап
+- i18n: +90 ключей (RU + EN) для навигации
+- SSR безопасность: все document/window вызовы защищены typeof проверками
+- Build: ✅ Clean build, 65+ pages generated
+- Deploy: ✅ Server built + deployed + nginx reloaded
+- Production: ✅ 15/15 pages verified HTTP 200, SmartScrollNavigator confirmed in JS chunks
+
+Stage Summary:
+- 17 files changed, 917 insertions, 54 deletions
+- New component: SmartScrollNavigator.tsx (654 lines)
+- 12 pages enhanced with section anchors
+- Full integration with GuideAssistant
+- Commit: df57f77 (main)
+- LOCAL = GITHUB = SERVER = PRODUCTION ✅
