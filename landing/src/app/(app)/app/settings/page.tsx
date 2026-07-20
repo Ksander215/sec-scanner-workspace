@@ -32,6 +32,10 @@ import {
   Link2,
   AlertTriangle,
 } from "lucide-react";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -366,6 +370,10 @@ export default function SettingsPage() {
           <SettingsIcon className="w-6 h-6 text-accent" />
           {t("settings.title")}
           <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-amber-muted text-amber rounded border border-amber/20">Demo</span>
+          <div className="flex items-center gap-2 mt-2">
+            <ContextualHelp section="settings" />
+            <DemoBadge />
+          </div>
         </h1>
 
         {/* Demo notice banner */}
@@ -1004,6 +1012,11 @@ export default function SettingsPage() {
           </main>
         </div>
       </Container>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="settings" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["settings"]} />
+      </div>
     </div>
   );
 }

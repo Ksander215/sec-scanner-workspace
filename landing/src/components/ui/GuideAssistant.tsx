@@ -16,6 +16,10 @@ import {
   Sparkles,
   ArrowRight,
   CheckCircle2,
+  Bell,
+  Key,
+  Settings,
+  Database,
 } from "lucide-react";
 
 /* ─── Scenario definitions ────────────────────────────────────────────── */
@@ -101,6 +105,51 @@ const SCENARIOS: Scenario[] = [
       { titleKey: "guide.scenarios.report.step1.title", descKey: "guide.scenarios.report.step1.desc", href: "/app/scanner" },
       { titleKey: "guide.scenarios.report.step2.title", descKey: "guide.scenarios.report.step2.desc", href: "/app/reports" },
       { titleKey: "guide.scenarios.report.step3.title", descKey: "guide.scenarios.report.step3.desc", href: "/app/reports" },
+    ],
+  },
+  {
+    id: "notifications",
+    iconKey: "bell",
+    titleKey: "guide.scenarios.notifications.title",
+    descKey: "guide.scenarios.notifications.desc",
+    steps: [
+      { titleKey: "guide.scenarios.notifications.step1.title", descKey: "guide.scenarios.notifications.step1.desc", href: "/app/notifications" },
+      { titleKey: "guide.scenarios.notifications.step2.title", descKey: "guide.scenarios.notifications.step2.desc", href: "/app/integrations" },
+      { titleKey: "guide.scenarios.notifications.step3.title", descKey: "guide.scenarios.notifications.step3.desc", href: "/app/scanner" },
+    ],
+  },
+  {
+    id: "integrations",
+    iconKey: "database",
+    titleKey: "guide.scenarios.integrations.title",
+    descKey: "guide.scenarios.integrations.desc",
+    steps: [
+      { titleKey: "guide.scenarios.integrations.step1.title", descKey: "guide.scenarios.integrations.step1.desc", href: "/app/integrations" },
+      { titleKey: "guide.scenarios.integrations.step2.title", descKey: "guide.scenarios.integrations.step2.desc", href: "/app/repositories" },
+      { titleKey: "guide.scenarios.integrations.step3.title", descKey: "guide.scenarios.integrations.step3.desc", href: "/app/api-keys" },
+    ],
+  },
+  {
+    id: "control",
+    iconKey: "settings",
+    titleKey: "guide.scenarios.control.title",
+    descKey: "guide.scenarios.control.desc",
+    steps: [
+      { titleKey: "guide.scenarios.control.step1.title", descKey: "guide.scenarios.control.step1.desc", href: "/app/settings" },
+      { titleKey: "guide.scenarios.control.step2.title", descKey: "guide.scenarios.control.step2.desc", href: "/app/notifications" },
+      { titleKey: "guide.scenarios.control.step3.title", descKey: "guide.scenarios.control.step3.desc", href: "/app/api-keys" },
+      { titleKey: "guide.scenarios.control.step4.title", descKey: "guide.scenarios.control.step4.desc", href: "/app/scanner" },
+    ],
+  },
+  {
+    id: "api-access",
+    iconKey: "key",
+    titleKey: "guide.scenarios.apiAccess.title",
+    descKey: "guide.scenarios.apiAccess.desc",
+    steps: [
+      { titleKey: "guide.scenarios.apiAccess.step1.title", descKey: "guide.scenarios.apiAccess.step1.desc", href: "/app/api-keys" },
+      { titleKey: "guide.scenarios.apiAccess.step2.title", descKey: "guide.scenarios.apiAccess.step2.desc", href: "/app/integrations" },
+      { titleKey: "guide.scenarios.apiAccess.step3.title", descKey: "guide.scenarios.apiAccess.step3.desc", href: "/app/scanner" },
     ],
   },
 ];

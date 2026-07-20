@@ -12,7 +12,12 @@ type BusinessResultType =
   | "data_driven"
   | "controlled"
   | "protected"
-  | "calm";
+  | "calm"
+  | "scan_complete"
+  | "report_ready"
+  | "connected"
+  | "configured"
+  | "organized";
 
 interface BusinessResultProps {
   type: BusinessResultType;
@@ -53,6 +58,31 @@ const RESULT_CONFIG: Record<BusinessResultType, {
     icon: <ShieldCheck className="w-5 h-5" />,
     titleKey: "business.calm.title",
     descKey: "business.calm.desc",
+  },
+  scan_complete: {
+    icon: <ShieldCheck className="w-5 h-5" />,
+    titleKey: "business.scanComplete.title",
+    descKey: "business.scanComplete.desc",
+  },
+  report_ready: {
+    icon: <Brain className="w-5 h-5" />,
+    titleKey: "business.reportReady.title",
+    descKey: "business.reportReady.desc",
+  },
+  connected: {
+    icon: <TrendingUp className="w-5 h-5" />,
+    titleKey: "business.connected.title",
+    descKey: "business.connected.desc",
+  },
+  configured: {
+    icon: <Eye className="w-5 h-5" />,
+    titleKey: "business.configured.title",
+    descKey: "business.configured.desc",
+  },
+  organized: {
+    icon: <Target className="w-5 h-5" />,
+    titleKey: "business.organized.title",
+    descKey: "business.organized.desc",
   },
 };
 

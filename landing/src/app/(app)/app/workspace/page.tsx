@@ -3,6 +3,10 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Activity, Database, GitBranch, Clock, Cpu, BarChart3, ArrowRight, ShieldAlert, CheckCircle, AlertTriangle } from "lucide-react";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 const stats = [
   { label: "Total Assets", value: "8", icon: Database, color: "text-cyan", bg: "bg-cyan-muted" },
@@ -25,6 +29,10 @@ export default function WorkspaceOverviewPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Workspace Overview</h1>
         <p className="mt-2 text-muted-2">Monitor and manage your security workspace activities.</p>
+        <div className="flex items-center gap-2 mt-2">
+          <ContextualHelp section="workspace" />
+          <DemoBadge />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -95,6 +103,11 @@ export default function WorkspaceOverviewPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="workspace" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["workspace"]} />
       </div>
     </div>
   );

@@ -41,6 +41,8 @@ import {
   type Severity,
 } from "@/lib/engine";
 import { useI18n } from "@/lib/i18n-context";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
 
 // ─── Node type configs ──────────────────────────────────────────────────────
 
@@ -429,6 +431,11 @@ export default function AttackPathsPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="attack-paths" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["attack-paths"]} />
       </div>
     </div>
   );

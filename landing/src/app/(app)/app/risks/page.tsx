@@ -2,6 +2,11 @@
 
 import { motion } from "framer-motion";
 import { ShieldAlert, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
+import { BusinessResult } from "@/components/ui/BusinessResult";
 
 const risks = [
   { id: "RISK-001", name: "Unpatched Critical Vulnerabilities", severity: "critical", score: 9.2, trend: "up", affectedAssets: 3, description: "Multiple critical CVEs remain unpatched across production infrastructure." },
@@ -29,6 +34,11 @@ export default function RisksPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground">Risks</h1>
         <p className="mt-2 text-muted-2">Risk assessment and management for your security posture.</p>
+        <div className="flex items-center gap-2 mt-2">
+          <ContextualHelp section="risks" />
+          <DemoBadge />
+        </div>
+        <BusinessResult type="risks_known" className="mt-4" />
       </div>
 
       <div className="space-y-3">
@@ -64,6 +74,11 @@ export default function RisksPage() {
             </motion.div>
           );
         })}
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="risks" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["risks"]} />
       </div>
     </div>
   );

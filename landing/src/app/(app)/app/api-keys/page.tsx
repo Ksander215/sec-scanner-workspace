@@ -21,6 +21,11 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
+import { BusinessResult } from "@/components/ui/BusinessResult";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -295,6 +300,11 @@ export default function ApiKeysPage() {
                   {t("apiKeys.title")}
                 </h1>
                 <p className="text-sm text-muted-2 mt-0.5">{t("apiKeys.subtitle")}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <ContextualHelp section="api-keys" />
+                  <DemoBadge />
+                </div>
+                <BusinessResult type="configured" className="mt-4" />
               </div>
             </div>
             <Button onClick={() => setShowCreateDialog(true)}>
@@ -819,6 +829,11 @@ export default function ApiKeysPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="api-keys" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["api-keys"]} />
+      </div>
     </div>
   );
 }

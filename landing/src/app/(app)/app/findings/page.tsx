@@ -42,6 +42,10 @@ import {
   Share2,
 } from "lucide-react";
 import Link from "next/link";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { BusinessResult } from "@/components/ui/BusinessResult";
 
 const severityConfig: Record<Severity, { color: string; bg: string; border: string }> = {
   critical: { color: "text-red", bg: "bg-red-muted", border: "border-red/20" },
@@ -214,6 +218,10 @@ export default function FindingsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">{t("findings.title")}</h1>
         <p className="mt-2 text-muted-2">{t("findings.subtitle")}</p>
+        <div className="flex items-center gap-2 mt-2">
+          <ContextualHelp section="findings" />
+        </div>
+        <BusinessResult type="risks_known" className="mt-4" />
       </div>
 
       {/* ─── Filter Bar ─────────────────────────────────────────────────── */}
@@ -689,6 +697,11 @@ export default function FindingsPage() {
           </>
         )}
       </AnimatePresence>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="findings" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["findings"]} />
+      </div>
     </div>
   );
 }
