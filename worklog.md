@@ -92,3 +92,39 @@ Stage Summary:
 - All pages return HTTP 200
 - User issue was browser cache — need Ctrl+Shift+R
 - LOCAL = GITHUB = SERVER = PRODUCTION = BROWSER ✅
+
+---
+Task ID: INT-037
+Agent: Main Agent
+Task: Project Knowledge Base & Handoff System
+
+Work Log:
+- Explored full project state: 66 pages, 33 UI components, 24 lib modules, 2676 i18n keys, 6 plugins
+- Created 14 documentation files in /docs/:
+  1. HANDOFF.md — точка входа для новых участников (миссия, состояние, порядок работы)
+  2. CURRENT_STATE.md — живая сводка (готовность модулей, долги, риски, метрики)
+  3. PRODUCT_VISION.md — продуктовое видение (что продаём, для кого, отличия)
+  4. PRODUCT_PRINCIPLES.md — 11 принципов (Business First, Zero Anxiety, Event Driven, etc.)
+  5. DEVELOPMENT_RULES.md — правила разработки (Production First, Zero Divergence, etc.)
+  6. RELEASE_CHECKLIST.md — чек-лист релиза (Build → GitHub → Server → Production → Review)
+  7. END_TO_END_CHECKLIST.md — E2E сценарии для 11 страниц
+  8. AIS_SPECIFICATION.md — полная спецификация AIS (архитектура, модули, поведение)
+  9. UX_GUIDELINES.md — UX руководства (цвета, типографика, анимации, адаптивность)
+  10. ARCHITECTURE.md — архитектура проекта (frontend, backend, plugins, infrastructure)
+  11. ROADMAP.md — дорожная карта (выполненное + следующее + долгосрочное)
+  12. DECISIONS.md — 15 архитектурных решений (ADR-001 — ADR-015)
+  13. GLOSSARY.md — глоссарий (продуктовые, технические термины, роли)
+  14. CHANGELOG_PRODUCT.md — продуктовый чейнджлог (только видимые изменения)
+- Updated README.md — добавлен раздел "For New Developers" с порядком чтения документации
+- Build: ✅ PASS (66 static pages)
+- Git: ✅ COMMIT 80dfbf1 + PUSH to main
+- Server: ✅ git pull + next build + copy + nginx reload
+- Production: ✅ HTTP 200
+- Browser Verification: Landing ✅, Dashboard ✅, AIS panel ✅, Scanner ✅, Marketplace ✅, Reports ✅, Settings ✅, Dark theme ✅
+- Regression: No pages broken
+
+Stage Summary:
+- 14 документов созданы (2,652 строки)
+- README обновлён с разделом для новых разработчиков
+- LOCAL = GITHUB = SERVER = PRODUCTION = BROWSER ✅
+- Новый агент может продолжить работу, прочитав HANDOFF.md → CURRENT_STATE.md → PRODUCT_PRINCIPLES.md → DEVELOPMENT_RULES.md → RELEASE_CHECKLIST.md
