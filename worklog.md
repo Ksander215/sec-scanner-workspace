@@ -183,3 +183,58 @@ Stage Summary:
 - After: 15/15 pages have ContextualHelp + FAQ + SmartNextStep, 9/15 have DemoBadge, 7/15 have BusinessResult
 - 25 files changed, 3425 insertions
 - Commit: 00fd97b (main)
+
+---
+Task ID: INT-032
+Agent: Super Z (main)
+Task: Self-Explaining Platform (Платформа, которая объясняет себя сама)
+
+Work Log:
+- BLOCK 1-2: Complete rewrite of GuideAssistant → "Ваш помощник"
+  - Replaced scenario-based wizard with context-aware dialog navigator
+  - Assistant automatically detects current page via pathname matching
+  - 4 tabs: Explain / Flow / FAQ / Path
+  - Greeting message adapts to the section user opened
+  - 17 page contexts defined (dashboard, scanner, findings, risks, reports, repositories, integrations, knowledge-graph, attack-paths, marketplace, projects, workspace, architecture, notifications, api-keys, settings, pricing)
+- BLOCK 3: Every page auto-answers 4 questions via Explain tab
+  - Что это? / Для чего это нужно? / Что вы получите? / Что делать дальше?
+  - Each of 17 sections has all 4 answers in business language
+- BLOCK 4: Visual flow diagrams integrated into Flow tab
+  - Scanner: Target → Check → Risks → Graph → Report → Fix
+  - Repository: GitHub → Analysis → Secrets → Dependencies → Results
+  - Knowledge Graph: Vulnerability → Asset → Attack Path → Recommendations
+  - 17 section-specific visual flows with VisualFlow component
+- BLOCK 5: "What changed?" after actions (business language)
+  - After scan: "Security checkpoint created, track improvements"
+  - After repo connect: "Code changes auto-analyzed for risks"
+  - After integration: "Security data flows to connected system"
+  - After notification setup: "Critical events arrive automatically"
+- BLOCK 6: Progress tracker with checkboxes + global user path
+  - Per-section checklist with mark-as-done functionality
+  - Global path: Project → Repository → SSH → Notifications → Scan → Report
+  - Completion celebration when all steps checked
+- BLOCK 7: Live FAQ per page via Questions tab
+  - 2-5 contextual FAQ items per section
+  - Expandable accordion with business-language answers
+- BLOCK 8: Business language throughout
+  - No technical jargon in assistant messages
+  - "CVE" → "Известная уязвимость", "Repository" → "Хранилище кода"
+  - "Critical Risk" → "Проблема, которую рекомендуется устранить в первую очередь"
+- BLOCK 9: Confidence-building messages
+  - Added "confidence_boost" type to BusinessResult component
+  - "Безопасность вашей компании стала прозрачной и управляемой"
+  - Scan complete: "Вы знаете, какие риски требуют внимания в первую очередь"
+- i18n: +260 keys (RU + EN) for all assistant content
+  - 17 greetings, 17 × 4 explanation answers, 17 visual flows
+  - 30+ progress step labels, 5 action results, 3 confidence messages
+- Build: ✅ Clean build, 65 pages generated
+- Deploy: ✅ Server built + deployed + nginx reloaded
+- Production: ✅ 17 pages verified HTTP 200, assistant JS confirmed in bundles
+
+Stage Summary:
+- 3 files changed, 1370 insertions, 261 deletions
+- GuideAssistant completely rewritten: scenario picker → context-aware dialog navigator
+- Every page now has automatic explanation, visual flow, FAQ, and progress tracking
+- Business language throughout all assistant messages
+- Commit: e8c503d (main)
+- LOCAL = GITHUB = SERVER = PRODUCTION ✅
