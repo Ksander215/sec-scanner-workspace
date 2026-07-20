@@ -56,3 +56,4 @@ scripts/deploy_fast.py
 sec-scanner-current.json
 sec-scanner-new.json
 *.cache
+.github/workflows/
