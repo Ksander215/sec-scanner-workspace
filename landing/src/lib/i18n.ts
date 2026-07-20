@@ -2551,6 +2551,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "scroll.arch.overview": "Обзор архитектуры",
     "scroll.arch.layers": "Слои инфраструктуры",
     "scroll.arch.faq": "Вопросы",
+    "scroll.marketplace.overview": "Каталог инструментов",
+    "scroll.marketplace.catalog": "Инструменты",
+    "scroll.marketplace.community": "Сообщество",
+    "scroll.marketplace.faq": "Вопросы",
 
     // Next step labels
     "scroll.next.findings": "Изучить обнаружения",
@@ -2582,6 +2586,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "scroll.assistant.kgAction": "Объяснить простыми словами",
     "scroll.assistant.apQuestion": "Неясны пути атак?",
     "scroll.assistant.apAction": "Объяснить простыми словами",
+    "scroll.assistant.marketplaceQuestion": "Неясно, какой инструмент выбрать?",
+    "scroll.assistant.marketplaceAction": "Подобрать под задачу",
 
   },
 
@@ -5108,6 +5114,10 @@ const translations: Record<Locale, Record<string, string>> = {
     "scroll.arch.overview": "Architecture overview",
     "scroll.arch.layers": "Infrastructure layers",
     "scroll.arch.faq": "FAQ",
+    "scroll.marketplace.overview": "Tool catalog",
+    "scroll.marketplace.catalog": "Tools",
+    "scroll.marketplace.community": "Community",
+    "scroll.marketplace.faq": "FAQ",
 
     // Next step labels
     "scroll.next.findings": "Review findings",
@@ -5139,6 +5149,8 @@ const translations: Record<Locale, Record<string, string>> = {
     "scroll.assistant.kgAction": "Explain simply",
     "scroll.assistant.apQuestion": "Unclear attack paths?",
     "scroll.assistant.apAction": "Explain simply",
+    "scroll.assistant.marketplaceQuestion": "Not sure which tool to choose?",
+    "scroll.assistant.marketplaceAction": "Recommend for your task",
 
 },
 };
