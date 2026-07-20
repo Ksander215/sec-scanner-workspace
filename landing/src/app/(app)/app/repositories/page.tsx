@@ -35,6 +35,10 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { Tabs } from "@/components/ui/Tabs";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -1044,6 +1048,11 @@ export default function RepositoriesPage() {
         </div>
       </PageHeader>
 
+      <div className="flex items-center gap-2 mt-2">
+        <ContextualHelp section="repositories" />
+        <DemoBadge />
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {repos.length === 0 ? (
           <motion.div
@@ -1088,6 +1097,11 @@ export default function RepositoriesPage() {
         t={t}
         onConnected={handleConnected}
       />
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="repositories" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["repositories"]} />
+      </div>
     </div>
   );
 }

@@ -19,6 +19,10 @@ import {
   Workflow,
 } from "lucide-react";
 import { architectureLayers, type ArchLayer } from "@/lib/demo-data";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 const layerIcons: React.ElementType[] = [Server, Workflow, Layers, Box, Plug];
 
@@ -163,6 +167,10 @@ export default function InteractiveArchitecturePage() {
             Interactive Architecture
           </h1>
           <p className="text-sm text-muted-2 mt-1">Click each layer to explore its classes, technologies, and connections</p>
+          <div className="flex items-center gap-2 mt-2">
+            <ContextualHelp section="architecture" />
+            <DemoBadge />
+          </div>
         </div>
       </div>
 
@@ -207,6 +215,11 @@ export default function InteractiveArchitecturePage() {
           </a>
         </div>
       </Container>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="architecture" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["architecture"]} />
+      </div>
     </div>
   );
 }

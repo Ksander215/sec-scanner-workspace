@@ -46,6 +46,11 @@ import {
   type Repository,
   type SSHConnection,
 } from "@/lib/engine";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
+import { BusinessResult } from "@/components/ui/BusinessResult";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -1362,6 +1367,12 @@ export default function ProjectsPage() {
         </div>
       </PageHeader>
 
+      <div className="flex items-center gap-2 mt-2">
+        <ContextualHelp section="projects" />
+        <DemoBadge />
+      </div>
+      <BusinessResult type="organized" className="mt-4" />
+
       <Container>
         <div className="py-8">
           {projects.length === 0 ? (
@@ -1410,6 +1421,11 @@ export default function ProjectsPage() {
         onComplete={handleCreateProject}
         t={t}
       />
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="projects" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["projects"]} />
+      </div>
     </div>
   );
 }

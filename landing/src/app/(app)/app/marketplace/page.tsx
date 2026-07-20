@@ -45,6 +45,10 @@ import {
   ALL_MANIFESTS,
   BUILTIN_TOOL_IDS,
 } from "@/lib/engine";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
 
 const categoryIcons: Record<string, React.ElementType> = {
   plugins: Puzzle,
@@ -500,6 +504,10 @@ export default function MarketplacePreviewPage() {
                 {t("marketplace.title")}
               </h1>
               <p className="text-sm text-muted-2 mt-1">{t("marketplace.subtitle")}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <ContextualHelp section="marketplace" />
+                <DemoBadge />
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -719,6 +727,11 @@ export default function MarketplacePreviewPage() {
             {" · "}
             <a href="https://github.com/Ksander215/sec-scanner-workspace" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">GitHub</a>
           </p>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <SectionFAQ section="marketplace" />
+          <SmartNextStep {...RECOMMENDATION_CHAINS["marketplace"]} />
         </div>
       </Container>
     </div>

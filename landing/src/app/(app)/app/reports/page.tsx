@@ -33,6 +33,10 @@ import {
   type ExportFormat,
   type ReportContent,
 } from "@/lib/engine";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { BusinessResult } from "@/components/ui/BusinessResult";
 
 // ─── Types ──────────────────────────────────────────────────────────────
 
@@ -289,6 +293,10 @@ export default function ReportsPage() {
             {t("reports.title")}
           </h1>
           <p className="mt-2 text-muted-2">{t("reports.subtitle")}</p>
+          <div className="flex items-center gap-2 mt-2">
+            <ContextualHelp section="reports" />
+          </div>
+          <BusinessResult type="report_ready" className="mt-4" />
         </div>
         <Button onClick={() => setShowDialog(true)} disabled={generating}>
           {generating ? (
@@ -581,6 +589,11 @@ export default function ReportsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="reports" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["reports"]} />
+      </div>
     </Container>
   );
 }

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/Button";
 import { Check, X, Shield, Zap, Building2, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { motion } from "framer-motion";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
 
 /* ─── Feature definition ────────────────────────────────────────── */
 interface PlanFeature {
@@ -180,6 +183,9 @@ export default function PricingPage() {
           >
             {t("pricing2.subtitle")}
           </motion.p>
+          <div className="flex items-center gap-2 mt-2">
+            <ContextualHelp section="pricing" />
+          </div>
         </div>
       </div>
 
@@ -352,6 +358,11 @@ export default function PricingPage() {
           </div>
         </motion.section>
       </Container>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="pricing" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["pricing"]} />
+      </div>
     </>
   );
 }

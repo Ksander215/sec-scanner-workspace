@@ -35,6 +35,11 @@ import {
   Zap,
   Clock,
 } from "lucide-react";
+import { ContextualHelp } from "@/components/ui/ContextualHelp";
+import { SectionFAQ } from "@/components/ui/SectionFAQ";
+import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
+import { DemoBadge } from "@/components/ui/DemoBadge";
+import { BusinessResult } from "@/components/ui/BusinessResult";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -837,6 +842,11 @@ export default function IntegrationsHubPage() {
                 <p className="text-sm text-muted-2 mt-0.5">
                   {t("integrations.subtitle")}
                 </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <ContextualHelp section="integrations" />
+                  <DemoBadge />
+                </div>
+                <BusinessResult type="connected" className="mt-4" />
               </div>
             </div>
 
@@ -996,6 +1006,11 @@ export default function IntegrationsHubPage() {
           />
         )}
       </AnimatePresence>
+
+      <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <SectionFAQ section="integrations" />
+        <SmartNextStep {...RECOMMENDATION_CHAINS["integrations"]} />
+      </div>
     </div>
   );
 }
