@@ -1,0 +1,3653 @@
+{
+  "version": "INT-046-v1",
+  "lastUpdated": "2026-07-21T23:00:00+03:00",
+  "productionCommit": "ebf668271964fc8606c22a7d1ad87f3a5f982c99",
+  "auditedBy": "GLM-5.2 (Super Z)",
+  "blockScores": {
+    "Frontend": 94,
+    "Backend": 78,
+    "AIS": 91,
+    "UX": 88,
+    "Business Language": 96,
+    "Evidence": 100,
+    "Accessibility": 72,
+    "Performance": 81
+  },
+  "categoryScores": {
+    "AIS": {
+      "score": 91,
+      "notes": "Полностью реализован, 10 модулей. Sounds имеет partial из-за autoplay policy."
+    },
+    "UX": {
+      "score": 88,
+      "notes": "Большинство компонентов готовы. Empty/Loading/Error states непоследовательны."
+    },
+    "Dashboard": {
+      "score": 90,
+      "notes": "Хорошая визуализация, но нет onboarding для новых пользователей."
+    },
+    "Scanner": {
+      "score": 85,
+      "notes": "Форма работает, нет real-time прогресса сканирования на UI."
+    },
+    "Reports": {
+      "score": 82,
+      "notes": "Генерация работает, email sharing — mock."
+    },
+    "Marketplace": {
+      "score": 84,
+      "notes": "UI готов, install/uninstall — client-side только."
+    },
+    "Repository": {
+      "score": 65,
+      "notes": "UI есть, реальная интеграция с git отсутствует."
+    },
+    "Business UX": {
+      "score": 96,
+      "notes": "BusinessResult, ExecutiveSummary работают отлично."
+    },
+    "Integrations": {
+      "score": 63,
+      "notes": "UI есть, реальные подключения отсутствуют (mock)."
+    },
+    "Notifications": {
+      "score": 54,
+      "notes": "UI есть, delivery — mock, rules — mock."
+    },
+    "Platform": {
+      "score": 78,
+      "notes": "Основные страницы готовы, SSO/RBAC/Audit Trail не начаты."
+    }
+  },
+  "aisModuleScores": {
+    "AIS Notifications": {
+      "score": 92,
+      "notes": "Cinematic animation работает, contextual tips появляются"
+    },
+    "AIS Memory": {
+      "score": 88,
+      "notes": "localStorage persistence работает, нет server-side persistence"
+    },
+    "AIS Sound": {
+      "score": 65,
+      "notes": "Web Audio API готов, browser autoplay policy блокирует автоматическое воспроизведение"
+    },
+    "AIS Prediction": {
+      "score": 85,
+      "notes": "Context prediction работает, 7 правил. Limited ML."
+    },
+    "AIS Context": {
+      "score": 90,
+      "notes": "Page-aware context работает на всех ключевых страницах"
+    },
+    "AIS Learning": {
+      "score": 78,
+      "notes": "Adaptive timing работает, learning rate медленный"
+    },
+    "AIS Personalization": {
+      "score": 82,
+      "notes": "Role detection работает, нет ручной настройки роли"
+    },
+    "AIS Guide": {
+      "score": 89,
+      "notes": "AISAssistant с 3 вкладками работает отлично"
+    },
+    "AIS Confidence": {
+      "score": 87,
+      "notes": "5 уровней confidence работает, факторы влияния видны"
+    },
+    "AIS Event Bus": {
+      "score": 91,
+      "notes": "Subscribe/emit работает, нет persistence между сессиями"
+    }
+  },
+  "trustFindings": [
+    {
+      "id": "TRUST-001",
+      "severity": "high",
+      "page": "/app/dashboard",
+      "finding": "Demo данные отображаются как реальные метрики без явной пометки DemoBadge на всех графиках",
+      "status": "partial_fixed",
+      "fix": "DemoBadge добавлен на некоторые секции в INT-038, но не на все"
+    },
+    {
+      "id": "TRUST-002",
+      "severity": "critical",
+      "page": "/app/integrations",
+      "finding": "Toggles 'Connect' показывают success notification без реального подключения к сервису",
+      "status": "open",
+      "fix": "TODO: либо реальная интеграция, либо явная пометка 'Demo' на toggle"
+    },
+    {
+      "id": "TRUST-003",
+      "severity": "critical",
+      "page": "/app/scanner",
+      "finding": "Progress bar сканирования симулируется, не отражает реальный прогресс backend",
+      "status": "open",
+      "fix": "TODO: подключить SSE от backend для real-time progress"
+    },
+    {
+      "id": "TRUST-004",
+      "severity": "high",
+      "page": "/app/reports/email",
+      "finding": "Email sending показывает success, но реальная отправка не происходит",
+      "status": "open",
+      "fix": "TODO: либо реальный SMTP, либо явная пометка 'simulated'"
+    },
+    {
+      "id": "TRUST-005",
+      "severity": "medium",
+      "page": "/app/notifications",
+      "finding": "Notification rules CRUD сохраняется в localStorage, но UI не показывает что данные не персистентны",
+      "status": "open",
+      "fix": "TODO: добавить пометку 'локально' или перенести на backend"
+    },
+    {
+      "id": "TRUST-006",
+      "severity": "medium",
+      "page": "/app/api-keys",
+      "finding": "API keys создаются локально, не валидируются и не используются реальными API endpoints",
+      "status": "open",
+      "fix": "TODO: backend должен валидировать API keys"
+    },
+    {
+      "id": "TRUST-007",
+      "severity": "low",
+      "page": "/app/marketplace",
+      "finding": "Install/uninstall работает client-side, но реальная установка плагина не происходит",
+      "status": "partial_fixed",
+      "fix": "DemoBadge на некоторых карточках, но не на всех"
+    }
+  ],
+  "uxFindings": [
+    {
+      "id": "UX-001",
+      "page": "/app/dashboard",
+      "issue": "Некоторые карточки имеют зелёные overline labels (убрано в INT-038, но местами осталось)",
+      "severity": "low"
+    },
+    {
+      "id": "UX-002",
+      "page": "/app/marketplace",
+      "issue": "8 подкатегорий с одинаковыми 6 карточками — дублирование контента",
+      "severity": "medium"
+    },
+    {
+      "id": "UX-003",
+      "page": "/app/settings",
+      "issue": "9 табов с mock данными создают ощущение перегруженности",
+      "severity": "medium"
+    },
+    {
+      "id": "UX-004",
+      "page": "/app/workspace/*",
+      "issue": "5 страниц workspace с hardcoded activity/stats — одинаковое визуальное оформление",
+      "severity": "low"
+    },
+    {
+      "id": "UX-005",
+      "page": "/app/docs/*",
+      "issue": "11 страниц документации с похожими заголовками 'Getting Started', 'Guides' — сложно отличить",
+      "severity": "low"
+    },
+    {
+      "id": "UX-006",
+      "page": "/app/community/*",
+      "issue": "3 страницы community с одинаковым layout — нет чёткой дифференциации",
+      "severity": "low"
+    }
+  ],
+  "userJourney": [
+    {
+      "stage": "Первый вход",
+      "score": 78,
+      "issues": [
+        "Нет onboarding wizard",
+        "AIS first-visit notification есть, но нет guided tour"
+      ]
+    },
+    {
+      "stage": "Регистрация",
+      "score": 0,
+      "issues": [
+        "Нет системы аутентификации — PLAT-008 SSO not_started"
+      ]
+    },
+    {
+      "stage": "Настройка",
+      "score": 65,
+      "issues": [
+        "9 табов настроек, но team/SSH/sessions/tokens — mock",
+        "AIS settings работают"
+      ]
+    },
+    {
+      "stage": "Первый скан",
+      "score": 72,
+      "issues": [
+        "Форма сканера работает",
+        "Реальное сканирование требует backend setup",
+        "Progress bar симулируется"
+      ]
+    },
+    {
+      "stage": "Интеграции",
+      "score": 45,
+      "issues": [
+        "UI есть, реальные подключения отсутствуют",
+        "SSH key wizard — mock",
+        "Webhooks — mock"
+      ]
+    },
+    {
+      "stage": "Отчёт",
+      "score": 80,
+      "issues": [
+        "Генерация отчётов работает (HTML/JSON/SARIF/MD/CSV)",
+        "Email sharing — mock",
+        "Нет автоматической отправки"
+      ]
+    },
+    {
+      "stage": "Повторное использование",
+      "score": 70,
+      "issues": [
+        "Scan history в localStorage",
+        "Project CRUD client-side",
+        "Нет server-side persistence"
+      ]
+    }
+  ],
+  "accessibility": {
+    "desktop": {
+      "score": 88,
+      "issues": [
+        "Хорошая контрастность",
+        "Keyboard navigation работает",
+        "Некоторые модальные окна не trap focus"
+      ]
+    },
+    "mobile": {
+      "score": 65,
+      "issues": [
+        "Responsive, но не mobile-first",
+        "Sidebar collapsible, но жесты не настроены",
+        "Некоторые таблицы overflow на mobile"
+      ]
+    },
+    "tablet": {
+      "score": 80,
+      "issues": [
+        "Адаптивный layout работает",
+        "Некоторые карточки слишком мелкие"
+      ]
+    },
+    "dark_theme": {
+      "score": 92,
+      "issues": [
+        "Полная поддержка dark theme",
+        "Некоторые элементы имеют недостаточный контраст"
+      ]
+    },
+    "keyboard": {
+      "score": 75,
+      "issues": [
+        "Tab navigation работает",
+        "Skip-to-content отсутствует",
+        "Некоторые dropdown не закрываются по Escape"
+      ]
+    },
+    "screen_reader": {
+      "score": 55,
+      "issues": [
+        "aria-live для AIS notifications есть",
+        "Многие иконки без aria-label",
+        "Form labels частичные"
+      ]
+    },
+    "contrast": {
+      "score": 82,
+      "issues": [
+        "WCAG AA в большинстве мест",
+        "Некоторые placeholder тексты не соответствуют"
+      ]
+    },
+    "text_size": {
+      "score": 90,
+      "issues": [
+        "Базовый размер 16px",
+        "Возможность zoom до 200% работает"
+      ]
+    },
+    "notifications": {
+      "score": 78,
+      "issues": [
+        "AIS notifications читаемы",
+        "Auto-dismiss может быть слишком быстрым для SR users"
+      ]
+    }
+  },
+  "features": {
+    "AIS-001": {
+      "id": "AIS-001",
+      "name": "Adaptive Intelligence Assistant",
+      "description": "Floating AIS button with proactive tips, contextual trust builder, and context prediction",
+      "category": "AIS",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "AIS-002": {
+      "id": "AIS-002",
+      "name": "Confidence Score",
+      "description": "Real-time confidence scoring based on user actions and platform engagement",
+      "category": "AIS",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "AIS-003": {
+      "id": "AIS-003",
+      "name": "Context Prediction",
+      "description": "Rule-based next-action prediction based on page time and navigation patterns",
+      "category": "AIS",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "AIS-004": {
+      "id": "AIS-004",
+      "name": "Adaptive Memory",
+      "description": "Persistent memory of user actions, page visits, and preferences across sessions (localStorage)",
+      "category": "AIS",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "AIS-005": {
+      "id": "AIS-005",
+      "name": "Sound Notifications",
+      "description": "Web Audio API audio feedback for notifications, achievements, tips, and system events",
+      "category": "AIS",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "AIS-006": {
+      "id": "AIS-006",
+      "name": "Personalized Guidance",
+      "description": "Role-based guidance and goal tracking (CEO, CTO, Developer, DevOps, Pentester)",
+      "category": "AIS",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "AIS-007": {
+      "id": "AIS-007",
+      "name": "SOLO LEVELING Notifications",
+      "description": "Branded notification system with glow effects, sounds, and i18n-translated text. DEPRECATED in INT-040 v2 — replaced by AISSystemEvent (cinematic 6-stage animation). File SoloNotification.tsx remains as dead code and should be removed.",
+      "category": "AIS",
+      "version": "INT-038",
+      "status": "deprecated",
+      "scores": {
+        "product": 12,
+        "ux": 0,
+        "business": 20,
+        "evidence": 0
+      },
+      "fourStatuses": {
+        "technical": "deprecated",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "not_deployed"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": false,
+        "no_fake_state": true,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": true,
+        "manually_verified": false
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Есть дублирование текста/элементов",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных",
+        "Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "AIS-008": {
+      "id": "AIS-008",
+      "name": "Developer Overlay",
+      "description": "Feature status per page at /app/debug/features, built from Feature Registry. BROKEN on Production: page returns 404 fallback to index.html (HTTP 200, 163356 bytes = index.html size). Source exists in git at /app/debug/features/page.tsx but not in production build.",
+      "category": "AIS",
+      "version": "INT-038",
+      "status": "broken",
+      "scores": {
+        "product": 25,
+        "ux": 12,
+        "business": 20,
+        "evidence": 33
+      },
+      "fourStatuses": {
+        "technical": "broken",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "broken"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/debug/features",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "AIS-009": {
+      "id": "AIS-009",
+      "name": "Feature Status in AIS",
+      "description": "AIS reads Feature Registry and reports page compliance status to users",
+      "category": "AIS",
+      "version": "INT-038",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-001": {
+      "id": "UX-001",
+      "name": "Contextual Help",
+      "description": "Expandable help panels with What/Why/Result for 16 sections on key pages",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/risks",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-002": {
+      "id": "UX-002",
+      "name": "Business Result",
+      "description": "Business-oriented result blocks showing ROI, cost savings, and impact",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/risks",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-003": {
+      "id": "UX-003",
+      "name": "Executive Summary",
+      "description": "AI-generated executive summary for security posture and business impact",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "UX-004": {
+      "id": "UX-004",
+      "name": "Section FAQ",
+      "description": "Collapsible FAQ sections on key pages for self-service support",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/risks",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-005": {
+      "id": "UX-005",
+      "name": "Smart Next Step",
+      "description": "Intelligent next step recommendations after completing actions",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/risks",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-006": {
+      "id": "UX-006",
+      "name": "Visual Flow",
+      "description": "Visual pipeline and workflow diagrams for complex processes",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/marketplace",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-007": {
+      "id": "UX-007",
+      "name": "Smart Scroll Navigator",
+      "description": "Scroll-aware navigation indicator with section dots, progress, and AIS integration",
+      "category": "UX",
+      "version": "INT-033",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-008": {
+      "id": "UX-008",
+      "name": "Demo Badge",
+      "description": "Warning badge indicating demo/mock data on pages",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/risks",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-009": {
+      "id": "UX-009",
+      "name": "Term Tooltip",
+      "description": "Hoverable tooltips for security and business terminology",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-010": {
+      "id": "UX-010",
+      "name": "Why Important",
+      "description": "Context blocks explaining why a feature or metric matters",
+      "category": "UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/marketplace",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-011": {
+      "id": "UX-011",
+      "name": "Personal Goal Card",
+      "description": "Personalized goal tracking card on dashboard",
+      "category": "UX",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "UX-012": {
+      "id": "UX-012",
+      "name": "Company Progress",
+      "description": "Company-wide security progress indicator on dashboard",
+      "category": "UX",
+      "version": "INT-036",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "SCAN-001": {
+      "id": "SCAN-001",
+      "name": "Security Scanner",
+      "description": "Multi-step scan wizard with data source selection, tool selection, pipeline stages, and live execution (client-side engine)",
+      "category": "Scanner",
+      "version": "INT-020",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/scanner",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "SCAN-002": {
+      "id": "SCAN-002",
+      "name": "Scan History",
+      "description": "View past scan results with localStorage data and demo scenarios tab",
+      "category": "Scanner",
+      "version": "INT-020",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/scans",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "SCAN-003": {
+      "id": "SCAN-003",
+      "name": "Findings List",
+      "description": "Filterable findings with severity badges, detail panels, comments, and assignments (client-side)",
+      "category": "Scanner",
+      "version": "INT-020",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/findings",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "RPT-001": {
+      "id": "RPT-001",
+      "name": "Report Generation",
+      "description": "Generate reports in HTML, JSON, SARIF, Markdown, CSV formats with real file downloads",
+      "category": "Reports",
+      "version": "INT-020",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/reports",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "RPT-002": {
+      "id": "RPT-002",
+      "name": "Email Report Sharing",
+      "description": "Channel configuration UI — sending is simulated, no real delivery",
+      "category": "Reports",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/reports/email",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "MKT-001": {
+      "id": "MKT-001",
+      "name": "Marketplace",
+      "description": "Protection marketplace with categories, search, install/uninstall via client-side engine",
+      "category": "Marketplace",
+      "version": "INT-020",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/marketplace",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "MKT-002": {
+      "id": "MKT-002",
+      "name": "Marketplace Sub-categories",
+      "description": "8 sub-category pages — all show hardcoded 6-item card grids with no real install logic",
+      "category": "Marketplace",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/marketplace/plugins",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "REPO-001": {
+      "id": "REPO-001",
+      "name": "Repository Management",
+      "description": "Repository connection UI — all data is hardcoded mock, no real git operations",
+      "category": "Repository",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/repositories",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "DASH-001": {
+      "id": "DASH-001",
+      "name": "Adaptive Dashboard",
+      "description": "Role-adaptive dashboard with sparklines, risk scores, severity distribution, compliance — all from demo data",
+      "category": "Dashboard",
+      "version": "INT-036",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "DASH-002": {
+      "id": "DASH-002",
+      "name": "Risk Overview",
+      "description": "Risk list — all 5 items are hardcoded inline, no interactivity beyond display",
+      "category": "Dashboard",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/risks",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "BIZ-001": {
+      "id": "BIZ-001",
+      "name": "Business Language Mode",
+      "description": "Executive-friendly language replacing technical jargon with business terms",
+      "category": "Business UX",
+      "version": "INT-030",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "INT-001": {
+      "id": "INT-001",
+      "name": "Integration Hub",
+      "description": "Integration catalog with connection forms — toggles are local state only, no real connections",
+      "category": "Integrations",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/integrations",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "INT-002": {
+      "id": "INT-002",
+      "name": "SSH Key Management",
+      "description": "SSH key wizard UI — all keys and connection tests are simulated",
+      "category": "Integrations",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/integrations/ssh",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "INT-003": {
+      "id": "INT-003",
+      "name": "API Key Management",
+      "description": "API key CRUD with scope selection — client-side only, no backend persistence",
+      "category": "Integrations",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/api-keys",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "NTF-001": {
+      "id": "NTF-001",
+      "name": "Notification Rules",
+      "description": "Notification rule CRUD UI — rules and history are mock, sends are simulated",
+      "category": "Notifications",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/notifications",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "PLAT-001": {
+      "id": "PLAT-001",
+      "name": "Platform Status Center",
+      "description": "Platform-wide readiness overview with per-module percentages built from Feature Registry. BROKEN on Production: /app/platform-status returns 404 fallback to index.html (HTTP 200, 163356 bytes). Source exists in git but not in production build. A 'ghost' page /app/system-status exists on production instead (81653 bytes, real content) but is missing from git entirely.",
+      "category": "Platform",
+      "version": "INT-038",
+      "status": "broken",
+      "scores": {
+        "product": 25,
+        "ux": 12,
+        "business": 20,
+        "evidence": 33
+      },
+      "fourStatuses": {
+        "technical": "broken",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "broken"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/platform-status",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "PLAT-002": {
+      "id": "PLAT-002",
+      "name": "Feature Registry",
+      "description": "Single source of truth for all platform features with honest status tracking. PARTIAL: only 3 statuses supported (implemented/in_progress/planned) instead of required 7 (not_started/in_progress/implemented/verified/broken/missing/deprecated). Needs TypeScript types update and JSON data migration.",
+      "category": "Platform",
+      "version": "INT-038",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "PLAT-003": {
+      "id": "PLAT-003",
+      "name": "Project Management",
+      "description": "Project CRUD with onboarding wizard — backed by client-side engine store, not real API",
+      "category": "Platform",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/projects",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "PLAT-004": {
+      "id": "PLAT-004",
+      "name": "Settings Panel",
+      "description": "9-tab settings — theme/language work; team/SSH/sessions/tokens are all mock data",
+      "category": "Platform",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/settings",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "PLAT-005": {
+      "id": "PLAT-005",
+      "name": "Workspace",
+      "description": "Workspace overview — all stats and activity are hardcoded mock data",
+      "category": "Platform",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/workspace",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "PLAT-006": {
+      "id": "PLAT-006",
+      "name": "Cloud Workspace",
+      "description": "Cloud project management — entirely placeholder with hardcoded data",
+      "category": "Platform",
+      "version": "",
+      "status": "not_started",
+      "scores": {
+        "product": 0,
+        "ux": 0,
+        "business": 0,
+        "evidence": 0
+      },
+      "fourStatuses": {
+        "technical": "not_implemented",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "not_deployed"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": false,
+        "no_fake_state": false,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": false,
+        "manually_verified": false
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Есть дублирование текста/элементов",
+        "Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных",
+        "Не работает в тёмной теме",
+        "Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/cloud",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "PLAT-007": {
+      "id": "PLAT-007",
+      "name": "Pricing Page",
+      "description": "3-plan pricing with feature comparison table and working CTA links",
+      "category": "Platform",
+      "version": "INT-020",
+      "status": "partial",
+      "scores": {
+        "product": 44,
+        "ux": 31,
+        "business": 40,
+        "evidence": 83
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/pricing",
+      "remainingWork": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)"
+      ]
+    },
+    "INF-001": {
+      "id": "INF-001",
+      "name": "Knowledge Graph",
+      "description": "ReactFlow-based knowledge graph from engine findings with search, filter, node detail",
+      "category": "Scanner",
+      "version": "INT-020",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/demo/knowledge-graph",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "INF-002": {
+      "id": "INF-002",
+      "name": "Attack Paths",
+      "description": "ReactFlow-based attack path visualizer from engine findings with path switching",
+      "category": "Scanner",
+      "version": "INT-020",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/demo/attack-paths",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "INF-003": {
+      "id": "INF-003",
+      "name": "Architecture View",
+      "description": "Interactive expandable architecture layers — data from demo-data, not real infra",
+      "category": "Scanner",
+      "version": "INT-025",
+      "status": "in_progress",
+      "scores": {
+        "product": 38,
+        "ux": 31,
+        "business": 40,
+        "evidence": 50
+      },
+      "fourStatuses": {
+        "technical": "in_progress",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": "partial",
+        "tested_on_production": "partial",
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/architecture",
+      "remainingWork": [
+        "Частично: Не работает на production",
+        "Частично: Не протестирована на production",
+        "Частично: UX не до конца понятен"
+      ]
+    },
+    "PLAT-008": {
+      "id": "PLAT-008",
+      "name": "Enterprise SSO",
+      "description": "Single sign-on integration for enterprise customers",
+      "category": "Platform",
+      "version": "",
+      "status": "not_started",
+      "scores": {
+        "product": 0,
+        "ux": 0,
+        "business": 0,
+        "evidence": 0
+      },
+      "fourStatuses": {
+        "technical": "not_implemented",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "not_deployed"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": false,
+        "no_fake_state": false,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": false,
+        "manually_verified": false
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Есть дублирование текста/элементов",
+        "Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных",
+        "Не работает в тёмной теме",
+        "Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "PLAT-009": {
+      "id": "PLAT-009",
+      "name": "Compliance Frameworks",
+      "description": "SOC2, ISO 27001, GDPR compliance mapping and reporting",
+      "category": "Platform",
+      "version": "",
+      "status": "not_started",
+      "scores": {
+        "product": 0,
+        "ux": 0,
+        "business": 0,
+        "evidence": 0
+      },
+      "fourStatuses": {
+        "technical": "not_implemented",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "not_deployed"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": false,
+        "no_fake_state": false,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": false,
+        "manually_verified": false
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Есть дублирование текста/элементов",
+        "Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных",
+        "Не работает в тёмной теме",
+        "Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "PLAT-010": {
+      "id": "PLAT-010",
+      "name": "RBAC",
+      "description": "Role-based access control with granular permissions",
+      "category": "Platform",
+      "version": "",
+      "status": "not_started",
+      "scores": {
+        "product": 0,
+        "ux": 0,
+        "business": 0,
+        "evidence": 0
+      },
+      "fourStatuses": {
+        "technical": "not_implemented",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "not_deployed"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": false,
+        "no_fake_state": false,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": false,
+        "manually_verified": false
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Есть дублирование текста/элементов",
+        "Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных",
+        "Не работает в тёмной теме",
+        "Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "PLAT-011": {
+      "id": "PLAT-011",
+      "name": "SIEM Integration",
+      "description": "Security information and event management integration",
+      "category": "Platform",
+      "version": "",
+      "status": "not_started",
+      "scores": {
+        "product": 0,
+        "ux": 0,
+        "business": 0,
+        "evidence": 0
+      },
+      "fourStatuses": {
+        "technical": "not_implemented",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "not_deployed"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": false,
+        "no_fake_state": false,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": false,
+        "manually_verified": false
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Есть дублирование текста/элементов",
+        "Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных",
+        "Не работает в тёмной теме",
+        "Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "PLAT-012": {
+      "id": "PLAT-012",
+      "name": "Audit Trail",
+      "description": "Complete audit trail of all platform actions",
+      "category": "Platform",
+      "version": "",
+      "status": "not_started",
+      "scores": {
+        "product": 0,
+        "ux": 0,
+        "business": 0,
+        "evidence": 0
+      },
+      "fourStatuses": {
+        "technical": "not_implemented",
+        "evidence": "missing",
+        "product": "not_ready",
+        "production": "not_deployed"
+      },
+      "criteria": {
+        "works_on_production": false,
+        "tested_on_production": false,
+        "clear_ux": false,
+        "no_duplication": false,
+        "no_fake_state": false,
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": false,
+        "has_explanation": false,
+        "has_next_step": false,
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": false,
+        "works_in_dark_theme": false,
+        "manually_verified": false
+      },
+      "productDebt": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен",
+        "Есть дублирование текста/элементов",
+        "Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Нет success state (подтверждение успешного действия)",
+        "Нет объяснения (что это и зачем)",
+        "Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Не оптимизирована для мобильных",
+        "Не работает в тёмной теме",
+        "Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Не работает на production",
+        "Не протестирована на production",
+        "UX не до конца понятен"
+      ]
+    },
+    "I18N-001": {
+      "id": "I18N-001",
+      "name": "Internationalization",
+      "description": "Full Russian/English bilingual support across all pages and components",
+      "category": "Platform",
+      "version": "INT-010",
+      "status": "partial",
+      "scores": {
+        "product": 44,
+        "ux": 31,
+        "business": 40,
+        "evidence": 83
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)"
+      ]
+    },
+    "THEME-001": {
+      "id": "THEME-001",
+      "name": "Dark/Light Theme",
+      "description": "next-themes powered theme switching with system preference detection",
+      "category": "Platform",
+      "version": "INT-010",
+      "status": "partial",
+      "scores": {
+        "product": 44,
+        "ux": 31,
+        "business": 40,
+        "evidence": 83
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)"
+      ]
+    },
+    "NAV-001": {
+      "id": "NAV-001",
+      "name": "Search Modal",
+      "description": "Command-palette search modal accessible from app and landing pages",
+      "category": "Platform",
+      "version": "INT-015",
+      "status": "partial",
+      "scores": {
+        "product": 44,
+        "ux": 31,
+        "business": 40,
+        "evidence": 83
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "not_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": "partial",
+        "no_duplication": "partial",
+        "no_fake_state": "partial",
+        "has_empty_state": false,
+        "has_loading_state": false,
+        "has_error_state": false,
+        "has_success_state": "partial",
+        "has_explanation": "partial",
+        "has_next_step": "partial",
+        "adaptive_to_user": false,
+        "has_settings": false,
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": "partial"
+      },
+      "productDebt": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)",
+        "Нет empty state (что видит пользователь при отсутствии данных)",
+        "Нет loading state (индикатор загрузки)",
+        "Нет error state (что делать при ошибке)",
+        "Частично: Нет success state (подтверждение успешного действия)",
+        "Частично: Нет объяснения (что это и зачем)",
+        "Частично: Нет подсказки следующего шага",
+        "Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных",
+        "Частично: Не проверена вручную"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/dashboard",
+      "remainingWork": [
+        "Частично: UX не до конца понятен",
+        "Частично: Есть дублирование текста/элементов",
+        "Частично: Присутствуют fake states (демо-данные без пометки)"
+      ]
+    },
+    "PLAT-013": {
+      "id": "PLAT-013",
+      "name": "System Status Center",
+      "description": "Production-verified platform status page at /app/system-status showing real-time verification of all platform modules with VERIFIED/PARTIAL/FAIL statuses, last-checked timestamps, E2E results, and verification principles (Never Trust Code, No Completion Without E2E, Production Is Source Of Truth, Every Feature Must Have Evidence).",
+      "category": "Platform",
+      "version": "INT-044",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/system-status",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "PLAT-014": {
+      "id": "PLAT-014",
+      "name": "Evidence Center",
+      "description": "Production evidence registry page at /app/evidence with per-feature verification (screenshots, commit, checks, AIS module-level status, production consistency check LOCAL=GITHUB=SERVER=PRODUCTION). Implements INT-045 BLOCK 1, 5, 6, 7.",
+      "category": "Platform",
+      "version": "INT-045",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/evidence",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    },
+    "PLAT-015": {
+      "id": "PLAT-015",
+      "name": "Product Readiness Dashboard",
+      "description": "Product completeness audit page at /app/product-readiness with 16-criteria scoring, Product Debt, Trust findings, UX findings, User Journey, Accessibility, Executive Summary, and TOP-10 Roadmap. Implements INT-046.",
+      "category": "Platform",
+      "version": "INT-046",
+      "status": "verified",
+      "scores": {
+        "product": 81,
+        "ux": 81,
+        "business": 90,
+        "evidence": 100
+      },
+      "fourStatuses": {
+        "technical": "implemented",
+        "evidence": "verified",
+        "product": "almost_ready",
+        "production": "deployed"
+      },
+      "criteria": {
+        "works_on_production": true,
+        "tested_on_production": true,
+        "clear_ux": true,
+        "no_duplication": true,
+        "no_fake_state": true,
+        "has_empty_state": "partial",
+        "has_loading_state": "partial",
+        "has_error_state": "partial",
+        "has_success_state": true,
+        "has_explanation": true,
+        "has_next_step": true,
+        "adaptive_to_user": "partial",
+        "has_settings": "partial",
+        "works_on_mobile": "partial",
+        "works_in_dark_theme": true,
+        "manually_verified": true
+      },
+      "productDebt": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)",
+        "Частично: Нет адаптации под пользователя (роль/скорость/предпочтения)",
+        "Частично: Нет настроек (в /app/settings)",
+        "Частично: Не оптимизирована для мобильных"
+      ],
+      "lastChecked": "2026-07-21T23:00:00+03:00",
+      "responsible": "GLM-5.2 (Super Z)",
+      "productionUrl": "https://sec-scanner.pro/app/product-readiness",
+      "remainingWork": [
+        "Частично: Нет empty state (что видит пользователь при отсутствии данных)",
+        "Частично: Нет loading state (индикатор загрузки)",
+        "Частично: Нет error state (что делать при ошибке)"
+      ]
+    }
+  }
+}

@@ -37,6 +37,7 @@ import {
   Server,
   Gauge,
   ShieldCheck,
+  TrendingUp,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -162,6 +163,12 @@ const sidebarSections: SidebarSection[] = [
     labelKey: "sidebar.evidence",
     icon: ShieldCheck,
     href: "/app/evidence",
+  },
+  {
+    id: "product-readiness",
+    labelKey: "sidebar.productReadiness",
+    icon: TrendingUp,
+    href: "/app/product-readiness",
   },
   {
     id: "settings",
