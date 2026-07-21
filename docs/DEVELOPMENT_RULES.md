@@ -299,3 +299,140 @@ nginx -s reload
 ### Принцип Production First
 
 **Production важнее Git.** Если функция существует только на Production, но отсутствует в Git — она должна быть восстановлена в Repository (Ghost Recovery). Если Git отличается от Production — сначала восстанавливается Git, потом разрешается deploy.
+
+---
+
+## 16. Zero False Reports (INT-045)
+
+Запрещается писать следующие утверждения без доказательств:
+
+| Запрещено без доказательств | Требуемые доказательства |
+|------------------------------|--------------------------|
+| "Реализовано" | Production URL + HTTP 200 + commit hash + скриншот |
+| "Готово" | Production URL + HTTP 200 + commit hash + скриншот |
+| "Работает" | Production URL + E2E scenario + скриншот |
+| "Исправлено" | Production URL + diff + commit + regression test |
+| "Deploy completed" | SHA = LOCAL = GITHUB = SERVER = PRODUCTION |
+| "Verified" | Evidence Registry entry с 6 checks = pass |
+
+### Если доказательств нет — задача автоматически считается незавершённой.
+
+---
+
+## 17. Mandatory Product Review (INT-045)
+
+Перед завершением каждого INT-этапа агент обязан ответить на 6 вопросов:
+
+1. **Что изменилось для пользователя?** — конкретные видимые изменения
+2. **Где это увидеть?** — Production URL с прямыми ссылками
+3. **Как проверить?** — пошаговый сценарий проверки (кликнуть туда, ввести это, ожидать это)
+4. **Что ещё не реализовано?** — явный список того, что НЕ сделано
+5. **Какие ограничения остались?** — известные лимиты, edge cases, частичные реализации
+6. **Какие риски существуют?** — что может сломаться, что требует мониторинга
+
+Ответы на эти 6 вопросов обязательны в финальном отчёте каждого INT.
+
+---
+
+## 18. Agent Quality Control (INT-045)
+
+После каждого INT-этапа агент обязан указать 4 категории проверок:
+
+### Что проверено автоматически
+- `npx next build` exit code 0
+- `curl -s -o /dev/null -w '%{http_code}'` для каждой Production URL
+- `git rev-parse HEAD` на LOCAL = GITHUB = SERVER
+- `agent-browser snapshot` для подтверждения DOM
+- TypeScript type check без ошибок
+
+### Что проверено вручную
+- Визуальная проверка UI через скриншоты
+- Кликабельность кнопок (через agent-browser click)
+- Контекстные уведомления AIS появляются при переходах
+- Переключение языка/темы работает
+
+### Что не удалось проверить
+- Safari browser (нет в окружении)
+- Mobile viewport (не сделано в этой сессии)
+- Real backend operations (backend на INT-036, не синхронизирован)
+
+### Что требует проверки владельцем проекта
+- Реальная регистрация/аутентификация пользователя
+- Реальные операции сканирования (nmap/nuclei)
+- Интеграции с внешними сервисами (GitHub, Slack, Jira)
+- Performance под нагрузкой
+
+Эти 4 категории обязательны в финальном отчёте каждого INT.
+
+---
+
+## 19. Definition of Done — INT-045 (расширенный)
+
+Задача считается завершённой **только если** выполнены ВСЕ 13 пунктов:
+
+| # | Критерий | Доказательство |
+|---|----------|----------------|
+| 1 | Код написан | commit hash в git log |
+| 2 | Build успешен | `npx next build` exit 0, без TS ошибок |
+| 3 | GitHub синхронизирован | `git ls-remote origin main` SHA = local HEAD |
+| 4 | Сервер синхронизирован | SSH: `cd /var/www/sec-scanner-build && git rev-parse HEAD` = GitHub |
+| 5 | Production обновлён | `curl -s https://sec-scanner.pro/<route>` возвращает новый контент |
+| 6 | Browser Review пройден | agent-browser snapshot подтверждает DOM |
+| 7 | Visual Review пройден | скриншоты сохранены в evidence |
+| 8 | E2E пройден | END_TO_END_CHECKLIST.md сценарии выполнены |
+| 9 | Regression пройдена | KNOWN_REGRESSIONS.md проверен, новых регрессий нет |
+| 10 | Evidence создан | `feature-evidence.json` обновлён с проверками |
+| 11 | Feature Registry обновлён | `feature-registry.json` статусы актуальны |
+| 12 | Product Status обновлён | `/app/system-status` показывает актуальные данные |
+| 13 | Documentation обновлена | CURRENT_STATE, CHANGELOG, DECISIONS, worklog обновлены |
+
+**Если хотя бы один пункт не выполнен — задача остаётся `in_progress`.**
+
+---
+
+## 20. Evidence-Based Development (INT-045 — расширение Rule 15)
+
+### Каждая функция должна иметь evidence-запись
+
+В `feature-evidence.json` для каждой функции должно быть:
+
+```json
+{
+  "AIS-014": {
+    "status": "verified",
+    "commit": "1643a9c...",
+    "production": "https://sec-scanner.pro/app/dashboard",
+    "screenshots": ["dashboard.png", "ais-panel-open.png"],
+    "video": null,
+    "browser": "pass",
+    "e2e": "pass",
+    "regression": "pass",
+    "build": "pass",
+    "visual": "pass",
+    "verifiedAt": "2026-07-21T22:00:00+03:00",
+    "verifiedBy": "GLM-5.2"
+  }
+}
+```
+
+### 6 обязательных checks
+
+| Check | Что проверяет |
+|-------|---------------|
+| build | `npx next build` exit 0 |
+| production | HTTP 200 + уникальный контент (не index.html fallback) |
+| browser | agent-browser snapshot подтверждает DOM |
+| e2e | END_TO_END_CHECKLIST.md сценарии |
+| regression | KNOWN_REGRESSIONS.md проверен |
+| visual | скриншот сохранён |
+
+### Статус функции = min(всех checks)
+
+- Все 6 = pass → `verified`
+- Хотя бы один = fail → `broken`
+- Хотя бы один = partial → `partial`
+- Хотя бы один = skip → `in_progress` или `not_started`
+
+### Без evidence функция считается неподтверждённой
+
+Статус `implemented` (без evidence) **запрещён**. Использовать `implemented_not_verified` для legacy или `verified` для подтверждённых.

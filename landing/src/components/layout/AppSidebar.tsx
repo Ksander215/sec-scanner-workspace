@@ -36,6 +36,7 @@ import {
   Terminal,
   Server,
   Gauge,
+  ShieldCheck,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -155,6 +156,12 @@ const sidebarSections: SidebarSection[] = [
     labelKey: "sidebar.systemStatus",
     icon: Gauge,
     href: "/app/system-status",
+  },
+  {
+    id: "evidence",
+    labelKey: "sidebar.evidence",
+    icon: ShieldCheck,
+    href: "/app/evidence",
   },
   {
     id: "settings",
