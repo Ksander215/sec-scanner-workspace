@@ -3,7 +3,7 @@
 import { useAISEvents } from "@/hooks/useAISEvents";
 
 /**
- * Inner component rendered INSIDE SoloNotificationProvider
+ * Inner component rendered INSIDE AISSystemEventProvider
  * so that useAISEvents can access the notification context.
  */
 export function AISEventBridge() {
