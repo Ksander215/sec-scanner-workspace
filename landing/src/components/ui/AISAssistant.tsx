@@ -342,7 +342,7 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.3 }}
           onClick={() => setInternalOpen(true)}
-          aria-label="AIS Assistant"
+          aria-label="AIS — Adaptive Intelligence System"
           className="fixed bottom-6 right-6 z-[140] w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 flex items-center justify-center transition-shadow group"
         >
           <Sparkles className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />

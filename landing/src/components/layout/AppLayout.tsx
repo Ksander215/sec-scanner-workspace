@@ -8,6 +8,7 @@ import { AppBreadcrumbs, type BreadcrumbItem } from "./AppBreadcrumbs";
 import { AISAssistant } from "@/components/ui/AISAssistant";
 import { SoloNotificationProvider } from "@/components/ui/SoloNotification";
 import { SmartScrollNavigator } from "@/components/ui/SmartScrollNavigator";
+import { AISEventBridge } from "./AISEventBridge";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -92,6 +93,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SoloNotificationProvider>
+      <AISEventBridge />
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <AppSidebar

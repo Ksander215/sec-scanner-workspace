@@ -81,8 +81,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.github.desc",
     icon: GitBranch,
     category: "sourceControl",
-    status: "connected",
-    lastSync: "2 min ago",
+    status: "not_connected",
     fields: [{ key: "token", required: true }, { key: "url", required: false }],
   },
   {
@@ -91,8 +90,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.gitlab.desc",
     icon: GitBranch,
     category: "sourceControl",
-    status: "connected",
-    lastSync: "15 min ago",
+    status: "not_connected",
     fields: [{ key: "token", required: true }, { key: "url", required: true }],
   },
   {
@@ -111,8 +109,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.slack.desc",
     icon: Hash,
     category: "messaging",
-    status: "connected",
-    lastSync: "5 min ago",
+    status: "not_connected",
     fields: [{ key: "webhookUrl", required: true }],
   },
   {
@@ -121,8 +118,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.telegram.desc",
     icon: Send,
     category: "messaging",
-    status: "error",
-    lastSync: "2 hours ago",
+    status: "not_connected",
     fields: [{ key: "botToken", required: true }, { key: "chatId", required: true }],
   },
   {
@@ -140,7 +136,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.teams.desc",
     icon: Users,
     category: "messaging",
-    status: "syncing",
+    status: "not_connected",
     fields: [{ key: "webhookUrl", required: true }],
   },
   // Auth
@@ -150,8 +146,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.ldap.desc",
     icon: Lock,
     category: "auth",
-    status: "connected",
-    lastSync: "1 hour ago",
+    status: "not_connected",
     fields: [{ key: "url", required: true }, { key: "token", required: true }],
   },
   {
@@ -170,8 +165,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.docker.desc",
     icon: ContainerIcon,
     category: "infrastructure",
-    status: "connected",
-    lastSync: "10 min ago",
+    status: "not_connected",
     fields: [{ key: "url", required: true }, { key: "token", required: false }],
   },
   {
@@ -180,7 +174,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.kubernetes.desc",
     icon: Network,
     category: "infrastructure",
-    status: "syncing",
+    status: "not_connected",
     fields: [{ key: "url", required: true }, { key: "token", required: true }],
   },
   {
@@ -189,8 +183,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.aws.desc",
     icon: Cloud,
     category: "infrastructure",
-    status: "connected",
-    lastSync: "30 min ago",
+    status: "not_connected",
     fields: [{ key: "token", required: true }],
   },
   {
@@ -218,8 +211,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.jira.desc",
     icon: ClipboardList,
     category: "issueTracking",
-    status: "connected",
-    lastSync: "8 min ago",
+    status: "not_connected",
     fields: [{ key: "url", required: true }, { key: "token", required: true }],
   },
   {
@@ -247,8 +239,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.email.desc",
     icon: Mail,
     category: "communication",
-    status: "connected",
-    lastSync: "Just now",
+    status: "not_connected",
     fields: [{ key: "url", required: true }, { key: "token", required: true }],
   },
   {
@@ -257,8 +248,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.webhook.desc",
     icon: Webhook,
     category: "communication",
-    status: "error",
-    lastSync: "3 hours ago",
+    status: "not_connected",
     fields: [{ key: "webhookUrl", required: true }],
   },
   // SSH
@@ -268,8 +258,7 @@ const integrationsData: Integration[] = [
     descKey: "integrations.ssh.desc",
     icon: Terminal,
     category: "ssh",
-    status: "connected",
-    lastSync: "1 min ago",
+    status: "not_connected",
     fields: [{ key: "url", required: true }, { key: "token", required: false }],
   },
 ];
@@ -654,6 +643,7 @@ export default function IntegrationsHubPage() {
   const { addToast } = useToast();
 
   const [integrations, setIntegrations] = useState<Integration[]>(integrationsData);
+  const [hasUserConnectedIntegration, setHasUserConnectedIntegration] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [connectTarget, setConnectTarget] = useState<Integration | null>(null);
@@ -794,6 +784,7 @@ export default function IntegrationsHubPage() {
             : i
         )
       );
+      setHasUserConnectedIntegration(true);
       addToast({
         type: "success",
         title: t("integrations.connectionSuccess"),
@@ -846,7 +837,7 @@ export default function IntegrationsHubPage() {
                   <ContextualHelp section="integrations" />
                   <DemoBadge />
                 </div>
-                {integrations.filter((i: { status: string }) => i.status === "connected").length > 0 && <BusinessResult type="connected" className="mt-4" />}
+                {hasUserConnectedIntegration && <BusinessResult type="connected" className="mt-4" />}
               </div>
             </div>
 

@@ -85,52 +85,7 @@ const EXPIRATION_OPTIONS = [
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
-const INITIAL_KEYS: ApiKey[] = [
-  {
-    id: "key-1",
-    name: "Production API",
-    fullKey: "sip_live_k8m2x9pqr_a1b2c3d4e5f6_7g8h",
-    maskedKey: "sip_live_****...****7g8h",
-    scopes: ["rest", "graphql", "read", "write"],
-    status: "active",
-    createdAt: "2025-11-15",
-    expiresAt: "2026-11-15",
-    lastUsedAt: "2026-03-03",
-  },
-  {
-    id: "key-2",
-    name: "CI/CD Pipeline",
-    fullKey: "sip_live_j4n7w2lmn_o9p0q1r2s3t4_u5v6",
-    maskedKey: "sip_live_****...****u5v6",
-    scopes: ["cli", "sdk", "read"],
-    status: "active",
-    createdAt: "2025-12-01",
-    expiresAt: null,
-    lastUsedAt: "2026-03-02",
-  },
-  {
-    id: "key-3",
-    name: "Webhook Listener",
-    fullKey: "sip_live_z9q3r5xabc_d7e8f9g0h1i2_j3k4",
-    maskedKey: "sip_live_****...****j3k4",
-    scopes: ["webhook", "read"],
-    status: "disabled",
-    createdAt: "2025-09-20",
-    expiresAt: "2026-03-20",
-    lastUsedAt: "2026-01-14",
-  },
-  {
-    id: "key-4",
-    name: "Admin Backup Key",
-    fullKey: "sip_live_w2t5v8ydef_m6n7o8p9q0r1_s2t3",
-    maskedKey: "sip_live_****...****s2t3",
-    scopes: ["admin", "rest", "graphql", "read", "write"],
-    status: "rotated",
-    createdAt: "2025-06-10",
-    expiresAt: "2025-12-10",
-    lastUsedAt: "2025-11-28",
-  },
-];
+const INITIAL_KEYS: ApiKey[] = [];
 
 // ─── Status Badge ───────────────────────────────────────────────────────────
 
@@ -187,6 +142,7 @@ export default function ApiKeysPage() {
 
   // ─── State ──────────────────────────────────────────────────────────────
   const [keys, setKeys] = useState<ApiKey[]>(INITIAL_KEYS);
+  const [hasUserCreatedKey, setHasUserCreatedKey] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newKeyReveal, setNewKeyReveal] = useState<{ id: string; fullKey: string } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -223,6 +179,7 @@ export default function ApiKeysPage() {
     };
 
     setKeys((prev) => [newKey, ...prev]);
+    setHasUserCreatedKey(true);
     setNewKeyReveal({ id: newKey.id, fullKey });
     setShowCreateDialog(false);
     setFormData({ name: "", scopes: ["rest", "read"], expiration: "never" });
@@ -304,7 +261,7 @@ export default function ApiKeysPage() {
                   <ContextualHelp section="api-keys" />
                   <DemoBadge />
                 </div>
-                {keys.length > 0 && <BusinessResult type="configured" className="mt-4" />}
+                {hasUserCreatedKey && <BusinessResult type="configured" className="mt-4" />}
               </div>
             </div>
             <Button onClick={() => setShowCreateDialog(true)}>
