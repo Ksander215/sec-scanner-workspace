@@ -17,45 +17,53 @@ import registryData from "@/data/feature-registry.json";
 /* --- Types -------------------------------------------------------------- */
 
 /**
- * All 7 valid feature statuses (INT-043 / ADR-018).
- * Legacy statuses `planned` maps to `not_started` for backward compat.
+ * All valid feature statuses (INT-044 / ADR-018 expanded).
+ * Legacy statuses `planned` and `implemented` kept for backward compat
+ * but `implemented` should NOT be used in new code (use `verified` instead).
  */
 export type FeatureStatus =
   | "not_started"
   | "in_progress"
-  | "implemented"
+  | "implemented" // legacy alias — prefer `verified`
   | "verified"
+  | "partial"
   | "broken"
   | "missing"
   | "deprecated"
   // Legacy statuses kept for backward compatibility during migration
   | "planned";
 
-/** Canonical 7 statuses (excluding legacy aliases) */
+/** Canonical 8 statuses (excluding legacy aliases) */
 export const CANONICAL_STATUSES: FeatureStatus[] = [
   "not_started",
   "in_progress",
-  "implemented",
   "verified",
+  "partial",
   "broken",
   "missing",
   "deprecated",
 ];
 
-/** Normalize legacy `planned` → `not_started` */
+/** Normalize legacy statuses */
 export function normalizeStatus(status: string): FeatureStatus {
   if (status === "planned") return "not_started";
+  // Note: 'implemented' kept as-is for backward compat in JSON, but new code uses 'verified'
   return status as FeatureStatus;
 }
 
-/** Is a status considered "production-verified"? Only `implemented` (with evidence) or `verified` */
+/** Is a status considered "production-verified"? Only `verified` */
 export function isVerified(status: FeatureStatus): boolean {
   return status === "verified";
 }
 
 /** Is a status considered "user-visible working"? (excludes broken/missing/deprecated/not_started) */
 export function isWorking(status: FeatureStatus): boolean {
-  return status === "implemented" || status === "verified" || status === "in_progress";
+  return (
+    status === "verified" ||
+    status === "implemented" ||
+    status === "partial" ||
+    status === "in_progress"
+  );
 }
 
 /** Is a status considered "broken or absent"? */
