@@ -33,35 +33,55 @@ import {
   Sparkles,
 } from "lucide-react";
 
-/* ─── Status icon ──────────────────────────────────────────────────────── */
+/* --- Status icon -------------------------------------------------------- */
+
+const STATUS_LABELS: Record<FeatureStatus, string> = {
+  not_started: "Not Started",
+  in_progress: "In Progress",
+  implemented: "Implemented",
+  verified: "Verified",
+  partial: "Partial",
+  broken: "Broken",
+  missing: "Missing",
+  deprecated: "Deprecated",
+  planned: "Planned",
+};
+
+const STATUS_COLORS: Record<FeatureStatus, string> = {
+  not_started: "text-foreground/40",
+  in_progress: "text-amber-500",
+  implemented: "text-blue-500",
+  verified: "text-emerald-500",
+  partial: "text-amber-500",
+  broken: "text-red-500",
+  missing: "text-red-500",
+  deprecated: "text-foreground/40",
+  planned: "text-foreground/40",
+};
 
 function StatusIcon({ status }: { status: FeatureStatus }) {
   switch (status) {
+    case "verified":
     case "implemented":
       return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
     case "in_progress":
+    case "partial":
       return <Clock className="w-4 h-4 text-amber-500" />;
+    case "broken":
+    case "missing":
+      return <XCircle className="w-4 h-4 text-red-500" />;
+    case "deprecated":
+    case "not_started":
     case "planned":
       return <Circle className="w-4 h-4 text-foreground/30" />;
   }
 }
 
 function StatusLabel({ status }: { status: FeatureStatus }) {
-  const labels = {
-    implemented: "Implemented",
-    in_progress: "In Progress",
-    planned: "Planned",
-  };
-  const colors = {
-    implemented: "text-emerald-500",
-    in_progress: "text-amber-500",
-    planned: "text-foreground/40",
-  };
-
-  return <span className={`text-xs font-medium ${colors[status]}`}>{labels[status]}</span>;
+  return <span className={`text-xs font-medium ${STATUS_COLORS[status]}`}>{STATUS_LABELS[status]}</span>;
 }
 
-/* ─── Main page ────────────────────────────────────────────────────────── */
+/* --- Main page ---------------------------------------------------------- */
 
 export default function DebugFeaturesPage() {
   const { t } = useI18n();
