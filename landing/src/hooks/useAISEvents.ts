@@ -1,22 +1,23 @@
 /**
- * AIS — Event-Driven Notification Hook (INT-039 BLOCK 4-6)
+ * AIS — Event-Driven Notification Hook (INT-040)
  *
- * Connects AIS Event Bus to SoloNotification system.
+ * Connects AIS Event Bus to AISSystemEvent cinematic notification system.
  * Shows contextual notifications when real events occur.
- * Implements adaptive timing based on user behavior.
+ * Implements adaptive timing, priority queue, and zero spam protection.
  */
 
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
-import { useSoloNotification } from "@/components/ui/SoloNotification";
+import { useAISSystemEvent } from "@/components/ui/AISSystemEvent";
 import { useAIS } from "@/hooks/useAIS";
 import {
   getAISEventBus,
   getPageContext,
   getNotificationForEvent,
   calculateAdaptiveTiming,
+  getPersonalityTier,
   type AISEventType,
 } from "@/lib/ais/events";
 
@@ -29,7 +30,7 @@ let firstVisitShown = false;
 
 export function useAISEvents() {
   const pathname = usePathname();
-  const { addNotification } = useSoloNotification();
+  const { addNotification } = useAISSystemEvent();
   const ais = useAIS();
   const prevPathRef = useRef<string | null>(null);
 
@@ -45,6 +46,7 @@ export function useAISEvents() {
 
     addNotification({
       type: def.notificationType,
+      priority: def.priority,
       systemKey: def.systemKey,
       titleKey: def.titleKey,
       descKey: def.descKey,
@@ -83,6 +85,7 @@ export function useAISEvents() {
 
     addNotification({
       type: "ai_tip",
+      priority: "info",
       systemKey: "ais.label",
       titleKey: context.titleKey,
       descKey: context.descKey,
@@ -117,6 +120,7 @@ export function useAISEvents() {
 
       addNotification({
         type: def.notificationType,
+        priority: def.priority,
         systemKey: def.systemKey,
         titleKey: def.titleKey,
         descKey: def.descKey,

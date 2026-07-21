@@ -1,13 +1,15 @@
 /**
- * AIS — Event-Driven Notification System (INT-039 BLOCK 4-6)
+ * AIS — Event-Driven Notification System (INT-040)
  *
  * Every AIS notification must be tied to a real event.
  * No messages "just because". Zero fake notifications.
  *
  * Events are emitted by user actions, page transitions,
- * and system state changes. AIS listens and shows contextual
- * notifications with Solo Leveling style.
+ * and system state changes. AIS listens and shows cinematic
+ * notifications with priority queue and adaptive timing.
  */
+
+import type { AISPriority } from "@/components/ui/AISSystemEvent";
 
 /* ─── Event Types ──────────────────────────────────────────────────── */
 
@@ -43,7 +45,10 @@ export type AISEventType =
   | "achievement_unlocked"
   | "first_visit"
   | "error_occurred"
-  | "session_started";
+  | "session_started"
+  | "sync_completed"
+  | "improvement_found"
+  | "control_level_changed";
 
 export interface AISEvent {
   type: AISEventType;
@@ -58,8 +63,10 @@ export interface AISEvent {
 /* ─── Notification mapping ─────────────────────────────────────────── */
 
 export interface AISNotificationDef {
-  /** SoloNotification type */
+  /** Notification type for visual style */
   notificationType: "system" | "achievement" | "success" | "info" | "warning" | "ai_tip";
+  /** Priority level */
+  priority: AISPriority;
   /** i18n key for the system label */
   systemKey: string;
   /** i18n key for title */
@@ -73,26 +80,33 @@ export interface AISNotificationDef {
   duration: number;
   /** Glow color */
   glowColor?: string;
+  /** Sound type */
+  sound?: string;
 }
 
 const EVENT_NOTIFICATIONS: Partial<Record<AISEventType, AISNotificationDef>> = {
   page_enter: {
     notificationType: "ai_tip",
+    priority: "info",
     systemKey: "ais.label",
     titleKey: "ais.event.pageEnter.title",
     descKey: "ais.event.pageEnter.desc",
-    duration: -1, // adaptive
+    duration: -1,
     glowColor: "rgba(139, 92, 246, 0.3)",
+    sound: "notification",
   },
   first_visit: {
     notificationType: "system",
+    priority: "high",
     systemKey: "ais.label",
     titleKey: "ais.event.firstVisit.title",
     descKey: "ais.event.firstVisit.desc",
     duration: -1,
+    sound: "notification",
   },
   scan_started: {
     notificationType: "system",
+    priority: "normal",
     systemKey: "ais.label",
     titleKey: "ais.event.scanStarted.title",
     descKey: "ais.event.scanStarted.desc",
@@ -100,109 +114,194 @@ const EVENT_NOTIFICATIONS: Partial<Record<AISEventType, AISNotificationDef>> = {
     actionHref: "/app/scanner",
     duration: 5000,
     glowColor: "rgba(59, 130, 246, 0.3)",
+    sound: "notification",
   },
   scan_completed: {
     notificationType: "achievement",
+    priority: "high",
     systemKey: "ais.label",
     titleKey: "ais.event.scanCompleted.title",
     descKey: "ais.event.scanCompleted.desc",
     actionLabelKey: "ais.event.viewFindings",
     actionHref: "/app/findings",
     duration: 8000,
+    sound: "completed",
   },
   integration_connected: {
     notificationType: "success",
+    priority: "normal",
     systemKey: "ais.label",
     titleKey: "ais.event.integrationConnected.title",
     descKey: "ais.event.integrationConnected.desc",
     duration: 6000,
+    sound: "success",
   },
   integration_disconnected: {
     notificationType: "warning",
+    priority: "high",
     systemKey: "ais.label",
     titleKey: "ais.event.integrationDisconnected.title",
     descKey: "ais.event.integrationDisconnected.desc",
     duration: 6000,
     glowColor: "rgba(245, 158, 11, 0.3)",
+    sound: "warning",
   },
   tool_installed: {
     notificationType: "success",
+    priority: "normal",
     systemKey: "ais.label",
     titleKey: "ais.event.toolInstalled.title",
     descKey: "ais.event.toolInstalled.desc",
     actionLabelKey: "ais.event.openScanner",
     actionHref: "/app/scanner",
     duration: 6000,
+    sound: "success",
   },
   report_generated: {
     notificationType: "achievement",
+    priority: "normal",
     systemKey: "ais.label",
     titleKey: "ais.event.reportGenerated.title",
     descKey: "ais.event.reportGenerated.desc",
     actionLabelKey: "ais.event.viewReport",
     actionHref: "/app/reports",
     duration: 7000,
+    sound: "completed",
+  },
+  report_downloaded: {
+    notificationType: "success",
+    priority: "info",
+    systemKey: "ais.label",
+    titleKey: "ais.event.reportDownloaded.title",
+    descKey: "ais.event.reportDownloaded.desc",
+    duration: 5000,
+    sound: "success",
   },
   repo_connected: {
     notificationType: "success",
+    priority: "normal",
     systemKey: "ais.label",
     titleKey: "ais.event.repoConnected.title",
     descKey: "ais.event.repoConnected.desc",
     duration: 6000,
+    sound: "success",
   },
   ssh_connected: {
     notificationType: "success",
+    priority: "normal",
     systemKey: "ais.label",
     titleKey: "ais.event.sshConnected.title",
     descKey: "ais.event.sshConnected.desc",
     duration: 6000,
+    sound: "success",
   },
   api_key_created: {
     notificationType: "success",
+    priority: "info",
     systemKey: "ais.label",
     titleKey: "ais.event.apiKeyCreated.title",
     descKey: "ais.event.apiKeyCreated.desc",
     duration: 6000,
+    sound: "success",
   },
   api_key_revoked: {
     notificationType: "warning",
+    priority: "high",
     systemKey: "ais.label",
     titleKey: "ais.event.apiKeyRevoked.title",
     descKey: "ais.event.apiKeyRevoked.desc",
     duration: 6000,
+    sound: "warning",
   },
   notification_rule_created: {
     notificationType: "success",
+    priority: "info",
     systemKey: "ais.label",
     titleKey: "ais.event.notificationRuleCreated.title",
     descKey: "ais.event.notificationRuleCreated.desc",
     duration: 6000,
+    sound: "success",
   },
   goal_progress: {
     notificationType: "achievement",
+    priority: "high",
     systemKey: "ais.label",
     titleKey: "ais.event.goalProgress.title",
     descKey: "ais.event.goalProgress.desc",
     duration: 7000,
+    sound: "achievement",
   },
   achievement_unlocked: {
     notificationType: "achievement",
+    priority: "high",
     systemKey: "ais.label",
     titleKey: "ais.event.achievementUnlocked.title",
     descKey: "ais.event.achievementUnlocked.desc",
-    duration: 0, // manual dismiss only
+    duration: 0,
+    sound: "achievement",
+  },
+  risk_changed: {
+    notificationType: "warning",
+    priority: "critical",
+    systemKey: "ais.label",
+    titleKey: "ais.event.riskChanged.title",
+    descKey: "ais.event.riskChanged.desc",
+    duration: 0,
+    sound: "warning",
+  },
+  attack_path_built: {
+    notificationType: "system",
+    priority: "high",
+    systemKey: "ais.label",
+    titleKey: "ais.event.attackPathBuilt.title",
+    descKey: "ais.event.attackPathBuilt.desc",
+    actionLabelKey: "ais.event.viewPaths",
+    actionHref: "/app/demo/attack-paths",
+    duration: 8000,
+    sound: "notification",
   },
   error_occurred: {
     notificationType: "warning",
+    priority: "critical",
     systemKey: "ais.label",
     titleKey: "ais.event.errorOccurred.title",
     descKey: "ais.event.errorOccurred.desc",
-    duration: 0, // manual dismiss only
+    duration: 0,
     glowColor: "rgba(239, 68, 68, 0.3)",
+    sound: "error",
+  },
+  sync_completed: {
+    notificationType: "success",
+    priority: "info",
+    systemKey: "ais.label",
+    titleKey: "ais.event.syncCompleted.title",
+    descKey: "ais.event.syncCompleted.desc",
+    duration: 5000,
+    sound: "success",
+  },
+  improvement_found: {
+    notificationType: "ai_tip",
+    priority: "normal",
+    systemKey: "ais.label",
+    titleKey: "ais.event.improvementFound.title",
+    descKey: "ais.event.improvementFound.desc",
+    actionLabelKey: "ais.event.viewRecommendation",
+    actionHref: "/app/dashboard",
+    duration: 8000,
+    sound: "recommendation",
+  },
+  control_level_changed: {
+    notificationType: "system",
+    priority: "high",
+    systemKey: "ais.label",
+    titleKey: "ais.event.controlLevelChanged.title",
+    descKey: "ais.event.controlLevelChanged.desc",
+    duration: 7000,
+    sound: "notification",
   },
 };
 
-/* ─── Page-specific contextual messages ─────────────────────────────── */
+/* ─── Page-specific contextual messages (BLOCK 10) ─────────────────── */
 
 export interface PageContext {
   titleKey: string;
@@ -343,7 +442,7 @@ export function getAISEventBus(): AISEventBus {
   return instance;
 }
 
-/* ─── Adaptive Timing Engine (BLOCK 5) ──────────────────────────────── */
+/* ─── Adaptive Timing Engine (BLOCK 8) ─────────────────────────────── */
 
 export interface AdaptiveTiming {
   /** Calculated duration in ms */
@@ -355,9 +454,12 @@ export interface AdaptiveTiming {
 /**
  * Calculate adaptive display time based on user behavior.
  *
- * - If user quickly dismisses notifications → shorter duration
- * - If user reads them for a long time → longer duration
- * - If user never dismisses → keep until manual dismiss
+ * Learns from:
+ * - Fast dismissals → shorter duration
+ * - Slow reading → longer duration
+ * - Never dismissed → keep until manual dismiss
+ *
+ * Settings persist across sessions via localStorage.
  */
 export function calculateAdaptiveTiming(
   baseDuration: number,
@@ -379,13 +481,13 @@ export function calculateAdaptiveTiming(
   const total = tipsDismissed + tipsEngaged;
   const engagementRatio = total > 0 ? tipsEngaged / total : 0.5;
 
-  // User dismisses quickly → shorten duration
+  // User dismisses quickly → shorten duration (40% of base)
   if (engagementRatio < 0.2 && tipsDismissed >= 3) {
     const shortened = Math.max(3000, baseDuration * 0.4);
     return { duration: shortened, autoDismiss: true };
   }
 
-  // User reads carefully → extend duration
+  // User reads carefully → extend duration (180% of base)
   if (engagementRatio > 0.6 && tipsEngaged >= 3) {
     const extended = baseDuration * 1.8;
     return { duration: extended, autoDismiss: true };
@@ -397,6 +499,18 @@ export function calculateAdaptiveTiming(
   }
 
   return { duration: baseDuration, autoDismiss: true };
+}
+
+/* ─── Progressive Personality (BLOCK 11) ────────────────────────────── */
+
+/**
+ * Returns a personality tier based on how long the user has been
+ * using the platform. Early days = formal, later = more natural.
+ */
+export function getPersonalityTier(sessionCount: number): "formal" | "natural" | "familiar" {
+  if (sessionCount <= 3) return "formal";
+  if (sessionCount <= 15) return "natural";
+  return "familiar";
 }
 
 /* ─── Exported helpers ──────────────────────────────────────────────── */

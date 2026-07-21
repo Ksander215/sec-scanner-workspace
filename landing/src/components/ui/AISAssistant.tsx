@@ -214,7 +214,7 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
       const timer = setTimeout(() => {
         setShowProactive(true);
         ais.markAssistantShown(pathname);
-        ais.playSound("tip");
+        ais.playSound("recommendation");
       }, 1500);
       return () => clearTimeout(timer);
     }

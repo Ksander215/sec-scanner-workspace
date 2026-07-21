@@ -6,7 +6,7 @@ import { AppTopBar } from "./AppTopBar";
 import { SearchModal } from "./SearchModal";
 import { AppBreadcrumbs, type BreadcrumbItem } from "./AppBreadcrumbs";
 import { AISAssistant } from "@/components/ui/AISAssistant";
-import { SoloNotificationProvider } from "@/components/ui/SoloNotification";
+import { AISSystemEventProvider } from "@/components/ui/AISSystemEvent";
 import { SmartScrollNavigator } from "@/components/ui/SmartScrollNavigator";
 import { AISEventBridge } from "./AISEventBridge";
 import { usePathname } from "next/navigation";
@@ -92,7 +92,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SoloNotificationProvider>
+    <AISSystemEventProvider>
       <AISEventBridge />
       <div className="flex min-h-screen">
         {/* Sidebar */}
@@ -133,12 +133,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Search modal */}
         <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
-        {/* AIS — Intelligent Assistant (INT-036) */}
+        {/* AIS — Adaptive Intelligence System */}
         <AISAssistant externalOpen={assistantOpen} onExternalClose={() => setAssistantOpen(false)} />
 
-        {/* Smart Scroll Navigator — INT-033 */}
+        {/* Smart Scroll Navigator */}
         <SmartScrollNavigator onOpenAssistant={handleOpenAssistant} />
       </div>
-    </SoloNotificationProvider>
+    </AISSystemEventProvider>
   );
 }
