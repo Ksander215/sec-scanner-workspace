@@ -698,14 +698,24 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     readSettingsFromEngine();
 
+    // Sync SoundIdentity whenever settings change
+    const sync = () => {
+      readSettingsFromEngine();
+      // Keep SoundIdentity singleton in sync
+      try {
+        const mem = getAISMemory().getMemory();
+        getSoundIdentity().setEnabled(mem.soundEnabled);
+      } catch { /* ignore */ }
+    };
+
     // Listen for cross-tab changes via native storage event
     const onStorage = (e: StorageEvent) => {
-      if (e.key === "sip_ais_memory") readSettingsFromEngine();
+      if (e.key === "sip_ais_memory") sync();
     };
     window.addEventListener("storage", onStorage);
 
     // Listen for same-tab changes via custom event (settings page dispatches this)
-    const onAISChange = () => readSettingsFromEngine();
+    const onAISChange = () => sync();
     window.addEventListener("ais-settings-changed", onAISChange);
 
     return () => {

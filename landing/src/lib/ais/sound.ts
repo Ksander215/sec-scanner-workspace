@@ -29,6 +29,7 @@ type SoundType =
 class SoundIdentity {
   private ctx: AudioContext | null = null;
   private enabled = true;
+  private pendingQueue: SoundType[] = [];
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -50,6 +51,20 @@ class SoundIdentity {
     return this.ctx;
   }
 
+  /** Ensure AudioContext is running — call from user gesture (click) handlers */
+  async unlock(): Promise<void> {
+    const ctx = this.getCtx();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+    // Flush any pending sounds
+    while (this.pendingQueue.length > 0) {
+      const type = this.pendingQueue.shift()!;
+      this.playSound(ctx, type);
+    }
+  }
+
   setEnabled(enabled: boolean): void {
     this.enabled = enabled;
   }
@@ -66,7 +81,17 @@ class SoundIdentity {
 
     // Resume if suspended (browser autoplay policy)
     if (ctx.state === "suspended") {
-      ctx.resume().then(() => this.playSound(ctx, type));
+      this.pendingQueue.push(type);
+      ctx.resume().then(() => {
+        // Flush queue after resume
+        while (this.pendingQueue.length > 0) {
+          const pending = this.pendingQueue.shift()!;
+          this.playSound(ctx, pending);
+        }
+      }).catch(() => {
+        // If resume fails, clear queue — likely no user gesture yet
+        this.pendingQueue = [];
+      });
     } else {
       this.playSound(ctx, type);
     }

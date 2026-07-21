@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useI18n } from "@/lib/i18n-context";
 import { useToast } from "@/components/ui/Toast";
 import { getAISMemory, type AISAnimationIntensity, type AISDismissSpeed, type AISActivityLevel } from "@/lib/ais/memory";
+import { getSoundIdentity } from "@/lib/ais/sound";
 import { Badge } from "@/components/ui/Badge";
 import { Sparkles } from "lucide-react";
 
@@ -130,8 +131,15 @@ export function AISettingsSection() {
     const engine = getAISMemory();
     const newVal = !engine.getMemory().soundEnabled;
     engine.toggleSound(newVal);
+    getSoundIdentity().setEnabled(newVal);
     setSoundEnabled(newVal);
     notifyChange();
+    // Unlock AudioContext + play a test sound when enabling
+    if (newVal) {
+      getSoundIdentity().unlock().then(() => {
+        getSoundIdentity().play("notification");
+      });
+    }
     addToast({ type: "success", title: t("settings.saved") });
   }, [notifyChange, addToast, t]);
 
@@ -200,7 +208,17 @@ export function AISettingsSection() {
             <div className="text-sm text-foreground">{t("ais.settings.sound")}</div>
             <div className="text-xs text-muted-2">{t("ais.settings.sound.desc")}</div>
           </div>
-          <Toggle value={soundEnabled} onChange={handleToggleSound} />
+          <div className="flex items-center gap-2">
+            {soundEnabled && (
+              <button
+                onClick={() => getSoundIdentity().unlock().then(() => getSoundIdentity().play("notification"))}
+                className="text-xs text-violet-400 hover:text-violet-300 transition-colors px-2 py-1 rounded border border-violet-500/30 hover:border-violet-500/50"
+              >
+                ▶ Test
+              </button>
+            )}
+            <Toggle value={soundEnabled} onChange={handleToggleSound} />
+          </div>
         </div>
 
         {/* Activity Level */}

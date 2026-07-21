@@ -15,6 +15,7 @@ import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAIS, type AISState } from "@/hooks/useAIS";
+import { getSoundIdentity } from "@/lib/ais/sound";
 import {
   Sparkles,
   X,
@@ -341,7 +342,11 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
           initial={{ scale: 1, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.3 }}
-          onClick={() => setInternalOpen(true)}
+          onClick={() => {
+            setInternalOpen(true);
+            // Unlock AudioContext on user gesture so future sounds can play
+            getSoundIdentity().unlock();
+          }}
           aria-label="AIS — Adaptive Intelligence System"
           className="fixed bottom-6 right-6 z-[140] w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 flex items-center justify-center transition-shadow group"
         >
