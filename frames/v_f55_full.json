@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Yes, there is a notification popup visible in the frame.  \n\n### Position:  \nThe popup is located in the **upper-middle portion** of the screen, horizontally centered (or slightly right of center) and positioned near the top edge.  \n\n### Size:  \nIt is a small, rectangular overlay with a compact width and minimal height, consistent with a typical toast or notification popup.  \n\n### Content:  \nThe text inside the popup is in Russian: *“Включить микрофон”* (which translates to “Enable microphone” in English).  \n\n### Colors:  \n- The background of the popup is a **dark gray or black** (semi-transparent, allowing partial visibility of the underlying scene).  \n- The text color is **white**, providing high contrast against the dark background for readability.  \n\n\nThis popup appears to be a system or application notification, likely related to microphone permissions or activation.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784603914,
+  "id": "20260721111829a8045649071b4303",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260721111829a8045649071b4303",
+  "usage": {
+    "completion_tokens": 184,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2697,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 2881
+  }
+}

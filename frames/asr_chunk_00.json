@@ -1,0 +1,14 @@
+{
+  "created": 1784602888,
+  "id": "20260721110127ddd4968dbbc548f3",
+  "request_id": "20260721110127ddd4968dbbc548f3",
+  "text": "祝贺你们成为服务员。",
+  "usage": {
+    "completion_tokens": 8,
+    "prompt_tokens": 375,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 383
+  }
+}

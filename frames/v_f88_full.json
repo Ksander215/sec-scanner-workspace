@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "There is a notification popup in the frame. It is a glowing, semi - transparent interface with a yellow - hued design. At the top of the popup, there is a circular icon with a symbol inside. Below the icon, there is text, and further down, there are two button - like elements, each with text and an icon. The popup appears to be floating in the air, and the overall design has a futuristic or digital aesthetic.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784604490,
+  "id": "202607211126318ffd9caa4ee04b9c",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202607211126318ffd9caa4ee04b9c",
+  "usage": {
+    "completion_tokens": 94,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2672,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 2766
+  }
+}

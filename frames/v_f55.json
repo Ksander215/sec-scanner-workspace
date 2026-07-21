@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "There is no notification popup or overlay visible in this frame. The image shows a room with shelves, a person in camouflage clothing, and various items, but no popups, overlays, or notifications are present.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784603700,
+  "id": "20260721111457d040365b93674d4d",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260721111457d040365b93674d4d",
+  "usage": {
+    "completion_tokens": 45,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 329,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 374
+  }
+}

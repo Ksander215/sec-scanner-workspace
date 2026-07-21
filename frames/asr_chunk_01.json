@@ -1,0 +1,14 @@
+{
+  "created": 1784602889,
+  "id": "202607211101285e09228df55a4c22",
+  "request_id": "202607211101285e09228df55a4c22",
+  "text": "Смотрите, вот такой должен быть.",
+  "usage": {
+    "completion_tokens": 10,
+    "prompt_tokens": 375,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 385
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "There is a notification popup in the top - center of the screen. It has a small size. The content of the popup is the text “Включить микрофон” (which means “Enable microphone” in Russian). The popup has a dark background, and there is a close button (an “X” icon) in the top - right corner of the popup.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784604022,
+  "id": "2026072111201887aefaf9ced84957",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "2026072111201887aefaf9ced84957",
+  "usage": {
+    "completion_tokens": 78,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2691,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 2769
+  }
+}

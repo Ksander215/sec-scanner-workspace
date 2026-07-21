@@ -1,0 +1,14 @@
+{
+  "created": 1784602890,
+  "id": "20260721110129c970fd283e444133",
+  "request_id": "20260721110129c970fd283e444133",
+  "text": "Вот такой должен быть звук уведомления.",
+  "usage": {
+    "completion_tokens": 12,
+    "prompt_tokens": 217,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "total_tokens": 229
+  }
+}

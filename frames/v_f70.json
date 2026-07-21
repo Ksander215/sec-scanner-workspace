@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "There are no visible notification popups or overlays in this screen recording frame. The frame shows a scene with a person in a storage room (shelves with various items, a green door, etc.) and a standard Windows taskbar at the bottom, but no distinct notification elements are present.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784603848,
+  "id": "20260721111726ae95235b38664709",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260721111726ae95235b38664709",
+  "usage": {
+    "completion_tokens": 61,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 323,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 384
+  }
+}

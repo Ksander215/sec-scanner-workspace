@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "This video frame shows a person in military camouflage uniform holding a small object (appears to be a snack or food item) in what looks like a storage or supply room with green walls and shelves containing various items. The frame appears to be from a movie or TV show rather than a typical application interface. At the bottom of the screen, there's a Windows taskbar visible, indicating this is being viewed on a Windows computer. The taskbar shows various application icons and system indicators, but no specific notifications are clearly visible in this frame. The overall appearance suggests this is a media player application displaying a video file.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784603391,
+  "id": "20260721110825dd8c01b9056f46f6",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260721110825dd8c01b9056f46f6",
+  "usage": {
+    "completion_tokens": 126,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 331,
+    "prompt_tokens_details": {
+      "cached_tokens": 5
+    },
+    "total_tokens": 457
+  }
+}
