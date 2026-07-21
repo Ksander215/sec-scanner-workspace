@@ -285,3 +285,53 @@ Backups:
 - /home/z/my-project/int044/screenshots/20-product-readiness-overview.png
 - /home/z/my-project/int044/screenshots/21-product-readiness-features.png
 - /home/z/my-project/int044/screenshots/22-product-readiness-roadmap.png
+
+---
+Task ID: INT-048
+Agent: Super Z (Main)
+Task: Unified AI Architecture (SIP + AIS + AI CTO + AIO)
+
+Work Log:
+- BLOCK 1: Создан architecture-registry.json с 4 центрами (SIP/AIS/AI CTO/AIO), 43 модулями, 9 communication links, 20 responsibility matrix entries, 4 routing rules, 5 future agents, 4 explainability examples
+- BLOCK 2-5: Созданы 4 детальные страницы /app/architecture/{sip,ais,cto,aio} через shared component CenterDetail.tsx
+- BLOCK 6: Создана /app/architecture — большая карта с 4 центрами (SIP 94%, AIS 82%, AI CTO 61%, AIO 37%, overall 69%), Communication Graph, AI Routing, Future Agents, Unified Terminology
+- BLOCK 7: Responsibility Matrix в architecture-registry.json — 20 функций распределены по 4 центрам
+- BLOCK 8: Communication Graph — 9 связей между центрами (AIS←SIP, AI CTO→AIO, AIO→SIP, AIS→AI CTO queries, и т.д.)
+- BLOCK 9-10: AI Copilot Routing Engine — routeQuestion() в architecture-registry.ts, 4 pattern-based rules + fallback
+- BLOCK 11: Explainability — 4 примера (по одному на центр) с question/answer/source
+- BLOCK 12: Future AI Agents — 5 запланированных (Security Analyst, Threat Hunter, DevSecOps, Compliance, Executive)
+- BLOCK 13: Unified Terminology — 5 канонических терминов (SIP/AIS/AI CTO/AIO/AI Copilot)
+- BLOCK 14: Rule 22 (Architecture Governance) в DEVELOPMENT_RULES.md
+- i18n: +28 architecture.* keys (RU+EN), удалены 4 устаревших дубликата (architecture.title/subtitle от старой /app/architecture)
+- Sidebar: +Architecture link (Network icon)
+- PLAT-016..020: 5 новых features в feature-registry + evidence
+- Push на GitHub через сервер (git bundle + fetch + reset --hard + push)
+- Build: npx next build — успешно после исправлений:
+  - Network уже импортирован в AppSidebar.tsx — убран дубликат
+  - Дубликаты architecture.title/subtitle в i18n.ts (старые от /app/architecture) — удалены
+- Deploy: rm -rf /var/www/sec-scanner.pro/* + cp -r out/* + nginx reload
+- Production verification через agent-browser:
+  - 2 скриншота: 23-architecture-map.png, 24-architecture-sip.png
+  - /app/architecture: HTTP 200, 76894 bytes — 4 centers с scores, Communication Graph, AI Routing, Future Agents, Unified Terminology
+  - /app/architecture/sip: HTTP 200, 76251 bytes — 12 modules (Security Engine, Risk Engine, Vulnerability, Reports, Attack Paths, Compliance, Integrations, Assets, API, Dashboard, KG, Marketplace)
+  - Все 5 архитектурных страниц возвращают уникальный контент (71113-76894 bytes)
+- Обновлены CURRENT_STATE, CHANGELOG_PRODUCT, DECISIONS, worklog
+
+Stage Summary:
+- LOCAL = GITHUB = SERVER = PRODUCTION = commit 186024b
+- /app/architecture работает: 4 centers (SIP 94%, AIS 82%, AI CTO 61%, AIO 37%, overall 69%)
+- 4 detail pages работают: /app/architecture/{sip,ais,cto,aio}
+- Communication Graph: 9 связей между центрами
+- AI Routing: 4 pattern-based rules + fallback (AI CTO)
+- Future Agents: 5 запланированных (Security Analyst, Threat Hunter, DevSecOps, Compliance, Executive)
+- Unified Terminology: 5 канонических терминов
+- Rule 22 Architecture Governance добавлен
+- 5 новых features (PLAT-016..020) в registry
+- Полный цикл: Build → GitHub → Server → Production → Visual Review → E2E — пройден
+
+Backups:
+- /backup/sec-scanner-pro-pre-int048 (12M) — production до INT-048 deploy
+
+Скриншоты (доказательства):
+- /home/z/my-project/int044/screenshots/23-architecture-map.png
+- /home/z/my-project/int044/screenshots/24-architecture-sip.png

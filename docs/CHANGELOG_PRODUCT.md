@@ -4,6 +4,53 @@
 
 ---
 
+## INT-048 — 2026-07-21 (Unified AI Architecture: SIP + AIS + AI CTO + AIO)
+
+### Что изменилось для пользователя
+
+1. **Новая страница `/app/architecture`** (AI Архитектура) — доступна из sidebar (Network icon)
+2. **4 центра ответственности** с готовностью: SIP 94%, AIS 82%, AI CTO 61%, AIO 37%
+3. **4 детальные страницы**: /app/architecture/{sip,ais,cto,aio}
+4. **Communication Graph**: 9 связей между центрами (AIS←SIP, AI CTO→AIO, AIO→SIP, и т.д.)
+5. **AI Routing Engine**: 4 правила маршрутизации запросов по центрам + fallback
+6. **Future AI Agents**: 5 запланированных (Security Analyst, Threat Hunter, DevSecOps, Compliance, Executive)
+7. **Unified Terminology**: SIP/AIS/AI CTO/AIO/AI Copilot — канонические термины
+8. **Rule 22 Architecture Governance**: новая функция не может быть реализована без назначения центра
+
+### Где это увидеть
+
+- `/app/architecture` — большая карта с 4 центрами
+- `/app/architecture/sip` — Security Intelligence Platform detail
+- `/app/architecture/ais` — Adaptive Intelligence System detail
+- `/app/architecture/cto` — AI CTO Product Intelligence Center detail
+- `/app/architecture/aio` — AIO Autonomous Operations Center detail
+- Скриншоты: `/home/z/my-project/int044/screenshots/23-architecture-map.png`, `24-architecture-sip.png`
+
+### Как проверить
+
+1. Открыть https://sec-scanner.pro/app/architecture
+2. Проверить 4 центра: SIP 94%, AIS 82%, AI CTO 61%, AIO 37%
+3. Кликнуть на любой центр → детальная страница с модулями, KPIs, коммуникациями
+4. Прокрутить вниз до Communication Graph, AI Routing, Future Agents, Unified Terminology
+
+### Технические изменения
+
+- Новые файлы: architecture-registry.json (4 centers + 9 communication links + 20 responsibility matrix entries + 4 routing rules + 5 future agents + 4 explainability examples), architecture-registry.ts (TypeScript module + routeQuestion()), 5 pages (/app/architecture + 4 detail), CenterDetail.tsx shared component
+- Изменённые: DEVELOPMENT_RULES.md (+Rule 22 Architecture Governance), AppSidebar.tsx (+Architecture link), AppLayout.tsx (+breadcrumb), feature-registry.json (+PLAT-016..020), feature-evidence.json (+5 entries), i18n.ts (+28 architecture.* keys, удалены 4 устаревших дубликата)
+- Коммиты: 968c088 → 5e39d6b → 186024b INT-048: Unified AI Architecture
+
+### Agent Quality Control (Rule 18)
+
+**Проверено автоматически**: npx next build exit 0; curl /app/architecture = 200 (76894 bytes); curl /app/architecture/{sip,ais,cto,aio} = 200 (74129-76251 bytes); git rev-parse HEAD 186024b = LOCAL = GITHUB = SERVER; agent-browser snapshot подтверждает DOM (4 centers с scores, Communication Graph, AI Routing, Future Agents, Unified Terminology); TypeScript type check без ошибок.
+
+**Проверено вручную**: визуальная проверка через скриншоты 23-24; клик на SIP card → переход на /app/architecture/sip с модулями Security Engine, Risk Engine, и т.д.; отображение всех 12 SIP modules с readiness scores.
+
+**Не удалось проверить**: переход на AIS/CTO/AIO detail pages (только SIP проверен визуально); AI Copilot routing в действии.
+
+**Требует проверки владельцем**: реальная интеграция AI Copilot с routing engine; real backend operations для AIO modules.
+
+---
+
 ## INT-046 — 2026-07-21 (Product Completeness Audit & Production Readiness)
 
 ### Что изменилось для пользователя
