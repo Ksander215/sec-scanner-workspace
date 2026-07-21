@@ -1,21 +1,36 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: INT-043 (Product Recovery & SSOT audit), 2026-07-21
+> Последнее обновление: INT-044 (Repository Recovery & Production Synchronization), 2026-07-21
 
 ---
 
-## ⚠️ КРИТИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ (INT-043)
+## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-044)
 
-Проект находится в состоянии **расхождения трёх источников истины**:
-1. **GitHub** — последний коммит `INT-040 v2: AIS Cinematic Notification System` (`95691e0`)
-2. **Production (https://sec-scanner.pro)** — содержит "призрачную" работу: страницу `/app/system-status`, которой нет в git, и НЕ содержит `/app/platform-status` и `/app/debug/features`, которые есть в git
-3. **Backend (port 3005 via systemd sip-server.service)** — запущен из `/root/sec-scanner-workspace` на версии **INT-036**, отстаёт от GitHub на 4 этапа
+**Версия**: INT-044  
+**Production**: https://sec-scanner.pro — работает, HTTP 200  
+**Последний commit**: `a8500f7` INT-044 fix: add 'partial' to FeatureStatus type  
+**GitHub**: синхронизирован с Local  
+**Build dir на сервере**: синхронизирован с GitHub  
+**Production**: синхронизирован с build dir
 
-**INT-039, INT-041, INT-042 отсутствуют в git-истории.** Все ветки проверены — только `main`.
-Worklog.md содержит только одну запись (INT-040). Документация (HANDOFF, CURRENT_STATE, CHANGELOG_PRODUCT) устарела на 3-6 этапов.
+### Sources of Truth — все 5 синхронизированы
 
-Перед любым deploy — обязательно прочитать раздел "План восстановления" ниже.
+| Источник | Commit | Состояние |
+|----------|--------|-----------|
+| LOCAL (workspace) | `a8500f7` | ✅ чистый |
+| GITHUB (main) | `a8500f7` | ✅ pushed |
+| SERVER SOURCE (/var/www/sec-scanner-build) | `a8500f7` | ✅ синхронизирован |
+| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-044 | ✅ собран |
+| PRODUCTION (/var/www/sec-scanner.pro) | INT-044 | ✅ задеплоен |
+
+---
+
+## ⚠️ ИСТОРИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ (для будущих агентов)
+
+До INT-044 проект находился в состоянии расхождения трёх источников истины. Это было исправлено, но история важна для понимания ADR-016..020.
+
+Подробности — в `CHANGELOG_PRODUCT.md` (записи INT-043 и INT-044).
 
 ---
 

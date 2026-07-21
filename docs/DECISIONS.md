@@ -197,3 +197,34 @@
 **Обоснование**: Принудительный "reset контекста" с обязательной сверкой с Production предотвращает накопление расхождений.  
 **Влияние**: Добавлено как обязательное правило в DEVELOPMENT_RULES.md (Rule 12).  
 **Реализация**: Новый диалог начинается с чтения HANDOFF.md, CURRENT_STATE.md, DECISIONS.md, DEVELOPMENT_RULES.md, RELEASE_CHECKLIST.md, затем аудита Production.  
+
+---
+
+## ADR-021: /app/platform-status → /app/system-status (INT-044)
+
+**Дата**: 2026-07-21 (INT-044)  
+**Решение**: Страница `/app/platform-status` удалена (заменена на redirect), её функции переданы новой `/app/system-status`.  
+**Контекст**: PLAT-001 (Platform Status Center) был реализован в INT-038, но на Production никогда не появился (404 fallback). Параллельно предыдущий агент (неизвестный этап) создал `/app/system-status` на Production, но не закоммитил её в git. В INT-044 страница `/app/system-status` была реконструирована из Production HTML и добавлена в git как PLAT-013.  
+**Обоснование**: Production — единственный источник истины (ADR-016). Раз страница `/app/system-status` существует на Production, она должна быть в git. Раз `/app/platform-status` не существует на Production, она не должна оставаться как рабочая страница — иначе расхождение.  
+**Влияние**: PLAT-001 → broken (deprecated alias), PLAT-013 → verified. Все ссылки в sidebar обновлены на `/app/system-status`. `/app/platform-status` сохранён как redirect для обратной совместимости внешних ссылок.
+
+---
+
+## ADR-022: Evidence-Based Development (INT-044)
+
+**Дата**: 2026-07-21 (INT-044)  
+**Решение**: Любое заявление о выполнении задачи должно сопровождаться проверяемыми доказательствами: Production URL + HTTP-статус + скриншот + E2E + commit hash. Без доказательств задача автоматически считается незавершённой.  
+**Контекст**: В INT-043 обнаружено, что предыдущие агенты заявляли функции как "implemented" без проверки Production. Это привело к расхождениям между Feature Registry и реальным состоянием.  
+**Обоснование**: Production видит пользователь — значит Production должен быть доказательством.  
+**Влияние**: Добавлено как Rule 15 в DEVELOPMENT_RULES.md. Статус `implemented` больше не используется — заменён на `verified` (только после production-проверки).  
+**Реализация**: В INT-044 сделано 16 скриншотов ключевых страниц, сохранённых в `/home/z/my-project/int044/screenshots/`. Production URL проверены через curl + agent-browser snapshot.
+
+---
+
+## ADR-023: 8 канонических статусов Feature Registry (INT-044)
+
+**Дата**: 2026-07-21 (INT-044)  
+**Решение**: Feature Registry использует 8 канонических статусов: `not_started`, `in_progress`, `verified`, `partial`, `broken`, `missing`, `deprecated`, `planned` (legacy alias для `not_started`). Статус `implemented` сохранён как legacy alias, но не должен использоваться в новом коде.  
+**Контекст**: В INT-043 (ADR-018) заявлено 7 статусов, но `partial` был пропущен в TypeScript типе, что вызвало ошибку сборки. В INT-044 тип расширен до 8 + 2 legacy aliases.  
+**Обоснование**: `partial` нужен для функций, которые частично работают на Production (UI есть, но backend не отвечает). Без этого статуса такие функции приходилось бы помечать как `broken` или `in_progress`, что не точно.  
+**Влияние**: `feature-registry.ts` обновлён. `feature-registry.json` мигрирован: 4 features теперь `partial` (Integrations, Repositories, Notifications, Pricing).

@@ -4,6 +4,57 @@
 
 ---
 
+## INT-044 — 2026-07-21 (Repository Recovery & Production Synchronization)
+
+### Что было (БЫЛО — состояние до INT-044)
+
+- 3 разные версии кода на сервере (build dir INT-038, /root/sec-scanner-workspace INT-036, GitHub INT-040 v2)
+- Production содержал "призрачную" страницу /app/system-status, отсутствующую в git
+- /app/platform-status на production возвращал 404 fallback на index.html
+- /app/debug/features на production возвращал 404 fallback на index.html
+- Backend работал через systemd, но документация заявляла "не запущен"
+- SoloNotification.tsx оставался как мёртвый код
+- Документация (HANDOFF, CURRENT_STATE, CHANGELOG) устарела на 3-6 этапов
+- INT-039, INT-041, INT-042 отсутствовали в git-истории
+
+### Восстановлено (после INT-044)
+
+| Что восстановлено | Где | Commit | Production URL |
+|-------------------|-----|--------|----------------|
+| `/app/system-status` страница | landing/src/app/(app)/app/system-status/page.tsx | a8500f7 | https://sec-scanner.pro/app/system-status (HTTP 200, 116560 bytes) |
+| `/app/debug/features` Developer Overlay | landing/src/app/(app)/app/debug/features/page.tsx | 6cad6c1 | https://sec-scanner.pro/app/debug/features (HTTP 200, 69256 bytes) |
+| `/app/platform-status` redirect | landing/src/app/(app)/app/platform-status/page.tsx | 6cad6c1 | https://sec-scanner.pro/app/platform-status (HTTP 200, redirect to /app/system-status) |
+| 61 i18n ключ registry.* | landing/src/lib/i18n.ts | 06a04e8 | видны в продакшн |
+| 7 статусов Feature Registry | landing/src/lib/feature-registry.ts | a8500f7 | работает на /app/system-status |
+| Evidence-Based Development rule | docs/DEVELOPMENT_RULES.md (Rule 15) | 06a04e8 | документация |
+| Sidebar ссылка → /app/system-status | landing/src/components/layout/AppSidebar.tsx | 06a04e8 | видна в продакшн |
+| Backup pre-deploy | /backup/sec-scanner-pro-pre-int044 (12M) | — | сервер |
+
+### Не удалось восстановить
+
+- INT-039, INT-041, INT-042 — нет следов в git-истории всех веток. Вероятно, эти задачи выполнялись, но никогда не коммитились. Содержание задач неизвестно.
+- Оригинальный исходник `/app/system-status` (до реконструкции) — не найден нигде на сервере. Реконструирован из production HTML.
+
+### Видимые пользователю изменения
+
+1. **Sidebar**: ссылка "Статус платформы" теперь ведёт на `/app/system-status` (раньше вела на `/app/platform-status`, который возвращал 404 fallback)
+2. **Новая страница /app/system-status**: показывает готовность платформы (74%), 12 модулей с VERIFIED/PARTIAL/FAIL статусами, даты последних проверок, E2E-результаты, скриншот-статусы
+3. **4 принципа верификации видны**: Never Trust Code, No Completion Without E2E, Production Is The Source Of Truth, Every Feature Must Have Evidence
+4. **Pipeline агента виден**: Код → Build → Deploy → Проверка → E2E → Обновление статуса → Готово
+5. **Восстановлена /app/debug/features**: Developer Overlay для администраторов (раньше 404)
+6. **/app/platform-status**: теперь автоматически редиректит на /app/system-status (раньше показывал index.html)
+
+### Технические изменения
+
+- `feature-registry.json`: 36 features мигрировано с `implemented` на новые статусы (verified/partial/broken/not_started/deprecated)
+- `feature-registry.ts`: добавлены типы `partial` и `verified`, функции `normalizeStatus`, `isVerified`, `isWorking`, `isBroken`, новые readiness формулы с штрафом за broken/missing/deprecated
+- Добавлен PLAT-013 System Status Center (verified)
+- SoloNotification.tsx помечен как deprecated (AIS-007)
+- PLAT-001 помечен как broken (заменён на PLAT-013)
+- AIS-008 (debug/features) восстановлен — теперь работает на production
+
+---
+
 ## INT-043 — 2026-07-21 (аудит, без изменений кода)
 
 ### Product Recovery & Single Source of Truth — АУДИТ
