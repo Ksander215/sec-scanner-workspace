@@ -1,5 +1,5 @@
 {
-  "version": "INT-048-v1",
+  "version": "INT-049-v1",
   "lastUpdated": "2026-07-21T22:00:00+03:00",
   "productionCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
   "githubCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
@@ -1863,6 +1863,88 @@
         "visual": "pass"
       },
       "notes": "AIO (Autonomous Operations Center) detail page at /app/architecture/aio with Build/Deploy/Regression/Evidence/Sync/Recovery/Monitoring/Verification/Rollback modules."
+    },
+    "PLAT-021": {
+      "id": "PLAT-021",
+      "name": "Command Center",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-049",
+      "productionUrl": "https://sec-scanner.pro/app/command-center",
+      "pages": [
+        "/app/command-center"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "command-center.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "Unified platform control page at /app/command-center replacing Dashboard. Shows Security Health (SIP), Platform Health, AIS Status, Automation Status (AIO), Recent Activity, Recommendations, Next Actions, Current Goals. Implements INT-049 BLOCK 5."
+    },
+    "PLAT-022": {
+      "id": "PLAT-022",
+      "name": "Evolution Matrix",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-049",
+      "productionUrl": "https://sec-scanner.pro/app/evolution",
+      "pages": [
+        "/app/evolution"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "evolution.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "Platform evolution page at /app/evolution showing feature impact map across 4 centers (SIP/AIS/AI CTO/AIO) with stars ratings, Evolution Impact Analysis, AI Copilot Intent Detection demo, Platform Evolution Pipeline. Implements INT-049 BLOCK 1-4."
+    },
+    "PLAT-023": {
+      "id": "PLAT-023",
+      "name": "Dynamic Two-Level Navigation",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-049",
+      "productionUrl": "https://sec-scanner.pro/app",
+      "pages": [],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "sidebar.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "Sidebar restructured with first level (4 AI Centers + Command Center + Evolution + Architecture) and second level (Platform Tools: Scanner, Reports, Marketplace, etc). Implements INT-049 BLOCK 6."
     }
   }
 }
