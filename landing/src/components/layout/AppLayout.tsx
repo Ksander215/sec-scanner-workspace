@@ -33,6 +33,7 @@ const SEGMENT_I18N_KEYS: Record<string, string> = {
   platform: "nav.platform",
   "platform-status": "sidebar.systemStatus",
   "system-status": "sidebar.systemStatus",
+  "evidence": "sidebar.evidence",
   pricing: "nav.pricing",
   settings: "sidebar.settings",
   workspace: "sidebar.workspace",
