@@ -38,6 +38,8 @@ import {
   Gauge,
   ShieldCheck,
   TrendingUp,
+  Brain,
+  Sparkles,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
@@ -51,6 +53,51 @@ interface SidebarSection {
 }
 
 const sidebarSections: SidebarSection[] = [
+  // ─── INT-049: 4 AI Centers (first level) ──────────────────────────────
+  {
+    id: "command-center",
+    labelKey: "sidebar.commandCenter",
+    icon: Activity,
+    href: "/app/command-center",
+  },
+  {
+    id: "sip-center",
+    labelKey: "sidebar.sipCenter",
+    icon: ShieldCheck,
+    href: "/app/architecture/sip",
+  },
+  {
+    id: "ais-center",
+    labelKey: "sidebar.aisCenter",
+    icon: Sparkles,
+    href: "/app/architecture/ais",
+  },
+  {
+    id: "cto-center",
+    labelKey: "sidebar.ctoCenter",
+    icon: Brain,
+    href: "/app/architecture/cto",
+  },
+  {
+    id: "aio-center",
+    labelKey: "sidebar.aioCenter",
+    icon: Cpu,
+    href: "/app/architecture/aio",
+  },
+  {
+    id: "evolution",
+    labelKey: "sidebar.evolution",
+    icon: GitBranch,
+    href: "/app/evolution",
+  },
+  {
+    id: "architecture",
+    labelKey: "sidebar.architecture",
+    icon: Network,
+    href: "/app/architecture",
+  },
+
+  // ─── INT-049: Platform Tools (second level — SIP-owned) ───────────────
   {
     id: "dashboard",
     labelKey: "sidebar.dashboard",
@@ -152,6 +199,8 @@ const sidebarSections: SidebarSection[] = [
     icon: Users,
     href: "/app/community",
   },
+
+  // ─── INT-049: AI CTO Tools (oversight) ────────────────────────────────
   {
     id: "system-status",
     labelKey: "sidebar.systemStatus",
@@ -170,12 +219,8 @@ const sidebarSections: SidebarSection[] = [
     icon: TrendingUp,
     href: "/app/product-readiness",
   },
-  {
-    id: "architecture",
-    labelKey: "sidebar.architecture",
-    icon: Network,
-    href: "/app/architecture",
-  },
+
+  // ─── Settings ─────────────────────────────────────────────────────────
   {
     id: "settings",
     labelKey: "sidebar.settings",

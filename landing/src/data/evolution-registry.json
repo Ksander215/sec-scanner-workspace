@@ -1,0 +1,2502 @@
+{
+  "version": "INT-049-v1",
+  "lastUpdated": "2026-07-21T23:50:00+03:00",
+  "productionCommit": "13489fe8f0a2f9137b91640f5decbd759376a80c",
+  "description": "Platform Evolution Registry — каждая функция имеет owner center, dependencies, affected centers, impact score",
+  "evolutionPipeline": [
+    "Feature",
+    "Owner",
+    "Evolution Analysis",
+    "Affected Centers",
+    "Evidence",
+    "Product Readiness",
+    "Architecture",
+    "Deploy",
+    "Verification",
+    "Platform Updated"
+  ],
+  "synchronizedRegistries": [
+    "feature-registry.json",
+    "evidence-registry.json",
+    "product-readiness.json",
+    "architecture-registry.json",
+    "evolution-registry.json",
+    "system-status (live page)",
+    "documentation (HANDOFF, CURRENT_STATE, CHANGELOG, DECISIONS)",
+    "AI Knowledge Base (future)"
+  ],
+  "features": {
+    "AIS-001": {
+      "id": "AIS-001",
+      "name": "Adaptive Intelligence Assistant",
+      "category": "AIS",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 5,
+        "AI_CTO": 3,
+        "AIO": 3
+      },
+      "impactScore": 95,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-001)",
+      "version": "INT-036"
+    },
+    "AIS-002": {
+      "id": "AIS-002",
+      "name": "Confidence Score",
+      "category": "AIS",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [
+        "AIS-001"
+      ],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 2
+      },
+      "impactScore": 78,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-002)",
+      "version": "INT-036"
+    },
+    "AIS-003": {
+      "id": "AIS-003",
+      "name": "Context Prediction",
+      "category": "AIS",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [
+        "AIS-001",
+        "AIS-004"
+      ],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 2
+      },
+      "impactScore": 72,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-003)",
+      "version": "INT-036"
+    },
+    "AIS-004": {
+      "id": "AIS-004",
+      "name": "Adaptive Memory",
+      "category": "AIS",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 5,
+        "AI_CTO": 3,
+        "AIO": 3
+      },
+      "impactScore": 88,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-004)",
+      "version": "INT-036"
+    },
+    "AIS-005": {
+      "id": "AIS-005",
+      "name": "Sound Notifications",
+      "category": "AIS",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [
+        "AIS-001"
+      ],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 3,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 55,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-005)",
+      "version": "INT-036"
+    },
+    "AIS-006": {
+      "id": "AIS-006",
+      "name": "Personalized Guidance",
+      "category": "AIS",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [
+        "AIS-004"
+      ],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 2
+      },
+      "impactScore": 70,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-006)",
+      "version": "INT-036"
+    },
+    "AIS-007": {
+      "id": "AIS-007",
+      "name": "SOLO LEVELING Notifications",
+      "category": "AIS",
+      "status": "deprecated",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 30,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-007)",
+      "version": "INT-038"
+    },
+    "AIS-008": {
+      "id": "AIS-008",
+      "name": "Developer Overlay",
+      "category": "AIS",
+      "status": "broken",
+      "owner": "AIS",
+      "dependencies": [
+        "PLAT-002"
+      ],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 3,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-008)",
+      "version": "INT-038"
+    },
+    "AIS-009": {
+      "id": "AIS-009",
+      "name": "Feature Status in AIS",
+      "category": "AIS",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [
+        "PLAT-002",
+        "AIS-001"
+      ],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 60,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see AIS-009)",
+      "version": "INT-038"
+    },
+    "UX-001": {
+      "id": "UX-001",
+      "name": "Contextual Help",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 65,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-001)",
+      "version": "INT-030"
+    },
+    "UX-002": {
+      "id": "UX-002",
+      "name": "Business Result",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 60,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-002)",
+      "version": "INT-030"
+    },
+    "UX-003": {
+      "id": "UX-003",
+      "name": "Executive Summary",
+      "category": "UX",
+      "status": "in_progress",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 3,
+        "AIO": 1
+      },
+      "impactScore": 55,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-003)",
+      "version": "INT-030"
+    },
+    "UX-004": {
+      "id": "UX-004",
+      "name": "Section FAQ",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 3,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 40,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-004)",
+      "version": "INT-030"
+    },
+    "UX-005": {
+      "id": "UX-005",
+      "name": "Smart Next Step",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 3,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-005)",
+      "version": "INT-030"
+    },
+    "UX-006": {
+      "id": "UX-006",
+      "name": "Visual Flow",
+      "category": "UX",
+      "status": "verified",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 45,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-006)",
+      "version": "INT-030"
+    },
+    "UX-007": {
+      "id": "UX-007",
+      "name": "Smart Scroll Navigator",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [
+        "AIS-001"
+      ],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 3,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 55,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-007)",
+      "version": "INT-033"
+    },
+    "UX-008": {
+      "id": "UX-008",
+      "name": "Demo Badge",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 3,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-008)",
+      "version": "INT-030"
+    },
+    "UX-009": {
+      "id": "UX-009",
+      "name": "Term Tooltip",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 3,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 40,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-009)",
+      "version": "INT-030"
+    },
+    "UX-010": {
+      "id": "UX-010",
+      "name": "Why Important",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 35,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-010)",
+      "version": "INT-030"
+    },
+    "UX-011": {
+      "id": "UX-011",
+      "name": "Personal Goal Card",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AIS",
+      "dependencies": [
+        "AIS-006"
+      ],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 60,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-011)",
+      "version": "INT-036"
+    },
+    "UX-012": {
+      "id": "UX-012",
+      "name": "Company Progress",
+      "category": "UX",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 3,
+        "AIO": 1
+      },
+      "impactScore": 45,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see UX-012)",
+      "version": "INT-036"
+    },
+    "SCAN-001": {
+      "id": "SCAN-001",
+      "name": "Security Scanner",
+      "category": "Scanner",
+      "status": "verified",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 5,
+        "AIS": 3,
+        "AI_CTO": 3,
+        "AIO": 3
+      },
+      "impactScore": 92,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see SCAN-001)",
+      "version": "INT-020"
+    },
+    "SCAN-002": {
+      "id": "SCAN-002",
+      "name": "Scan History",
+      "category": "Scanner",
+      "status": "verified",
+      "owner": "SIP",
+      "dependencies": [
+        "SCAN-001"
+      ],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 65,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see SCAN-002)",
+      "version": "INT-020"
+    },
+    "SCAN-003": {
+      "id": "SCAN-003",
+      "name": "Findings List",
+      "category": "Scanner",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [
+        "SCAN-001"
+      ],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 3,
+        "AI_CTO": 3,
+        "AIO": 2
+      },
+      "impactScore": 70,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see SCAN-003)",
+      "version": "INT-020"
+    },
+    "RPT-001": {
+      "id": "RPT-001",
+      "name": "Report Generation",
+      "category": "Reports",
+      "status": "verified",
+      "owner": "SIP",
+      "dependencies": [
+        "SCAN-001"
+      ],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 3,
+        "AI_CTO": 3,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see RPT-001)",
+      "version": "INT-020"
+    },
+    "RPT-002": {
+      "id": "RPT-002",
+      "name": "Email Report Sharing",
+      "category": "Reports",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [
+        "RPT-001"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see RPT-002)",
+      "version": "INT-025"
+    },
+    "MKT-001": {
+      "id": "MKT-001",
+      "name": "Marketplace",
+      "category": "Marketplace",
+      "status": "verified",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 3,
+        "AI_CTO": 3,
+        "AIO": 2
+      },
+      "impactScore": 70,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see MKT-001)",
+      "version": "INT-020"
+    },
+    "MKT-002": {
+      "id": "MKT-002",
+      "name": "Marketplace Sub-categories",
+      "category": "Marketplace",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [
+        "MKT-001"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 45,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see MKT-002)",
+      "version": "INT-025"
+    },
+    "REPO-001": {
+      "id": "REPO-001",
+      "name": "Repository Management",
+      "category": "Repository",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 55,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see REPO-001)",
+      "version": "INT-025"
+    },
+    "DASH-001": {
+      "id": "DASH-001",
+      "name": "Adaptive Dashboard",
+      "category": "Dashboard",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 5,
+        "AIS": 3,
+        "AI_CTO": 3,
+        "AIO": 2
+      },
+      "impactScore": 80,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see DASH-001)",
+      "version": "INT-036"
+    },
+    "DASH-002": {
+      "id": "DASH-002",
+      "name": "Risk Overview",
+      "category": "Dashboard",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [
+        "DASH-001"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see DASH-002)",
+      "version": "INT-025"
+    },
+    "BIZ-001": {
+      "id": "BIZ-001",
+      "name": "Business Language Mode",
+      "category": "Business UX",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 65,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see BIZ-001)",
+      "version": "INT-030"
+    },
+    "INT-001": {
+      "id": "INT-001",
+      "name": "Integration Hub",
+      "category": "Integrations",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 60,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see INT-001)",
+      "version": "INT-025"
+    },
+    "INT-002": {
+      "id": "INT-002",
+      "name": "SSH Key Management",
+      "category": "Integrations",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [
+        "INT-001"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 45,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see INT-002)",
+      "version": "INT-025"
+    },
+    "INT-003": {
+      "id": "INT-003",
+      "name": "API Key Management",
+      "category": "Integrations",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [
+        "INT-001"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see INT-003)",
+      "version": "INT-025"
+    },
+    "NTF-001": {
+      "id": "NTF-001",
+      "name": "Notification Rules",
+      "category": "Notifications",
+      "status": "in_progress",
+      "owner": "AIS",
+      "dependencies": [
+        "AIS-001"
+      ],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 3,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 55,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see NTF-001)",
+      "version": "INT-025"
+    },
+    "PLAT-001": {
+      "id": "PLAT-001",
+      "name": "Platform Status Center",
+      "category": "Platform",
+      "status": "broken",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 30,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-001)",
+      "version": "INT-038"
+    },
+    "PLAT-002": {
+      "id": "PLAT-002",
+      "name": "Feature Registry",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-002)",
+      "version": "INT-038"
+    },
+    "PLAT-003": {
+      "id": "PLAT-003",
+      "name": "Project Management",
+      "category": "Platform",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 60,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-003)",
+      "version": "INT-025"
+    },
+    "PLAT-004": {
+      "id": "PLAT-004",
+      "name": "Settings Panel",
+      "category": "Platform",
+      "status": "in_progress",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 3,
+        "AIO": 1
+      },
+      "impactScore": 55,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-004)",
+      "version": "INT-025"
+    },
+    "PLAT-005": {
+      "id": "PLAT-005",
+      "name": "Workspace",
+      "category": "Platform",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 45,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-005)",
+      "version": "INT-025"
+    },
+    "PLAT-006": {
+      "id": "PLAT-006",
+      "name": "Cloud Workspace",
+      "category": "Platform",
+      "status": "not_started",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 20,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-006)",
+      "version": ""
+    },
+    "PLAT-007": {
+      "id": "PLAT-007",
+      "name": "Pricing Page",
+      "category": "Platform",
+      "status": "partial",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 3,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-007)",
+      "version": "INT-020"
+    },
+    "INF-001": {
+      "id": "INF-001",
+      "name": "Knowledge Graph",
+      "category": "Scanner",
+      "status": "verified",
+      "owner": "SIP",
+      "dependencies": [
+        "SCAN-001"
+      ],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 3,
+        "AI_CTO": 3,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see INF-001)",
+      "version": "INT-020"
+    },
+    "INF-002": {
+      "id": "INF-002",
+      "name": "Attack Paths",
+      "category": "Scanner",
+      "status": "verified",
+      "owner": "SIP",
+      "dependencies": [
+        "SCAN-001"
+      ],
+      "affectedCenters": {
+        "SIP": 4,
+        "AIS": 3,
+        "AI_CTO": 3,
+        "AIO": 2
+      },
+      "impactScore": 70,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see INF-002)",
+      "version": "INT-020"
+    },
+    "INF-003": {
+      "id": "INF-003",
+      "name": "Architecture View",
+      "category": "Scanner",
+      "status": "in_progress",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 50,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see INF-003)",
+      "version": "INT-025"
+    },
+    "PLAT-008": {
+      "id": "PLAT-008",
+      "name": "Enterprise SSO",
+      "category": "Platform",
+      "status": "not_started",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 5,
+        "AIO": 2
+      },
+      "impactScore": 80,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-008)",
+      "version": ""
+    },
+    "PLAT-009": {
+      "id": "PLAT-009",
+      "name": "Compliance Frameworks",
+      "category": "Platform",
+      "status": "not_started",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 1,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 65,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-009)",
+      "version": ""
+    },
+    "PLAT-010": {
+      "id": "PLAT-010",
+      "name": "RBAC",
+      "category": "Platform",
+      "status": "not_started",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-010)",
+      "version": ""
+    },
+    "PLAT-011": {
+      "id": "PLAT-011",
+      "name": "SIEM Integration",
+      "category": "Platform",
+      "status": "not_started",
+      "owner": "SIP",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 2,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 55,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (SIP modules)",
+        "CURRENT_STATE.md",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Scanner workflow",
+        "Report generation",
+        "Knowledge graph render"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-011)",
+      "version": ""
+    },
+    "PLAT-012": {
+      "id": "PLAT-012",
+      "name": "Audit Trail",
+      "category": "Platform",
+      "status": "not_started",
+      "owner": "AIO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 1,
+        "AI_CTO": 1,
+        "AIO": 4
+      },
+      "impactScore": 65,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIO modules)",
+        "deploy logs",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Backup created",
+        "Deploy atomic",
+        "Rollback path exists"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-012)",
+      "version": ""
+    },
+    "I18N-001": {
+      "id": "I18N-001",
+      "name": "Internationalization",
+      "category": "Platform",
+      "status": "partial",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 2
+      },
+      "impactScore": 70,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see I18N-001)",
+      "version": "INT-010"
+    },
+    "THEME-001": {
+      "id": "THEME-001",
+      "name": "Dark/Light Theme",
+      "category": "Platform",
+      "status": "partial",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 60,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see THEME-001)",
+      "version": "INT-010"
+    },
+    "NAV-001": {
+      "id": "NAV-001",
+      "name": "Search Modal",
+      "category": "Platform",
+      "status": "partial",
+      "owner": "AIS",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 1,
+        "AIS": 4,
+        "AI_CTO": 2,
+        "AIO": 1
+      },
+      "impactScore": 65,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AIS modules)",
+        "AIS memory state",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "AIS FAB visible",
+        "AIS panel opens",
+        "Contextual notification appears"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see NAV-001)",
+      "version": "INT-015"
+    },
+    "PLAT-013": {
+      "id": "PLAT-013",
+      "name": "System Status Center",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [
+        "PLAT-002"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 3,
+        "AI_CTO": 5,
+        "AIO": 3
+      },
+      "impactScore": 85,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-013)",
+      "version": "INT-044"
+    },
+    "PLAT-014": {
+      "id": "PLAT-014",
+      "name": "Evidence Center",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [
+        "PLAT-002"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 3,
+        "AI_CTO": 5,
+        "AIO": 3
+      },
+      "impactScore": 90,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-014)",
+      "version": "INT-045"
+    },
+    "PLAT-015": {
+      "id": "PLAT-015",
+      "name": "Product Readiness Dashboard",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [
+        "PLAT-014"
+      ],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 3,
+        "AI_CTO": 5,
+        "AIO": 3
+      },
+      "impactScore": 95,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-015)",
+      "version": "INT-046"
+    },
+    "PLAT-016": {
+      "id": "PLAT-016",
+      "name": "Unified AI Architecture Map",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [],
+      "affectedCenters": {
+        "SIP": 3,
+        "AIS": 3,
+        "AI_CTO": 5,
+        "AIO": 3
+      },
+      "impactScore": 88,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-016)",
+      "version": "INT-048"
+    },
+    "PLAT-017": {
+      "id": "PLAT-017",
+      "name": "SIP Center Detail",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [
+        "PLAT-016"
+      ],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-017)",
+      "version": "INT-048"
+    },
+    "PLAT-018": {
+      "id": "PLAT-018",
+      "name": "AIS Center Detail",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [
+        "PLAT-016"
+      ],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-018)",
+      "version": "INT-048"
+    },
+    "PLAT-019": {
+      "id": "PLAT-019",
+      "name": "AI CTO Center Detail",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [
+        "PLAT-016"
+      ],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-019)",
+      "version": "INT-048"
+    },
+    "PLAT-020": {
+      "id": "PLAT-020",
+      "name": "AIO Center Detail",
+      "category": "Platform",
+      "status": "verified",
+      "owner": "AI_CTO",
+      "dependencies": [
+        "PLAT-016"
+      ],
+      "affectedCenters": {
+        "SIP": 2,
+        "AIS": 2,
+        "AI_CTO": 4,
+        "AIO": 2
+      },
+      "impactScore": 75,
+      "requiredUpdates": [
+        "feature-registry.json",
+        "evidence-registry.json",
+        "product-readiness.json",
+        "architecture-registry.json (AI CTO modules)",
+        "product-readiness.json scores",
+        "CHANGELOG_PRODUCT.md",
+        "worklog.md",
+        "DECISIONS.md (if architectural)"
+      ],
+      "documentation": [
+        "docs/HANDOFF.md",
+        "docs/CURRENT_STATE.md",
+        "docs/CHANGELOG_PRODUCT.md"
+      ],
+      "tests": [
+        "Build: npx next build exit 0",
+        "Production: HTTP 200 on affected pages",
+        "Registry data valid",
+        "Score computation correct",
+        "Page renders without errors"
+      ],
+      "evidence": "https://sec-scanner.pro/app/evidence (see PLAT-020)",
+      "version": "INT-048"
+    }
+  }
+}

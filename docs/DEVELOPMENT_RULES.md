@@ -518,3 +518,91 @@ nginx -s reload
 | **AI Copilot** | Пользовательский интерфейс взаимодействия с интеллектуальными центрами |
 
 Запрещено использовать: "помощник", "интеллектуальный помощник", "умный ассистент" — только "AI Copilot" или "AIS".
+
+---
+
+## 23. Platform Evolution (INT-049)
+
+Любая задача **не считается завершённой**, если не выполнен анализ влияния на все 4 центра:
+
+- **SIP** (Security Intelligence Platform) — данные и безопасность
+- **AIS** (Adaptive Intelligence System) — взаимодействие с пользователем
+- **AI CTO** (Product Intelligence Center) — стратегия и решения
+- **AIO** (Autonomous Operations Center) — исполнение и автоматизация
+
+### Evolution Impact Report — обязательная часть каждого отчёта
+
+Каждый отчёт о завершении задачи обязан содержать Evolution Impact:
+
+```
+SIP:    ★★★★★  (5/5)
+AIS:    ★★★★☆  (4/5)
+AI CTO: ★★★☆☆  (3/5)
+AIO:    ★★☆☆☆  (2/5)
+```
+
+Звёзды означают уровень влияния изменения на центр:
+- ★★★★★ — критическое влияние, центр напрямую изменён
+- ★★★★☆ — высокое влияние, затронуты ключевые модули
+- ★★★☆☆ — среднее влияние, обновлены KPIs или evidence
+- ★★☆☆☆ — низкое влияние, обновлена только документация
+- ★☆☆☆☆ — минимальное влияние, центр не затронут
+
+### Evolution Registry
+
+Файл `landing/src/data/evolution-registry.json` содержит для каждой функции:
+- `owner` — центр-владелец (SIP / AIS / AI CTO / AIO)
+- `dependencies` — список других функций, от которых зависит
+- `affectedCenters` — звёзды влияния на каждый центр
+- `impactScore` — общий балл влияния (0-100)
+- `requiredUpdates` — обязательные обновления реестров
+- `tests` — обязательные тесты
+
+### Страница /app/evolution
+
+- **Matrix tab**: все функции с owner + affected centers звёздами
+- **Impact Analysis tab**: детальный отчёт по выбранной функции
+- **AI Intent tab**: демо AI Copilot Intent Detection
+- **Pipeline tab**: Platform Evolution Pipeline (10 шагов)
+
+### Platform Evolution Pipeline
+
+Каждое изменение проходит 10 шагов:
+1. Feature — изменение функции
+2. Owner — определение центра-владельца
+3. Evolution Analysis — анализ влияния на 4 центра
+4. Affected Centers — обновление затронутых центров
+5. Evidence — сбор доказательств
+6. Product Readiness — обновление score
+7. Architecture — обновление architecture-registry
+8. Deploy — развертывание
+9. Verification — проверка на production
+10. Platform Updated — все реестры синхронизированы
+
+### Product Synchronization (BLOCK 10)
+
+После любого изменения автоматически обновляются:
+- `feature-registry.json`
+- `evidence-registry.json`
+- `product-readiness.json`
+- `architecture-registry.json`
+- `evolution-registry.json`
+- System Status (live page `/app/system-status`)
+- Documentation (HANDOFF, CURRENT_STATE, CHANGELOG, DECISIONS)
+- AI Knowledge Base (future)
+
+### AI Copilot Intent Detection (BLOCK 7)
+
+AI Copilot — единственная входная точка для запросов пользователя. Любой запрос проходит:
+
+```
+AI Copilot → Intent Detection → Routing → Execution Center
+```
+
+Примеры:
+- "Просканируй сайт" → intent=`scan_request` → **SIP**
+- "Почему готовность продукта 55%?" → intent=`readiness_inquiry` → **AI CTO**
+- "Разверни новую сборку" → intent=`deploy_request` → **AIO**
+- "Объясни результаты" → intent=`explain_request` → **AIS**
+
+Функция `detectIntent(query)` в `evolution-registry.ts` реализует pattern-based intent detection с confidence score.
