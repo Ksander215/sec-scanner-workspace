@@ -1,15 +1,15 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: INT-046 (Product Completeness Audit & Production Readiness), 2026-07-21
+> Последнее обновление: INT-048 (Unified AI Architecture), 2026-07-21
 
 ---
 
-## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-046)
+## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-048)
 
-**Версия**: INT-046  
+**Версия**: INT-048  
 **Production**: https://sec-scanner.pro — работает, HTTP 200  
-**Последний commit**: `1c13b0e` INT-046: Product Completeness Audit & Production Readiness  
+**Последний commit**: `186024b` INT-048: Unified AI Architecture (SIP + AIS + AI CTO + AIO)  
 **GitHub**: синхронизирован с Local  
 **Build dir на сервере**: синхронизирован с GitHub  
 **Production**: синхронизирован с build dir
@@ -18,27 +18,21 @@
 
 | Источник | Commit | Состояние |
 |----------|--------|-----------|
-| LOCAL (workspace) | `1c13b0e` | ✅ чистый |
-| GITHUB (main) | `1c13b0e` | ✅ pushed |
-| SERVER SOURCE (/var/www/sec-scanner-build) | `1c13b0e` | ✅ синхронизирован |
-| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-046 | ✅ собран |
-| PRODUCTION (/var/www/sec-scanner.pro) | INT-046 | ✅ задеплоен |
+| LOCAL (workspace) | `186024b` | ✅ чистый |
+| GITHUB (main) | `186024b` | ✅ pushed |
+| SERVER SOURCE (/var/www/sec-scanner-build) | `186024b` | ✅ синхронизирован |
+| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-048 | ✅ собран |
+| PRODUCTION (/var/www/sec-scanner.pro) | INT-048 | ✅ задеплоен |
 
-### Product Readiness — ключевые метрики
+### Unified AI Architecture — 4 центра
 
-| Метрика | Значение |
-|---------|----------|
-| Functional readiness | 91% (функции технически реализованы) |
-| **Product readiness** | **55%** (готовы для ежедневного использования) |
-| Total features | 57 |
-| Ready (≥85%) | 28 |
-| Almost Ready (70-84%) | 0 |
-| Partial (50-69%) | 4 |
-| Not Ready (<50%) | 25 |
-| Critical trust findings | 2 |
-| Open trust findings | 5 |
-| Total product debt items | ~280 |
-| AIS modules | 10 (avg 85%) |
+| Центр | Score | Модулей | Зона ответственности |
+|-------|-------|---------|----------------------|
+| **SIP** | 94% | 12 | Данные и безопасность (Scanner, Risk, Reports, KG, Attack Paths) |
+| **AIS** | 82% | 12 | Пользователь (Copilot, Notifications, Sound, Animation, Memory, Context) |
+| **AI CTO** | 61% | 10 | Стратегия (Readiness, Roadmap, Trust Audit, Executive Summary) |
+| **AIO** | 37% | 9 | Исполнение (Build, Deploy, Regression, Evidence, Sync, Recovery) |
+| **Overall** | **69%** | 43 | — |
 
 ### Ключевые страницы
 
@@ -48,9 +42,29 @@
 | Dashboard | https://sec-scanner.pro/app/dashboard | 200 | verified |
 | System Status | https://sec-scanner.pro/app/system-status | 200 | verified (PLAT-013) |
 | Evidence Center | https://sec-scanner.pro/app/evidence | 200 | verified (PLAT-014) |
-| **Product Readiness** | https://sec-scanner.pro/app/product-readiness | 200 | **verified (PLAT-015)** |
+| Product Readiness | https://sec-scanner.pro/app/product-readiness | 200 | verified (PLAT-015) |
+| **AI Architecture Map** | https://sec-scanner.pro/app/architecture | 200 | **verified (PLAT-016)** |
+| **SIP Center** | https://sec-scanner.pro/app/architecture/sip | 200 | **verified (PLAT-017)** |
+| **AIS Center** | https://sec-scanner.pro/app/architecture/ais | 200 | **verified (PLAT-018)** |
+| **AI CTO Center** | https://sec-scanner.pro/app/architecture/cto | 200 | **verified (PLAT-019)** |
+| **AIO Center** | https://sec-scanner.pro/app/architecture/aio | 200 | **verified (PLAT-020)** |
 | Developer Overlay | https://sec-scanner.pro/app/debug/features | 200 | verified (AIS-008) |
-| Platform Status (redirect) | https://sec-scanner.pro/app/platform-status | 200 | broken (PLAT-001, redirect to system-status) |
+| Platform Status (redirect) | https://sec-scanner.pro/app/platform-status | 200 | broken (PLAT-001, redirect) |
+
+### Feature Registry — 62 функции
+
+| Метрика | Значение |
+|---------|----------|
+| Total features | 62 (57 + 5 новых PLAT-016..020) |
+| Verified | 33 |
+| Partial | 4 |
+| Broken | 2 |
+| In Progress | 15 |
+| Not Started / Planned | 7 |
+| Deprecated | 1 |
+| Functional readiness | 91% |
+| Product readiness | 55% |
+| Architecture readiness | 69% (среднее по 4 центрам) |
 
 ---
 

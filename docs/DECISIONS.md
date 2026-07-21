@@ -351,3 +351,47 @@
 **Контекст**: Product readiness не может быть бинарным (готово/не готово). Нужны критерии которые показывают что именно отсутствует.  
 **Обоснование**: 16 критериев покрывают все аспекты product completeness: технический, UX, accessibility, адаптивность, безопасность.  
 **Влияние**: Score = (true * 1.0 + partial * 0.5) / 16 * 100. Каждый критерий генерирует Product Debt item если false или partial. Средний score = 55%.
+
+---
+
+## ADR-034: Unified AI Architecture (INT-048)
+
+**Дата**: 2026-07-21 (INT-048)  
+**Решение**: Платформа реорганизована в 4 взаимосвязанных интеллектуальных центра: SIP (Security Intelligence Platform), AIS (Adaptive Intelligence System), AI CTO (Product Intelligence Center), AIO (Autonomous Operations Center).  
+**Контекст**: До INT-048 функции платформы были независимыми модулями без чёткой зоны ответственности. AI Copilot работал локально без понимания общей архитектуры.  
+**Обоснование**: 4 центра с чёткими зонами ответственности (данные/пользователь/стратегия/исполнение) упрощают развитие и поддержку. AI Copilot может маршрутизировать запросы в нужный центр.  
+**Влияние**:  
+- Создан `architecture-registry.json` с 4 центрами, 43 модулями, 9 communication links  
+- Созданы 5 страниц: /app/architecture + 4 detail pages  
+- AI Routing Engine: routeQuestion() определяет центр по тексту запроса  
+- Rule 22 Architecture Governance в DEVELOPMENT_RULES.md  
+
+---
+
+## ADR-035: AI Routing Engine (INT-048)
+
+**Дата**: 2026-07-21 (INT-048)  
+**Решение**: AI Copilot маршрутизирует запросы пользователей в один из 4 центров на основе pattern matching.  
+**Контекст**: Без routing engine AI Copilot не знал к какому центру обращаться. Пользовательские вопросы типа "Почему Scanner пустой?" (SIP) vs "Когда будет деплой?" (AIO) требовали разной логики.  
+**Обоснование**: Pattern-based routing простой и предсказуемый. Каждый центр имеет ключевые слова (scanner/risk/finding → SIP; deploy/build/sync → AIO; readiness/roadmap/trust → AI CTO; tip/goal/notification → AIS).  
+**Влияние**: `architecture-registry.ts` → `routeQuestion(question)` возвращает `{center, matchedRule, isFallback, explanation}`. Fallback центр — AI CTO (как наиболее общий).
+
+---
+
+## ADR-036: Architecture Governance Rule (INT-048)
+
+**Дата**: 2026-07-21 (INT-048)  
+**Решение**: Новая функция не может быть реализована, пока не определено: центр, владелец, inputs, outputs, dependencies.  
+**Контекст**: До INT-048 функции добавлялись без чёткого понимания кто за них отвечает. Это приводило к дублированию и orphan-функциям.  
+**Обоснование**: Явная привязка к центру предотвращает дублирование и orphan-функции. Каждая функция знает свои dependencies и inputs/outputs.  
+**Влияние**: Rule 22 в DEVELOPMENT_RULES.md. `architecture-registry.json` → `responsibilityMatrix` содержит 20 функций с назначенными центрами.
+
+---
+
+## ADR-037: Unified Terminology (INT-048)
+
+**Дата**: 2026-07-21 (INT-048)  
+**Решение**: Во всей платформе используются только 5 канонических терминов: SIP, AIS, AI CTO, AIO, AI Copilot. Запрещены синонимы ("помощник", "интеллектуальный помощник", "умный ассистент").  
+**Контекст**: Разные части платформы использовали разные термины для одной сущности, что путало пользователей и разработчиков.  
+**Обоснование**: Единая терминология упрощает коммуникацию и документацию. Пользователь сразу понимает к какому центру относится функция.  
+**Влияние**: `architecture-registry.json` → `unifiedTerminology` с определениями. Rule 22 в DEVELOPMENT_RULES.md явно запрещает синонимы.
