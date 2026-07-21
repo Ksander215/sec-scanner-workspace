@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "There is a notification popup/overlay visible in the center-right portion of the screen. It appears as a semi-transparent golden/yellow rectangular box with rounded corners. The overlay contains text and appears to be some kind of menu or information panel, possibly showing options or instructions. It's positioned in front of the person standing in the warehouse-like room. The popup has a slight glow effect around its edges and seems to be in a static state (not animating). The background behind the popup is slightly darkened, suggesting it's an active overlay that's meant to draw attention. The popup appears to be approximately 20-25% of the screen width and about 15-20% of the screen height. There are no other visible notifications, toasts, or overlays in the frame.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784603688,
+  "id": "202607211114430951b22ee9124e25",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "202607211114430951b22ee9124e25",
+  "usage": {
+    "completion_tokens": 161,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 347,
+    "prompt_tokens_details": {
+      "cached_tokens": 15
+    },
+    "total_tokens": 508
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "The frame shows a screen recording at second 38 displaying a video (likely a movie or TV show) featuring a person in a camouflage military-style uniform. The video content occupies the majority of the screen, with a blurred background suggesting an indoor setting.  \n\nAt the **top center** of the screen, there is a small, semi-transparent **notification popup** (or overlay) containing an \"X\" icon. This popup appears to be a standard close button for the video player, positioned in the upper portion of the screen. It is relatively small in size, with the \"X\" centered within it. The popup does not show any additional text or content beyond the \"X\" icon, and there are no visible animations (e.g., sliding, fading) affecting it—it appears static in this frame.  \n\nThe Windows taskbar is visible at the bottom of the screen, containing various application icons (including the Start menu button, File Explorer, and browser icons) and system indicators (volume, network, battery) on the right. No other notifications, toasts, or overlays are present in the frame.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784603467,
+  "id": "20260721111041ebe0ac6c8cd246b6",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260721111041ebe0ac6c8cd246b6",
+  "usage": {
+    "completion_tokens": 226,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 352,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 578
+  }
+}

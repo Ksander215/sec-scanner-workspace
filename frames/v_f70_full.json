@@ -1,0 +1,28 @@
+{
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "There is no notification popup visible in this frame. The image shows a scene (likely from a video or film) with a person in a storage/warehouse setting, and the taskbar at the bottom of the screen (with various application icons and system indicators) does not display any active notification popups.",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1784604217,
+  "id": "20260721112302a57a044740d44625",
+  "model": "glm-4.6v",
+  "object": "chat.completion",
+  "request_id": "20260721112302a57a044740d44625",
+  "usage": {
+    "completion_tokens": 64,
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "prompt_tokens": 2672,
+    "prompt_tokens_details": {
+      "cached_tokens": 4
+    },
+    "total_tokens": 2736
+  }
+}
