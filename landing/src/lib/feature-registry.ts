@@ -6,13 +6,62 @@
  * - Per-category readiness percentage
  * - Overall platform readiness
  * - Functional matrix generation
+ *
+ * INT-043: Extended to support 7 statuses per ADR-018:
+ *   not_started, in_progress, implemented, verified, broken, missing, deprecated
+ * Backward compatible: legacy statuses (implemented/in_progress/planned) still work.
  */
 
 import registryData from "@/data/feature-registry.json";
 
 /* ─── Types ────────────────────────────────────────────────────────────── */
 
-export type FeatureStatus = "implemented" | "in_progress" | "planned";
+/**
+ * All 7 valid feature statuses (INT-043 / ADR-018).
+ * Legacy statuses `planned` maps to `not_started` for backward compat.
+ */
+export type FeatureStatus =
+  | "not_started"
+  | "in_progress"
+  | "implemented"
+  | "verified"
+  | "broken"
+  | "missing"
+  | "deprecated"
+  // Legacy statuses kept for backward compatibility during migration
+  | "planned";
+
+/** Canonical 7 statuses (excluding legacy aliases) */
+export const CANONICAL_STATUSES: FeatureStatus[] = [
+  "not_started",
+  "in_progress",
+  "implemented",
+  "verified",
+  "broken",
+  "missing",
+  "deprecated",
+];
+
+/** Normalize legacy `planned` → `not_started` */
+export function normalizeStatus(status: string): FeatureStatus {
+  if (status === "planned") return "not_started";
+  return status as FeatureStatus;
+}
+
+/** Is a status considered "production-verified"? Only `implemented` (with evidence) or `verified` */
+export function isVerified(status: FeatureStatus): boolean {
+  return status === "verified";
+}
+
+/** Is a status considered "user-visible working"? (excludes broken/missing/deprecated/not_started) */
+export function isWorking(status: FeatureStatus): boolean {
+  return status === "implemented" || status === "verified" || status === "in_progress";
+}
+
+/** Is a status considered "broken or absent"? */
+export function isBroken(status: FeatureStatus): boolean {
+  return status === "broken" || status === "missing" || status === "deprecated";
+}
 
 export interface Feature {
   id: string;
@@ -77,16 +126,34 @@ export function getCategoryReadiness(category: string): {
   implemented: number;
   inProgress: number;
   planned: number;
+  broken: number;
+  missing: number;
+  deprecated: number;
+  verified: number;
+  notStarted: number;
   percentage: number;
 } {
   const features = getFeaturesByCategory(category);
   const total = features.length;
-  const implemented = features.filter((f) => f.status === "implemented").length;
-  const inProgress = features.filter((f) => f.status === "in_progress").length;
-  const planned = features.filter((f) => f.status === "planned").length;
-  const percentage = total > 0 ? Math.round(((implemented + inProgress * 0.5) / total) * 100) : 0;
+  const implemented = features.filter((f) => normalizeStatus(f.status) === "implemented").length;
+  const verified = features.filter((f) => normalizeStatus(f.status) === "verified").length;
+  const inProgress = features.filter((f) => normalizeStatus(f.status) === "in_progress").length;
+  const planned = features.filter((f) => normalizeStatus(f.status) === "not_started" || f.status === "planned").length;
+  const broken = features.filter((f) => normalizeStatus(f.status) === "broken").length;
+  const missing = features.filter((f) => normalizeStatus(f.status) === "missing").length;
+  const deprecated = features.filter((f) => normalizeStatus(f.status) === "deprecated").length;
+  const notStarted = features.filter((f) => normalizeStatus(f.status) === "not_started").length;
 
-  return { total, implemented, inProgress, planned, percentage };
+  // Readiness formula (INT-043):
+  //   verified = 100% weight
+  //   implemented = 80% weight (not yet verified on production)
+  //   in_progress = 50% weight
+  //   not_started / planned = 0% weight
+  //   broken / missing / deprecated = -10% penalty (negative contribution)
+  const score = verified * 1.0 + implemented * 0.8 + inProgress * 0.5 - (broken + missing + deprecated) * 0.1;
+  const percentage = total > 0 ? Math.max(0, Math.min(100, Math.round((score / total) * 100))) : 0;
+
+  return { total, implemented, verified, inProgress, planned, broken, missing, deprecated, notStarted, percentage };
 }
 
 export function getOverallReadiness(): {
@@ -94,16 +161,28 @@ export function getOverallReadiness(): {
   implemented: number;
   inProgress: number;
   planned: number;
+  broken: number;
+  missing: number;
+  deprecated: number;
+  verified: number;
+  notStarted: number;
   percentage: number;
 } {
   const features = registry.features;
   const total = features.length;
-  const implemented = features.filter((f) => f.status === "implemented").length;
-  const inProgress = features.filter((f) => f.status === "in_progress").length;
-  const planned = features.filter((f) => f.status === "planned").length;
-  const percentage = total > 0 ? Math.round(((implemented + inProgress * 0.5) / total) * 100) : 0;
+  const implemented = features.filter((f) => normalizeStatus(f.status) === "implemented").length;
+  const verified = features.filter((f) => normalizeStatus(f.status) === "verified").length;
+  const inProgress = features.filter((f) => normalizeStatus(f.status) === "in_progress").length;
+  const planned = features.filter((f) => normalizeStatus(f.status) === "not_started" || f.status === "planned").length;
+  const broken = features.filter((f) => normalizeStatus(f.status) === "broken").length;
+  const missing = features.filter((f) => normalizeStatus(f.status) === "missing").length;
+  const deprecated = features.filter((f) => normalizeStatus(f.status) === "deprecated").length;
+  const notStarted = features.filter((f) => normalizeStatus(f.status) === "not_started").length;
 
-  return { total, implemented, inProgress, planned, percentage };
+  const score = verified * 1.0 + implemented * 0.8 + inProgress * 0.5 - (broken + missing + deprecated) * 0.1;
+  const percentage = total > 0 ? Math.max(0, Math.min(100, Math.round((score / total) * 100))) : 0;
+
+  return { total, implemented, verified, inProgress, planned, broken, missing, deprecated, notStarted, percentage };
 }
 
 /* ─── Page compliance ──────────────────────────────────────────────────── */
@@ -113,16 +192,27 @@ export function getPageCompliance(pagePath: string): {
   implemented: number;
   missing: Feature[];
   compliant: Feature[];
+  broken: Feature[];
 } {
   const features = getFeaturesForPage(pagePath);
-  const implemented = features.filter((f) => f.status === "implemented");
-  const missing = features.filter((f) => f.status !== "implemented");
+  const isCompliantStatus = (s: string) => {
+    const n = normalizeStatus(s);
+    return n === "implemented" || n === "verified";
+  };
+  const isBrokenStatus = (s: string) => {
+    const n = normalizeStatus(s);
+    return n === "broken" || n === "missing" || n === "deprecated";
+  };
+  const implemented = features.filter((f) => isCompliantStatus(f.status));
+  const missing = features.filter((f) => !isCompliantStatus(f.status));
+  const broken = features.filter((f) => isBrokenStatus(f.status));
 
   return {
     total: features.length,
     implemented: implemented.length,
     missing,
     compliant: implemented,
+    broken,
   };
 }
 

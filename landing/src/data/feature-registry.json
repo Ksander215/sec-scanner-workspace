@@ -1,6 +1,7 @@
 {
-  "version": "INT-038-v2",
+  "version": "INT-043-audit",
   "lastUpdated": "2026-07-21",
+  "auditNotes": "INT-043 audit: PLAT-001 и AIS-008 помечены broken — на Production возвращают 404 fallback. AIS-007 (SoloNotification) помечен deprecated — заменён на AISSystemEvent в INT-040 v2. PLAT-002 (Feature Registry) помечен broken — версия устарела (INT-038-v2), требует расширения статусами.",
   "features": [
     {
       "id": "AIS-001",
@@ -65,8 +66,8 @@
     {
       "id": "AIS-007",
       "name": "SOLO LEVELING Notifications",
-      "description": "Branded notification system with glow effects, sounds, and i18n-translated text",
-      "status": "implemented",
+      "description": "Branded notification system with glow effects, sounds, and i18n-translated text. DEPRECATED in INT-040 v2 — replaced by AISSystemEvent (cinematic 6-stage animation). File SoloNotification.tsx remains as dead code and should be removed.",
+      "status": "deprecated",
       "pages": [],
       "category": "AIS",
       "required": true,
@@ -75,8 +76,8 @@
     {
       "id": "AIS-008",
       "name": "Developer Overlay",
-      "description": "Feature status per page at /app/debug/features, built from Feature Registry",
-      "status": "implemented",
+      "description": "Feature status per page at /app/debug/features, built from Feature Registry. BROKEN on Production: page returns 404 fallback to index.html (HTTP 200, 163356 bytes = index.html size). Source exists in git at /app/debug/features/page.tsx but not in production build.",
+      "status": "broken",
       "pages": ["/app/debug/features"],
       "category": "AIS",
       "required": true,
@@ -365,8 +366,8 @@
     {
       "id": "PLAT-001",
       "name": "Platform Status Center",
-      "description": "Platform-wide readiness overview with per-module percentages built from Feature Registry",
-      "status": "implemented",
+      "description": "Platform-wide readiness overview with per-module percentages built from Feature Registry. BROKEN on Production: /app/platform-status returns 404 fallback to index.html (HTTP 200, 163356 bytes). Source exists in git but not in production build. A 'ghost' page /app/system-status exists on production instead (81653 bytes, real content) but is missing from git entirely.",
+      "status": "broken",
       "pages": ["/app/platform-status"],
       "category": "Platform",
       "required": true,
@@ -375,8 +376,8 @@
     {
       "id": "PLAT-002",
       "name": "Feature Registry",
-      "description": "Single source of truth for all platform features with honest status tracking",
-      "status": "implemented",
+      "description": "Single source of truth for all platform features with honest status tracking. PARTIAL: only 3 statuses supported (implemented/in_progress/planned) instead of required 7 (not_started/in_progress/implemented/verified/broken/missing/deprecated). Needs TypeScript types update and JSON data migration.",
+      "status": "in_progress",
       "pages": [],
       "category": "Platform",
       "required": true,
