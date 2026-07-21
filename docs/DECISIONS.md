@@ -228,3 +228,67 @@
 **Контекст**: В INT-043 (ADR-018) заявлено 7 статусов, но `partial` был пропущен в TypeScript типе, что вызвало ошибку сборки. В INT-044 тип расширен до 8 + 2 legacy aliases.  
 **Обоснование**: `partial` нужен для функций, которые частично работают на Production (UI есть, но backend не отвечает). Без этого статуса такие функции приходилось бы помечать как `broken` или `in_progress`, что не точно.  
 **Влияние**: `feature-registry.ts` обновлён. `feature-registry.json` мигрирован: 4 features теперь `partial` (Integrations, Repositories, Notifications, Pricing).
+
+---
+
+## ADR-024: Evidence-Driven Development (INT-045)
+
+**Дата**: 2026-07-21 (INT-045)  
+**Решение**: Каждая функция платформы должна иметь evidence-запись в `feature-evidence.json` с 6 обязательными проверками: build, production, browser, e2e, regression, visual. Без evidence функция не может считаться реализованной.  
+**Контекст**: В INT-043/044 обнаружено, что предыдущие агенты заявляли функции как "implemented" без production-проверки. Это привело к 2 BROKEN страницам (platform-status, debug/features) и 1 "призрачной" странице (system-status).  
+**Обоснование**: Production — единственный источник истины (ADR-016). Evidence — формализация этого принципа: каждое утверждение должно сопровождаться проверяемыми доказательствами.  
+**Влияние**:  
+- Создан `feature-evidence.json` (56 features + 10 AIS modules)  
+- Создан `evidence-registry.ts` с TypeScript типами и хелпер-функциями  
+- Создана страница `/app/evidence` (PLAT-014, verified)  
+- Добавлены Rules 16-20 в DEVELOPMENT_RULES.md  
+- Статус `implemented` запрещён; использовать `verified` или `implemented_not_verified`  
+
+---
+
+## ADR-025: 7 канонических статусов evidence (INT-045)
+
+**Дата**: 2026-07-21 (INT-045)  
+**Решение**: 7 канонических статусов: `planned`, `in_progress`, `implemented_not_verified`, `verified`, `broken`, `deprecated`, `removed`. Статус `implemented` без evidence запрещён.  
+**Контекст**: В INT-044 использовались 8 статусов, но `partial` и `missing` создавали путаницу с `verified`/`broken`. В INT-045 стандартизировано: `partial` → `in_progress` (UI есть, но не полностью), `missing` → `broken` (заявлено, но отсутствует).  
+**Обоснование**: Меньше статусов = меньше двусмысленности. Каждое состояние функции явное и однозначное.  
+**Влияние**: `evidence-registry.ts` экспортирует `migrateToCanonicalStatus()` для обратной совместимости с legacy статусами.  
+
+---
+
+## ADR-026: AIS Module-Level Verification (INT-045)
+
+**Дата**: 2026-07-21 (INT-045)  
+**Решение**: AIS (Adaptive Intelligence System) верифицируется не как одна функция, а как 10 отдельных модулей с индивидуальными статусами.  
+**Контекст**: AIS — сложная система из 10 подсистем (Notification, Memory, Adaptive Timing, Context Engine, Sounds, Animation, Assistant, Settings, Event Bus, Preferences). Глобальный статус "AIS implemented" скрывает детали — может быть, 9 модулей работают, а 1 сломан.  
+**Обоснование**: Модульная верификация позволяет точно определить, что работает, а что нет. Пользователь и разработчик видят детальный статус.  
+**Влияние**:  
+- `feature-evidence.json` содержит секцию `aisModules` с 10 модулями  
+- `/app/evidence` имеет отдельную вкладку "AIS модули"  
+- 9 модулей verified, 1 (Sounds) partial — из-за browser autoplay policy  
+
+---
+
+## ADR-027: Production Consistency Check (INT-045)
+
+**Дата**: 2026-07-21 (INT-045)  
+**Решение**: На странице `/app/evidence` отображается Production Consistency панель с SHA commit'ов из 4 источников: LOCAL, GITHUB, SERVER BUILD, PRODUCTION. Если SHA различаются — статус `OUT OF SYNC`.  
+**Контекст**: В INT-043 обнаружено, что 3 разные версии кода существовали одновременно на сервере. Нужно явное визуальное представление синхронизации.  
+**Обоснование**: Zero Divergence Rule (Rule 2) требует LOCAL = GITHUB = SERVER = PRODUCTION. Визуальная панель делает нарушение очевидным.  
+**Влияние**:  
+- `evidence-registry.ts` экспортирует `getProductionConsistency()`  
+- На `/app/evidence` отображается панель с 4 SHA и общим sync статусом  
+- TODO: real-time check через backend API (сейчас build-time snapshot)  
+
+---
+
+## ADR-028: KNOWN_REGRESSIONS.md (INT-045)
+
+**Дата**: 2026-07-21 (INT-045)  
+**Решение**: Создан журнал `docs/KNOWN_REGRESSIONS.md` для фиксации всех регрессий: что ломалось, почему, когда, как исправлено, как избежать.  
+**Контекст**: В INT-043 обнаружено 7 регрессий, накопленных за INT-037..INT-042. Без журнала они были бы потеряны и могли повториться.  
+**Обоснование**: Regression Memory — ключевой механизм предотвращения повторения ошибок. Каждая регрессия должна быть документирована с шаблоном REG-XXX.  
+**Влияние**:  
+- 7 регрессий задокументировано (REG-001..007)  
+- Шаблон для новых регрессий включён в конец файла  
+- Rule 9 (Regression First) усилена: перед задачей проверять KNOWN_REGRESSIONS.md  

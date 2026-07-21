@@ -1,15 +1,15 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: INT-044 (Repository Recovery & Production Synchronization), 2026-07-21
+> Последнее обновление: INT-045 (Evidence-Driven Development & Product Verification System), 2026-07-21
 
 ---
 
-## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-044)
+## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-045)
 
-**Версия**: INT-044  
+**Версия**: INT-045  
 **Production**: https://sec-scanner.pro — работает, HTTP 200  
-**Последний commit**: `a8500f7` INT-044 fix: add 'partial' to FeatureStatus type  
+**Последний commit**: `c43857f` INT-045: Evidence-Driven Development & Product Verification System  
 **GitHub**: синхронизирован с Local  
 **Build dir на сервере**: синхронизирован с GitHub  
 **Production**: синхронизирован с build dir
@@ -18,11 +18,37 @@
 
 | Источник | Commit | Состояние |
 |----------|--------|-----------|
-| LOCAL (workspace) | `a8500f7` | ✅ чистый |
-| GITHUB (main) | `a8500f7` | ✅ pushed |
-| SERVER SOURCE (/var/www/sec-scanner-build) | `a8500f7` | ✅ синхронизирован |
-| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-044 | ✅ собран |
-| PRODUCTION (/var/www/sec-scanner.pro) | INT-044 | ✅ задеплоен |
+| LOCAL (workspace) | `c43857f` | ✅ чистый |
+| GITHUB (main) | `c43857f` | ✅ pushed |
+| SERVER SOURCE (/var/www/sec-scanner-build) | `c43857f` | ✅ синхронизирован |
+| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-045 | ✅ собран |
+| PRODUCTION (/var/www/sec-scanner.pro) | INT-045 | ✅ задеплоен |
+
+### Evidence Registry — статистика
+
+| Метрика | Значение |
+|---------|----------|
+| Total features | 56 |
+| Verified | 28 |
+| Partial | 4 |
+| Broken | 2 |
+| In Progress | 15 |
+| Not Started / Planned | 6 |
+| Deprecated | 1 |
+| AIS modules | 10 (9 verified, 1 partial) |
+| Evidence completeness | ~83% (281/336 checks passed) |
+| Production sync | IN SYNC |
+
+### Ключевые страницы
+
+| Страница | URL | HTTP | Статус |
+|----------|-----|------|--------|
+| Landing | https://sec-scanner.pro/ | 200 | verified |
+| Dashboard | https://sec-scanner.pro/app/dashboard | 200 | verified |
+| System Status | https://sec-scanner.pro/app/system-status | 200 | verified (PLAT-013) |
+| Evidence Center | https://sec-scanner.pro/app/evidence | 200 | verified (PLAT-014) |
+| Developer Overlay | https://sec-scanner.pro/app/debug/features | 200 | verified (AIS-008) |
+| Platform Status (redirect) | https://sec-scanner.pro/app/platform-status | 200 | broken (PLAT-001, redirect to system-status) |
 
 ---
 
