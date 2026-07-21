@@ -1,7 +1,21 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: INT-037, 2026-07-21
+> Последнее обновление: INT-043 (Product Recovery & SSOT audit), 2026-07-21
+
+---
+
+## ⚠️ КРИТИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ (INT-043)
+
+Проект находится в состоянии **расхождения трёх источников истины**:
+1. **GitHub** — последний коммит `INT-040 v2: AIS Cinematic Notification System` (`95691e0`)
+2. **Production (https://sec-scanner.pro)** — содержит "призрачную" работу: страницу `/app/system-status`, которой нет в git, и НЕ содержит `/app/platform-status` и `/app/debug/features`, которые есть в git
+3. **Backend (port 3005 via systemd sip-server.service)** — запущен из `/root/sec-scanner-workspace` на версии **INT-036**, отстаёт от GitHub на 4 этапа
+
+**INT-039, INT-041, INT-042 отсутствуют в git-истории.** Все ветки проверены — только `main`.
+Worklog.md содержит только одну запись (INT-040). Документация (HANDOFF, CURRENT_STATE, CHANGELOG_PRODUCT) устарела на 3-6 этапов.
+
+Перед любым deploy — обязательно прочитать раздел "План восстановления" ниже.
 
 ---
 
@@ -148,6 +162,62 @@ backend/src/
 | Backend | Не запущен |
 | Analytics | Umami на analytics.sec-scanner.pro |
 | API Proxy | Настроен → :3005 (не запущен) |
+
+---
+
+## Production (по факту аудита INT-043)
+
+| Параметр | Значение | Расхождение с документацией |
+|----------|---------|------------------------------|
+| URL | https://sec-scanner.pro | OK |
+| IP | 85.239.38.163 | OK |
+| SSH порт | 22222 | OK |
+| Web root | /var/www/sec-scanner.pro | OK |
+| Build source | /var/www/sec-scanner-build (git INT-038) | ⚠️ Build dir отстаёт от GitHub (INT-040 v2) |
+| Nginx | active, SSL Let's Encrypt | OK |
+| Backend (sip-server.service) | **ACTIVE**, порт 3005 | ❌ HANDOFF говорит "Backend не запущен" |
+| Backend source | /root/sec-scanner-workspace (git INT-036) | ❌ Отстаёт на 4 этапа |
+| Backend health | `/api/health` возвращает JSON | OK |
+| Backend tools | nmap 7.94, nuclei 3.8.0, owasp-zap 17.0.19 — установлены; trivy, semgrep, nikto — отсутствуют | Частично |
+| Analytics | Umami на analytics.sec-scanner.pro | OK |
+| API Proxy | nginx → :3005 — работает | ❌ HANDOFF говорит "не запущен" |
+| Backup | /backup/sec-scanner-pro-20260721-int043 | Создан в INT-043 |
+
+### Production — страницы, которые НЕ существуют (404 fallback на index.html)
+
+| Маршрут | Заявлен в Feature Registry | Реальность на production |
+|---------|----------------------------|---------------------------|
+| `/app/platform-status` | PLAT-001 implemented | **BROKEN** — 404 fallback (HTTP 200, но контент = index.html, 163356 байт) |
+| `/app/debug/features` | AIS-008 implemented | **BROKEN** — 404 fallback (HTTP 200, но контент = index.html, 163356 байт) |
+
+### Production — "призрачная" страница, отсутствующая в git
+
+| Маршрут | Статус на production | Статус в git |
+|---------|-----------------------|---------------|
+| `/app/system-status` | **WORKING** — реальная prerendered страница, 81653 байт, содержит принципы INT-043 | **MISSING** — нет ни в GitHub, ни в /var/www/sec-scanner-build, ни в /root/sec-scanner-workspace |
+
+Уникальные тексты из `/app/system-status` HTML (маркеры INT-043):
+- "Never Trust Code — сначала визуальная проверка на production"
+- "No Completion Without E2E — задача не завершена без прохождения сценария"
+- "Production Is The Source Of Truth — только production является источником истины"
+- "Every Feature Must Have Evidence — каждая функция должна иметь доказательство"
+- "AIS Notification Engine"
+- "Автоматическая проверка: какие функции реально работают в production"
+
+---
+
+## План восстановления (INT-043)
+
+1. ✅ Backup production создан: `/backup/sec-scanner-pro-20260721-int043` (12M)
+2. ⏳ Реконструировать `/app/system-status/page.tsx` из HTML и добавить в git
+3. ⏳ Решить: переименовать `/app/platform-status` → `/app/system-status` или оставить оба маршрута
+4. ⏳ Восстановить `/app/debug/features` (Developer Overlay) в production
+5. ⏳ Обновить Feature Registry: ввести статусы `broken` и `missing`
+6. ⏳ Синхронизировать `/root/sec-scanner-workspace` (backend) с GitHub main
+7. ⏳ Пересобрать backend, перезапустить sip-server.service
+8. ⏳ Обновить HANDOFF.md, CHANGELOG_PRODUCT.md, DECISIONS.md
+9. ⏳ Добавить Context Reset Rule в DEVELOPMENT_RULES.md
+10. ⏳ E2E + Regression тесты
 
 ---
 
