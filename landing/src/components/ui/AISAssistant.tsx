@@ -196,8 +196,8 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
   useEffect(() => {
     if (!pathname) return;
 
-    // Skip if detail level is minimal (BLOCK 5)
-    if (ais.detailLevel === 0) return;
+    // Skip if user explicitly disabled auto-assistant
+    if (!ais.memory.preferences.autoAssistant) return;
 
     // Skip if assistant was already shown for this page this session
     if (ais.wasAssistantShown(pathname)) return;
@@ -222,7 +222,7 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
 
   // BLOCK 12: Context prediction prompt (separate from proactive tips)
   useEffect(() => {
-    if (!ais.prediction || ais.detailLevel === 0) return;
+    if (!ais.prediction || !ais.memory.preferences.autoAssistant) return;
     if (!pathname) return;
 
     // Only show prediction if no proactive tip is currently visible
@@ -338,10 +338,11 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
       {/* ── Floating button ─────────────────────────────────────────── */}
       {!isOpen && (
         <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.5 }}
+          initial={{ scale: 1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.3 }}
           onClick={() => setInternalOpen(true)}
+          aria-label="AIS Assistant"
           className="fixed bottom-6 right-6 z-[140] w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 flex items-center justify-center transition-shadow group"
         >
           <Sparkles className="w-5 h-5 text-white group-hover:scale-110 transition-transform" />
@@ -421,14 +422,30 @@ export function AISAssistant({ externalOpen, onExternalClose }: AISAssistantProp
               </AnimatePresence>
             </div>
 
-            {/* Role indicator */}
+            {/* Role indicator + settings */}
             <div className="p-3 border-t border-border">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[10px] text-foreground/50">
                   {t(`ais.role.${ais.role}`)}
                 </span>
+                <span className="text-[10px] text-foreground/30">
+                  · L{ais.detailLevel}
+                </span>
                 <div className="flex-1" />
+                <button
+                  onClick={() => {
+                    ais.setPreference("autoAssistant", !ais.memory.preferences.autoAssistant);
+                  }}
+                  className={`text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                    ais.memory.preferences.autoAssistant
+                      ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                      : "bg-foreground/5 text-foreground/30"
+                  }`}
+                  title={ais.memory.preferences.autoAssistant ? "Disable auto tips" : "Enable auto tips"}
+                >
+                  {ais.memory.preferences.autoAssistant ? "AUTO" : "SILENT"}
+                </button>
                 <button
                   onClick={() => ais.toggleSound()}
                   className="text-foreground/30 hover:text-foreground/60 transition-colors"
@@ -548,12 +565,22 @@ function GuideTab({ ais, pathname }: { ais: AISState; pathname: string | null })
   );
 
   // Feature Registry integration (INT-038 Block 7)
-  const pageCompliance = pathname ? (() => {
-    try {
-      const { getPageCompliance } = require("@/lib/feature-registry");
-      return getPageCompliance(pathname);
-    } catch { return null; }
-  })() : null;
+  const [pageCompliance, setPageCompliance] = useState<{
+    total: number; implemented: number; missing: { id: string; name: string; status: string }[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!pathname) return;
+    let cancelled = false;
+    import("@/lib/feature-registry")
+      .then(({ getPageCompliance }) => {
+        if (!cancelled) setPageCompliance(getPageCompliance(pathname));
+      })
+      .catch(() => {
+        if (!cancelled) setPageCompliance(null);
+      });
+    return () => { cancelled = true; };
+  }, [pathname]);
 
   const isFullyCompliant = pageCompliance && pageCompliance.total > 0 && pageCompliance.implemented === pageCompliance.total;
   const hasMissing = pageCompliance && pageCompliance.missing.length > 0;
@@ -643,7 +670,7 @@ function GuideTab({ ais, pathname }: { ais: AISState; pathname: string | null })
       </div>
 
       {/* Favorite pages */}
-      {ais.detailLevel >= 1 && (
+      {ais.memory.preferences.autoAssistant && (
         <div className="p-3 rounded-lg bg-surface border border-border">
           <h4 className="text-xs font-semibold text-foreground mb-2">
             {t("ais.guide.favorites")}
