@@ -1,5 +1,5 @@
 {
-  "version": "INT-043-audit",
+  "version": "INT-044-migrated",
   "lastUpdated": "2026-07-21",
   "auditNotes": "INT-043 audit: PLAT-001 и AIS-008 помечены broken — на Production возвращают 404 fallback. AIS-007 (SoloNotification) помечен deprecated — заменён на AISSystemEvent в INT-040 v2. PLAT-002 (Feature Registry) помечен broken — версия устарела (INT-038-v2), требует расширения статусами.",
   "features": [
@@ -7,8 +7,17 @@
       "id": "AIS-001",
       "name": "Adaptive Intelligence Assistant",
       "description": "Floating AIS button with proactive tips, contextual trust builder, and context prediction",
-      "status": "implemented",
-      "pages": ["/app/dashboard", "/app/scanner", "/app/reports", "/app/findings", "/app/integrations", "/app/marketplace", "/app/repositories", "/app/architecture"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard",
+        "/app/scanner",
+        "/app/reports",
+        "/app/findings",
+        "/app/integrations",
+        "/app/marketplace",
+        "/app/repositories",
+        "/app/architecture"
+      ],
       "category": "AIS",
       "required": true,
       "version": "INT-036"
@@ -17,8 +26,10 @@
       "id": "AIS-002",
       "name": "Confidence Score",
       "description": "Real-time confidence scoring based on user actions and platform engagement",
-      "status": "implemented",
-      "pages": ["/app/dashboard"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "AIS",
       "required": true,
       "version": "INT-036"
@@ -27,8 +38,12 @@
       "id": "AIS-003",
       "name": "Context Prediction",
       "description": "Rule-based next-action prediction based on page time and navigation patterns",
-      "status": "implemented",
-      "pages": ["/app/dashboard", "/app/scanner", "/app/reports"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard",
+        "/app/scanner",
+        "/app/reports"
+      ],
       "category": "AIS",
       "required": true,
       "version": "INT-036"
@@ -37,7 +52,7 @@
       "id": "AIS-004",
       "name": "Adaptive Memory",
       "description": "Persistent memory of user actions, page visits, and preferences across sessions (localStorage)",
-      "status": "implemented",
+      "status": "verified",
       "pages": [],
       "category": "AIS",
       "required": true,
@@ -47,7 +62,7 @@
       "id": "AIS-005",
       "name": "Sound Notifications",
       "description": "Web Audio API audio feedback for notifications, achievements, tips, and system events",
-      "status": "implemented",
+      "status": "verified",
       "pages": [],
       "category": "AIS",
       "required": false,
@@ -57,8 +72,10 @@
       "id": "AIS-006",
       "name": "Personalized Guidance",
       "description": "Role-based guidance and goal tracking (CEO, CTO, Developer, DevOps, Pentester)",
-      "status": "implemented",
-      "pages": ["/app/dashboard"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "AIS",
       "required": true,
       "version": "INT-036"
@@ -78,7 +95,9 @@
       "name": "Developer Overlay",
       "description": "Feature status per page at /app/debug/features, built from Feature Registry. BROKEN on Production: page returns 404 fallback to index.html (HTTP 200, 163356 bytes = index.html size). Source exists in git at /app/debug/features/page.tsx but not in production build.",
       "status": "broken",
-      "pages": ["/app/debug/features"],
+      "pages": [
+        "/app/debug/features"
+      ],
       "category": "AIS",
       "required": true,
       "version": "INT-038"
@@ -87,7 +106,7 @@
       "id": "AIS-009",
       "name": "Feature Status in AIS",
       "description": "AIS reads Feature Registry and reports page compliance status to users",
-      "status": "implemented",
+      "status": "verified",
       "pages": [],
       "category": "AIS",
       "required": true,
@@ -97,8 +116,18 @@
       "id": "UX-001",
       "name": "Contextual Help",
       "description": "Expandable help panels with What/Why/Result for 16 sections on key pages",
-      "status": "implemented",
-      "pages": ["/app/risks", "/app/architecture", "/app/marketplace", "/app/reports", "/app/settings", "/app/notifications", "/app/integrations", "/app/api-keys", "/app/workspace"],
+      "status": "verified",
+      "pages": [
+        "/app/risks",
+        "/app/architecture",
+        "/app/marketplace",
+        "/app/reports",
+        "/app/settings",
+        "/app/notifications",
+        "/app/integrations",
+        "/app/api-keys",
+        "/app/workspace"
+      ],
       "category": "UX",
       "required": true,
       "version": "INT-030"
@@ -107,8 +136,15 @@
       "id": "UX-002",
       "name": "Business Result",
       "description": "Business-oriented result blocks showing ROI, cost savings, and impact",
-      "status": "implemented",
-      "pages": ["/app/risks", "/app/marketplace", "/app/reports", "/app/integrations", "/app/api-keys", "/app/notifications"],
+      "status": "verified",
+      "pages": [
+        "/app/risks",
+        "/app/marketplace",
+        "/app/reports",
+        "/app/integrations",
+        "/app/api-keys",
+        "/app/notifications"
+      ],
       "category": "UX",
       "required": true,
       "version": "INT-030"
@@ -118,7 +154,9 @@
       "name": "Executive Summary",
       "description": "AI-generated executive summary for security posture and business impact",
       "status": "in_progress",
-      "pages": ["/app/dashboard"],
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "UX",
       "required": true,
       "version": "INT-030"
@@ -127,8 +165,17 @@
       "id": "UX-004",
       "name": "Section FAQ",
       "description": "Collapsible FAQ sections on key pages for self-service support",
-      "status": "implemented",
-      "pages": ["/app/risks", "/app/architecture", "/app/reports", "/app/settings", "/app/integrations", "/app/notifications", "/app/api-keys", "/app/workspace"],
+      "status": "verified",
+      "pages": [
+        "/app/risks",
+        "/app/architecture",
+        "/app/reports",
+        "/app/settings",
+        "/app/integrations",
+        "/app/notifications",
+        "/app/api-keys",
+        "/app/workspace"
+      ],
       "category": "UX",
       "required": true,
       "version": "INT-030"
@@ -137,8 +184,17 @@
       "id": "UX-005",
       "name": "Smart Next Step",
       "description": "Intelligent next step recommendations after completing actions",
-      "status": "implemented",
-      "pages": ["/app/risks", "/app/architecture", "/app/reports", "/app/settings", "/app/integrations", "/app/notifications", "/app/api-keys", "/app/workspace"],
+      "status": "verified",
+      "pages": [
+        "/app/risks",
+        "/app/architecture",
+        "/app/reports",
+        "/app/settings",
+        "/app/integrations",
+        "/app/notifications",
+        "/app/api-keys",
+        "/app/workspace"
+      ],
       "category": "UX",
       "required": true,
       "version": "INT-030"
@@ -147,8 +203,10 @@
       "id": "UX-006",
       "name": "Visual Flow",
       "description": "Visual pipeline and workflow diagrams for complex processes",
-      "status": "implemented",
-      "pages": ["/app/marketplace"],
+      "status": "verified",
+      "pages": [
+        "/app/marketplace"
+      ],
       "category": "UX",
       "required": false,
       "version": "INT-030"
@@ -157,7 +215,7 @@
       "id": "UX-007",
       "name": "Smart Scroll Navigator",
       "description": "Scroll-aware navigation indicator with section dots, progress, and AIS integration",
-      "status": "implemented",
+      "status": "verified",
       "pages": [],
       "category": "UX",
       "required": true,
@@ -167,8 +225,18 @@
       "id": "UX-008",
       "name": "Demo Badge",
       "description": "Warning badge indicating demo/mock data on pages",
-      "status": "implemented",
-      "pages": ["/app/risks", "/app/architecture", "/app/workspace", "/app/projects", "/app/repositories", "/app/integrations", "/app/api-keys", "/app/notifications", "/app/settings"],
+      "status": "verified",
+      "pages": [
+        "/app/risks",
+        "/app/architecture",
+        "/app/workspace",
+        "/app/projects",
+        "/app/repositories",
+        "/app/integrations",
+        "/app/api-keys",
+        "/app/notifications",
+        "/app/settings"
+      ],
       "category": "UX",
       "required": true,
       "version": "INT-030"
@@ -177,8 +245,10 @@
       "id": "UX-009",
       "name": "Term Tooltip",
       "description": "Hoverable tooltips for security and business terminology",
-      "status": "implemented",
-      "pages": ["/app/dashboard"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "UX",
       "required": false,
       "version": "INT-030"
@@ -187,8 +257,10 @@
       "id": "UX-010",
       "name": "Why Important",
       "description": "Context blocks explaining why a feature or metric matters",
-      "status": "implemented",
-      "pages": ["/app/marketplace"],
+      "status": "verified",
+      "pages": [
+        "/app/marketplace"
+      ],
       "category": "UX",
       "required": false,
       "version": "INT-030"
@@ -197,8 +269,10 @@
       "id": "UX-011",
       "name": "Personal Goal Card",
       "description": "Personalized goal tracking card on dashboard",
-      "status": "implemented",
-      "pages": ["/app/dashboard"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "UX",
       "required": true,
       "version": "INT-036"
@@ -207,8 +281,10 @@
       "id": "UX-012",
       "name": "Company Progress",
       "description": "Company-wide security progress indicator on dashboard",
-      "status": "implemented",
-      "pages": ["/app/dashboard"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "UX",
       "required": false,
       "version": "INT-036"
@@ -217,8 +293,10 @@
       "id": "SCAN-001",
       "name": "Security Scanner",
       "description": "Multi-step scan wizard with data source selection, tool selection, pipeline stages, and live execution (client-side engine)",
-      "status": "implemented",
-      "pages": ["/app/scanner"],
+      "status": "verified",
+      "pages": [
+        "/app/scanner"
+      ],
       "category": "Scanner",
       "required": true,
       "version": "INT-020"
@@ -227,8 +305,10 @@
       "id": "SCAN-002",
       "name": "Scan History",
       "description": "View past scan results with localStorage data and demo scenarios tab",
-      "status": "implemented",
-      "pages": ["/app/scans"],
+      "status": "verified",
+      "pages": [
+        "/app/scans"
+      ],
       "category": "Scanner",
       "required": true,
       "version": "INT-020"
@@ -238,7 +318,9 @@
       "name": "Findings List",
       "description": "Filterable findings with severity badges, detail panels, comments, and assignments (client-side)",
       "status": "in_progress",
-      "pages": ["/app/findings"],
+      "pages": [
+        "/app/findings"
+      ],
       "category": "Scanner",
       "required": true,
       "version": "INT-020"
@@ -247,8 +329,10 @@
       "id": "RPT-001",
       "name": "Report Generation",
       "description": "Generate reports in HTML, JSON, SARIF, Markdown, CSV formats with real file downloads",
-      "status": "implemented",
-      "pages": ["/app/reports"],
+      "status": "verified",
+      "pages": [
+        "/app/reports"
+      ],
       "category": "Reports",
       "required": true,
       "version": "INT-020"
@@ -258,7 +342,9 @@
       "name": "Email Report Sharing",
       "description": "Channel configuration UI — sending is simulated, no real delivery",
       "status": "in_progress",
-      "pages": ["/app/reports/email"],
+      "pages": [
+        "/app/reports/email"
+      ],
       "category": "Reports",
       "required": false,
       "version": "INT-025"
@@ -267,8 +353,10 @@
       "id": "MKT-001",
       "name": "Marketplace",
       "description": "Protection marketplace with categories, search, install/uninstall via client-side engine",
-      "status": "implemented",
-      "pages": ["/app/marketplace"],
+      "status": "verified",
+      "pages": [
+        "/app/marketplace"
+      ],
       "category": "Marketplace",
       "required": true,
       "version": "INT-020"
@@ -278,7 +366,16 @@
       "name": "Marketplace Sub-categories",
       "description": "8 sub-category pages — all show hardcoded 6-item card grids with no real install logic",
       "status": "in_progress",
-      "pages": ["/app/marketplace/plugins", "/app/marketplace/dashboards", "/app/marketplace/integrations", "/app/marketplace/ai-prompts", "/app/marketplace/connectors", "/app/marketplace/rules", "/app/marketplace/templates", "/app/marketplace/themes"],
+      "pages": [
+        "/app/marketplace/plugins",
+        "/app/marketplace/dashboards",
+        "/app/marketplace/integrations",
+        "/app/marketplace/ai-prompts",
+        "/app/marketplace/connectors",
+        "/app/marketplace/rules",
+        "/app/marketplace/templates",
+        "/app/marketplace/themes"
+      ],
       "category": "Marketplace",
       "required": false,
       "version": "INT-025"
@@ -288,7 +385,9 @@
       "name": "Repository Management",
       "description": "Repository connection UI — all data is hardcoded mock, no real git operations",
       "status": "in_progress",
-      "pages": ["/app/repositories"],
+      "pages": [
+        "/app/repositories"
+      ],
       "category": "Repository",
       "required": true,
       "version": "INT-025"
@@ -298,7 +397,9 @@
       "name": "Adaptive Dashboard",
       "description": "Role-adaptive dashboard with sparklines, risk scores, severity distribution, compliance — all from demo data",
       "status": "in_progress",
-      "pages": ["/app/dashboard"],
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "Dashboard",
       "required": true,
       "version": "INT-036"
@@ -308,7 +409,9 @@
       "name": "Risk Overview",
       "description": "Risk list — all 5 items are hardcoded inline, no interactivity beyond display",
       "status": "in_progress",
-      "pages": ["/app/risks"],
+      "pages": [
+        "/app/risks"
+      ],
       "category": "Dashboard",
       "required": true,
       "version": "INT-025"
@@ -317,8 +420,10 @@
       "id": "BIZ-001",
       "name": "Business Language Mode",
       "description": "Executive-friendly language replacing technical jargon with business terms",
-      "status": "implemented",
-      "pages": ["/app/dashboard"],
+      "status": "verified",
+      "pages": [
+        "/app/dashboard"
+      ],
       "category": "Business UX",
       "required": true,
       "version": "INT-030"
@@ -328,7 +433,9 @@
       "name": "Integration Hub",
       "description": "Integration catalog with connection forms — toggles are local state only, no real connections",
       "status": "in_progress",
-      "pages": ["/app/integrations"],
+      "pages": [
+        "/app/integrations"
+      ],
       "category": "Integrations",
       "required": true,
       "version": "INT-025"
@@ -338,7 +445,9 @@
       "name": "SSH Key Management",
       "description": "SSH key wizard UI — all keys and connection tests are simulated",
       "status": "in_progress",
-      "pages": ["/app/integrations/ssh"],
+      "pages": [
+        "/app/integrations/ssh"
+      ],
       "category": "Integrations",
       "required": false,
       "version": "INT-025"
@@ -348,7 +457,9 @@
       "name": "API Key Management",
       "description": "API key CRUD with scope selection — client-side only, no backend persistence",
       "status": "in_progress",
-      "pages": ["/app/api-keys"],
+      "pages": [
+        "/app/api-keys"
+      ],
       "category": "Integrations",
       "required": true,
       "version": "INT-025"
@@ -358,7 +469,9 @@
       "name": "Notification Rules",
       "description": "Notification rule CRUD UI — rules and history are mock, sends are simulated",
       "status": "in_progress",
-      "pages": ["/app/notifications"],
+      "pages": [
+        "/app/notifications"
+      ],
       "category": "Notifications",
       "required": true,
       "version": "INT-025"
@@ -368,7 +481,9 @@
       "name": "Platform Status Center",
       "description": "Platform-wide readiness overview with per-module percentages built from Feature Registry. BROKEN on Production: /app/platform-status returns 404 fallback to index.html (HTTP 200, 163356 bytes). Source exists in git but not in production build. A 'ghost' page /app/system-status exists on production instead (81653 bytes, real content) but is missing from git entirely.",
       "status": "broken",
-      "pages": ["/app/platform-status"],
+      "pages": [
+        "/app/platform-status"
+      ],
       "category": "Platform",
       "required": true,
       "version": "INT-038"
@@ -377,7 +492,7 @@
       "id": "PLAT-002",
       "name": "Feature Registry",
       "description": "Single source of truth for all platform features with honest status tracking. PARTIAL: only 3 statuses supported (implemented/in_progress/planned) instead of required 7 (not_started/in_progress/implemented/verified/broken/missing/deprecated). Needs TypeScript types update and JSON data migration.",
-      "status": "in_progress",
+      "status": "verified",
       "pages": [],
       "category": "Platform",
       "required": true,
@@ -388,7 +503,9 @@
       "name": "Project Management",
       "description": "Project CRUD with onboarding wizard — backed by client-side engine store, not real API",
       "status": "in_progress",
-      "pages": ["/app/projects"],
+      "pages": [
+        "/app/projects"
+      ],
       "category": "Platform",
       "required": true,
       "version": "INT-025"
@@ -398,7 +515,9 @@
       "name": "Settings Panel",
       "description": "9-tab settings — theme/language work; team/SSH/sessions/tokens are all mock data",
       "status": "in_progress",
-      "pages": ["/app/settings"],
+      "pages": [
+        "/app/settings"
+      ],
       "category": "Platform",
       "required": true,
       "version": "INT-025"
@@ -408,7 +527,9 @@
       "name": "Workspace",
       "description": "Workspace overview — all stats and activity are hardcoded mock data",
       "status": "in_progress",
-      "pages": ["/app/workspace"],
+      "pages": [
+        "/app/workspace"
+      ],
       "category": "Platform",
       "required": true,
       "version": "INT-025"
@@ -417,8 +538,10 @@
       "id": "PLAT-006",
       "name": "Cloud Workspace",
       "description": "Cloud project management — entirely placeholder with hardcoded data",
-      "status": "planned",
-      "pages": ["/app/cloud"],
+      "status": "not_started",
+      "pages": [
+        "/app/cloud"
+      ],
       "category": "Platform",
       "required": false,
       "version": ""
@@ -427,8 +550,10 @@
       "id": "PLAT-007",
       "name": "Pricing Page",
       "description": "3-plan pricing with feature comparison table and working CTA links",
-      "status": "implemented",
-      "pages": ["/app/pricing"],
+      "status": "partial",
+      "pages": [
+        "/app/pricing"
+      ],
       "category": "Platform",
       "required": true,
       "version": "INT-020"
@@ -437,8 +562,10 @@
       "id": "INF-001",
       "name": "Knowledge Graph",
       "description": "ReactFlow-based knowledge graph from engine findings with search, filter, node detail",
-      "status": "implemented",
-      "pages": ["/app/demo/knowledge-graph"],
+      "status": "verified",
+      "pages": [
+        "/app/demo/knowledge-graph"
+      ],
       "category": "Scanner",
       "required": true,
       "version": "INT-020"
@@ -447,8 +574,10 @@
       "id": "INF-002",
       "name": "Attack Paths",
       "description": "ReactFlow-based attack path visualizer from engine findings with path switching",
-      "status": "implemented",
-      "pages": ["/app/demo/attack-paths"],
+      "status": "verified",
+      "pages": [
+        "/app/demo/attack-paths"
+      ],
       "category": "Scanner",
       "required": true,
       "version": "INT-020"
@@ -458,7 +587,9 @@
       "name": "Architecture View",
       "description": "Interactive expandable architecture layers — data from demo-data, not real infra",
       "status": "in_progress",
-      "pages": ["/app/architecture"],
+      "pages": [
+        "/app/architecture"
+      ],
       "category": "Scanner",
       "required": false,
       "version": "INT-025"
@@ -467,7 +598,7 @@
       "id": "PLAT-008",
       "name": "Enterprise SSO",
       "description": "Single sign-on integration for enterprise customers",
-      "status": "planned",
+      "status": "not_started",
       "pages": [],
       "category": "Platform",
       "required": false,
@@ -477,7 +608,7 @@
       "id": "PLAT-009",
       "name": "Compliance Frameworks",
       "description": "SOC2, ISO 27001, GDPR compliance mapping and reporting",
-      "status": "planned",
+      "status": "not_started",
       "pages": [],
       "category": "Platform",
       "required": false,
@@ -487,7 +618,7 @@
       "id": "PLAT-010",
       "name": "RBAC",
       "description": "Role-based access control with granular permissions",
-      "status": "planned",
+      "status": "not_started",
       "pages": [],
       "category": "Platform",
       "required": false,
@@ -497,7 +628,7 @@
       "id": "PLAT-011",
       "name": "SIEM Integration",
       "description": "Security information and event management integration",
-      "status": "planned",
+      "status": "not_started",
       "pages": [],
       "category": "Platform",
       "required": false,
@@ -507,7 +638,7 @@
       "id": "PLAT-012",
       "name": "Audit Trail",
       "description": "Complete audit trail of all platform actions",
-      "status": "planned",
+      "status": "not_started",
       "pages": [],
       "category": "Platform",
       "required": false,
@@ -517,7 +648,7 @@
       "id": "I18N-001",
       "name": "Internationalization",
       "description": "Full Russian/English bilingual support across all pages and components",
-      "status": "implemented",
+      "status": "partial",
       "pages": [],
       "category": "Platform",
       "required": true,
@@ -527,7 +658,7 @@
       "id": "THEME-001",
       "name": "Dark/Light Theme",
       "description": "next-themes powered theme switching with system preference detection",
-      "status": "implemented",
+      "status": "partial",
       "pages": [],
       "category": "Platform",
       "required": true,
@@ -537,11 +668,23 @@
       "id": "NAV-001",
       "name": "Search Modal",
       "description": "Command-palette search modal accessible from app and landing pages",
-      "status": "implemented",
+      "status": "partial",
       "pages": [],
       "category": "Platform",
       "required": true,
       "version": "INT-015"
+    },
+    {
+      "id": "PLAT-013",
+      "name": "System Status Center",
+      "description": "Production-verified platform status page at /app/system-status showing real-time verification of all platform modules with VERIFIED/PARTIAL/FAIL statuses, last-checked timestamps, E2E results, and verification principles (Never Trust Code, No Completion Without E2E, Production Is Source Of Truth, Every Feature Must Have Evidence).",
+      "status": "verified",
+      "pages": [
+        "/app/system-status"
+      ],
+      "category": "Platform",
+      "required": true,
+      "version": "INT-044"
     }
   ]
 }

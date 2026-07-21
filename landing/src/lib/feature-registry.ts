@@ -14,7 +14,7 @@
 
 import registryData from "@/data/feature-registry.json";
 
-/* ─── Types ────────────────────────────────────────────────────────────── */
+/* --- Types -------------------------------------------------------------- */
 
 /**
  * All 7 valid feature statuses (INT-043 / ADR-018).
@@ -80,7 +80,7 @@ export interface FeatureRegistry {
   features: Feature[];
 }
 
-/* ─── Raw data ─────────────────────────────────────────────────────────── */
+/* --- Raw data ----------------------------------------------------------- */
 
 const registry: FeatureRegistry = registryData as FeatureRegistry;
 
@@ -92,7 +92,7 @@ export function getFeatures(): Feature[] {
   return registry.features;
 }
 
-/* ─── Filtering ────────────────────────────────────────────────────────── */
+/* --- Filtering ---------------------------------------------------------- */
 
 export function getFeaturesByCategory(category: string): Feature[] {
   return registry.features.filter((f) => f.category === category);
@@ -112,14 +112,14 @@ export function getFeatureById(id: string): Feature | undefined {
   return registry.features.find((f) => f.id === id);
 }
 
-/* ─── Categories ───────────────────────────────────────────────────────── */
+/* --- Categories --------------------------------------------------------- */
 
 export function getCategories(): string[] {
   const cats = new Set(registry.features.map((f) => f.category));
   return Array.from(cats).sort();
 }
 
-/* ─── Readiness computation ────────────────────────────────────────────── */
+/* --- Readiness computation ---------------------------------------------- */
 
 export function getCategoryReadiness(category: string): {
   total: number;
@@ -185,7 +185,7 @@ export function getOverallReadiness(): {
   return { total, implemented, verified, inProgress, planned, broken, missing, deprecated, notStarted, percentage };
 }
 
-/* ─── Page compliance ──────────────────────────────────────────────────── */
+/* --- Page compliance ---------------------------------------------------- */
 
 export function getPageCompliance(pagePath: string): {
   total: number;
@@ -216,7 +216,7 @@ export function getPageCompliance(pagePath: string): {
   };
 }
 
-/* ─── Functional matrix ───────────────────────────────────────────────── */
+/* --- Functional matrix ------------------------------------------------- */
 
 export interface MatrixCell {
   featureId: string;
@@ -275,7 +275,7 @@ export function getFunctionalMatrix(): {
   return { pages: MATRIX_PAGES, features };
 }
 
-/* ─── Page display names ──────────────────────────────────────────────── */
+/* --- Page display names ------------------------------------------------ */
 
 export const PAGE_DISPLAY_NAMES: Record<string, string> = {
   "/app/dashboard": "Dashboard",
@@ -298,7 +298,7 @@ export const PAGE_DISPLAY_NAMES: Record<string, string> = {
   "/app/platform-status": "Platform Status",
 };
 
-/* ─── Category display order ──────────────────────────────────────────── */
+/* --- Category display order -------------------------------------------- */
 
 export const CATEGORY_ORDER = [
   "AIS",

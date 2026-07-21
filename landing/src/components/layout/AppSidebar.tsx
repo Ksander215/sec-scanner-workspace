@@ -151,10 +151,10 @@ const sidebarSections: SidebarSection[] = [
     href: "/app/community",
   },
   {
-    id: "platform-status",
-    labelKey: "sidebar.platformStatus",
+    id: "system-status",
+    labelKey: "sidebar.systemStatus",
     icon: Gauge,
-    href: "/app/platform-status",
+    href: "/app/system-status",
   },
   {
     id: "settings",
