@@ -124,101 +124,9 @@ const STATUS_CONFIG: Record<NotificationStatus, { color: string; icon: React.Ele
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
-const INITIAL_RULES: NotificationRule[] = [
-  {
-    id: "rule-1",
-    name: "Critical Alerts — Telegram",
-    channel: "telegram",
-    triggers: ["criticalFinding", "highFinding"],
-    enabled: true,
-    lastTriggered: "2m ago",
-    config: { botToken: "7234...:AAHx...", chatId: "-1001234567890" },
-  },
-  {
-    id: "rule-2",
-    name: "Scan Results — Slack",
-    channel: "slack",
-    triggers: ["scanComplete", "newFinding"],
-    enabled: true,
-    lastTriggered: "15m ago",
-    config: { webhookUrl: "https://hooks.slack.com/services/T.../B.../xxx" },
-  },
-  {
-    id: "rule-3",
-    name: "Remediation Updates — Email",
-    channel: "email",
-    triggers: ["remediation", "assignment"],
-    enabled: false,
-    lastTriggered: null,
-    config: { recipientEmail: "security@company.com" },
-  },
-  {
-    id: "rule-4",
-    name: "All Events — Webhook",
-    channel: "webhook",
-    triggers: ["scanComplete", "criticalFinding", "highFinding", "newFinding", "remediation", "assignment"],
-    enabled: true,
-    lastTriggered: "1h ago",
-    config: { url: "https://api.example.com/webhooks/sip", secret: "whsec_****" },
-  },
-];
+const INITIAL_RULES: NotificationRule[] = [];
 
-const INITIAL_HISTORY: NotificationHistoryEntry[] = [
-  {
-    id: "hist-1",
-    ruleId: "rule-1",
-    channel: "telegram",
-    trigger: "criticalFinding",
-    title: "CVE-2024-5678 — RCE in Apache Struts",
-    sentAt: "2m ago",
-    status: "sent",
-  },
-  {
-    id: "hist-2",
-    ruleId: "rule-2",
-    channel: "slack",
-    trigger: "scanComplete",
-    title: "Scan completed: production-api",
-    sentAt: "15m ago",
-    status: "sent",
-  },
-  {
-    id: "hist-3",
-    ruleId: "rule-4",
-    channel: "webhook",
-    trigger: "highFinding",
-    title: "XSS vulnerability in user-dashboard",
-    sentAt: "1h ago",
-    status: "sent",
-  },
-  {
-    id: "hist-4",
-    ruleId: "rule-2",
-    channel: "slack",
-    trigger: "newFinding",
-    title: "New finding: Misconfigured CORS policy",
-    sentAt: "2h ago",
-    status: "failed",
-  },
-  {
-    id: "hist-5",
-    ruleId: "rule-1",
-    channel: "telegram",
-    trigger: "criticalFinding",
-    title: "CVE-2024-1234 — SQL Injection in auth-service",
-    sentAt: "3h ago",
-    status: "sent",
-  },
-  {
-    id: "hist-6",
-    ruleId: "rule-4",
-    channel: "webhook",
-    trigger: "remediation",
-    title: "Remediation verified: SSRF patch deployed",
-    sentAt: "5h ago",
-    status: "pending",
-  },
-];
+const INITIAL_HISTORY: NotificationHistoryEntry[] = [];
 
 const DEFAULT_FORM: RuleFormData = {
   name: "",
@@ -426,6 +334,7 @@ export default function NotificationsPage() {
   // ─── State ──────────────────────────────────────────────────────────────
   const [rules, setRules] = useState<NotificationRule[]>(INITIAL_RULES);
   const [history] = useState<NotificationHistoryEntry[]>(INITIAL_HISTORY);
+  const [hasUserCreatedRule, setHasUserCreatedRule] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -500,6 +409,7 @@ export default function NotificationsPage() {
         config: formData.config,
       };
       setRules((prev) => [newRule, ...prev]);
+      setHasUserCreatedRule(true);
       addToast({
         type: "success",
         title: t("notifications.ruleCreated"),
@@ -555,7 +465,7 @@ export default function NotificationsPage() {
                   <ContextualHelp section="notifications" />
                   <DemoBadge />
                 </div>
-                {rules.length > 0 && <BusinessResult type="configured" className="mt-4" />}
+                {hasUserCreatedRule && <BusinessResult type="configured" className="mt-4" />}
               </div>
             </div>
             <Button onClick={handleOpenCreate}>

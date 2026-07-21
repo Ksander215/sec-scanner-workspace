@@ -474,20 +474,20 @@ export default function DashboardPage() {
             {/* INT-035: Confidence Score + Company Progress */}
             <div className="grid md:grid-cols-2 gap-4">
               <ConfidenceScore
-                score={78}
+                score={0}
                 factors={{
-                  fixedIssues: 26,
-                  coveredServices: 85,
-                  connectedIntegrations: 5,
-                  automationPercent: 81,
+                  fixedIssues: 0,
+                  coveredServices: 0,
+                  connectedIntegrations: 0,
+                  automationPercent: 0,
                 }}
               />
               <CompanyProgress
                 stats={[
-                  { labelKey: "confidence.progress.fixedIssues", value: 26, positive: true },
-                  { labelKey: "confidence.progress.closedPaths", value: 4, positive: true },
-                  { labelKey: "confidence.progress.connectedIntegrations", value: 5, positive: true },
-                  { labelKey: "confidence.progress.automatedChecks", value: "81%", positive: true },
+                  { labelKey: "confidence.progress.fixedIssues", value: 0, positive: true },
+                  { labelKey: "confidence.progress.closedPaths", value: 0, positive: true },
+                  { labelKey: "confidence.progress.connectedIntegrations", value: 0, positive: true },
+                  { labelKey: "confidence.progress.automatedChecks", value: "0%", positive: true },
                 ]}
                 trendKey="confidence.progress.trendUp"
                 nextAction={{ labelKey: "confidence.term.recommendations", href: "/app/findings" }}

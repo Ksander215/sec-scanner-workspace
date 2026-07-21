@@ -490,4 +490,4 @@ export const MANIFESTS_BY_ID: Record<string, PluginManifest> = Object.fromEntrie
 );
 
 /** Built-in tools that are always available (pre-installed) */
-export const BUILTIN_TOOL_IDS = new Set(["nmap", "nuclei", "trivy"]);
+export const BUILTIN_TOOL_IDS = new Set<string>([]);
