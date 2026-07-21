@@ -466,7 +466,7 @@ export function SmartScrollNavigator({ onOpenAssistant, onSectionChange }: Smart
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2"
+            className="fixed bottom-20 right-6 z-50 flex flex-col items-end gap-2"
           >
             {/* Expanded navigation panel */}
             <AnimatePresence>

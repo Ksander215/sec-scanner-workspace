@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { AppTopBar } from "./AppTopBar";
 import { SearchModal } from "./SearchModal";
@@ -76,6 +76,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleOpenAssistant = useCallback(() => {
     setAssistantOpen(true);
+  }, []);
+
+  // Keyboard shortcut: Ctrl+Shift+A to open AIS
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === "A") {
+        e.preventDefault();
+        setAssistantOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   return (
