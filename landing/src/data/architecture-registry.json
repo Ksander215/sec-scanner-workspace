@@ -1,0 +1,324 @@
+{
+  "version": "INT-048-v1",
+  "lastUpdated": "2026-07-21T23:30:00+03:00",
+  "productionCommit": "efcc7c14a881b0a85e01fc666812527662f808b1",
+  "unifiedTerminology": {
+    "SIP": "Security Intelligence Platform — ядро платформы, отвечает за данные и безопасность",
+    "AIS": "Adaptive Intelligence System — взаимодействие с пользователем, адаптация, контекст",
+    "AI_CTO": "Product Intelligence Center — стратегия развития продукта, принятие решений",
+    "AIO": "Autonomous Operations Center — исполнение, контроль качества, автоматизация жизненного цикла",
+    "AI_Copilot": "пользовательский интерфейс взаимодействия с интеллектуальными центрами"
+  },
+  "centers": {
+    "SIP": {
+      "id": "SIP",
+      "name": "Security Intelligence Platform",
+      "nameRu": "Security Intelligence Platform",
+      "icon": "ShieldCheck",
+      "color": "from-blue-500 to-cyan-500",
+      "score": 94,
+      "mission": "Ядро платформы. Отвечает за данные и безопасность. Хранит и обрабатывает результаты сканирований, управляет рисками, генерирует отчёты, поддерживает инфраструктуру интеграций.",
+      "responsibilities": [
+        "Security Engine — оркестрация сканирований",
+        "Risk Engine — оценка и приоритизация рисков",
+        "Vulnerability Engine — анализ уязвимостей",
+        "Reports — генерация отчётов (HTML/JSON/SARIF/MD/CSV)",
+        "Attack Paths — пути атак с MITRE ATT&CK",
+        "Compliance — соответствие стандартам",
+        "Integrations — подключения к внешним сервисам",
+        "Assets — учёт активов инфраструктуры",
+        "API — публичный и внутренний API",
+        "Dashboard — визуализация состояния безопасности"
+      ],
+      "modules": [
+        { "id": "SIP-SEC", "name": "Security Engine", "readiness": 88, "features": ["SCAN-001", "SCAN-002"] },
+        { "id": "SIP-RISK", "name": "Risk Engine", "readiness": 75, "features": ["DASH-002"] },
+        { "id": "SIP-VULN", "name": "Vulnerability Engine", "readiness": 82, "features": ["SCAN-003"] },
+        { "id": "SIP-REPORTS", "name": "Reports", "readiness": 79, "features": ["RPT-001", "RPT-002"] },
+        { "id": "SIP-ATTACK", "name": "Attack Paths", "readiness": 82, "features": ["INF-002"] },
+        { "id": "SIP-COMPLIANCE", "name": "Compliance", "readiness": 0, "features": ["PLAT-009"] },
+        { "id": "SIP-INTEGRATIONS", "name": "Integrations", "readiness": 63, "features": ["INT-001", "INT-002", "INT-003"] },
+        { "id": "SIP-ASSETS", "name": "Assets", "readiness": 70, "features": ["PLAT-005"] },
+        { "id": "SIP-API", "name": "API", "readiness": 78, "features": ["NAV-001"] },
+        { "id": "SIP-DASHBOARD", "name": "Dashboard", "readiness": 90, "features": ["DASH-001"] },
+        { "id": "SIP-KG", "name": "Knowledge Graph", "readiness": 84, "features": ["INF-001"] },
+        { "id": "SIP-MARKETPLACE", "name": "Marketplace", "readiness": 84, "features": ["MKT-001", "MKT-002"] }
+      ],
+      "dependencies": ["AIS", "AIO"],
+      "inputs": ["user scans", "integration data", "external CVE feeds"],
+      "outputs": ["scan results", "findings", "reports", "risk scores", "knowledge graph"],
+      "kpis": [
+        { "name": "Scan success rate", "value": "95%", "target": "99%" },
+        { "name": "Average scan time", "value": "12s", "target": "<10s" },
+        { "name": "Findings accuracy", "value": "88%", "target": "95%" },
+        { "name": "Report generation time", "value": "3s", "target": "<2s" }
+      ],
+      "owner": "SIP Core Team",
+      "evidence": [
+        "https://sec-scanner.pro/app/dashboard",
+        "https://sec-scanner.pro/app/scanner",
+        "https://sec-scanner.pro/app/reports",
+        "https://sec-scanner.pro/app/demo/knowledge-graph",
+        "https://sec-scanner.pro/app/demo/attack-paths"
+      ]
+    },
+    "AIS": {
+      "id": "AIS",
+      "name": "Adaptive Intelligence System",
+      "nameRu": "Adaptive Intelligence System",
+      "icon": "Sparkles",
+      "color": "from-violet-500 to-fuchsia-500",
+      "score": 82,
+      "mission": "Взаимодействие с пользователем. Адаптируется к поведению, контексту, роли. Управляет уведомлениями, звуком, анимацией. AI Copilot — единая точка входа.",
+      "responsibilities": [
+        "Intelligence — координация подсистем AIS",
+        "Memory Engine — профиль пользователя в localStorage",
+        "Context Engine — контекст текущей страницы",
+        "Notification Engine — кинематографичные уведомления",
+        "Sound Identity — звуковая идентичность",
+        "Animation Engine — анимации интерфейса",
+        "AI Copilot — плавающая кнопка + панель",
+        "Goal Engine — персональные цели пользователя",
+        "Confidence Engine — оценка уверенности платформы",
+        "Personalization — адаптация под роль",
+        "Learning Engine — адаптация по поведению",
+        "Journey Engine — отслеживание пути пользователя"
+      ],
+      "modules": [
+        { "id": "AIS-INTEL", "name": "Intelligence Core", "readiness": 90, "features": ["AIS-001"] },
+        { "id": "AIS-MEMORY", "name": "Memory Engine", "readiness": 88, "features": ["AIS-004"] },
+        { "id": "AIS-CONTEXT", "name": "Context Engine", "readiness": 90, "features": ["AIS-003"] },
+        { "id": "AIS-NOTIF", "name": "Notification Engine", "readiness": 92, "features": ["AIS-007"] },
+        { "id": "AIS-SOUND", "name": "Sound Identity", "readiness": 65, "features": ["AIS-005"] },
+        { "id": "AIS-ANIM", "name": "Animation Engine", "readiness": 92, "features": ["AIS-007"] },
+        { "id": "AIS-COPILOT", "name": "AI Copilot", "readiness": 89, "features": ["AIS-001"] },
+        { "id": "AIS-GOAL", "name": "Goal Engine", "readiness": 85, "features": ["AIS-006", "UX-011"] },
+        { "id": "AIS-CONF", "name": "Confidence Engine", "readiness": 87, "features": ["AIS-002"] },
+        { "id": "AIS-PERS", "name": "Personalization", "readiness": 82, "features": ["AIS-006"] },
+        { "id": "AIS-LEARN", "name": "Learning Engine", "readiness": 78, "features": ["AIS-004"] },
+        { "id": "AIS-JOURNEY", "name": "Journey Engine", "readiness": 75, "features": ["AIS-004"] }
+      ],
+      "dependencies": ["SIP"],
+      "inputs": ["user actions", "page visits", "session data", "SIP context"],
+      "outputs": ["adaptive notifications", "personalized tips", "confidence score", "goal progress"],
+      "kpis": [
+        { "name": "Notification engagement rate", "value": "42%", "target": "60%" },
+        { "name": "Tip dismissal rate", "value": "18%", "target": "<15%" },
+        { "name": "Adaptive timing accuracy", "value": "85%", "target": "90%" },
+        { "name": "First-visit conversion", "value": "32%", "target": "45%" }
+      ],
+      "owner": "AIS Team",
+      "evidence": [
+        "https://sec-scanner.pro/app/dashboard (FAB visible)",
+        "https://sec-scanner.pro/app/scanner (contextual notification)",
+        "https://sec-scanner.pro/app/settings (AIS Settings section)"
+      ]
+    },
+    "AI_CTO": {
+      "id": "AI_CTO",
+      "name": "AI CTO — Product Intelligence Center",
+      "nameRu": "AI CTO — Центр продуктового интеллекта",
+      "icon": "Brain",
+      "color": "from-emerald-500 to-teal-500",
+      "score": 61,
+      "mission": "Стратегия развития продукта и принятие решений. Отвечает за Product Readiness, Roadmap, Product Debt, Trust Audit. Не содержит пользовательской логики — только аналитика и рекомендации.",
+      "responsibilities": [
+        "Capability Registry — реестр возможностей платформы",
+        "Product Readiness — оценка готовности продукта",
+        "Product Debt — технический и продуктовый долг",
+        "Technical Debt — технический долг",
+        "Trust Audit — аудит доверия",
+        "Executive Summary — сводка для руководства",
+        "Recovery Queue — очередь восстановления",
+        "Dynamic Roadmap — динамическая дорожная карта",
+        "Product Map — карта продукта"
+      ],
+      "modules": [
+        { "id": "CTO-CAP", "name": "Capability Registry", "readiness": 78, "features": ["PLAT-002"] },
+        { "id": "CTO-READINESS", "name": "Product Readiness", "readiness": 85, "features": ["PLAT-015"] },
+        { "id": "CTO-DEBT", "name": "Product Debt", "readiness": 72, "features": ["PLAT-015"] },
+        { "id": "CTO-TRUST", "name": "Trust Audit", "readiness": 68, "features": ["PLAT-015"] },
+        { "id": "CTO-EXEC", "name": "Executive Summary", "readiness": 82, "features": ["PLAT-015"] },
+        { "id": "CTO-RECOVERY", "name": "Recovery Queue", "readiness": 45, "features": [] },
+        { "id": "CTO-ROADMAP", "name": "Dynamic Roadmap", "readiness": 75, "features": ["PLAT-015"] },
+        { "id": "CTO-MAP", "name": "Product Map", "readiness": 55, "features": [] },
+        { "id": "CTO-EVIDENCE", "name": "Evidence Registry", "readiness": 95, "features": ["PLAT-014"] },
+        { "id": "CTO-STATUS", "name": "System Status", "readiness": 92, "features": ["PLAT-013"] }
+      ],
+      "dependencies": ["SIP", "AIO"],
+      "inputs": ["feature-registry.json", "evidence-registry.json", "product-readiness.json", "AIO verification results"],
+      "outputs": ["roadmap", "executive summary", "trust findings", "product debt list"],
+      "kpis": [
+        { "name": "Product readiness", "value": "55%", "target": "85%" },
+        { "name": "Functional readiness", "value": "91%", "target": "95%" },
+        { "name": "Open trust findings", "value": "5", "target": "0" },
+        { "name": "Roadmap items completed/quarter", "value": "12", "target": "20" }
+      ],
+      "owner": "AI CTO (autonomous)",
+      "evidence": [
+        "https://sec-scanner.pro/app/system-status",
+        "https://sec-scanner.pro/app/evidence",
+        "https://sec-scanner.pro/app/product-readiness"
+      ]
+    },
+    "AIO": {
+      "id": "AIO",
+      "name": "AIO — Autonomous Operations Center",
+      "nameRu": "AIO — Центр автономных операций",
+      "icon": "Cpu",
+      "color": "from-amber-500 to-orange-500",
+      "score": 37,
+      "mission": "Исполнение, контроль качества, автоматизация жизненного цикла изменений. Build → Deploy → Regression → Evidence → Sync → Recovery → Monitoring → Verification → Rollback.",
+      "responsibilities": [
+        "Build — автоматическая сборка",
+        "Deploy — автоматический деплой",
+        "Regression — регрессионное тестирование",
+        "Evidence — сбор доказательств",
+        "Sync — синхронизация источников",
+        "Recovery — восстановление после сбоев",
+        "Monitoring — мониторинг production",
+        "Verification — проверка после deploy",
+        "Rollback — откат изменений"
+      ],
+      "modules": [
+        { "id": "AIO-BUILD", "name": "Build", "readiness": 65, "features": [] },
+        { "id": "AIO-DEPLOY", "name": "Deploy", "readiness": 55, "features": [] },
+        { "id": "AIO-REGRESS", "name": "Regression", "readiness": 30, "features": [] },
+        { "id": "AIO-EVIDENCE", "name": "Evidence Collection", "readiness": 70, "features": ["PLAT-014"] },
+        { "id": "AIO-SYNC", "name": "Sync (LOCAL=GITHUB=SERVER=PROD)", "readiness": 60, "features": [] },
+        { "id": "AIO-RECOVERY", "name": "Recovery", "readiness": 25, "features": [] },
+        { "id": "AIO-MONITOR", "name": "Monitoring", "readiness": 35, "features": [] },
+        { "id": "AIO-VERIFY", "name": "Verification", "readiness": 50, "features": [] },
+        { "id": "AIO-ROLLBACK", "name": "Rollback", "readiness": 20, "features": [] }
+      ],
+      "dependencies": ["SIP", "AI_CTO"],
+      "inputs": ["git push events", "deploy triggers", "AI CTO verification requests"],
+      "outputs": ["build artifacts", "deploy logs", "evidence updates", "sync status", "rollback decisions"],
+      "kpis": [
+        { "name": "Deploy success rate", "value": "85%", "target": "99%" },
+        { "name": "Mean time to recover (MTTR)", "value": "45min", "target": "<15min" },
+        { "name": "Regression coverage", "value": "30%", "target": "80%" },
+        { "name": "Sync consistency", "value": "IN SYNC", "target": "IN SYNC (always)" }
+      ],
+      "owner": "AIO (autonomous)",
+      "evidence": [
+        "/backup/sec-scanner-pro-pre-int046 (auto-backup)",
+        "https://sec-scanner.pro/app/evidence (Production Consistency panel)"
+      ]
+    }
+  },
+  "communicationGraph": [
+    { "from": "AIS", "to": "SIP", "type": "reads", "description": "AIS получает контекст от SIP (текущая страница, активные scans)" },
+    { "from": "AIS", "to": "AI_CTO", "type": "writes", "description": "AIS отправляет user engagement метрики в AI CTO для product analysis" },
+    { "from": "AI_CTO", "to": "SIP", "type": "reads", "description": "AI CTO читает feature-registry и evidence для product assessment" },
+    { "from": "AI_CTO", "to": "AIO", "type": "triggers", "description": "AI CTO триггерит AIO на verification после изменений" },
+    { "from": "AIO", "to": "SIP", "type": "deploys", "description": "AIO деплоит изменения в SIP (frontend + backend)" },
+    { "from": "AIO", "to": "AI_CTO", "type": "reports", "description": "AIO отчитывается перед AI CTO о результатах deploy/verification" },
+    { "from": "AIS", "to": "AI_CTO", "type": "queries", "description": "AI Copilot (через AIS) запрашивает у AI CTO 'Почему Product Readiness 55%?'" },
+    { "from": "AIS", "to": "AIO", "type": "queries", "description": "AI Copilot (через AIS) запрашивает у AIO 'Когда будет деплой?'" },
+    { "from": "AIS", "to": "SIP", "type": "queries", "description": "AI Copilot (через AIS) запрашивает у SIP 'Почему Scanner пустой?'" }
+  ],
+  "responsibilityMatrix": {
+    "Scanner": "SIP",
+    "Notification Engine": "AIS",
+    "Product Readiness": "AI_CTO",
+    "Deploy": "AIO",
+    "Memory Engine": "AIS",
+    "Risk Engine": "SIP",
+    "Roadmap": "AI_CTO",
+    "Evidence Collection": "AIO",
+    "Sound Identity": "AIS",
+    "Knowledge Graph": "SIP",
+    "Trust Audit": "AI_CTO",
+    "Rollback": "AIO",
+    "AI Copilot": "AIS",
+    "Reports": "SIP",
+    "Executive Summary": "AI_CTO",
+    "Build": "AIO",
+    "Goal Engine": "AIS",
+    "Marketplace": "SIP",
+    "Recovery Queue": "AI_CTO",
+    "Monitoring": "AIO"
+  },
+  "futureAgents": [
+    {
+      "id": "AGENT-SEC-ANALYST",
+      "name": "Security Analyst",
+      "center": "SIP",
+      "description": "Анализирует findings, предлагает mitigations",
+      "dataSources": ["SIP scan results", "SIP knowledge graph"],
+      "status": "planned"
+    },
+    {
+      "id": "AGENT-THREAT-HUNTER",
+      "name": "Threat Hunter",
+      "center": "SIP",
+      "description": "Проактивный поиск угроз в attack paths",
+      "dataSources": ["SIP attack paths", "SIP knowledge graph"],
+      "status": "planned"
+    },
+    {
+      "id": "AGENT-DEVSECOPS",
+      "name": "DevSecOps Advisor",
+      "center": "AIO",
+      "description": "Советует по CI/CD security, интеграциям",
+      "dataSources": ["AIO deploy logs", "SIP integrations"],
+      "status": "planned"
+    },
+    {
+      "id": "AGENT-COMPLIANCE",
+      "name": "Compliance Advisor",
+      "center": "AI_CTO",
+      "description": "Проверяет соответствие SOC2/ISO27001/GDPR",
+      "dataSources": ["AI CTO product map", "SIP compliance module"],
+      "status": "planned"
+    },
+    {
+      "id": "AGENT-EXEC",
+      "name": "Executive Advisor",
+      "center": "AI_CTO",
+      "description": "Готовит executive summaries для C-level",
+      "dataSources": ["AI CTO executive summary", "AI CTO roadmap"],
+      "status": "planned"
+    }
+  ],
+  "aiRouting": {
+    "description": "AI Copilot маршрутизирует запросы в соответствующий центр",
+    "rules": [
+      { "pattern": "scanner|scan|vulnerab|risk|finding|attack path|knowledge graph|report", "center": "SIP", "example": "Почему Scanner пустой?" },
+      { "pattern": "next|tip|goal|confidence|notification|sound|adaptive|role|preference", "center": "AIS", "example": "Что делать дальше?" },
+      { "pattern": "readiness|debt|trust|roadmap|executive|recovery|capability|evidence|status", "center": "AI_CTO", "example": "Почему Product Readiness 55%?" },
+      { "pattern": "deploy|build|regression|sync|rollback|monitor|verify|recover", "center": "AIO", "example": "Когда будет деплой?" }
+    ],
+    "fallback": "AI_CTO"
+  },
+  "explainability": {
+    "description": "Каждый ответ центра содержит explainability",
+    "examples": [
+      {
+        "question": "Почему Scanner пустой?",
+        "center": "SIP",
+        "answer": "Scanner пустой, потому что ещё не запускалось ни одного Scan.",
+        "source": "SIP / Security Engine / SCAN-001"
+      },
+      {
+        "question": "Что делать дальше?",
+        "center": "AIS",
+        "answer": "Основываясь на вашем профиле (CEO, first session), рекомендуется запустить первый скан.",
+        "source": "AIS / Goal Engine / AIS-006"
+      },
+      {
+        "question": "Почему Product Readiness 55%?",
+        "center": "AI_CTO",
+        "answer": "Product Readiness 55%, потому что 25 функций имеют score <50%. Основные пробелы: empty/error states, mobile-first, real integrations.",
+        "source": "AI_CTO / Product Readiness / PLAT-015"
+      },
+      {
+        "question": "Когда будет деплой?",
+        "center": "AIO",
+        "answer": "Следующий деплой запланирован после завершения текущего build. Build прогресс: 70%.",
+        "source": "AIO / Build / AIO-BUILD"
+      }
+    ]
+  }
+}

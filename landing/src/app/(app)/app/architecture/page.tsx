@@ -1,227 +1,244 @@
+/**
+ * /app/architecture - Unified AI Architecture Dashboard (INT-048 BLOCK 6)
+ *
+ * Big map showing 4 AI centers: SIP, AIS, AI CTO, AIO.
+ * Click on a center to navigate to its detailed page.
+ * Includes: Communication Graph, Responsibility Matrix, AI Routing, Future Agents.
+ */
+
 "use client";
 
-import { useState } from "react";
-import { Container } from "@/components/ui/Container";
-import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import {
-  Layers,
-  Server,
-  ArrowRightLeft,
-  Plug,
-  Brain,
-  BarChart3,
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
-  Code,
-  Box,
-  Workflow,
-} from "lucide-react";
-import { architectureLayers, type ArchLayer } from "@/lib/demo-data";
+import { motion } from "framer-motion";
+import Link from "next/link";
 import { useI18n } from "@/lib/i18n-context";
-import { ContextualHelp } from "@/components/ui/ContextualHelp";
-import { SectionFAQ } from "@/components/ui/SectionFAQ";
-import { SmartNextStep, RECOMMENDATION_CHAINS } from "@/components/ui/SmartNextStep";
-import { DemoBadge } from "@/components/ui/DemoBadge";
+import { Container } from "@/components/ui/Container";
+import {
+  getArchitectureRegistry,
+  getAllCenters,
+  getOverallArchitectureScore,
+  getCenterScoreColor,
+  getCenterScoreBg,
+  type CenterId,
+} from "@/lib/architecture-registry";
+import {
+  ShieldCheck,
+  Sparkles,
+  Brain,
+  Cpu,
+  ArrowRight,
+  ArrowLeftRight,
+  Network,
+  Bot,
+  GitBranch,
+  TrendingUp,
+} from "lucide-react";
 
-const layerIcons: React.ElementType[] = [Server, Workflow, Layers, Box, Plug];
+const CENTER_ICON_MAP: Record<string, React.ElementType> = {
+  ShieldCheck,
+  Sparkles,
+  Brain,
+  Cpu,
+};
 
-const layerColors = [
-  { bg: "rgba(0,212,255,0.06)", border: "rgba(0,212,255,0.2)", text: "#00d4ff" },
-  { bg: "rgba(168,85,247,0.06)", border: "rgba(168,85,247,0.2)", text: "#a855f7" },
-  { bg: "rgba(0,255,136,0.06)", border: "rgba(0,255,136,0.2)", text: "#00ff88" },
-  { bg: "rgba(255,184,0,0.06)", border: "rgba(255,184,0,0.2)", text: "#ffb800" },
-  { bg: "rgba(255,68,68,0.06)", border: "rgba(255,68,68,0.2)", text: "#ff4444" },
-];
-
-function ArchitectureLayer({
-  layer,
-  index,
-  expanded,
-  onToggle,
-}: {
-  layer: ArchLayer;
-  index: number;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  const color = layerColors[index];
-  const Icon = layerIcons[index];
-
-  return (
-    <div className="relative">
-      {/* Layer card */}
-      <button
-        onClick={onToggle}
-        className="w-full p-5 rounded-xl border-2 text-left transition-all duration-300 group"
-        style={{
-          background: expanded ? color.bg.replace("0.06", "0.12") : color.bg,
-          borderColor: expanded ? color.text : color.border,
-          boxShadow: expanded ? `0 0 30px ${color.text}15` : "none",
-        }}
-      >
-        <div className="flex items-center gap-4">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: `${color.text}15` }}
-          >
-            <Icon className="w-6 h-6" style={{ color: color.text }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-mono px-2 py-0.5 rounded-md" style={{ background: `${color.text}15`, color: color.text }}>
-                L{index + 1}
-              </span>
-              <h3 className="text-base font-bold" style={{ color: color.text }}>
-                {layer.name}
-              </h3>
-            </div>
-            <p className="text-sm text-muted-2 mt-1 line-clamp-2">{layer.description}</p>
-          </div>
-          <div className="shrink-0">
-            {expanded ? (
-              <ChevronDown className="w-5 h-5 text-muted" />
-            ) : (
-              <ChevronRight className="w-5 h-5 text-muted group-hover:text-foreground transition-colors" />
-            )}
-          </div>
-        </div>
-
-        {/* Quick stats when collapsed */}
-        {!expanded && (
-          <div className="flex items-center gap-3 mt-3 ml-16">
-            <span className="text-xs text-muted-2">{layer.classes.length} classes</span>
-            <span className="text-xs text-muted-2">·</span>
-            <span className="text-xs text-muted-2">{layer.technologies.length} technologies</span>
-          </div>
-        )}
-      </button>
-
-      {/* Expanded content */}
-      {expanded && (
-        <div className="mt-3 ml-6 space-y-4 animate-in">
-          {/* Main classes */}
-          <div className="p-4 rounded-xl bg-surface border border-border">
-            <span className="text-xs text-muted uppercase tracking-wider block mb-3">Core Classes</span>
-            <div className="flex flex-wrap gap-2">
-              {layer.classes.map((cls) => (
-                <span
-                  key={cls}
-                  className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg border font-mono"
-                  style={{ background: `${color.text}08`, borderColor: `${color.text}20`, color: color.text }}
-                >
-                  <Code className="w-3 h-3" />
-                  {cls}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Technologies */}
-          <div className="p-4 rounded-xl bg-surface border border-border">
-            <span className="text-xs text-muted uppercase tracking-wider block mb-3">Technologies</span>
-            <div className="flex flex-wrap gap-2">
-              {layer.technologies.map((tech) => (
-                <span key={tech} className="text-xs px-3 py-1.5 rounded-lg bg-surface-2 text-foreground border border-border">
-                  {tech}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Connections */}
-          <div className="p-4 rounded-xl bg-surface border border-border">
-            <span className="text-xs text-muted uppercase tracking-wider block mb-3">Connections</span>
-            <div className="space-y-2">
-              {layer.connections.map((conn) => (
-                <div key={conn} className="flex items-center gap-2 text-xs text-muted-2">
-                  <ArrowRightLeft className="w-3.5 h-3.5 text-accent" />
-                  {conn}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Connector to next layer */}
-      {index < architectureLayers.length - 1 && (
-        <div className="flex justify-center my-1">
-          <div className="w-px h-6" style={{ background: `${color.text}30` }} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function InteractiveArchitecturePage() {
-  const [expandedLayer, setExpandedLayer] = useState<string | null>("domain");
+export default function ArchitecturePage() {
   const { t } = useI18n();
+  const registry = getArchitectureRegistry();
+  const centers = getAllCenters();
+  const overallScore = getOverallArchitectureScore();
 
   return (
-    <div className="min-h-[calc(100vh-4rem)]">
-      {/* Header */}
-      <div id="architecture-header" data-scroll-section={t("scroll.arch.overview")} className="border-b border-border bg-surface/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Layers className="w-5 h-5 text-accent" />
-            Interactive Architecture
-          </h1>
-          <p className="text-sm text-muted-2 mt-1">Click each layer to explore its classes, technologies, and connections</p>
-          <div className="flex items-center gap-2 mt-2">
-            <ContextualHelp section="architecture" />
-            <DemoBadge />
+    <Container>
+      <div className="max-w-7xl mx-auto space-y-6 py-6">
+        {/* Header */}
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+              <Network className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">
+                {t("architecture.title")}
+              </h1>
+              <p className="text-sm text-muted-2">{t("architecture.subtitle")}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <Container className="py-8">
-        <div id="architecture-layers" data-scroll-section={t("scroll.arch.layers")} className="max-w-3xl mx-auto space-y-2">
-          {architectureLayers.map((layer, i) => (
-            <ArchitectureLayer
-              key={layer.id}
-              layer={layer}
-              index={i}
-              expanded={expandedLayer === layer.id}
-              onToggle={() => setExpandedLayer(expandedLayer === layer.id ? null : layer.id)}
+        {/* Overall score */}
+        <div className="rounded-xl border border-violet-500/15 bg-violet-500/5 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold text-foreground">
+              {t("architecture.overallScore")}
+            </span>
+            <span className={`text-3xl font-bold tabular-nums ${getCenterScoreColor(overallScore)}`}>
+              {overallScore}%
+            </span>
+          </div>
+          <div className="w-full h-3 rounded-full bg-foreground/5 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${overallScore}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className={`h-full ${getCenterScoreBg(overallScore)}`}
             />
-          ))}
+          </div>
         </div>
 
-        {/* Deployment options */}
-        <div id="architecture-deployment" data-scroll-section={t("scroll.arch.deployment")} className="mt-12 max-w-3xl mx-auto p-6 rounded-xl bg-surface border border-border">
-          <h3 className="text-lg font-bold text-foreground mb-4">Deployment Options</h3>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {[
-              { title: "Self-Hosted", desc: "Docker Compose or Kubernetes. Full control, no data leaves your network.", icon: Server },
-              { title: "Cloud SaaS", desc: "Managed infrastructure with automatic updates and scaling. Start scanning in minutes.", icon: Brain },
-              { title: "Hybrid", desc: "Scanning agents on-premises with cloud management console. Best of both worlds.", icon: ArrowRightLeft },
-            ].map((opt) => (
-              <div key={opt.title} className="p-4 rounded-lg bg-surface-2 border border-border hover:border-accent/20 transition-colors">
-                <opt.icon className="w-5 h-5 text-accent mb-2" />
-                <h4 className="text-sm font-semibold text-foreground mb-1">{opt.title}</h4>
-                <p className="text-xs text-muted-2">{opt.desc}</p>
+        {/* 4 AI Centers Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {centers.map((center) => {
+            const Icon = CENTER_ICON_MAP[center.icon] || Network;
+            return (
+              <Link
+                key={center.id}
+                href={`/app/architecture/${center.id === "AI_CTO" ? "cto" : center.id.toLowerCase()}`}
+                className="block rounded-xl border border-border bg-surface p-5 hover:border-violet-500/30 transition-colors group"
+              >
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${center.color} flex items-center justify-center shrink-0`}>
+                    <Icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-lg font-bold text-foreground">{center.id === "AI_CTO" ? "AI CTO" : center.id}</h2>
+                      <span className="text-[10px] text-muted-2 uppercase tracking-wider">{center.name}</span>
+                    </div>
+                    <p className="text-xs text-muted-2 line-clamp-2 mb-3">{center.mission}</p>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] text-muted-2 uppercase tracking-wider">{t("architecture.readiness")}</span>
+                          <span className={`text-sm font-bold tabular-nums ${getCenterScoreColor(center.score)}`}>
+                            {center.score}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 rounded-full bg-foreground/5 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${center.score}%` }}
+                            transition={{ duration: 0.8 }}
+                            className={`h-full ${getCenterScoreBg(center.score)}`}
+                          />
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-muted-2 group-hover:text-violet-500 transition-colors" />
+                    </div>
+                    <div className="mt-3 flex items-center gap-3 text-[10px] text-muted-2">
+                      <span>{center.modules.length} {t("architecture.modules")}</span>
+                      <span>•</span>
+                      <span>{center.kpis.length} KPIs</span>
+                      <span>•</span>
+                      <span>{center.dependencies.length} deps</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Communication Graph (BLOCK 8) */}
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <ArrowLeftRight className="w-4 h-4 text-violet-500" />
+            <span className="text-sm font-semibold text-foreground">
+              {t("architecture.communicationGraph")}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {registry.communicationGraph.map((link, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 p-2 rounded-lg bg-surface-2/50 border border-border text-xs"
+              >
+                <span className="font-mono font-bold text-violet-500">{link.from === "AI_CTO" ? "AI CTO" : link.from}</span>
+                <span className="px-2 py-0.5 rounded bg-foreground/5 text-foreground/60 text-[10px] uppercase tracking-wider">
+                  {link.type}
+                </span>
+                <ArrowRight className="w-3 h-3 text-muted-2" />
+                <span className="font-mono font-bold text-blue-500">{link.to === "AI_CTO" ? "AI CTO" : link.to}</span>
+                <span className="text-muted-2 ml-2 truncate">{link.description}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <a
-            href="/app/demo"
-            className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent-hover transition-colors"
-          >
-            See architecture in action — Try Demo
-            <ExternalLink className="w-4 h-4" />
-          </a>
+        {/* AI Routing (BLOCK 10) */}
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <GitBranch className="w-4 h-4 text-violet-500" />
+            <span className="text-sm font-semibold text-foreground">
+              {t("architecture.aiRouting")}
+            </span>
+          </div>
+          <p className="text-xs text-muted-2 mb-3">{registry.aiRouting.description}</p>
+          <div className="space-y-2">
+            {registry.aiRouting.rules.map((rule, i) => (
+              <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-surface-2/50 border border-border">
+                <code className="text-[10px] text-muted-2 font-mono px-2 py-0.5 rounded bg-foreground/5">
+                  /{rule.pattern}/
+                </code>
+                <ArrowRight className="w-3 h-3 text-muted-2" />
+                <span className="font-mono font-bold text-violet-500 text-xs">
+                  {rule.center === "AI_CTO" ? "AI CTO" : rule.center}
+                </span>
+                <span className="text-xs text-muted-2 truncate">"{rule.example}"</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 text-[11px] text-muted-2">
+            {t("architecture.fallback")}: <span className="font-mono font-bold">{registry.aiRouting.fallback === "AI_CTO" ? "AI CTO" : registry.aiRouting.fallback}</span>
+          </div>
         </div>
-      </Container>
 
-      <div id="architecture-faq" data-scroll-section={t("scroll.arch.faq")} className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SectionFAQ section="architecture" />
-        <SmartNextStep {...RECOMMENDATION_CHAINS["architecture"]} />
+        {/* Future AI Agents (BLOCK 12) */}
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Bot className="w-4 h-4 text-violet-500" />
+            <span className="text-sm font-semibold text-foreground">
+              {t("architecture.futureAgents")}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {registry.futureAgents.map((agent) => (
+              <div key={agent.id} className="p-3 rounded-lg bg-surface-2/50 border border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Bot className="w-4 h-4 text-violet-500" />
+                  <span className="text-sm font-semibold text-foreground">{agent.name}</span>
+                  <span className="ml-auto px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider bg-foreground/5 text-muted-2">
+                    {agent.status}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-2 mb-2">{agent.description}</p>
+                <div className="flex items-center gap-1 text-[10px] text-muted-2">
+                  <span>{t("architecture.owner")}:</span>
+                  <span className="font-mono font-bold text-violet-500">
+                    {agent.center === "AI_CTO" ? "AI CTO" : agent.center}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Unified Terminology (BLOCK 13) */}
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-4 h-4 text-violet-500" />
+            <span className="text-sm font-semibold text-foreground">
+              {t("architecture.unifiedTerminology")}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {Object.entries(registry.unifiedTerminology).map(([term, definition]) => (
+              <div key={term} className="flex items-start gap-3 text-xs">
+                <code className="font-mono font-bold text-violet-500 shrink-0 w-24">{term.replace("_", " ")}</code>
+                <span className="text-foreground/70">{definition}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </Container>
   );
 }
