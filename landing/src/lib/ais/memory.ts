@@ -44,6 +44,17 @@ export interface AISMetric {
   toolsInstalled: number;
 }
 
+export type AISAnimationIntensity = "full" | "reduced" | "minimal";
+export type AISDismissSpeed = "fast" | "normal" | "slow";
+export type AISActivityLevel = "proactive" | "normal" | "minimal";
+
+export interface AISSettings {
+  typingEnabled: boolean;
+  animationIntensity: AISAnimationIntensity;
+  dismissSpeed: AISDismissSpeed;
+  activityLevel: AISActivityLevel;
+}
+
 export interface AISMemory {
   /** When the user first visited */
   firstVisit: number;
@@ -92,6 +103,8 @@ export interface AISMemory {
     engineerMode: boolean;    // force engineer mode
     autoAssistant: boolean;   // allow auto assistant
   };
+  /** AIS notification settings */
+  aisSettings: AISSettings;
   /** One-time action bonuses applied (prevents re-accumulation) */
   actionBonuses?: {
     scans?: boolean;
@@ -154,6 +167,12 @@ function createDefaultMemory(): AISMemory {
       engineerMode: false,
       autoAssistant: true,
     },
+    aisSettings: {
+      typingEnabled: true,
+      animationIntensity: "full",
+      dismissSpeed: "normal",
+      activityLevel: "normal",
+    },
   };
 }
 
@@ -177,8 +196,15 @@ class AdaptiveMemoryEngine {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return createDefaultMemory();
       const parsed = JSON.parse(raw) as AISMemory;
-      // Merge with defaults to handle schema evolution
-      return { ...createDefaultMemory(), ...parsed };
+      // Merge with defaults to handle schema evolution (deep merge for nested objects)
+      const defaults = createDefaultMemory();
+      return {
+        ...defaults,
+        ...parsed,
+        preferences: { ...defaults.preferences, ...parsed.preferences },
+        aisSettings: { ...defaults.aisSettings, ...(parsed.aisSettings || {}) },
+        metrics: { ...defaults.metrics, ...parsed.metrics },
+      };
     } catch {
       return createDefaultMemory();
     }
@@ -375,6 +401,20 @@ class AdaptiveMemoryEngine {
   ): void {
     this.memory.preferences[key] = value;
     this.save();
+  }
+
+  /** Set AIS setting (typing, animation, dismiss, activity) */
+  setAISetting<K extends keyof AISSettings>(
+    key: K,
+    value: AISSettings[K]
+  ): void {
+    this.memory.aisSettings[key] = value;
+    this.save();
+  }
+
+  /** Get AIS settings */
+  getAISSettings(): Readonly<AISSettings> {
+    return this.memory.aisSettings;
   }
 
   /** Set goals */
