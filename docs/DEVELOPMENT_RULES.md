@@ -436,3 +436,38 @@ nginx -s reload
 ### Без evidence функция считается неподтверждённой
 
 Статус `implemented` (без evidence) **запрещён**. Использовать `implemented_not_verified` для legacy или `verified` для подтверждённых.
+
+---
+
+## 21. Four Statuses Rule (INT-046)
+
+После INT-046 агенту запрещается писать "Функция реализована" без одновременного указания **четырёх статусов**:
+
+| Статус | Что означает | Возможные значения |
+|--------|--------------|---------------------|
+| **Technical Status** | Реализована ли технически | `implemented` / `not_implemented` / `broken` / `deprecated` / `in_progress` |
+| **Evidence Status** | Подтверждена ли доказательствами | `verified` / `partial` / `missing` |
+| **Product Status** | Готова ли как продукт (для ежедневного использования) | `ready` / `almost_ready` / `partial` / `not_ready` |
+| **Production Status** | Подтверждена ли на production | `deployed` / `broken` / `not_deployed` |
+
+### Пример корректного заявления
+
+✅ "PLAT-015 Product Readiness Dashboard:
+- Technical: implemented
+- Evidence: verified
+- Product: ready (score 95%)
+- Production: deployed (HTTP 200, 68000 bytes)"
+
+### Пример запрещённого заявления
+
+❌ "Функция реализована" — без указания всех 4 статусов.
+
+### Разница между статусами
+
+- **Technical = implemented, но Product = not_ready**: код написан, но нет empty/error states, не адаптировано под мобильные, нет настроек. Пользователь не может использовать это ежедневно.
+- **Technical = implemented, Evidence = missing**: код есть, но нет production verification (HTTP 200, скриншот, E2E).
+- **Technical = implemented, Production = broken**: код есть в git, но на production не работает (404 fallback, runtime error).
+
+### Все 4 статуса должны быть отражены в `product-readiness.json`
+
+Файл `landing/src/data/product-readiness.json` содержит `fourStatuses` для каждой функции. Страница `/app/product-readiness` отображает их в развёрнутом виде.
