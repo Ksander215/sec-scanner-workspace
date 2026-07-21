@@ -621,21 +621,6 @@ function CinematicNotification({
             </>
           )}
         </div>
-
-        {/* Progress bar (auto-dismiss timer) */}
-        {stage >= 5 && (() => {
-          const dur = notification.duration ?? config.defaultDuration;
-          if (dur <= 0) return null;
-          return (
-            <motion.div
-              className="absolute bottom-0 left-0 h-[2px] rounded-full"
-              style={{ backgroundColor: config.accentColor }}
-              initial={{ width: "100%" }}
-              animate={{ width: "0%" }}
-              transition={{ duration: dur / 1000, ease: "linear" }}
-            />
-          );
-        })()}
       </div>
     </motion.div>
   );
