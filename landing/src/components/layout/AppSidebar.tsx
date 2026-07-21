@@ -171,6 +171,12 @@ const sidebarSections: SidebarSection[] = [
     href: "/app/product-readiness",
   },
   {
+    id: "architecture",
+    labelKey: "sidebar.architecture",
+    icon: Network,
+    href: "/app/architecture",
+  },
+  {
     id: "settings",
     labelKey: "sidebar.settings",
     icon: Settings,

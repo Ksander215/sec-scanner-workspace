@@ -471,3 +471,50 @@ nginx -s reload
 ### Все 4 статуса должны быть отражены в `product-readiness.json`
 
 Файл `landing/src/data/product-readiness.json` содержит `fourStatuses` для каждой функции. Страница `/app/product-readiness` отображает их в развёрнутом виде.
+
+---
+
+## 22. Architecture Governance (INT-048)
+
+Новая функция не может быть реализована, пока не определено:
+
+1. **Какому центру она принадлежит** — SIP / AIS / AI CTO / AIO
+2. **Кто является владельцем** — конкретная команда или autonomous agent
+3. **Какие данные использует** — inputs (откуда получает данные)
+4. **Какие данные публикует** — outputs (что отдаёт другим центрам)
+5. **Какие зависимости создаёт** — от каких других центров зависит
+
+### Четыре центра ответственности
+
+| Центр | Зона ответственности | Примеры функций |
+|-------|----------------------|------------------|
+| **SIP** | Данные и безопасность | Scanner, Risk Engine, Reports, Knowledge Graph, Attack Paths |
+| **AIS** | Взаимодействие с пользователем | AI Copilot, Notifications, Sound, Animation, Memory, Context |
+| **AI CTO** | Стратегия и решения | Product Readiness, Roadmap, Trust Audit, Executive Summary |
+| **AIO** | Исполнение и автоматизация | Build, Deploy, Regression, Evidence, Sync, Recovery, Rollback |
+
+### Запрет на "плавающие" функции
+
+Каждая функция платформы должна быть явно отнесена к одному из 4 центров в `architecture-registry.json` → `responsibilityMatrix`. Функция без owner'а считается orphan и не может быть реализована.
+
+### При добавлении новой функции
+
+1. Определить центр (SIP/AIS/AI CTO/AIO)
+2. Добавить запись в `responsibilityMatrix`
+3. Указать dependencies (от каких центров зависит)
+4. Указать inputs/outputs
+5. Только после этого — реализация кода
+
+### Unified Terminology (BLOCK 13)
+
+Во всей платформе используются только эти термины:
+
+| Термин | Расшифровка |
+|--------|-------------|
+| **SIP** | Security Intelligence Platform |
+| **AIS** | Adaptive Intelligence System |
+| **AI CTO** | Product Intelligence Center |
+| **AIO** | Autonomous Operations Center |
+| **AI Copilot** | Пользовательский интерфейс взаимодействия с интеллектуальными центрами |
+
+Запрещено использовать: "помощник", "интеллектуальный помощник", "умный ассистент" — только "AI Copilot" или "AIS".

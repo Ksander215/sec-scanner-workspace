@@ -1,5 +1,5 @@
 {
-  "version": "INT-046-v1",
+  "version": "INT-048-v1",
   "lastUpdated": "2026-07-21T22:00:00+03:00",
   "productionCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
   "githubCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
@@ -1723,6 +1723,146 @@
         "visual": "pass"
       },
       "notes": "Self-auditing: Product Readiness Dashboard audits the platform itself"
+    },
+    "PLAT-016": {
+      "id": "PLAT-016",
+      "name": "Unified AI Architecture Map",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-048",
+      "productionUrl": "https://sec-scanner.pro/app/architecture",
+      "pages": [
+        "/app/architecture"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "architecture.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "Main architecture dashboard at /app/architecture showing 4 AI centers (SIP/AIS/AI CTO/AIO) with readiness scores, communication graph, AI routing engine, future agents, unified terminology. Implements INT-048 BLOCK 6."
+    },
+    "PLAT-017": {
+      "id": "PLAT-017",
+      "name": "SIP Center Detail",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-048",
+      "productionUrl": "https://sec-scanner.pro/app/architecture/sip",
+      "pages": [
+        "/app/architecture/sip"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "architecture.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "SIP (Security Intelligence Platform) detail page at /app/architecture/sip with 12 modules, KPIs, dependencies, communication links, evidence."
+    },
+    "PLAT-018": {
+      "id": "PLAT-018",
+      "name": "AIS Center Detail",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-048",
+      "productionUrl": "https://sec-scanner.pro/app/architecture/ais",
+      "pages": [
+        "/app/architecture/ais"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "architecture.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "AIS (Adaptive Intelligence System) detail page at /app/architecture/ais with 12 modules including Memory/Context/Notification/Sound/Animation/Copilot/Goal/Confidence engines."
+    },
+    "PLAT-019": {
+      "id": "PLAT-019",
+      "name": "AI CTO Center Detail",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-048",
+      "productionUrl": "https://sec-scanner.pro/app/architecture/cto",
+      "pages": [
+        "/app/architecture/cto"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "architecture.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "AI CTO (Product Intelligence Center) detail page at /app/architecture/cto with Capability Registry, Product Readiness, Product Debt, Trust Audit, Executive Summary, Recovery Queue, Dynamic Roadmap."
+    },
+    "PLAT-020": {
+      "id": "PLAT-020",
+      "name": "AIO Center Detail",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-048",
+      "productionUrl": "https://sec-scanner.pro/app/architecture/aio",
+      "pages": [
+        "/app/architecture/aio"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "architecture.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "AIO (Autonomous Operations Center) detail page at /app/architecture/aio with Build/Deploy/Regression/Evidence/Sync/Recovery/Monitoring/Verification/Rollback modules."
     }
   }
 }
