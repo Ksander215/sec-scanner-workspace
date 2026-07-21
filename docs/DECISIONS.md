@@ -292,3 +292,62 @@
 - 7 регрессий задокументировано (REG-001..007)  
 - Шаблон для новых регрессий включён в конец файла  
 - Rule 9 (Regression First) усилена: перед задачей проверять KNOWN_REGRESSIONS.md  
+
+---
+
+## ADR-029: Product Readiness vs Functional Readiness (INT-046)
+
+**Дата**: 2026-07-21 (INT-046)  
+**Решение**: Разделить понятия "functional readiness" (функция технически реализована) и "product readiness" (функция готова для ежедневного использования пользователями).  
+**Контекст**: В INT-045 Evidence Registry показывал что 28 функций verified (83% evidence completeness). Но product audit выявил что только 55% готовы для реального использования — нет empty/error states, mock integrations, нет mobile-first, и т.д.  
+**Обоснование**: "Функция существует" ≠ "Функция закончена как продукт". Пользователь видит product readiness, а не functional readiness.  
+**Влияние**:  
+- Создан `product-readiness.json` с 16 критериями для каждой функции  
+- Создана страница `/app/product-readiness` (PLAT-015)  
+- Executive Summary: "91% functional, 55% product ready"  
+- Roadmap TOP-10 задач по влиянию на продукт  
+
+---
+
+## ADR-030: Four Statuses Rule (INT-046)
+
+**Дата**: 2026-07-21 (INT-046)  
+**Решение**: После INT-046 агенту запрещено писать "Функция реализована" без одновременного указания 4 статусов: Technical / Evidence / Product / Production.  
+**Контекст**: Заявление "реализовано" двусмысленно — может означать что код написан, или что функция работает на production, или что готова для пользователей.  
+**Обоснование**: 4 статуса разделяют эти значения:  
+- Technical: код существует  
+- Evidence: подтверждено доказательствами  
+- Product: готово для пользователей  
+- Production: работает на production  
+
+**Влияние**: Rule 21 в DEVELOPMENT_RULES.md. Каждая функция в `product-readiness.json` имеет `fourStatuses` объект.
+
+---
+
+## ADR-031: Trust Audit — Critical Product Debt (INT-046)
+
+**Дата**: 2026-07-21 (INT-046)  
+**Решение**: Любое место, где пользователь может подумать "это выглядит ненастоящим", автоматически получает статус Critical Product Debt.  
+**Контекст**: Обнаружено 7 trust findings: fake integrations (toggles показывают success без подключения), fake progress bar, fake email sending, fake notifications. Это разрушает доверие пользователей.  
+**Обоснование**: Доверие — основа B2B sales. Если пользователь думает что функция fake, он не будет платить.  
+**Влияние**: 7 находок задокументировано в `product-readiness.json` → `trustFindings`. 2 critical (TRUST-002 integrations, TRUST-003 progress bar), 2 high (TRUST-001 demo data, TRUST-004 email), 2 medium (TRUST-005 notifications, TRUST-006 API keys), 1 low (TRUST-007 marketplace install).
+
+---
+
+## ADR-032: Roadmap Generator (INT-046)
+
+**Дата**: 2026-07-21 (INT-046)  
+**Решение**: На основе Product Debt автоматически строить TOP-10 задач по влиянию на продукт, с учётом: trust / sales / retention / onboarding / technical_risk.  
+**Контекст**: Без приоритизации Product Debt — это просто список. Нужен механизм определения что делать первым.  
+**Обоснование**: Влияние на продукт ≠ сложность реализации. Real auth (high effort, 95 impact) важнее mobile polish (high effort, 72 impact).  
+**Влияние**: `product-readiness.ts` → `getRoadmap()` возвращает 10 приоритизированных задач. Каждая задача имеет: rank, title, impact, impactScore (0-100), effort (low/medium/high), description, affectedFeatures.
+
+---
+
+## ADR-033: 16 Product Completeness Criteria (INT-046)
+
+**Дата**: 2026-07-21 (INT-046)  
+**Решение**: Каждая функция оценивается по 16 критериям: works_on_production, tested_on_production, clear_ux, no_duplication, no_fake_state, has_empty_state, has_loading_state, has_error_state, has_success_state, has_explanation, has_next_step, adaptive_to_user, has_settings, works_on_mobile, works_in_dark_theme, manually_verified.  
+**Контекст**: Product readiness не может быть бинарным (готово/не готово). Нужны критерии которые показывают что именно отсутствует.  
+**Обоснование**: 16 критериев покрывают все аспекты product completeness: технический, UX, accessibility, адаптивность, безопасность.  
+**Влияние**: Score = (true * 1.0 + partial * 0.5) / 16 * 100. Каждый критерий генерирует Product Debt item если false или partial. Средний score = 55%.

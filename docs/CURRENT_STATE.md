@@ -1,15 +1,15 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: INT-045 (Evidence-Driven Development & Product Verification System), 2026-07-21
+> Последнее обновление: INT-046 (Product Completeness Audit & Production Readiness), 2026-07-21
 
 ---
 
-## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-045)
+## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-046)
 
-**Версия**: INT-045  
+**Версия**: INT-046  
 **Production**: https://sec-scanner.pro — работает, HTTP 200  
-**Последний commit**: `c43857f` INT-045: Evidence-Driven Development & Product Verification System  
+**Последний commit**: `1c13b0e` INT-046: Product Completeness Audit & Production Readiness  
 **GitHub**: синхронизирован с Local  
 **Build dir на сервере**: синхронизирован с GitHub  
 **Production**: синхронизирован с build dir
@@ -18,26 +18,27 @@
 
 | Источник | Commit | Состояние |
 |----------|--------|-----------|
-| LOCAL (workspace) | `c43857f` | ✅ чистый |
-| GITHUB (main) | `c43857f` | ✅ pushed |
-| SERVER SOURCE (/var/www/sec-scanner-build) | `c43857f` | ✅ синхронизирован |
-| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-045 | ✅ собран |
-| PRODUCTION (/var/www/sec-scanner.pro) | INT-045 | ✅ задеплоен |
+| LOCAL (workspace) | `1c13b0e` | ✅ чистый |
+| GITHUB (main) | `1c13b0e` | ✅ pushed |
+| SERVER SOURCE (/var/www/sec-scanner-build) | `1c13b0e` | ✅ синхронизирован |
+| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-046 | ✅ собран |
+| PRODUCTION (/var/www/sec-scanner.pro) | INT-046 | ✅ задеплоен |
 
-### Evidence Registry — статистика
+### Product Readiness — ключевые метрики
 
 | Метрика | Значение |
 |---------|----------|
-| Total features | 56 |
-| Verified | 28 |
-| Partial | 4 |
-| Broken | 2 |
-| In Progress | 15 |
-| Not Started / Planned | 6 |
-| Deprecated | 1 |
-| AIS modules | 10 (9 verified, 1 partial) |
-| Evidence completeness | ~83% (281/336 checks passed) |
-| Production sync | IN SYNC |
+| Functional readiness | 91% (функции технически реализованы) |
+| **Product readiness** | **55%** (готовы для ежедневного использования) |
+| Total features | 57 |
+| Ready (≥85%) | 28 |
+| Almost Ready (70-84%) | 0 |
+| Partial (50-69%) | 4 |
+| Not Ready (<50%) | 25 |
+| Critical trust findings | 2 |
+| Open trust findings | 5 |
+| Total product debt items | ~280 |
+| AIS modules | 10 (avg 85%) |
 
 ### Ключевые страницы
 
@@ -47,6 +48,7 @@
 | Dashboard | https://sec-scanner.pro/app/dashboard | 200 | verified |
 | System Status | https://sec-scanner.pro/app/system-status | 200 | verified (PLAT-013) |
 | Evidence Center | https://sec-scanner.pro/app/evidence | 200 | verified (PLAT-014) |
+| **Product Readiness** | https://sec-scanner.pro/app/product-readiness | 200 | **verified (PLAT-015)** |
 | Developer Overlay | https://sec-scanner.pro/app/debug/features | 200 | verified (AIS-008) |
 | Platform Status (redirect) | https://sec-scanner.pro/app/platform-status | 200 | broken (PLAT-001, redirect to system-status) |
 

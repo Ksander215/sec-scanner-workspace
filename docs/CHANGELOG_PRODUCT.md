@@ -4,6 +4,66 @@
 
 ---
 
+## INT-046 — 2026-07-21 (Product Completeness Audit & Production Readiness)
+
+### Что изменилось для пользователя
+
+1. **Новая страница `/app/product-readiness`** (Готовность продукта) — доступна из sidebar (TrendingUp icon)
+2. **7 вкладок**: Обзор / Функции (57) / Trust аудит (7) / UX аудит (6) / User Journey (7) / Доступность (9) / Roadmap (10)
+3. **Executive Summary**: "Платформа функционально реализована на 91%, но продуктово готова на 55%"
+4. **4 статуса для каждой функции**: Technical / Evidence / Product / Production (Rule 21)
+5. **Product Score для каждой функции**: 16 критериев (empty/loading/error states, mobile, dark theme, и т.д.)
+6. **Product Debt**: автоматический список пунктов долга для каждой функции
+7. **Trust Audit**: 7 находок (2 critical, 2 high, 2 medium, 1 low) — где пользователь может подумать "это ненастоящее"
+8. **Roadmap TOP-10**: приоритизированный список задач по влиянию на продукт
+
+### Где это увидеть
+
+- `/app/product-readiness` — главная страница
+- `/app/product-readiness` → "Функции" → клик на функцию → 4 статуса + scores + Product Debt
+- `/app/product-readiness` → "Roadmap" → TOP-10 приоритетов
+- Скриншоты: `/home/z/my-project/int044/screenshots/20-product-readiness-overview.png`, `21-features.png`, `22-roadmap.png`
+
+### Как проверить
+
+1. Открыть https://sec-scanner.pro/app/product-readiness
+2. Проверить Executive Summary: "91% functional, 55% product ready"
+3. Кликнуть "Функции" → 57 функций с scores
+4. Кликнуть любую функцию → 4 статуса + Product Debt
+5. Кликнуть "Roadmap" → TOP-10 приоритетов
+
+### Что ещё не реализовано (key gaps из Executive Summary)
+
+1. Завершение UX (empty/loading/error states на всех страницах)
+2. Адаптация мобильной версии (mobile-first вместо responsive)
+3. Повышение доступности (screen reader, keyboard navigation)
+4. Персонализация AIS (ручная настройка роли, server-side persistence)
+5. Реальные интеграции (замена mock toggle на реальные подключения)
+
+### Какие риски существуют
+
+- **Product readiness 55%**: разрыв между "функция существует" и "функция готова для ежедневного использования"
+- **7 trust findings**: места, где пользователь может подумать что это ненастоящее (mock integrations, fake progress, fake email sending)
+- **Backend на INT-036**: не синхронизирован с GitHub INT-046
+
+### Agent Quality Control (Rule 18)
+
+**Проверено автоматически**: npx next build exit 0; curl /app/product-readiness = 200 (62919 bytes); git rev-parse HEAD 1c13b0e = LOCAL = GITHUB = SERVER; agent-browser snapshot подтверждает DOM (57 features, 7 trust, 6 UX, 7 journey, 9 a11y, 10 roadmap); TypeScript type check без ошибок.
+
+**Проверено вручную**: визуальная проверка через скриншоты 20-22; кликабельность табов (Features, Roadmap); отображение Executive Summary с правильными числами (91% / 55%).
+
+**Не удалось проверить**: Safari browser; Mobile viewport; real-time score updates.
+
+**Требует проверки владельцем**: реальная регистрация/аутентификация; backend operations; performance под нагрузкой.
+
+### Технические изменения
+
+- Новые файлы: landing/src/data/product-readiness.json (57 features + audits), landing/src/lib/product-readiness.ts, landing/src/app/(app)/app/product-readiness/page.tsx
+- Изменённые: docs/DEVELOPMENT_RULES.md (+Rule 21 Four Statuses), AppSidebar.tsx (+Product Readiness link), AppLayout.tsx (+breadcrumb), feature-registry.json (+PLAT-015), feature-evidence.json (+PLAT-015), i18n.ts (+60 readiness.* keys)
+- Коммиты: 7e4d235 → f816729 → 1c13b0e INT-046: Product Completeness Audit & Production Readiness
+
+---
+
 ## INT-045 — 2026-07-21 (Evidence-Driven Development & Product Verification System)
 
 ### Что изменилось для пользователя
