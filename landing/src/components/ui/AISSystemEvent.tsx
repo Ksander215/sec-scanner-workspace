@@ -1,18 +1,21 @@
 /**
- * AIS — Cinematic Notification System (INT-040)
+ * AIS — Cinematic Notification System v2 (INT-040)
  *
- * Полная замена toast-уведомлений для AIS.
- * Кинематографичная многоэтапная анимация:
+ * Variant B: Scan-Materialize — единственный стиль уведомлений AIS.
  *
- * Stage 1: Появление символа AIS (100-200мс задержка, только символ)
- * Stage 2: Раскрытие карточки (высота, свечение)
- * Stage 3: Появление заголовка
- * Stage 4: Эффект печати текста
- * Stage 5: Кнопка действия
- * Stage 6: Исчезновение (свечение затухает, горизонтальное схлопывание к центру)
+ * Это не toast. Не snackbar. Не popup.
+ * Это собственная операционная система взаимодействия с платформой.
  *
- * Поддерживает: очередь, приоритеты, адаптивное время, Reduced Motion,
- * клавиатурную навигацию, screen reader.
+ * Анимация появления (350-450ms):
+ *   Stage 1: Световая линия (scan line сверху вниз)
+ *   Stage 2: Рамка (clip-path раскрывается)
+ *   Stage 3: Заголовок "AIS / Adaptive Intelligence System"
+ *   Stage 4: Основной текст (typewriter)
+ *   Stage 5: Действие (кнопка)
+ *   Stage 6: Исчезновение (схлопывание к центру)
+ *
+ * Поддерживает: очередь, приоритеты, адаптивное время,
+ * Do-Not-Disturb, Reduced Motion, клавиатуру, screen reader.
  */
 
 "use client";
@@ -42,7 +45,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-/* ─── Priority Levels ──────────────────────────────────────────────── */
+/* ─── Priority Levels (INT-040 v2) ─────────────────────── */
 
 export type AISPriority = "critical" | "high" | "normal" | "info";
 
@@ -54,13 +57,13 @@ export type AISEventType =
   | "warning"
   | "ai_tip";
 
-/* ─── Notification Interface ──────────────────────────────────────── */
+/* ─── Notification Interface ────────────────────────────── */
 
 export interface AISSystemNotification {
   id: string;
   type: AISEventType;
   priority: AISPriority;
-  /** i18n key for system label (default: "AIS") */
+  /** i18n key for system label (default: "ais.label") */
   systemKey?: string;
   /** i18n key for title */
   titleKey: string;
@@ -82,7 +85,7 @@ export interface AISSystemNotification {
   addedAt: number;
 }
 
-/* ─── Context ──────────────────────────────────────────────────────── */
+/* ─── Context ───────────────────────────────────────────── */
 
 interface AISSystemEventContextValue {
   addNotification: (notification: Omit<AISSystemNotification, "id" | "addedAt">) => void;
@@ -97,7 +100,7 @@ const AISSystemEventContext = createContext<AISSystemEventContextValue>({
   clearAll: () => {},
 });
 
-/* ─── Visual Config ────────────────────────────────────────────────── */
+/* ─── Visual Config per Event Type ──────────────────────── */
 
 const EVENT_CONFIG: Record<
   AISEventType,
@@ -107,6 +110,7 @@ const EVENT_CONFIG: Record<
     glowColor: string;
     borderColor: string;
     accentColor: string;
+    scanLineColor: string;
     defaultSound: SoundType;
     defaultDuration: number;
     defaultPriority: AISPriority;
@@ -117,6 +121,7 @@ const EVENT_CONFIG: Record<
     gradient: "from-violet-600/15 via-violet-500/5 to-transparent",
     glowColor: "rgba(139, 92, 246, 0.35)",
     borderColor: "border-violet-500/25",
+    scanLineColor: "rgba(139, 92, 246, 0.8)",
     accentColor: "#8b5cf6",
     defaultSound: "notification",
     defaultDuration: 7000,
@@ -127,6 +132,7 @@ const EVENT_CONFIG: Record<
     gradient: "from-emerald-600/15 via-emerald-500/5 to-transparent",
     glowColor: "rgba(16, 185, 129, 0.35)",
     borderColor: "border-emerald-500/25",
+    scanLineColor: "rgba(16, 185, 129, 0.8)",
     accentColor: "#10b981",
     defaultSound: "achievement",
     defaultDuration: 9000,
@@ -137,6 +143,7 @@ const EVENT_CONFIG: Record<
     gradient: "from-blue-600/15 via-blue-500/5 to-transparent",
     glowColor: "rgba(59, 130, 246, 0.35)",
     borderColor: "border-blue-500/25",
+    scanLineColor: "rgba(59, 130, 246, 0.8)",
     accentColor: "#3b82f6",
     defaultSound: "success",
     defaultDuration: 6000,
@@ -147,6 +154,7 @@ const EVENT_CONFIG: Record<
     gradient: "from-cyan-600/15 via-cyan-500/5 to-transparent",
     glowColor: "rgba(6, 182, 212, 0.3)",
     borderColor: "border-cyan-500/25",
+    scanLineColor: "rgba(6, 182, 212, 0.8)",
     accentColor: "#06b6d4",
     defaultSound: "recommendation",
     defaultDuration: 8000,
@@ -157,6 +165,7 @@ const EVENT_CONFIG: Record<
     gradient: "from-amber-600/15 via-amber-500/5 to-transparent",
     glowColor: "rgba(245, 158, 11, 0.3)",
     borderColor: "border-amber-500/25",
+    scanLineColor: "rgba(245, 158, 11, 0.8)",
     accentColor: "#f59e0b",
     defaultSound: "warning",
     defaultDuration: 8000,
@@ -167,6 +176,7 @@ const EVENT_CONFIG: Record<
     gradient: "from-violet-600/15 via-fuchsia-500/8 to-transparent",
     glowColor: "rgba(168, 85, 247, 0.35)",
     borderColor: "border-violet-500/30",
+    scanLineColor: "rgba(168, 85, 247, 0.8)",
     accentColor: "#a855f7",
     defaultSound: "recommendation",
     defaultDuration: 9000,
@@ -174,7 +184,7 @@ const EVENT_CONFIG: Record<
   },
 };
 
-/* ─── Priority order for queue ─────────────────────────────────────── */
+/* ─── Priority order for queue ──────────────────────────── */
 
 const PRIORITY_ORDER: Record<AISPriority, number> = {
   critical: 0,
@@ -183,9 +193,23 @@ const PRIORITY_ORDER: Record<AISPriority, number> = {
   info: 3,
 };
 
-/* ─── Typewriter Hook ──────────────────────────────────────────────── */
+/* ─── Do-Not-Disturb Detection ──────────────────────────── */
 
-function useTypewriter(text: string, speed = 28, enabled = true) {
+function isUserTyping(): boolean {
+  if (typeof document === "undefined") return false;
+  const active = document.activeElement;
+  if (!active) return false;
+  const tag = active.tagName.toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return true;
+  if ((active as HTMLElement).isContentEditable) return true;
+  // Check for contenteditable parent
+  if (active.closest("[contenteditable='true']")) return true;
+  return false;
+}
+
+/* ─── Typewriter Hook ───────────────────────────────────── */
+
+function useTypewriter(text: string, speed = 25, enabled = true) {
   const [displayed, setDisplayed] = useState("");
   const [isDone, setIsDone] = useState(false);
   const indexRef = useRef(0);
@@ -218,7 +242,7 @@ function useTypewriter(text: string, speed = 28, enabled = true) {
   return { displayed, isDone };
 }
 
-/* ─── Animation Stage Component ────────────────────────────────────── */
+/* ─── Cinematic Notification (Variant B: Scan-Materialize) ─ */
 
 function CinematicNotification({
   notification,
@@ -240,6 +264,7 @@ function CinematicNotification({
   const config = EVENT_CONFIG[notification.type];
   const Icon = config.icon;
   const glowColor = notification.glowColor || config.glowColor;
+  const scanLineColor = config.scanLineColor;
 
   // Animation stage management
   const [stage, setStage] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
@@ -249,27 +274,24 @@ function CinematicNotification({
   const descText = notification.descKey ? t(notification.descKey) : "";
   const { displayed: typedText, isDone: typingDone } = useTypewriter(
     descText,
-    28,
+    22,
     typingEnabled && animationIntensity !== "minimal"
   );
 
   // Track read time for adaptive timing
-  const appearTime = useRef(Date.now());
   const [isHovered, setIsHovered] = useState(false);
 
   // Reduced motion override
   const isReduced = prefersReducedMotion || animationIntensity === "minimal";
   const isReducedPartial = isReduced || animationIntensity === "reduced";
 
-  // Stage progression
+  // Stage progression — total ~400ms for stages 1-5
   useEffect(() => {
     if (isReduced) {
-      // Skip to final state immediately
       setStage(5);
       return;
     }
 
-    // Clear previous timers
     stageTimerRef.current.forEach(clearTimeout);
     stageTimerRef.current = [];
 
@@ -278,30 +300,29 @@ function CinematicNotification({
       stageTimerRef.current.push(id);
     };
 
-    // Stage 1: Symbol only → 150ms delay → Stage 2
-    addTimer(() => setStage(2), 150);
+    // Stage 1→2: Scan line → card reveals (~80ms)
+    addTimer(() => setStage(2), 80);
 
-    // Stage 2: Card expands → 300ms → Stage 3
-    addTimer(() => setStage(3), 450);
+    // Stage 2→3: Card expands → header appears (~200ms)
+    addTimer(() => setStage(3), 200);
 
-    // Stage 3: Title appears → 200ms → Stage 4
-    addTimer(() => setStage(4), 650);
+    // Stage 3→4: Header → text starts typing (~300ms)
+    addTimer(() => setStage(4), 300);
 
-    // Stage 4: Typewriter starts, after it finishes → Stage 5
-    const typingDuration = Math.min(descText.length * 28 + 200, 3000);
-    addTimer(() => setStage(5), 650 + typingDuration);
+    // Stage 4→5: After typewriter finishes → action button
+    const typingDuration = Math.min(descText.length * 22 + 100, 2000);
+    addTimer(() => setStage(5), 300 + typingDuration);
 
     return () => {
       stageTimerRef.current.forEach(clearTimeout);
     };
   }, [isReduced, descText.length]);
 
-  // Auto-dismiss timer (paused on hover, affected by dismissSpeed setting)
+  // Auto-dismiss timer (paused on hover, affected by dismissSpeed)
   useEffect(() => {
-    if (notification.duration === 0) return; // Manual dismiss only
-    if (stage < 5) return; // Don't start until fully visible
+    if (notification.duration === 0) return;
+    if (stage < 5) return;
 
-    // Apply dismiss speed multiplier
     const speedMultiplier = dismissSpeed === "fast" ? 0.5 : dismissSpeed === "slow" ? 1.8 : 1.0;
     let remaining = (notification.duration ?? config.defaultDuration) * speedMultiplier;
     let startTime = Date.now();
@@ -320,9 +341,7 @@ function CinematicNotification({
       clearTimeout(timerId);
     };
 
-    if (isHovered) {
-      // Don't start timer while hovered
-    } else {
+    if (!isHovered) {
       startTimer();
     }
 
@@ -334,8 +353,9 @@ function CinematicNotification({
 
   const handleDismiss = useCallback(() => {
     setStage(6);
-    // Wait for exit animation
-    setTimeout(() => onDismiss(notification.id), 600);
+    // Play shutdown sound at dismiss
+    getSoundIdentity().play("shutdown");
+    setTimeout(() => onDismiss(notification.id), 500);
   }, [notification.id, onDismiss]);
 
   const handleAction = useCallback(() => {
@@ -359,81 +379,24 @@ function CinematicNotification({
 
   // Glow intensity based on stage
   const glowIntensity =
-    stage === 1 ? 0.2 :
+    stage === 1 ? 0.3 :
     stage === 2 ? 0.6 :
     stage >= 3 && stage <= 5 ? 1.0 :
     stage === 6 ? 0 : 1.0;
 
-  // Animation variants
-  const finalState = {
-    opacity: 1,
-    x: 0,
-    y: 0,
-    scale: 1,
-    scaleX: 1,
-    scaleY: 1,
-    height: "auto" as const,
-    width: 420,
+  // Priority badge config
+  const priorityBadge: Record<AISPriority, { label: string; className: string }> = {
+    critical: { label: "CRITICAL", className: "text-red-400 bg-red-500/15 border-red-500/30" },
+    high: { label: "IMPORTANT", className: "text-amber-400 bg-amber-500/15 border-amber-500/30" },
+    normal: { label: "TIP", className: "text-cyan-400 bg-cyan-500/15 border-cyan-500/30" },
+    info: { label: "INFO", className: "text-blue-400 bg-blue-500/15 border-blue-500/30" },
   };
-
-  const cardVariants = {
-    stage1: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      scale: 0.7,
-      scaleX: 1,
-      scaleY: 1,
-      height: 56,
-      width: 56,
-    },
-    stage2: isReduced ? { ...finalState } : {
-      ...finalState,
-      transition: {
-        type: "spring" as const,
-        stiffness: 200,
-        damping: 22,
-        height: { duration: 0.4, ease: "easeOut" },
-        width: { duration: 0.4, ease: "easeOut" },
-      },
-    },
-    stage3: { ...finalState },
-    stage4: { ...finalState },
-    stage5: { ...finalState },
-    stage6: isReduced
-      ? { opacity: 0, scaleX: 0.6, scaleY: 0.95 }
-      : {
-          opacity: 0,
-          scaleX: 0,
-          scaleY: 0.85,
-          y: 0,
-          transition: {
-            duration: 0.5,
-            ease: "easeInOut" as const,
-            scaleX: { duration: 0.45, ease: [0.4, 0, 0.2, 1] as const },
-            scaleY: { duration: 0.4, ease: "easeOut" as const },
-            opacity: { duration: 0.35, delay: 0.08 },
-          },
-        },
-  };
-
-  // Determine which stage variant to show
-  const currentVariant =
-    stage === 1 ? "stage1" :
-    stage === 2 ? "stage2" :
-    stage === 3 ? "stage3" :
-    stage === 4 ? "stage4" :
-    stage === 5 ? "stage5" :
-    "stage6";
 
   return (
     <motion.div
       layout
-      variants={cardVariants}
-      animate={currentVariant}
-      initial={{ opacity: 0, x: 60, scaleX: 0.3, scaleY: 0.85 }}
       className="pointer-events-auto mx-auto mt-3 px-4"
-      style={{ maxWidth: stage === 1 ? 56 : 420, zIndex: 210 }}
+      style={{ maxWidth: 460, zIndex: 210 }}
       role="alert"
       aria-live="polite"
       aria-label={
@@ -446,187 +409,227 @@ function CinematicNotification({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`relative overflow-hidden rounded-xl border ${config.borderColor} bg-gradient-to-r ${config.gradient} backdrop-blur-md`}
-        style={{
-          boxShadow:
-            glowIntensity > 0
-              ? `0 0 ${20 * glowIntensity}px ${glowColor}, 0 0 ${50 * glowIntensity}px ${glowColor.replace(/[\d.]+\)$/, `${0.12 * glowIntensity})`)}, inset 0 1px 0 0 rgba(255,255,255,0.05)`
-              : "none",
-          transition: "box-shadow 0.5s ease",
+      {/* ─── Variant B: Scan-Materialize ─── */}
+      <motion.div
+        className="relative overflow-hidden"
+        initial={{
+          opacity: 0,
+          clipPath: "inset(0 0 100% 0)",
         }}
+        animate={
+          stage === 6
+            ? {
+                opacity: 0,
+                clipPath: "inset(50% 0 50% 0)",
+                scaleY: 0,
+                transition: {
+                  duration: 0.45,
+                  ease: [0.4, 0, 0.2, 1],
+                },
+              }
+            : stage === 1
+            ? {
+                opacity: 1,
+                clipPath: "inset(0 0 85% 0)",
+                transition: { duration: 0.08 },
+              }
+            : {
+                opacity: 1,
+                clipPath: "inset(0 0 0% 0)",
+                scaleY: stage === 2 ? 1.01 : 1,
+                transition: {
+                  clipPath: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+                  scaleY: { duration: 0.2, ease: "easeOut" },
+                },
+              }
+        }
       >
-        {/* Top glow line */}
         <div
-          className="absolute top-0 left-0 right-0 h-px"
+          className={`rounded-xl border ${config.borderColor} bg-gradient-to-r ${config.gradient} backdrop-blur-md`}
           style={{
-            background: `linear-gradient(90deg, transparent, ${glowColor.replace(/[\d.]+\)$/, `${0.7 * glowIntensity})`)}, transparent)`,
-            opacity: glowIntensity,
-            transition: "opacity 0.5s ease",
+            boxShadow:
+              glowIntensity > 0
+                ? `0 0 ${20 * glowIntensity}px ${glowColor}, 0 0 ${50 * glowIntensity}px ${glowColor.replace(/[\d.]+\)$/, `${0.12 * glowIntensity})`)}, inset 0 1px 0 0 rgba(255,255,255,0.05)`
+                : "none",
+            transition: "box-shadow 0.4s ease",
           }}
-        />
-
-        {/* Scan line effect (brand identity) */}
-        {stage >= 2 && stage <= 5 && !isReduced && (
-          <motion.div
-            className="absolute left-0 right-0 h-px pointer-events-none"
-            style={{
-              background: `linear-gradient(90deg, transparent, ${config.accentColor}40, transparent)`,
-            }}
-            animate={{ top: ["0%", "100%"] }}
-            transition={{
-              duration: 2.5,
-              repeat: Infinity,
-              ease: "linear",
-            }}
-          />
-        )}
-
-        <div className="p-4">
-          {/* Stage 1: Only symbol */}
-          {stage === 1 && !isReduced && (
-            <div className="flex items-center justify-center w-8 h-8">
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [0.7, 1, 0.7],
-                }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <Sparkles className="w-6 h-6" style={{ color: config.accentColor }} />
-              </motion.div>
-            </div>
+        >
+          {/* ─── BLOCK 3: Scan Line Effect ─── */}
+          {stage >= 1 && stage <= 3 && !isReduced && (
+            <motion.div
+              className="absolute left-0 right-0 h-[2px] pointer-events-none z-10"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${scanLineColor}, ${scanLineColor}80, transparent)`,
+                boxShadow: `0 0 12px ${scanLineColor}60, 0 0 24px ${scanLineColor}30`,
+              }}
+              initial={{ top: "0%", opacity: 1 }}
+              animate={{ top: "100%", opacity: [1, 1, 0.4] }}
+              transition={{
+                duration: 0.4,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            />
           )}
 
-          {/* Stages 2+: Full card content */}
-          {stage >= 2 && (
-            <>
-              {/* Header row */}
-              <div className="flex items-center gap-2.5 mb-2">
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
-                  className="shrink-0"
-                >
-                  <div
-                    className="w-7 h-7 rounded-lg flex items-center justify-center"
-                    style={{
-                      background: `${config.accentColor}18`,
-                      border: `1px solid ${config.accentColor}30`,
-                    }}
-                  >
-                    <Icon className="w-4 h-4" style={{ color: config.accentColor }} />
-                  </div>
-                </motion.div>
+          {/* ─── Top Glow Line ─── */}
+          <div
+            className="absolute top-0 left-0 right-0 h-px z-10"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${glowColor.replace(/[\d.]+\)$/, `${0.7 * glowIntensity})`)}, transparent)`,
+              opacity: glowIntensity,
+              transition: "opacity 0.4s ease",
+            }}
+          />
 
-                {/* System label */}
+          {/* ─── Ambient Scan Line (brand identity) ─── */}
+          {stage >= 3 && stage <= 5 && !isReduced && (
+            <motion.div
+              className="absolute left-0 right-0 h-px pointer-events-none"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${config.accentColor}30, transparent)`,
+              }}
+              animate={{ top: ["0%", "100%"] }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            />
+          )}
+
+          <div className="p-5">
+            {/* ─── Header Row ─── */}
+            <div className="flex items-center gap-3 mb-3">
+              {/* Icon with entrance animation */}
+              <motion.div
+                initial={isReduced ? false : { scale: 0, opacity: 0 }}
+                animate={stage >= 2 ? { scale: 1, opacity: 1 } : { scale: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.05 }}
+                className="shrink-0"
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: `${config.accentColor}15`,
+                    border: `1px solid ${config.accentColor}30`,
+                  }}
+                >
+                  <Icon className="w-4.5 h-4.5" style={{ color: config.accentColor }} />
+                </div>
+              </motion.div>
+
+              {/* System label: "AIS" + subtitle */}
+              <motion.div
+                initial={isReduced ? false : { opacity: 0, x: -6 }}
+                animate={stage >= 2 ? { opacity: 1, x: 0 } : { opacity: 0, x: -6 }}
+                transition={{ duration: 0.2, delay: 0.1 }}
+                className="flex flex-col"
+              >
                 <span
-                  className="text-[10px] font-bold tracking-[0.18em] uppercase"
-                  style={{ color: `${config.accentColor}aa` }}
+                  className="text-[11px] font-bold tracking-[0.2em] uppercase"
+                  style={{ color: `${config.accentColor}bb` }}
                 >
                   {notification.systemKey ? t(notification.systemKey) : "AIS"}
                 </span>
+                <span className="text-[9px] tracking-[0.12em] uppercase text-foreground/30">
+                  Adaptive Intelligence System
+                </span>
+              </motion.div>
 
-                {/* Priority indicator */}
-                {notification.priority === "critical" && (
-                  <span className="text-[9px] font-bold tracking-wider uppercase text-red animate-pulse">
-                    CRITICAL
-                  </span>
-                )}
-                {notification.priority === "high" && (
-                  <span className="text-[9px] font-medium tracking-wider uppercase text-amber">
-                    HIGH
-                  </span>
-                )}
-
-                <div className="flex-1" />
-
-                {/* Dismiss button */}
-                <button
-                  onClick={handleDismiss}
-                  className="text-foreground/30 hover:text-foreground/70 transition-colors p-0.5"
-                  aria-label="Dismiss notification"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Stage 3+: Title */}
+              {/* Priority badge */}
               {stage >= 3 && (
-                <motion.div
-                  initial={isReduced ? false : { opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  <div className="text-sm font-semibold text-foreground mb-1">
-                    {t(notification.titleKey)}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Stage 4+: Description with typewriter */}
-              {stage >= 4 && descText && (
-                <motion.div
-                  initial={isReduced ? false : { opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
+                  className={`text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded border ${priorityBadge[notification.priority].className}`}
                 >
-                  <p className="text-xs text-foreground/60 leading-relaxed min-h-[1.25rem]">
-                    {typedText}
-                    {!typingDone && (
-                      <motion.span
-                        animate={{ opacity: [1, 0] }}
-                        transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" }}
-                        className="inline-block w-1.5 h-3 ml-0.5 align-text-bottom rounded-sm"
-                        style={{ background: config.accentColor }}
-                      />
-                    )}
-                  </p>
-                </motion.div>
+                  {priorityBadge[notification.priority].label}
+                </motion.span>
               )}
 
-              {/* Stage 5+: Action button */}
-              {stage >= 5 && notification.actions && notification.actions.length > 0 && (
-                <motion.div
-                  initial={isReduced ? false : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut", delay: 0.1 }}
-                  className="mt-3"
+              <div className="flex-1" />
+
+              {/* Dismiss button */}
+              <button
+                onClick={handleDismiss}
+                className="text-foreground/25 hover:text-foreground/60 transition-colors p-1 rounded-md hover:bg-white/5"
+                aria-label="Dismiss notification"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* ─── Stage 3+: Title (larger, more readable) ─── */}
+            {stage >= 3 && (
+              <motion.div
+                initial={isReduced ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+              >
+                <div className="text-[15px] font-semibold text-foreground mb-1.5 leading-snug">
+                  {t(notification.titleKey)}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ─── Stage 4+: Description with typewriter (larger) ─── */}
+            {stage >= 4 && descText && (
+              <motion.div
+                initial={isReduced ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <p className="text-[13px] text-foreground/60 leading-relaxed min-h-[1.4rem]">
+                  {typedText}
+                  {!typingDone && (
+                    <motion.span
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.45, repeat: Infinity, repeatType: "reverse" }}
+                      className="inline-block w-1.5 h-3.5 ml-0.5 align-text-bottom rounded-sm"
+                      style={{ background: config.accentColor }}
+                    />
+                  )}
+                </p>
+              </motion.div>
+            )}
+
+            {/* ─── Stage 5+: Action button ─── */}
+            {stage >= 5 && notification.actions && notification.actions.length > 0 && (
+              <motion.div
+                initial={isReduced ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut", delay: 0.05 }}
+                className="mt-4"
+              >
+                <button
+                  onClick={handleAction}
+                  className="group inline-flex items-center gap-1.5 text-[13px] font-medium px-4 py-2.5 rounded-lg transition-all duration-200"
+                  style={{
+                    background: `${config.accentColor}12`,
+                    border: `1px solid ${config.accentColor}28`,
+                    color: config.accentColor,
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.target as HTMLElement).style.background = `${config.accentColor}22`;
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.target as HTMLElement).style.background = `${config.accentColor}12`;
+                  }}
                 >
-                  <button
-                    onClick={handleAction}
-                    className="group inline-flex items-center gap-1.5 text-xs font-medium px-3.5 py-2 rounded-lg transition-all duration-200"
-                    style={{
-                      background: `${config.accentColor}15`,
-                      border: `1px solid ${config.accentColor}30`,
-                      color: config.accentColor,
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.target as HTMLElement).style.background = `${config.accentColor}25`;
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.target as HTMLElement).style.background = `${config.accentColor}15`;
-                    }}
-                  >
-                    {t(notification.actions[0].labelKey)}
-                    <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                  </button>
-                </motion.div>
-              )}
-            </>
-          )}
+                  {t(notification.actions[0].labelKey)}
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </motion.div>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
 
-/* ─── Provider with Queue ──────────────────────────────────────────── */
+/* ─── Provider with Queue ───────────────────────────────── */
 
 export function AISSystemEventProvider({ children }: { children: ReactNode }) {
   const { t } = useI18n();
@@ -638,17 +641,6 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
   const processingRef = useRef(false);
 
   // Adaptive timing state
-  const [dismissHistory, setDismissHistory] = useState<{
-    fastDismissals: number;
-    slowDismissals: number;
-    neverDismissed: number;
-    avgReadTimeMs: number;
-  }>({
-    fastDismissals: 0,
-    slowDismissals: 0,
-    neverDismissed: 0,
-    avgReadTimeMs: 0,
-  });
   const appearTimeRef = useRef<number>(0);
 
   // AIS settings from memory — reactive via custom event + storage event
@@ -660,6 +652,47 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
     activityLevel: "normal" as "proactive" | "normal" | "minimal",
     soundEnabled: true,
   });
+
+  // DND: user is typing/editing — defer notification
+  const dndRef = useRef(false);
+  const pendingDNDRef = useRef<AISSystemNotification | null>(null);
+  const dndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Detect typing (BLOCK 11)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onFocusIn = () => {
+      dndRef.current = isUserTyping();
+    };
+    const onFocusOut = () => {
+      dndRef.current = false;
+      // If there's a deferred notification, show it after short delay
+      if (pendingDNDRef.current) {
+        const pending = pendingDNDRef.current;
+        pendingDNDRef.current = null;
+        dndTimerRef.current = setTimeout(() => {
+          showNotification(pending);
+        }, 800);
+      }
+    };
+    const onInput = () => {
+      dndRef.current = true;
+      // Reset DND timer on each input
+      if (dndTimerRef.current) clearTimeout(dndTimerRef.current);
+    };
+
+    window.addEventListener("focusin", onFocusIn);
+    window.addEventListener("focusout", onFocusOut);
+    window.addEventListener("input", onInput);
+
+    return () => {
+      window.removeEventListener("focusin", onFocusIn);
+      window.removeEventListener("focusout", onFocusOut);
+      window.removeEventListener("input", onInput);
+      if (dndTimerRef.current) clearTimeout(dndTimerRef.current);
+    };
+  }, []);
 
   // Helper: read current settings from AdaptiveMemoryEngine
   const readSettingsFromEngine = useCallback(() => {
@@ -683,23 +716,19 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     readSettingsFromEngine();
 
-    // Sync SoundIdentity whenever settings change
     const sync = () => {
       readSettingsFromEngine();
-      // Keep SoundIdentity singleton in sync
       try {
         const mem = getAISMemory().getMemory();
         getSoundIdentity().setEnabled(mem.soundEnabled);
       } catch { /* ignore */ }
     };
 
-    // Listen for cross-tab changes via native storage event
     const onStorage = (e: StorageEvent) => {
       if (e.key === "sip_ais_memory") sync();
     };
     window.addEventListener("storage", onStorage);
 
-    // Listen for same-tab changes via custom event (settings page dispatches this)
     const onAISChange = () => sync();
     window.addEventListener("ais-settings-changed", onAISChange);
 
@@ -709,48 +738,58 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
     };
   }, [readSettingsFromEngine]);
 
-  // Spam protection: track shown notification keys
+  // Spam protection (BLOCK 8): track shown notification keys
   const shownKeysRef = useRef<Map<string, number>>(new Map());
+
+  // Actually display a notification
+  const showNotification = useCallback((n: AISSystemNotification) => {
+    appearTimeRef.current = Date.now();
+    setActiveNotification(n);
+    setIsExiting(false);
+    processingRef.current = true;
+
+    // Play branded sound (BLOCK 4-5)
+    if (settings.soundEnabled) {
+      const config = EVENT_CONFIG[n.type];
+      const sound = n.sound || config.defaultSound;
+      getSoundIdentity().play(sound);
+    }
+  }, [settings.soundEnabled]);
 
   const processQueue = useCallback(() => {
     if (processingRef.current) return;
     if (queueRef.current.length === 0) return;
-
-    processingRef.current = true;
 
     // Sort by priority (critical first)
     queueRef.current.sort(
       (a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]
     );
 
-    // If there's a critical and current is info, interrupt
     const next = queueRef.current.shift()!;
-    appearTimeRef.current = Date.now();
-    setActiveNotification(next);
-    setIsExiting(false);
 
-    // Play sound
-    if (settings.soundEnabled) {
-      const config = EVENT_CONFIG[next.type];
-      const sound = next.sound || config.defaultSound;
-      getSoundIdentity().play(sound);
+    // BLOCK 11: Do-Not-Disturb — if user is typing, defer
+    if (dndRef.current && next.priority !== "critical") {
+      pendingDNDRef.current = next;
+      return;
     }
-  }, [settings.soundEnabled]);
+
+    showNotification(next);
+  }, [showNotification]);
 
   const addNotification = useCallback(
     (notification: Omit<AISSystemNotification, "id" | "addedAt">) => {
       // Check autoAssistant
       if (!settings.autoAssistant) return;
 
-      // Spam protection: no duplicate same titleKey within 10 seconds
+      // BLOCK 8: No repeat — same titleKey within 30 seconds
       const now = Date.now();
       const lastShown = shownKeysRef.current.get(notification.titleKey);
-      if (lastShown && now - lastShown < 10000) return;
+      if (lastShown && now - lastShown < 30000) return;
 
       shownKeysRef.current.set(notification.titleKey, now);
       // Cleanup old entries
       for (const [key, time] of shownKeysRef.current) {
-        if (now - time > 60000) shownKeysRef.current.delete(key);
+        if (now - time > 120000) shownKeysRef.current.delete(key);
       }
 
       const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -762,17 +801,14 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
 
       // Priority override: critical can interrupt
       if (n.priority === "critical" && activeNotification && activeNotification.priority !== "critical") {
-        // Interrupt current notification
         setIsExiting(true);
         setTimeout(() => {
           setActiveNotification(null);
           processingRef.current = false;
-          // Add current back to queue
           queueRef.current.unshift(activeNotification);
-          // Then add the critical one to front
           queueRef.current.unshift(n);
           processQueue();
-        }, 200);
+        }, 150);
         return;
       }
 
@@ -785,39 +821,21 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
     [settings.autoAssistant, activeNotification, processQueue]
   );
 
+  // BLOCK 6: Adaptive duration — track dismiss behavior
   const removeNotification = useCallback(
     (id: string) => {
       if (!activeNotification || activeNotification.id !== id) return;
 
       // Track dismiss behavior for adaptive timing
       const readTime = Date.now() - appearTimeRef.current;
-      setDismissHistory((prev) => {
-        const newAvg =
-          prev.avgReadTimeMs === 0
-            ? readTime
-            : Math.round((prev.avgReadTimeMs + readTime) / 2);
-
-        if (readTime < 2000) {
-          return { ...prev, fastDismissals: prev.fastDismissals + 1, avgReadTimeMs: newAvg };
-        } else if (readTime > 8000) {
-          return { ...prev, slowDismissals: prev.slowDismissals + 1, avgReadTimeMs: newAvg };
-        }
-        return { ...prev, avgReadTimeMs: newAvg };
-      });
-
-      // Save to memory for persistence
       try {
-        const raw = localStorage.getItem("sip_ais_adaptive");
-        const existing = raw ? JSON.parse(raw) : {};
-        localStorage.setItem(
-          "sip_ais_adaptive",
-          JSON.stringify({
-            ...existing,
-            fastDismissals: (existing.fastDismissals || 0) + (readTime < 2000 ? 1 : 0),
-            slowDismissals: (existing.slowDismissals || 0) + (readTime > 8000 ? 1 : 0),
-            avgReadTimeMs: readTime,
-          })
-        );
+        const mem = getAISMemory();
+        // If dismissed quickly, increase dismiss count → shorter durations
+        if (readTime < 2000) {
+          mem.recordTipDismissed();
+        } else if (readTime > 5000) {
+          mem.recordTipEngaged();
+        }
       } catch {
         // Non-critical
       }
@@ -827,7 +845,7 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
         setActiveNotification(null);
         processingRef.current = false;
         processQueue();
-      }, 500);
+      }, 450);
     },
     [activeNotification, processQueue]
   );
@@ -836,16 +854,10 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
     (id: string) => {
       // Count as engagement
       try {
-        const raw = localStorage.getItem("sip_ais_memory");
-        if (raw) {
-          const mem = JSON.parse(raw);
-          mem.tipsEngaged = (mem.tipsEngaged || 0) + 1;
-          localStorage.setItem("sip_ais_memory", JSON.stringify(mem));
-        }
+        getAISMemory().recordTipEngaged();
       } catch {
         // Non-critical
       }
-
       removeNotification(id);
     },
     [removeNotification]
@@ -888,13 +900,13 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/* ─── Consumer hook ──────────────────────────────────────────────────── */
+/* ─── Consumer hook ─────────────────────────────────────── */
 
 export function useAISSystemEvent() {
   return useContext(AISSystemEventContext);
 }
 
-/* ─── Re-export for backward compatibility ──────────────────────────── */
+/* ─── Re-export for backward compatibility ──────────────── */
 
 export { useAISSystemEvent as useSoloNotification };
 export type { AISSystemNotification as SoloNotification };
