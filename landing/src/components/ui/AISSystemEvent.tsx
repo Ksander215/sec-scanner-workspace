@@ -9,7 +9,7 @@
  * Stage 3: Появление заголовка
  * Stage 4: Эффект печати текста
  * Stage 5: Кнопка действия
- * Stage 6: Исчезновение (свечение затухает, уменьшение, уход вверх)
+ * Stage 6: Исчезновение (свечение затухает, горизонтальное схлопывание к центру)
  *
  * Поддерживает: очередь, приоритеты, адаптивное время, Reduced Motion,
  * клавиатурную навигацию, screen reader.
@@ -362,8 +362,11 @@ function CinematicNotification({
   // Animation variants
   const finalState = {
     opacity: 1,
+    x: 0,
     y: 0,
     scale: 1,
+    scaleX: 1,
+    scaleY: 1,
     height: "auto" as const,
     width: 420,
   };
@@ -371,8 +374,11 @@ function CinematicNotification({
   const cardVariants = {
     stage1: {
       opacity: 1,
+      x: 0,
       y: 0,
       scale: 0.7,
+      scaleX: 1,
+      scaleY: 1,
       height: 56,
       width: 56,
     },
@@ -390,14 +396,18 @@ function CinematicNotification({
     stage4: { ...finalState },
     stage5: { ...finalState },
     stage6: isReduced
-      ? { opacity: 0, y: -10, scale: 1 }
+      ? { opacity: 0, scaleX: 0.6, scaleY: 0.95 }
       : {
           opacity: 0,
-          y: -30,
-          scale: 0.92,
+          scaleX: 0,
+          scaleY: 0.85,
+          y: 0,
           transition: {
             duration: 0.5,
             ease: "easeInOut" as const,
+            scaleX: { duration: 0.45, ease: [0.4, 0, 0.2, 1] as const },
+            scaleY: { duration: 0.4, ease: "easeOut" as const },
+            opacity: { duration: 0.35, delay: 0.08 },
           },
         },
   };
@@ -416,7 +426,7 @@ function CinematicNotification({
       layout
       variants={cardVariants}
       animate={currentVariant}
-      initial={{ opacity: 0, y: -40, scale: 0.85 }}
+      initial={{ opacity: 0, x: 60, scaleX: 0.3, scaleY: 0.85 }}
       className="pointer-events-auto mx-auto mt-3 px-4"
       style={{ maxWidth: stage === 1 ? 56 : 420, zIndex: 210 }}
       role="alert"
