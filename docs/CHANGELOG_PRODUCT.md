@@ -4,6 +4,69 @@
 
 ---
 
+## INT-045 — 2026-07-21 (Evidence-Driven Development & Product Verification System)
+
+### Что изменилось для пользователя
+
+1. **Новая страница `/app/evidence`** (Центр доказательств) — доступна из sidebar
+2. **6 вкладок**: Обзор, Все функции (56), Verified (28), Partial (4), Broken (2), AIS модули (10)
+3. **Production Consistency панель**: SHA LOCAL/GITHUB/SERVER/PRODUCTION + статус IN SYNC / OUT OF SYNC
+4. **AIS Module-Level Verification**: 10 модулей с индивидуальными статусами (9 verified, 1 partial)
+5. **Для каждой функции** (раскрывается по клику): commit, production URL, дата проверки, 6 checks (build/production/browser/e2e/regression/visual), скриншоты
+6. **Sidebar**: новый пункт "Центр доказательств" (ShieldCheck icon)
+
+### Где это увидеть
+
+- `/app/evidence` — главная страница Evidence Center
+- `/app/evidence` → вкладка "AIS модули" — 10 модулей с детальными статусами
+- `/app/evidence` → клик на любую функцию — раскрываются детали
+
+### Как проверить
+
+1. Открыть https://sec-scanner.pro/app/evidence
+2. Проверить панель "Синхронизация источников" — должен быть IN SYNC
+3. Кликнуть "Все функции" — должны отобразиться 56 функций
+4. Кликнуть любую функцию (например AIS-001) — раскроются commit, URL, 6 checks
+5. Кликнуть "AIS модули" — 10 модулей с индивидуальными статусами
+6. Скриншоты: /home/z/my-project/int044/screenshots/17,18,19-evidence-*.png
+
+### Что ещё не реализовано
+
+- Real-time production consistency (сейчас build-time snapshot)
+- Video evidence (поле есть, ни одна функция не имеет)
+- Changed files (поле пустое — TODO: git diff автозаполнение)
+- Backend sync (/root/sec-scanner-workspace всё ещё на INT-036)
+
+### Какие ограничения остались
+
+- Evidence обновляется только при пересборке feature-evidence.json
+- Нет автоматического запуска checks после deploy (TODO: CI/CD)
+- Sounds module AIS-005 имеет partial из-за browser autoplay policy
+
+### Какие риски существуют
+
+- Backend на INT-036 — frontend не сможет получать данные при поломке
+- SoloNotification.tsx deprecated но не удалён
+- feature-evidence.json растёт — при 200+ функциях может потребоваться pagination
+
+### Agent Quality Control (Rule 18)
+
+**Проверено автоматически**: npx next build exit 0; curl /app/evidence = 200 (55552 bytes); git rev-parse HEAD c43857f = LOCAL = GITHUB = SERVER; agent-browser snapshot подтверждает DOM (28 verified, 4 partial, 2 broken, 10 AIS); TypeScript type check без ошибок.
+
+**Проверено вручную**: визуальная проверка через скриншоты 17-19; кликабельность табов; раскрытие деталей функции по клику; Production Consistency панель показывает IN SYNC.
+
+**Не удалось проверить**: Safari browser; Mobile viewport; Real-time production consistency.
+
+**Требует проверки владельцем**: Реальная регистрация/аутентификация; Backend operations; Performance под нагрузкой; Real-time evidence updates.
+
+### Технические изменения
+
+- Новые файлы: docs/KNOWN_REGRESSIONS.md, landing/src/app/(app)/app/evidence/page.tsx, landing/src/data/feature-evidence.json, landing/src/lib/evidence-registry.ts
+- Изменённые: docs/DEVELOPMENT_RULES.md (+Rules 16-20), AppSidebar.tsx (+Evidence link), AppLayout.tsx (+breadcrumb), feature-registry.json (+PLAT-014), i18n.ts (+60 evidence.* keys)
+- Коммиты: 029acf2 → c43857f INT-045: Evidence-Driven Development
+
+---
+
 ## INT-044 — 2026-07-21 (Repository Recovery & Production Synchronization)
 
 ### Что было (БЫЛО — состояние до INT-044)

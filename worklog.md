@@ -184,3 +184,50 @@ Backups:
 - /home/z/my-project/int044/screenshots/14-ais-confidence-tab.png
 - /home/z/my-project/int044/screenshots/15-system-status-full.png
 - /home/z/my-project/int044/screenshots/16-scanner-with-ais.png
+
+---
+Task ID: INT-045
+Agent: Super Z (Main)
+Task: Evidence-Driven Development & Product Verification System
+
+Work Log:
+- BLOCK 5: Создан feature-evidence.json (56 features + 10 AIS modules) через scripts/gen_evidence.py
+- BLOCK 2: Создан evidence-registry.ts с TypeScript типами (FeatureEvidence, EvidenceFeatureStatus, CheckStatus, AISModuleEvidence, ProductionConsistency)
+- BLOCK 1: Создана страница /app/evidence (page.tsx, 600+ строк) с 6 табами
+- BLOCK 6: Production Consistency панель на /app/evidence (LOCAL/GITHUB/SERVER/PRODUCTION SHAs)
+- BLOCK 7: AIS Module-Level Verification — 10 модулей с индивидуальными статусами
+- BLOCK 10: Создан docs/KNOWN_REGRESSIONS.md с 7 регрессиями (REG-001..007)
+- BLOCK 8,9,11,12: Обновлён DEVELOPMENT_RULES.md (+Rules 16-20)
+- Добавлено 60 i18n ключей evidence.* (RU+EN)
+- Sidebar: +Evidence Center link (ShieldCheck icon)
+- feature-registry.json: +PLAT-014 Evidence Center (verified), version INT-045-v1
+- Push на GitHub через сервер (git bundle + fetch + reset --hard + push)
+- Build: npx next build — успешно после исправления lucide-react импорта (убран Github, Eye, FileText, GitCommit — несуществующие в lucide-react)
+- Deploy: rm -rf /var/www/sec-scanner.pro/* + cp -r out/* + nginx reload
+- BLOCK 9: Production verification через agent-browser:
+  - 3 скриншота: 17-evidence-overview.png, 18-evidence-ais-modules.png, 19-evidence-all-features.png
+  - /app/evidence: HTTP 200, 55552 bytes
+  - IN SYNC отображается на Production Consistency панели
+  - 28 verified, 4 partial, 2 broken, 10 AIS modules — корректно
+  - Все 56 features кликабельны с раскрывающимися деталями
+  - Все 10 AIS modules отображаются на отдельной вкладке
+- BLOCK 13: Обновлены CURRENT_STATE, CHANGELOG_PRODUCT, DECISIONS, worklog
+
+Stage Summary:
+- LOCAL = GITHUB = SERVER = PRODUCTION = commit c43857f
+- Evidence Center работает на production: /app/evidence HTTP 200 с уникальным контентом (55552 bytes)
+- 56 features имеют evidence-записи с 6 checks каждая (336 total checks)
+- 10 AIS modules имеют индивидуальные статусы (9 verified, 1 partial)
+- Production Consistency: IN SYNC (все 4 SHA совпадают на c43857f)
+- KNOWN_REGRESSIONS.md создан с 7 задокументированными регрессиями
+- 5 новых правил в DEVELOPMENT_RULES.md (Rules 16-20)
+- 5 новых ADR (ADR-024..028) в DECISIONS.md
+- Полный цикл: Build → GitHub → Server → Production → Visual Review → E2E — пройден
+
+Backups:
+- /backup/sec-scanner-pro-pre-int045 (12M) — production до INT-045 deploy
+
+Скриншоты (доказательства):
+- /home/z/my-project/int044/screenshots/17-evidence-overview.png
+- /home/z/my-project/int044/screenshots/18-evidence-ais-modules.png
+- /home/z/my-project/int044/screenshots/19-evidence-all-features.png
