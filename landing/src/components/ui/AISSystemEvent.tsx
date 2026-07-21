@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useI18n } from "@/lib/i18n-context";
 import { getSoundIdentity, type SoundType } from "@/lib/ais/sound";
+import { getAISMemory } from "@/lib/ais/memory";
 import {
   Sparkles,
   ShieldAlert,
@@ -225,12 +226,14 @@ function CinematicNotification({
   onAction,
   animationIntensity,
   typingEnabled,
+  dismissSpeed,
 }: {
   notification: AISSystemNotification;
   onDismiss: (id: string) => void;
   onAction: (id: string) => void;
   animationIntensity: "full" | "reduced" | "minimal";
   typingEnabled: boolean;
+  dismissSpeed: "fast" | "normal" | "slow";
 }) {
   const { t } = useI18n();
   const prefersReducedMotion = useReducedMotion();
@@ -293,12 +296,14 @@ function CinematicNotification({
     };
   }, [isReduced, descText.length]);
 
-  // Auto-dismiss timer (paused on hover)
+  // Auto-dismiss timer (paused on hover, affected by dismissSpeed setting)
   useEffect(() => {
     if (notification.duration === 0) return; // Manual dismiss only
     if (stage < 5) return; // Don't start until fully visible
 
-    let remaining = notification.duration ?? config.defaultDuration;
+    // Apply dismiss speed multiplier
+    const speedMultiplier = dismissSpeed === "fast" ? 0.5 : dismissSpeed === "slow" ? 1.8 : 1.0;
+    let remaining = (notification.duration ?? config.defaultDuration) * speedMultiplier;
     let startTime = Date.now();
     let timerId: ReturnType<typeof setTimeout>;
 
@@ -325,7 +330,7 @@ function CinematicNotification({
       clearTimeout(timerId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage, isHovered, notification.duration, notification.id]);
+  }, [stage, isHovered, notification.duration, notification.id, dismissSpeed]);
 
   const handleDismiss = useCallback(() => {
     setStage(6);
@@ -661,33 +666,53 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
   });
   const appearTimeRef = useRef<number>(0);
 
-  // AIS settings from memory
+  // AIS settings from memory — reactive via custom event + storage event
   const [settings, setSettings] = useState({
     autoAssistant: true,
     typingEnabled: true,
     animationIntensity: "full" as "full" | "reduced" | "minimal",
+    dismissSpeed: "normal" as "fast" | "normal" | "slow",
+    activityLevel: "normal" as "proactive" | "normal" | "minimal",
     soundEnabled: true,
   });
 
-  // Load settings from AIS memory on mount
-  useEffect(() => {
+  // Helper: read current settings from AdaptiveMemoryEngine
+  const readSettingsFromEngine = useCallback(() => {
     try {
-      const raw = localStorage.getItem("sip_ais_memory");
-      if (raw) {
-        const mem = JSON.parse(raw);
-        const prefs = mem.aisSettings || {};
-        setSettings((prev) => ({
-          ...prev,
-          autoAssistant: mem.preferences?.autoAssistant ?? true,
-          typingEnabled: prefs.typingEnabled ?? true,
-          animationIntensity: prefs.animationIntensity ?? "full",
-          soundEnabled: mem.soundEnabled ?? true,
-        }));
-      }
+      const mem = getAISMemory().getMemory();
+      const ais = mem.aisSettings;
+      setSettings({
+        autoAssistant: mem.preferences.autoAssistant,
+        typingEnabled: ais.typingEnabled,
+        animationIntensity: ais.animationIntensity,
+        dismissSpeed: ais.dismissSpeed,
+        activityLevel: ais.activityLevel,
+        soundEnabled: mem.soundEnabled,
+      });
     } catch {
       // Use defaults
     }
   }, []);
+
+  // Load settings on mount + listen for changes
+  useEffect(() => {
+    readSettingsFromEngine();
+
+    // Listen for cross-tab changes via native storage event
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "sip_ais_memory") readSettingsFromEngine();
+    };
+    window.addEventListener("storage", onStorage);
+
+    // Listen for same-tab changes via custom event (settings page dispatches this)
+    const onAISChange = () => readSettingsFromEngine();
+    window.addEventListener("ais-settings-changed", onAISChange);
+
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("ais-settings-changed", onAISChange);
+    };
+  }, [readSettingsFromEngine]);
 
   // Spam protection: track shown notification keys
   const shownKeysRef = useRef<Map<string, number>>(new Map());
@@ -859,6 +884,7 @@ export function AISSystemEventProvider({ children }: { children: ReactNode }) {
               onAction={onAction}
               animationIntensity={settings.animationIntensity}
               typingEnabled={settings.typingEnabled}
+              dismissSpeed={settings.dismissSpeed}
             />
           )}
         </AnimatePresence>

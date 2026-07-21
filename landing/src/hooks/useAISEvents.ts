@@ -70,6 +70,10 @@ export function useAISEvents() {
     // Check autoAssistant preference
     if (!ais.memory.preferences.autoAssistant) return;
 
+    // Activity level filtering: "minimal" = only high/critical, "proactive" = everything
+    const activityLevel = ais.memory.aisSettings?.activityLevel ?? "normal";
+    if (activityLevel === "minimal") return; // Skip contextual tips on minimal
+
     // Don't spam — only show on first visit to a page
     const context = getPageContext(pathname);
     if (!context) return;
@@ -107,6 +111,10 @@ export function useAISEvents() {
 
       // Don't show if autoAssistant is off
       if (!ais.memory.preferences.autoAssistant) return;
+
+      // Activity level filtering
+      const activityLevel = ais.memory.aisSettings?.activityLevel ?? "normal";
+      if (activityLevel === "minimal" && def.priority !== "critical" && def.priority !== "high") return;
 
       // Adaptive timing
       const timing = calculateAdaptiveTiming(def.duration === -1 ? 7000 : def.duration, {
