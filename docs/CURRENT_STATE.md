@@ -1,15 +1,15 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: INT-050 (Product Packaging & Navigation Redesign), 2026-07-21
+> Последнее обновление: EP-001 (Product Packaging & Business Transformation), 2026-07-21
 
 ---
 
-## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-050)
+## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после EP-001)
 
-**Версия**: INT-050  
+**Версия**: EP-001  
 **Production**: https://sec-scanner.pro — работает, HTTP 200  
-**Последний commit**: `0d6dfaf` INT-050: Product Packaging & Navigation Redesign  
+**Последний commit**: `22d1924` EP-001: Product Packaging & Business Transformation  
 **GitHub**: синхронизирован с Local  
 **Build dir на сервере**: синхронизирован с GitHub  
 **Production**: синхронизирован с build dir
@@ -18,11 +18,11 @@
 
 | Источник | Commit | Состояние |
 |----------|--------|-----------|
-| LOCAL (workspace) | `0d6dfaf` | ✅ чистый |
-| GITHUB (main) | `0d6dfaf` | ✅ pushed |
-| SERVER SOURCE (/var/www/sec-scanner-build) | `0d6dfaf` | ✅ синхронизирован |
-| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-050 | ✅ собран |
-| PRODUCTION (/var/www/sec-scanner.pro) | INT-050 | ✅ задеплоен |
+| LOCAL (workspace) | `22d1924` | ✅ чистый |
+| GITHUB (main) | `22d1924` | ✅ pushed |
+| SERVER SOURCE (/var/www/sec-scanner-build) | `22d1924` | ✅ синхронизирован |
+| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | EP-001 | ✅ собран |
+| PRODUCTION (/var/www/sec-scanner.pro) | EP-001 | ✅ задеплоен |
 
 ### Dual Mode Architecture (INT-050)
 
