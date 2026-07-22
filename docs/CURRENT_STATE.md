@@ -1,15 +1,15 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: BP-001 (Business Foundation), 2026-07-21
+> Последнее обновление: BP-002 (Customer Discovery & Market Validation), 2026-07-22
 
 ---
 
-## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после BP-001)
+## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после BP-002)
 
-**Версия**: BP-001  
+**Версия**: BP-002  
 **Production**: https://sec-scanner.pro — работает, HTTP 200  
-**Последний commit**: `a33767b` BP-001: Business Foundation  
+**Последний commit**: `20ef5c4` BP-002: Customer Discovery & Market Validation  
 **GitHub**: синхронизирован с Local  
 **Build dir на сервере**: синхронизирован с GitHub  
 **Production**: синхронизирован с build dir
@@ -18,11 +18,11 @@
 
 | Источник | Commit | Состояние |
 |----------|--------|-----------|
-| LOCAL (workspace) | `a33767b` | ✅ чистый |
-| GITHUB (main) | `a33767b` | ✅ pushed |
-| SERVER SOURCE (/var/www/sec-scanner-build) | `a33767b` | ✅ синхронизирован |
-| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | BP-001 | ✅ собран |
-| PRODUCTION (/var/www/sec-scanner.pro) | BP-001 | ✅ задеплоен |
+| LOCAL (workspace) | `20ef5c4` | ✅ чистый |
+| GITHUB (main) | `20ef5c4` | ✅ pushed |
+| SERVER SOURCE (/var/www/sec-scanner-build) | `20ef5c4` | ✅ синхронизирован |
+| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | BP-002 | ✅ собран |
+| PRODUCTION (/var/www/sec-scanner.pro) | BP-002 | ✅ задеплоен |
 
 ### Dual Mode Architecture (INT-050)
 

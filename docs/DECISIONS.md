@@ -567,3 +567,33 @@
 - EP-007: Enterprise Features (P1, Q1 2027)  
 - EP-008: SEO+Content (P1, Q4 2026)  
 - EP-009: SOC2 (P2, Q2 2027)  
+
+---
+
+## ADR-052: Evidence Before Roadmap (BP-002)
+
+**Дата**: 2026-07-22 (BP-002)  
+**Решение**: Перед реализацией любой крупной функции агент обязан ответить на 4 вопроса: (1) какая подтверждённая проблема, (2) сколько интервью подтвердили, (3) есть ли customer quote, (4) это validated или hypothesis. Если hypothesis — функция помечается как `experiment`.  
+**Контекст**: До BP-002 продуктовые решения принимались на основе assumptions. 9/20 assumptions оставались Unknown.  
+**Обоснование**: "Validate before Build". Каждая функция должна решать подтверждённую проблему.  
+**Влияние**: Rule 28 в DEVELOPMENT_RULES.md. Все будущие функции должны иметь Evidence section. Эксперименты получают explicit success/kill criteria.
+
+---
+
+## ADR-053: Evidence-Based PMF (BP-002)
+
+**Дата**: 2026-07-22 (BP-002)  
+**Решение**: PMF score переведён с условных процентов (63/100) на Confidence levels (Low/Medium/High) с реальными метриками: interview count, ICP coverage, validated problems, paying customers.  
+**Контекст**: Score 63/100 был based на expert assessment, не на data. Это давало ложное чувство понимания.  
+**Обоснование**: "Никаких искусственных процентов. Только реальные цифры." Confidence Low = 0-5 интервью, Medium = 15+/4+ ICP/3+ pilot, High = 30+/5 ICP/5+ paying.  
+**Влияние**: product-market-fit.json → evidenceBasedPMF. CEO Dashboard показывает Confidence: Low с реальными цифрами.
+
+---
+
+## ADR-054: Leading vs Lagging Indicators (BP-002)
+
+**Дата**: 2026-07-22 (BP-002)  
+**Решение**: На ранней стадии CEO Dashboard акцентируется на Leading Indicators (интервью, демо, регистрации, пилоты, фидбэк), не Lagging (MRR, ARR, LTV, CAC, Churn).  
+**Контекст**: Lagging indicators ($0 MRR) демотивируют. Leading indicators показывают progress.  
+**Обоснование**: "На ранней стадии CEO Dashboard должен акцентироваться именно на Leading Indicators."  
+**Влияние**: CEO Dashboard показывает две колонки: Leading (emerald, focus) + Lagging (muted, появится позже).
