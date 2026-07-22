@@ -449,3 +449,28 @@
 - Демо на `/app/evolution` → AI Intent tab  
 - 12 intent patterns: scan_request, risk_inquiry, report_request, explain_request, tip_request, goal_inquiry, readiness_inquiry, roadmap_inquiry, trust_inquiry, deploy_request, recovery_request, verify_request  
 - Fallback: AI CTO (confidence 30%)  
+
+---
+
+## ADR-042: Dual Mode Architecture (INT-050)
+
+**Дата**: 2026-07-21 (INT-050)  
+**Решение**: Платформа имеет два режима интерфейса: User Workspace (по умолчанию, простой SaaS) и Founder Console (инженерный контроль). Переключатель в sidebar с localStorage persistence.  
+**Контекст**: До INT-050 sidebar содержал 25 пунктов перемешанных — пользовательские (Scanner, Reports) и инженерные (Architecture, Evolution, Evidence). Это перегружало новых пользователей.  
+**Обоснование**: Пользователь должен видеть только продукт. Архитектура принадлежит фаундеру. Разделение через `audience` field позволяет добавлять модули без хаоса.  
+**Влияние**:  
+- AppSidebar.tsx: каждый section имеет `audience: "user" | "founder"`  
+- Toggle UI в верхней части sidebar  
+- Auto-switch при переходе на founder-страницы  
+- Rule 24 (Dual Mode Architecture) в DEVELOPMENT_RULES.md  
+- PLAT-024 добавлен в feature-registry  
+
+---
+
+## ADR-043: AIS как единая точка входа (INT-050 BLOCK 4)
+
+**Дата**: 2026-07-21 (INT-050)  
+**Решение**: В User mode пользователь не видит 4 AI Centers. Он общается только с AIS (AI Copilot), который маршрутизирует запросы через `detectIntent()` в нужный центр.  
+**Контекст**: Пользователь не должен думать "Мне идти в SIP или AI CTO?". Это инженерный вопрос, не пользовательский.  
+**Обоснование**: Скрытие инженерной архитектуры упрощает UX. AIS остаётся видимой точкой входа (плавающая кнопка), но внутренний routing скрыт.  
+**Влияние**: В User mode sidebar не показывает Architecture/Evolution/Evidence. AIS Copilot остаётся доступным и маршрутизирует запросы автоматически.

@@ -393,3 +393,60 @@ Backups:
 - /home/z/my-project/int044/screenshots/26-evolution-matrix.png
 - /home/z/my-project/int044/screenshots/27-evolution-intent.png
 - /home/z/my-project/int044/screenshots/28-evolution-intent-sip.png
+
+---
+Task ID: INT-050
+Agent: Super Z (Main)
+Task: Product Packaging & Navigation Redesign (User Workspace + Founder Console)
+
+Work Log:
+- BLOCK 1: Полный аудит 25 пунктов Sidebar — разделение на User (15) и Founder (10)
+- BLOCK 2-3: Sidebar разделён через audience field: USER WORKSPACE (15 пунктов) + FOUNDER CONSOLE (9 пунктов)
+- BLOCK 4: AIS остаётся точкой входа в User mode (плавающая кнопка Copilot), внутренний routing скрыт
+- BLOCK 5: Founder Console — переключатель в sidebar с localStorage persistence + auto-switch
+- BLOCK 6-7: Product Packaging Audit + First Impression Review задокументированы в CHANGELOG (BLOCK 9)
+- BLOCK 8: Founder Review (5 вопросов) — Architecture 8/10, Масштаб 8/10, Бренд 7/10, Коммерция 6/10, Долг описан
+- BLOCK 9: User Review (5 вопросов) — Понятность 7/10, Навигация 8/10, AIS 6/10, Терминология OK, Доверие подрывает mock integrations
+- BLOCK 10: Product Score — Founder Average 7.2/10, User Average 7.2/10
+- BLOCK 11: Honest Critique — что отлично/средне/плохо/переделал бы
+- BLOCK 12: Финальная демонстрация — вердикт фаундера + вердикт пользователя
+- Rule 24 (Dual Mode Architecture) в DEVELOPMENT_RULES.md
+- PLAT-024: Dual Mode Navigation добавлен в registries
+- Push на GitHub через сервер (git bundle + fetch + reset + push)
+- Build: npx next build — успешно с первой попытки
+- Deploy: rm -rf /var/www/sec-scanner.pro/* + cp -r out/* + nginx reload
+- Production verification через agent-browser:
+  - 3 скриншота: 29-sidebar-user-mode.png, 30-sidebar-founder-mode.png, 31-command-center-user-view.png
+  - User mode: USER WORKSPACE label, 15 пунктов (Projects, Scans, Reports, Marketplace, и т.д.)
+  - Founder mode: FOUNDER CONSOLE label, 9 пунктов (Architecture, SIP, AIS, AI CTO, AIO, Evolution, System Status, Evidence, Product Readiness)
+  - Toggle работает (click Founder → режим меняется)
+  - Auto-switch при переходе на /app/architecture
+- Обновлены CURRENT_STATE, CHANGELOG_PRODUCT, DECISIONS, worklog
+
+Stage Summary:
+- LOCAL = GITHUB = SERVER = PRODUCTION = commit 0d6dfaf
+- Sidebar разделён на User Workspace (15 пунктов) + Founder Console (9 пунктов)
+- Переключатель User/Founder с localStorage persistence
+- Auto-switch на founder-страницы
+- Rule 24 (Dual Mode Architecture) добавлен
+- PLAT-024 в registries
+- Founder Average: 7.2/10
+- User Average: 7.2/10
+- Полный цикл: Build → GitHub → Server → Production → Visual Review → E2E — пройден
+
+Evolution Impact Report (Rule 23):
+- SIP:    ★★☆☆☆  (2/5) — косвенно, sidebar влияет на навигацию к SIP страницам
+- AIS:    ★★★☆☆  (3/5) — AIS остаётся точкой входа, но скрыт в User mode
+- AI CTO: ★★★★★  (5/5) — Founder Console = AI CTO инструменты, Rule 24 добавлен
+- AIO:    ★☆☆☆☆  (1/5) — не затронут
+
+Вердикт фаундера: Продукт готов к масштабированию архитектурно, но НЕ готов коммерчески из-за 2 critical trust findings (TRUST-002, TRUST-003).
+Вердикт пользователя: Продукт вызывает желание продолжить использование, но доверие подрывается mock integrations.
+
+Backups:
+- /backup/sec-scanner-pro-pre-int050 (12M) — production до INT-050 deploy
+
+Скриншоты (доказательства):
+- /home/z/my-project/int044/screenshots/29-sidebar-user-mode.png
+- /home/z/my-project/int044/screenshots/30-sidebar-founder-mode.png
+- /home/z/my-project/int044/screenshots/31-command-center-user-view.png
