@@ -56,6 +56,13 @@ interface SidebarSection {
 const sidebarSections: SidebarSection[] = [
   // ─── INT-050 BLOCK 2: USER WORKSPACE (простой коммерческий SaaS) ──────
   {
+    id: "home",
+    labelKey: "sidebar.home",
+    icon: ShieldCheck,
+    href: "/app/home",
+    audience: "user",
+  },
+  {
     id: "command-center",
     labelKey: "sidebar.commandCenter",
     icon: Activity,
@@ -180,6 +187,13 @@ const sidebarSections: SidebarSection[] = [
 
   // ─── INT-050 BLOCK 5: FOUNDER CONSOLE (инженерный контроль) ───────────
   {
+    id: "founder-ceo",
+    labelKey: "sidebar.ceo",
+    icon: Briefcase,
+    href: "/app/ceo",
+    audience: "founder",
+  },
+  {
     id: "founder-architecture",
     labelKey: "sidebar.architecture",
     icon: Network,
@@ -266,7 +280,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   // Авто-переключение на founder mode если пользователь на founder-странице
   useEffect(() => {
     if (!pathname) return;
-    const founderRoutes = ["/app/architecture", "/app/evolution", "/app/evidence", "/app/product-readiness", "/app/system-status"];
+    const founderRoutes = ["/app/architecture", "/app/evolution", "/app/evidence", "/app/product-readiness", "/app/system-status", "/app/ceo"];
     if (founderRoutes.some((r) => pathname.startsWith(r)) && audience !== "founder") {
       setAudience("founder");
       if (typeof window !== "undefined") {
