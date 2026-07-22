@@ -1,15 +1,15 @@
 # CURRENT_STATE.md — Живая сводка проекта
 
 > Обновляется после каждого завершённого INT-этапа.  
-> Последнее обновление: INT-049 (Platform Evolution Framework & Unified Workspace), 2026-07-21
+> Последнее обновление: INT-050 (Product Packaging & Navigation Redesign), 2026-07-21
 
 ---
 
-## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-049)
+## ✅ ТЕКУЩЕЕ СОСТОЯНИЕ (после INT-050)
 
-**Версия**: INT-049  
+**Версия**: INT-050  
 **Production**: https://sec-scanner.pro — работает, HTTP 200  
-**Последний commit**: `d4454a5` INT-049: Platform Evolution Framework & Unified Workspace  
+**Последний commit**: `0d6dfaf` INT-050: Product Packaging & Navigation Redesign  
 **GitHub**: синхронизирован с Local  
 **Build dir на сервере**: синхронизирован с GitHub  
 **Production**: синхронизирован с build dir
@@ -18,11 +18,28 @@
 
 | Источник | Commit | Состояние |
 |----------|--------|-----------|
-| LOCAL (workspace) | `d4454a5` | ✅ чистый |
-| GITHUB (main) | `d4454a5` | ✅ pushed |
-| SERVER SOURCE (/var/www/sec-scanner-build) | `d4454a5` | ✅ синхронизирован |
-| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-049 | ✅ собран |
-| PRODUCTION (/var/www/sec-scanner.pro) | INT-049 | ✅ задеплоен |
+| LOCAL (workspace) | `0d6dfaf` | ✅ чистый |
+| GITHUB (main) | `0d6dfaf` | ✅ pushed |
+| SERVER SOURCE (/var/www/sec-scanner-build) | `0d6dfaf` | ✅ синхронизирован |
+| SERVER BUILD (/var/www/sec-scanner-build/landing/out) | INT-050 | ✅ собран |
+| PRODUCTION (/var/www/sec-scanner.pro) | INT-050 | ✅ задеплоен |
+
+### Dual Mode Architecture (INT-050)
+
+| Режим | Аудитория | Разделов | Принцип |
+|-------|-----------|----------|---------|
+| **User Workspace** (по умолчанию) | Конечные пользователи SaaS | 15 | Понятно за 30 секунд |
+| **Founder Console** | Фаундер, техническая команда | 9 | Полный инженерный контроль |
+
+Переключатель в sidebar + auto-switch при переходе на founder-страницы. Сохраняется в localStorage.
+
+### Product Scores (INT-050)
+
+| Метрика | Score |
+|---------|-------|
+| Founder Average | 7.2/10 (Архитектура 8, Масштаб 8, Развитие 7, Бренд 7, Коммерция 6) |
+| User Average | 7.2/10 (Понятность 7, Простота 8, Освоение 7, Навигация 8, Желание 6) |
+
 
 ### Unified AI Architecture + Evolution Framework
 
