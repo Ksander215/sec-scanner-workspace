@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,66 +49,25 @@ interface SidebarSection {
   icon: React.ElementType;
   href?: string;
   badge?: string;
+  audience?: "user" | "founder"; // INT-050: разделение пользовательского и фаундерского интерфейса
   children?: { labelKey: string; href: string; icon: React.ElementType }[];
 }
 
 const sidebarSections: SidebarSection[] = [
-  // ─── INT-049: 4 AI Centers (first level) ──────────────────────────────
+  // ─── INT-050 BLOCK 2: USER WORKSPACE (простой коммерческий SaaS) ──────
   {
     id: "command-center",
     labelKey: "sidebar.commandCenter",
     icon: Activity,
     href: "/app/command-center",
-  },
-  {
-    id: "sip-center",
-    labelKey: "sidebar.sipCenter",
-    icon: ShieldCheck,
-    href: "/app/architecture/sip",
-  },
-  {
-    id: "ais-center",
-    labelKey: "sidebar.aisCenter",
-    icon: Sparkles,
-    href: "/app/architecture/ais",
-  },
-  {
-    id: "cto-center",
-    labelKey: "sidebar.ctoCenter",
-    icon: Brain,
-    href: "/app/architecture/cto",
-  },
-  {
-    id: "aio-center",
-    labelKey: "sidebar.aioCenter",
-    icon: Cpu,
-    href: "/app/architecture/aio",
-  },
-  {
-    id: "evolution",
-    labelKey: "sidebar.evolution",
-    icon: GitBranch,
-    href: "/app/evolution",
-  },
-  {
-    id: "architecture",
-    labelKey: "sidebar.architecture",
-    icon: Network,
-    href: "/app/architecture",
-  },
-
-  // ─── INT-049: Platform Tools (second level — SIP-owned) ───────────────
-  {
-    id: "dashboard",
-    labelKey: "sidebar.dashboard",
-    icon: LayoutDashboard,
-    href: "/app/dashboard",
+    audience: "user",
   },
   {
     id: "projects",
     labelKey: "sidebar.projects",
     icon: FolderKanban,
     href: "/app/projects",
+    audience: "user",
   },
   {
     id: "scans",
@@ -116,6 +75,7 @@ const sidebarSections: SidebarSection[] = [
     icon: Radar,
     href: "/app/scans",
     badge: "5",
+    audience: "user",
   },
   {
     id: "findings",
@@ -123,24 +83,28 @@ const sidebarSections: SidebarSection[] = [
     icon: Bug,
     href: "/app/findings",
     badge: "12",
+    audience: "user",
   },
   {
     id: "reports",
     labelKey: "sidebar.reports",
     icon: FileBarChart,
     href: "/app/reports",
+    audience: "user",
   },
   {
     id: "marketplace",
     labelKey: "sidebar.catalog",
     icon: Store,
     href: "/app/marketplace",
+    audience: "user",
   },
   {
     id: "integrations",
     labelKey: "sidebar.integrations",
     icon: Cable,
     href: "/app/integrations",
+    audience: "user",
     children: [
       { labelKey: "sidebar.integrations.hub", href: "/app/integrations", icon: Cable },
       { labelKey: "sidebar.integrations.repositories", href: "/app/repositories", icon: GitBranch },
@@ -154,24 +118,28 @@ const sidebarSections: SidebarSection[] = [
     labelKey: "sidebar.infrastructure",
     icon: Network,
     href: "/app/demo/knowledge-graph",
+    audience: "user",
   },
   {
     id: "attack-paths",
     labelKey: "sidebar.attackPaths",
     icon: Route,
     href: "/app/demo/attack-paths",
+    audience: "user",
   },
   {
     id: "risks",
     labelKey: "sidebar.risks",
     icon: ShieldAlert,
     href: "/app/risks",
+    audience: "user",
   },
   {
     id: "workspace",
     labelKey: "sidebar.workspace",
     icon: Briefcase,
     href: "/app/workspace",
+    audience: "user",
     children: [
       { labelKey: "sidebar.workspace.overview", href: "/app/workspace", icon: Activity },
       { labelKey: "sidebar.workspace.assets", href: "/app/workspace/assets", icon: Database },
@@ -186,46 +154,93 @@ const sidebarSections: SidebarSection[] = [
     labelKey: "sidebar.playground",
     icon: FlaskConical,
     href: "/app/playground",
+    audience: "user",
   },
   {
     id: "documentation",
     labelKey: "sidebar.documentation",
     icon: BookOpen,
     href: "/app/docs",
+    audience: "user",
   },
   {
     id: "community",
     labelKey: "sidebar.community",
     icon: Users,
     href: "/app/community",
+    audience: "user",
   },
-
-  // ─── INT-049: AI CTO Tools (oversight) ────────────────────────────────
-  {
-    id: "system-status",
-    labelKey: "sidebar.systemStatus",
-    icon: Gauge,
-    href: "/app/system-status",
-  },
-  {
-    id: "evidence",
-    labelKey: "sidebar.evidence",
-    icon: ShieldCheck,
-    href: "/app/evidence",
-  },
-  {
-    id: "product-readiness",
-    labelKey: "sidebar.productReadiness",
-    icon: TrendingUp,
-    href: "/app/product-readiness",
-  },
-
-  // ─── Settings ─────────────────────────────────────────────────────────
   {
     id: "settings",
     labelKey: "sidebar.settings",
     icon: Settings,
     href: "/app/settings",
+    audience: "user",
+  },
+
+  // ─── INT-050 BLOCK 5: FOUNDER CONSOLE (инженерный контроль) ───────────
+  {
+    id: "founder-architecture",
+    labelKey: "sidebar.architecture",
+    icon: Network,
+    href: "/app/architecture",
+    audience: "founder",
+  },
+  {
+    id: "founder-sip",
+    labelKey: "sidebar.sipCenter",
+    icon: ShieldCheck,
+    href: "/app/architecture/sip",
+    audience: "founder",
+  },
+  {
+    id: "founder-ais",
+    labelKey: "sidebar.aisCenter",
+    icon: Sparkles,
+    href: "/app/architecture/ais",
+    audience: "founder",
+  },
+  {
+    id: "founder-cto",
+    labelKey: "sidebar.ctoCenter",
+    icon: Brain,
+    href: "/app/architecture/cto",
+    audience: "founder",
+  },
+  {
+    id: "founder-aio",
+    labelKey: "sidebar.aioCenter",
+    icon: Cpu,
+    href: "/app/architecture/aio",
+    audience: "founder",
+  },
+  {
+    id: "founder-evolution",
+    labelKey: "sidebar.evolution",
+    icon: GitBranch,
+    href: "/app/evolution",
+    audience: "founder",
+  },
+  {
+    id: "founder-system-status",
+    labelKey: "sidebar.systemStatus",
+    icon: Gauge,
+    href: "/app/system-status",
+    audience: "founder",
+  },
+  {
+    id: "founder-evidence",
+    labelKey: "sidebar.evidence",
+    icon: ShieldCheck,
+    href: "/app/evidence",
+    audience: "founder",
+  },
+  {
+    id: "founder-product-readiness",
+    labelKey: "sidebar.productReadiness",
+    icon: TrendingUp,
+    href: "/app/product-readiness",
+    audience: "founder",
   },
 ];
 
@@ -240,6 +255,33 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const pathname = usePathname();
   const { t } = useI18n();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["workspace"]));
+  // INT-050: User/Founder mode toggle. Default = "user" (простой коммерческий SaaS).
+  // Founder mode открывает инженерный доступ ко всем 4 центрам и реестрам.
+  const [audience, setAudience] = useState<"user" | "founder">(() => {
+    if (typeof window === "undefined") return "user";
+    const saved = window.localStorage.getItem("sip-audience");
+    return saved === "founder" ? "founder" : "user";
+  });
+
+  // Авто-переключение на founder mode если пользователь на founder-странице
+  useEffect(() => {
+    if (!pathname) return;
+    const founderRoutes = ["/app/architecture", "/app/evolution", "/app/evidence", "/app/product-readiness", "/app/system-status"];
+    if (founderRoutes.some((r) => pathname.startsWith(r)) && audience !== "founder") {
+      setAudience("founder");
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("sip-audience", "founder");
+      }
+    }
+  }, [pathname, audience]);
+
+  const toggleAudience = () => {
+    const next = audience === "user" ? "founder" : "user";
+    setAudience(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("sip-audience", next);
+    }
+  };
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const isActive = (href: string) => {
@@ -290,9 +332,57 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </Link>
       </div>
 
+      {/* INT-050: Audience toggle (User / Founder) */}
+      {!collapsed && (
+        <div className="px-3 py-2 border-b border-border shrink-0">
+          <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 border border-border">
+            <button
+              onClick={() => audience !== "user" && toggleAudience()}
+              className={`flex-1 px-2 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                audience === "user" ? "bg-accent text-white" : "text-muted-2 hover:text-foreground"
+              }`}
+            >
+              {t("sidebar.audience.user")}
+            </button>
+            <button
+              onClick={() => audience !== "founder" && toggleAudience()}
+              className={`flex-1 px-2 py-1 text-[11px] font-medium rounded-md transition-colors ${
+                audience === "founder" ? "bg-violet-600 text-white" : "text-muted-2 hover:text-foreground"
+              }`}
+            >
+              {t("sidebar.audience.founder")}
+            </button>
+          </div>
+        </div>
+      )}
+      {collapsed && (
+        <div className="px-2 py-2 border-b border-border shrink-0 flex justify-center">
+          <button
+            onClick={toggleAudience}
+            className={`w-8 h-8 rounded-md flex items-center justify-center text-[10px] font-bold ${
+              audience === "founder" ? "bg-violet-600 text-white" : "bg-accent text-white"
+            }`}
+            title={audience === "founder" ? t("sidebar.audience.founder") : t("sidebar.audience.user")}
+          >
+            {audience === "founder" ? "F" : "U"}
+          </button>
+        </div>
+      )}
+
+      {/* Audience label */}
+      {!collapsed && (
+        <div className="px-3 pt-2 pb-1">
+          <div className="text-[9px] font-bold tracking-[0.15em] text-muted-2 uppercase">
+            {audience === "user" ? t("sidebar.userWorkspace") : t("sidebar.founderConsole")}
+          </div>
+        </div>
+      )}
+
       {/* Nav items */}
       <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
-        {sidebarSections.map((section) => {
+        {sidebarSections
+          .filter((section) => section.audience === audience || (!section.audience && audience === "user"))
+          .map((section) => {
           const active = isSectionActive(section);
           const expanded = expandedSections.has(section.id);
           const hasChildren = section.children && section.children.length > 0;

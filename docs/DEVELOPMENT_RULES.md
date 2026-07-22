@@ -606,3 +606,60 @@ AI Copilot → Intent Detection → Routing → Execution Center
 - "Объясни результаты" → intent=`explain_request` → **AIS**
 
 Функция `detectIntent(query)` в `evolution-registry.ts` реализует pattern-based intent detection с confidence score.
+
+---
+
+## 24. Dual Mode Architecture: User Workspace + Founder Console (INT-050)
+
+Платформа имеет два режима интерфейса, переключаемых в Sidebar:
+
+### User Workspace (по умолчанию)
+
+**Целевая аудитория**: конечные пользователи SaaS-продукта.
+
+**Принцип**: Пользователь должен понимать меню менее чем за 30 секунд. Если есть сомнения — раздел не здесь.
+
+**Доступные разделы**:
+- Command Center (главная — обзор безопасности)
+- Projects, Scans, Findings, Reports
+- Marketplace (Центр решений)
+- Integrations (+ Repositories, SSH, API Keys, Notifications)
+- Knowledge Graph, Attack Paths, Risks
+- Workspace (Assets, Pipelines, History, Jobs, Monitoring)
+- Playground, Documentation, Community, Settings
+
+**Скрыто от пользователя** (только в Founder mode):
+- 4 AI Centers (SIP/AIS/AI CTO/AIO)
+- Architecture Map
+- Evolution Matrix
+- Evidence Center
+- Product Readiness
+- System Status
+
+### Founder Console
+
+**Целевая аудитория**: фаундер продукта, техническая команда.
+
+**Принцип**: Полный инженерный контроль. Все реестры, метрики, архитектура.
+
+**Доступные разделы**:
+- AI Architecture (карта 4 центров)
+- SIP / AIS / AI CTO / AIO (детальные страницы центров)
+- Platform Evolution (матрица влияния)
+- System Status (production readiness)
+- Evidence Center (доказательства по каждой функции)
+- Product Readiness (16-criteria audit)
+
+**Принцип AIS как единая точка входа** (BLOCK 4):
+Пользователь в User mode не думает "Мне идти в SIP или AI CTO?". Он общается с AIS (плавающая кнопка Copilot), который маршрутизирует запросы через `detectIntent()` в нужный центр. Внутренняя архитектура полностью скрыта.
+
+### Auto-switch
+
+При переходе на founder-страницу (e.g. `/app/architecture`) Sidebar автоматически переключается в Founder mode. Сохраняется в localStorage (`sip-audience`).
+
+### При добавлении новой функции
+
+1. Определить audience: `user` или `founder`
+2. Указать `audience` поле в `SidebarSection`
+3. Если `user` — функция должна быть понятна без обучения
+4. Если `founder` — функция может требовать технических знаний
