@@ -1,0 +1,141 @@
+{
+  "version": "BP-002-v1",
+  "lastUpdated": "2026-07-22",
+  "description": "Реестр подтверждённых проблем клиентов. Каждая проблема должна быть validated через интервью.",
+  "problems": [
+    {
+      "id": "PROBLEM-001",
+      "description": "Enterprise клиенты требуют SOC2 Type II, но у B2B SaaS стартапов нет security команды для подготовки",
+      "confirmedBy": 1,
+      "icp": "Startup Founder",
+      "priority": "P0",
+      "status": "Validated",
+      "hypothesis": "B2B SaaS стартапы теряют enterprise контракты из-за отсутствия SOC2",
+      "evidence": ["interview-001: 'Enterprise спрашивает про SOC2, а я не знаю что отвечать. Теряем контракты на $100k+/год.'"],
+      "potentialValue": "High — открывает enterprise segment для B2B SaaS клиентов"
+    },
+    {
+      "id": "PROBLEM-002",
+      "description": "Manual workflow сканирования: scan → Excel → email → Jira занимает 40+ часов/quarter",
+      "confirmedBy": 1,
+      "icp": "SMB CTO",
+      "priority": "P0",
+      "status": "Validated",
+      "hypothesis": "SMB с 1 security engineer тратят 60% времени на рутину",
+      "evidence": ["interview-002: '1 security engineer тратит 60% времени на рутинные сканы вручную'"],
+      "potentialValue": "High — экономит $4k+/quarter на engineer time"
+    },
+    {
+      "id": "PROBLEM-003",
+      "description": "Разовые annual audit не дают continuous monitoring — нет понимания динамики безопасности",
+      "confirmedBy": 1,
+      "icp": "Startup Founder",
+      "priority": "P1",
+      "status": "Validated",
+      "hypothesis": "Компании хотят понимать стали они безопаснее или нет за период",
+      "evidence": ["interview-001: 'Нет понимания: мы стали безопаснее за год или нет?'"],
+      "potentialValue": "Medium — ключевая ценность continuous monitoring"
+    },
+    {
+      "id": "PROBLEM-004",
+      "description": "Существующие tools (Tenable) дают 500+ vulnerabilities без AI prioritization — разработчики не понимают что исправлять первым",
+      "confirmedBy": 1,
+      "icp": "SMB CTO",
+      "priority": "P0",
+      "status": "Validated",
+      "hypothesis": "AI prioritization — главное отличие от enterprise tools",
+      "evidence": ["interview-002: 'Tenable даёт 500+ vulnerabilities, непонятно какие critical'"],
+      "potentialValue": "High — главное competitive advantage"
+    },
+    {
+      "id": "PROBLEM-005",
+      "description": "Security отчёты пишутся техническим языком — CEO и руководство не понимают",
+      "confirmedBy": 2,
+      "icp": "Startup Founder",
+      "priority": "P0",
+      "status": "Validated",
+      "hypothesis": "Executive Summary на языке бизнеса — killer feature",
+      "evidence": [
+        "interview-001: 'Консультант говорит техническим языком — я половину не понимаю'",
+        "interview-002: 'Нет AI prioritization для разработчиков'"
+      ],
+      "potentialValue": "High — главное differentiation от Tenable/Qualys"
+    },
+    {
+      "id": "PROBLEM-006",
+      "description": "Нет consolidation — компании используют 4-5 разных security tools вместо одного",
+      "confirmedBy": 2,
+      "icp": "Startup Founder",
+      "priority": "P1",
+      "status": "Validated",
+      "hypothesis": "Consolidation экономит $50k+/год на tools",
+      "evidence": [
+        "interview-001: 'Snyk + Dependabot + Sentry + manual audit — 4 разных'",
+        "interview-002: 'Tenable + Jira + Excel + email — manual workflow'"
+      ],
+      "potentialValue": "High — value proposition '1 вместо 5'"
+    },
+    {
+      "id": "PROBLEM-007",
+      "description": "После audit нет tracking исправлений — непонятно что реально исправлено",
+      "confirmedBy": 1,
+      "icp": "Startup Founder",
+      "priority": "P2",
+      "status": "Hypothesis",
+      "hypothesis": "Tracking исправлений увеличит retention",
+      "evidence": ["interview-001: 'После audit ничего не автоматизировано — всё manual'"],
+      "potentialValue": "Medium — retention feature"
+    },
+    {
+      "id": "PROBLEM-008",
+      "description": "Enterprise tools (Tenable $30k/год) слишком дорогие для SMB 50-200 сотрудников",
+      "confirmedBy": 1,
+      "icp": "SMB CTO",
+      "priority": "P1",
+      "status": "Validated",
+      "hypothesis": "SMB готовы платить $1000-$1500/мес вместо $30k/год Tenable",
+      "evidence": ["interview-002: 'Tenable стоит $30k/год — слишком дорого для нас'"],
+      "potentialValue": "High — pricing validation"
+    },
+    {
+      "id": "PROBLEM-009",
+      "description": "Jira integration отсутствует в большинстве security tools — разработчики работают в Jira, а не в security tools",
+      "confirmedBy": 1,
+      "icp": "SMB CTO",
+      "priority": "P0",
+      "status": "Validated",
+      "hypothesis": "Jira integration из коробки — killer для SMB",
+      "evidence": ["interview-002: 'Jira integration из коробки — если будет, заменю Tenable завтра'"],
+      "potentialValue": "High — критичная integration для SMB"
+    },
+    {
+      "id": "PROBLEM-010",
+      "description": "Нет понятных метрик 'стали лучше/хуже за квартал' — security status не отслеживается во времени",
+      "confirmedBy": 1,
+      "icp": "Startup Founder",
+      "priority": "P1",
+      "status": "Validated",
+      "hypothesis": "Progress tracking — retention feature",
+      "evidence": ["interview-001: 'Нет понимания: мы стали безопаснее за год или нет?'"],
+      "potentialValue": "Medium — retention + goal tracking"
+    }
+  ],
+  "stats": {
+    "total": 10,
+    "validated": 9,
+    "hypothesis": 1,
+    "rejected": 0,
+    "byPriority": {
+      "P0": 5,
+      "P1": 4,
+      "P2": 1
+    },
+    "byICP": {
+      "Startup Founder": 6,
+      "SMB CTO": 4,
+      "Enterprise CISO": 0,
+      "Security Agency": 0,
+      "MSP": 0
+    }
+  }
+}

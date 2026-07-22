@@ -1,5 +1,5 @@
 {
-  "version": "BP-001-v1",
+  "version": "BP-002-v1",
   "lastUpdated": "2026-07-21T22:00:00+03:00",
   "productionCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
   "githubCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
@@ -2056,6 +2056,34 @@
         "visual": "pass"
       },
       "notes": "CEO Dashboard расширен: North Star Metric (WAS), Sales Pipeline, Revenue Forecast (18 мес), Product-Market Fit assessment (63/100), ICP Distribution (5 profiles). 4 business documents: ICP, Business Journey, Pricing, Value Proposition. Rule 25 (Business Impact First). Implements BP-001."
+    },
+    "PLAT-028": {
+      "id": "PLAT-028",
+      "name": "Customer Discovery & Market Validation",
+      "status": "verified",
+      "category": "Platform",
+      "version": "BP-002",
+      "productionUrl": "https://sec-scanner.pro/app/ceo",
+      "pages": [
+        "/app/ceo"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "ceo-market-validation.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "CEO Dashboard расширен: Market Validation блок (Confidence Low, 2 интервью, 9 validated problems), Leading vs Lagging Indicators, ICP Evolution. 4 реестра: problem-registry.json (10 problems), assumptions.json (20 assumptions, 11 validated), competitor-evidence.json (5 competitors). Customer interview system: README + template + 2 примера. Rule 28 (Evidence Before Roadmap). Implements BP-002."
     }
   }
 }

@@ -765,3 +765,48 @@ Business: открывает path to revenue
 Commercial: поднимает Commercial Readiness с 18% до 25%
 Investment: показывает investors что product готов к monetization
 ```
+
+---
+
+## 28. Evidence Before Roadmap (BP-002)
+
+Перед реализацией любой крупной функции агент обязан ответить:
+
+1. **Какая подтверждённая проблема пользователей решается?** — ссылка на problem-registry.json
+2. **Сколько интервью это подтвердили?** — минимум 3 интервью для P0, 1 для P1
+3. **Есть ли хотя бы один потенциальный клиент, который сказал, что это важно?** — ссылка на interview-NNN.md
+4. **Это подтверждённый запрос или гипотеза?** — статус из assumptions.json
+
+### Если это гипотеза — функция должна быть помечена как `experiment`
+
+Эксперименты:
+- Получают метку `experiment` в feature-registry.json
+- Имеют explicit success criteria (например: "10 пользователей используют за 30 дней")
+- Имеют kill criteria (например: "если <3 пользователей за 60 дней — удалить")
+- Не входят в Pro/Business/Enterprise планы пока не validated
+
+### Шаблон для новой функции
+
+```markdown
+## Feature: [название]
+
+### Evidence
+- Problem: PROBLEM-XXX (validated в N интервью)
+- Interviews: interview-001, interview-002, interview-003
+- Assumption: ASSUMPTION-XXX (Validated)
+- Customer quote: "..." (interview-002)
+
+### Если это experiment
+- Status: experiment
+- Success criteria: [измеримый критерий]
+- Kill criteria: [когда удалить]
+- Duration: 60 дней
+```
+
+### Исключения
+
+- **Compliance** (SOC2, GDPR): не требует customer interviews, требует regulatory
+- **Security fixes**: не требует customer interviews, требует threat model
+- **Tech debt**: не требует customer interviews, требует engineering justification
+
+Эти исключения должны быть явно помечены как "compliance" / "security" / "tech-debt".

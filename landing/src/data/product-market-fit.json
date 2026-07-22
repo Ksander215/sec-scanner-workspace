@@ -1,73 +1,143 @@
 {
-  "version": "BP-001-v1",
-  "lastUpdated": "2026-07-21T23:50:00+03:00",
+  "version": "BP-002-v1",
+  "lastUpdated": "2026-07-22",
   "auditedBy": "GLM-5.2 (Super Z)",
   "description": "Product-Market Fit assessment — 10 dimensions scored 0-100",
   "dimensions": {
     "problem": {
       "score": 85,
       "notes": "SMB без security команды — реальная проблема. $4.45M avg breach cost. Compliance требования растут. Проблема острая и частая.",
-      "evidence": ["IBM Cost of Data Breach 2023: $4.45M avg", "GDPR fines up to 4% revenue", "SOC2 required for B2B SaaS"],
-      "gaps": ["Нужно больше customer interviews (цель: 20 к Q4 2026)"]
+      "evidence": [
+        "IBM Cost of Data Breach 2023: $4.45M avg",
+        "GDPR fines up to 4% revenue",
+        "SOC2 required for B2B SaaS"
+      ],
+      "gaps": [
+        "Нужно больше customer interviews (цель: 20 к Q4 2026)"
+      ]
     },
     "solution": {
       "score": 78,
       "notes": "AI-powered security platform с business-языком. Решает проблему. Но: mock integrations, нет real auth, backend отстаёт.",
-      "evidence": ["User Home с 4 секциями работает", "AI Assistant даёт рекомендации", "Scanner клиент-side работает"],
-      "gaps": ["TRUST-002: mock integrations", "Нет реальной auth", "Backend на INT-036"]
+      "evidence": [
+        "User Home с 4 секциями работает",
+        "AI Assistant даёт рекомендации",
+        "Scanner клиент-side работает"
+      ],
+      "gaps": [
+        "TRUST-002: mock integrations",
+        "Нет реальной auth",
+        "Backend на INT-036"
+      ]
     },
     "market": {
       "score": 88,
       "notes": "SMB security market $5B, рост 10% YoY. Целевой сегмент 50-500 сотрудников = 2M компаний в US/EU.",
-      "evidence": ["Gartner: SMB security $5B 2026", "SMB сегмент растёт быстрее enterprise", "Compliance требования расширяются"],
-      "gaps": ["Нужен более точный TAM расчёт для каждого ICP"]
+      "evidence": [
+        "Gartner: SMB security $5B 2026",
+        "SMB сегмент растёт быстрее enterprise",
+        "Compliance требования расширяются"
+      ],
+      "gaps": [
+        "Нужен более точный TAM расчёт для каждого ICP"
+      ]
     },
     "competition": {
       "score": 65,
       "notes": "Tenable, Qualys, Rapid7 доминируют enterprise. Snyk, Dependabot — developers. Мы в middle ground (SMB). Конкуренция умеренная.",
-      "evidence": ["Tenable $1.6B revenue (enterprise)", "Snyk $7k-$50k (developer)", "SMB сегмент under-served"],
-      "gaps": ["Нет detailed competitive matrix", "Нужен battle card для sales"]
+      "evidence": [
+        "Tenable $1.6B revenue (enterprise)",
+        "Snyk $7k-$50k (developer)",
+        "SMB сегмент under-served"
+      ],
+      "gaps": [
+        "Нет detailed competitive matrix",
+        "Нужен battle card для sales"
+      ]
     },
     "differentiation": {
       "score": 82,
       "notes": "AI Assistant с business-языком — главное отличие. Consolidation (1 вместо 5). First Value за 5 минут. Цена 30× дешевле engineer.",
-      "evidence": ["AI Assistant работает с contextual tips", "User Home без технических терминов", "$499/мес vs $150k/год engineer"],
-      "gaps": ["AI Assistant нужно continuous improvement", "Consolidation ещё не полностью реализована (нет code analysis)"]
+      "evidence": [
+        "AI Assistant работает с contextual tips",
+        "User Home без технических терминов",
+        "$499/мес vs $150k/год engineer"
+      ],
+      "gaps": [
+        "AI Assistant нужно continuous improvement",
+        "Consolidation ещё не полностью реализована (нет code analysis)"
+      ]
     },
     "pricing": {
       "score": 75,
       "notes": "4 тарифа ($99-$4999) покрывают все сегменты. Anchor pricing работает. Но: нет billing system, нет trial flow.",
-      "evidence": ["Pricing page существует", "4 плана с clear differentiation", "Annual discount 20%"],
-      "gaps": ["Нет billing (EP-002)", "Нет trial flow", "Нет usage-based limits enforcement"]
+      "evidence": [
+        "Pricing page существует",
+        "4 плана с clear differentiation",
+        "Annual discount 20%"
+      ],
+      "gaps": [
+        "Нет billing (EP-002)",
+        "Нет trial flow",
+        "Нет usage-based limits enforcement"
+      ]
     },
     "distribution": {
       "score": 35,
       "notes": "Пока слабо. SEO не оптимизирован. Нет content marketing. Нет sales team. Product Hunt не запущен.",
-      "evidence": ["Landing page существует", "SEO baseline не настроен"],
-      "gaps": ["Нет SEO strategy", "Нет content calendar", "Нет sales team", "Нет partnerships"]
+      "evidence": [
+        "Landing page существует",
+        "SEO baseline не настроен"
+      ],
+      "gaps": [
+        "Нет SEO strategy",
+        "Нет content calendar",
+        "Нет sales team",
+        "Нет partnerships"
+      ]
     },
     "retention": {
       "score": 45,
       "notes": "Пока нельзя измерить (нет paying users). Архитектура retention есть: AI memory, history, goals. Но: нет email digests, нет proactive notifications.",
-      "evidence": ["AI Assistant memory работает", "Scan history в localStorage"],
-      "gaps": ["Нет server-side persistence", "Нет email digests", "Нет retention metrics tracking"]
+      "evidence": [
+        "AI Assistant memory работает",
+        "Scan history в localStorage"
+      ],
+      "gaps": [
+        "Нет server-side persistence",
+        "Нет email digests",
+        "Нет retention metrics tracking"
+      ]
     },
     "networkEffect": {
       "score": 25,
       "notes": "Слабый network effect. AI training data растёт, но не directly valuable для пользователей. Referral program не запущен.",
-      "evidence": ["AI Assistant theoretically улучшается с usage"],
-      "gaps": ["Нет referral program", "Нет community features", "Нет marketplace network effect"]
+      "evidence": [
+        "AI Assistant theoretically улучшается с usage"
+      ],
+      "gaps": [
+        "Нет referral program",
+        "Нет community features",
+        "Нет marketplace network effect"
+      ]
     },
     "moat": {
       "score": 55,
       "notes": "Умеренный moat. AI context memory создаёт switching cost. Integrations ecosystem = lock-in. Но: brand trust не построен, compliance certifications отсутствуют.",
-      "evidence": ["AI memory создаёт switching cost", "Integrations = lock-in"],
-      "gaps": ["Нет SOC2 certification", "Нет brand recognition", "Нет patent portfolio"]
+      "evidence": [
+        "AI memory создаёт switching cost",
+        "Integrations = lock-in"
+      ],
+      "gaps": [
+        "Нет SOC2 certification",
+        "Нет brand recognition",
+        "Нет patent portfolio"
+      ]
     }
   },
   "overallScore": 63,
   "overallGrade": "C+",
-  "interpretation": "Product-Market Fit score 63/100 (C+). Проблема и market — сильные (85, 88). Solution и differentiation — хорошие (78, 82). Слабые места: distribution (35), network effect (25), retention (45). Это означает: продукт имеет potential, но go-to-market слабый. Priority: EP-002 (auth+billing) → EP-003 (real integrations) → distribution push.",
+  "interpretation": "PMF Confidence: Low. Только 2 интервью проведено, ICP покрыты 2/5. Нельзя принимать продуктовые решения на основе предположений. Priority: 28+ интервью к Q4 2026, покрыть все 5 ICP, запустить 3+ pilot.",
   "criticalActions": [
     {
       "priority": 1,
@@ -104,5 +174,32 @@
     "q4_2026": 72,
     "q2_2027": 80,
     "q4_2027": 85
+  },
+  "evidenceBasedPMF": {
+    "confidence": "Low",
+    "confidenceLevel": 1,
+    "description": "Low confidence — только 2 интервью, ICP покрыты 2/5, 0 платящих клиентов",
+    "metrics": {
+      "interviewCount": 2,
+      "interviewTarget": 30,
+      "icpCoverage": "2/5 (Startup Founder, SMB CTO)",
+      "validatedProblems": 9,
+      "validatedSolutions": 0,
+      "payingCustomers": 0,
+      "activePilots": 0,
+      "pilotSignups": 2
+    },
+    "confidenceLevels": {
+      "Low": "0-5 интервью, <3 ICP покрыты, 0 платящих",
+      "Medium": "15+ интервью, 4+ ICP покрыты, 3+ pilot, 1+ платящий",
+      "High": "30+ интервью, 5 ICP покрыты, 10+ pilot, 5+ платящих, 80% retention"
+    },
+    "pathToHighConfidence": [
+      "Провести 28+ интервью (цель Q4 2026)",
+      "Покрыть Enterprise CISO, Security Agency, MSP ICP",
+      "Запустить 3+ pilot customers",
+      "Конвертировать 1+ в paying customer",
+      "Измерить retention 30/60/90 дней"
+    ]
   }
 }
