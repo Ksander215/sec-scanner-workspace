@@ -1,0 +1,187 @@
+{
+  "version": "BP-002-v1",
+  "lastUpdated": "2026-07-22",
+  "description": "Реестр предположений. Каждое предположение должно перейти из Unknown → Interviewed → Validated/Rejected.",
+  "assumptions": [
+    {
+      "id": "ASSUMPTION-001",
+      "category": "Business",
+      "statement": "Enterprise клиенты требуют SOC2 Type II от B2B SaaS vendors",
+      "status": "Validated",
+      "evidence": ["interview-001: 'Enterprise спрашивает про SOC2'"],
+      "impact": "High — открывает enterprise segment"
+    },
+    {
+      "id": "ASSUMPTION-002",
+      "category": "Business",
+      "statement": "SMB 50-200 сотрудников имеют 1 security engineer (не 0, не 5)",
+      "status": "Validated",
+      "evidence": ["interview-002: 'У меня 1 security engineer'"],
+      "impact": "High — ICP definition"
+    },
+    {
+      "id": "ASSUMPTION-003",
+      "category": "AI",
+      "statement": "AI prioritization — главное отличие от Tenable/Qualys",
+      "status": "Validated",
+      "evidence": ["interview-002: 'AI должен сказать что исправлять первым'"],
+      "impact": "High — core differentiation"
+    },
+    {
+      "id": "ASSUMPTION-004",
+      "category": "Product",
+      "statement": "Continuous monitoring ценнее разового audit",
+      "status": "Validated",
+      "evidence": ["interview-001: 'continuous monitoring — у нас этого нет'"],
+      "impact": "High — value proposition"
+    },
+    {
+      "id": "ASSUMPTION-005",
+      "category": "Product",
+      "statement": "Executive Summary на 1 странице — killer feature для Startup Founder",
+      "status": "Validated",
+      "evidence": ["interview-001: 'Executive Summary — это решит мою проблему'"],
+      "impact": "High — main feature"
+    },
+    {
+      "id": "ASSUMPTION-006",
+      "category": "Pricing",
+      "statement": "Startup Founder готов платить $499/мес",
+      "status": "Validated",
+      "evidence": ["interview-001: '$300-$500/мес — дешевле чем $8k/год консультант'"],
+      "impact": "High — pricing validation"
+    },
+    {
+      "id": "ASSUMPTION-007",
+      "category": "Pricing",
+      "statement": "SMB CTO готов платить $1499/мес (Business план)",
+      "status": "Validated",
+      "evidence": ["interview-002: '$1000-$1500/мес — готов'"],
+      "impact": "High — pricing validation"
+    },
+    {
+      "id": "ASSUMPTION-008",
+      "category": "Pricing",
+      "statement": "Enterprise готов платить $4999/мес за SSO+RBAC+on-premise",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "High — нужно 5+ enterprise интервью"
+    },
+    {
+      "id": "ASSUMPTION-009",
+      "category": "Sales",
+      "statement": "Sales cycle для SMB 30 дней, для Enterprise 90 дней",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "Medium — нужно больше данных"
+    },
+    {
+      "id": "ASSUMPTION-010",
+      "category": "Marketing",
+      "statement": "SEO — основной канал для Startup Founder ICP",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "High — distribution strategy"
+    },
+    {
+      "id": "ASSUMPTION-011",
+      "category": "Product",
+      "statement": "Consolidation (1 вместо 5 tools) — главное value proposition",
+      "status": "Validated",
+      "evidence": [
+        "interview-001: 'Snyk + Dependabot + Sentry + manual — 4 разных'",
+        "interview-002: 'Tenable + Jira + Excel — manual workflow'"
+      ],
+      "impact": "High — value proposition"
+    },
+    {
+      "id": "ASSUMPTION-012",
+      "category": "Pricing",
+      "statement": "Annual discount 20% мотивирует annual payment",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "Medium — cash flow"
+    },
+    {
+      "id": "ASSUMPTION-013",
+      "category": "UX",
+      "statement": "Пользователь понимает 'AI Assistant' лучше чем 'Adaptive Intelligence System'",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "Medium — naming"
+    },
+    {
+      "id": "ASSUMPTION-014",
+      "category": "AI",
+      "statement": "AI должен предлагать действия, не только информацию",
+      "status": "Validated",
+      "evidence": ["interview-002: 'AI должен сказать что исправлять первым'"],
+      "impact": "High — AI philosophy"
+    },
+    {
+      "id": "ASSUMPTION-015",
+      "category": "Product",
+      "statement": "Jira integration из коробки — критична для SMB",
+      "status": "Validated",
+      "evidence": ["interview-002: 'Jira integration — если будет, заменю Tenable завтра'"],
+      "impact": "High — integration priority"
+    },
+    {
+      "id": "ASSUMPTION-016",
+      "category": "Business",
+      "statement": "Positioning 'Replace Tenable' реалистичное для SMB сегмента",
+      "status": "Validated",
+      "evidence": ["interview-002: готов заменить Tenable завтра при Jira integration"],
+      "impact": "High — positioning"
+    },
+    {
+      "id": "ASSUMPTION-017",
+      "category": "Security",
+      "statement": "SOC2 Type II certification откроет enterprise segment",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "High — нужно enterprise интервью"
+    },
+    {
+      "id": "ASSUMPTION-018",
+      "category": "Product",
+      "statement": "Referral program с '1 month free' мотивирует referrals",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "Medium — growth"
+    },
+    {
+      "id": "ASSUMPTION-019",
+      "category": "Sales",
+      "statement": "Security Agency ICP готов resell с 30% margin",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "Medium — channel"
+    },
+    {
+      "id": "ASSUMPTION-020",
+      "category": "Marketing",
+      "statement": "Product Hunt launch даст 100+ signups",
+      "status": "Unknown",
+      "evidence": [],
+      "impact": "Medium — distribution"
+    }
+  ],
+  "stats": {
+    "total": 20,
+    "validated": 11,
+    "rejected": 0,
+    "interviewed": 0,
+    "unknown": 9,
+    "byCategory": {
+      "Product": 5,
+      "UX": 1,
+      "Pricing": 4,
+      "AI": 2,
+      "Security": 1,
+      "Business": 3,
+      "Marketing": 2,
+      "Sales": 2
+    }
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "version": "BP-002-v1",
+  "lastUpdated": "2026-07-22",
+  "description": "Конкурентная разведка на основе evidence (обзоры, интервью, analysis).",
+  "competitors": [
+    {
+      "id": "COMP-001",
+      "name": "Tenable.io",
+      "tier": "Enterprise",
+      "pricing": "$30k-$100k+/год",
+      "whatTheyDoBetter": [
+        "Глубокая vulnerability database",
+        "Enterprise features (SSO, RBAC, audit)",
+        "Active scanning 24/7",
+        "Compliance reporting out of the box"
+      ],
+      "whatTheyDoWorse": [
+        "Слишком дорогой для SMB ($30k+ vs наш $1499)",
+        "Нет AI prioritization (500+ vulnerabilities без приоритета)",
+        "Нет Jira integration из коробки",
+        "Setup занимает недели",
+        "Нет business-языка (только CVE/CVSS)"
+      ],
+      "whatToCopy": [
+        "Compliance report templates (SOC2, ISO 27001)",
+        "Active scanning capabilities"
+      ],
+      "whereToDifferentiate": [
+        "AI Assistant с business-языком",
+        "Jira integration из коробки",
+        "First Value за 5 минут (vs недели)",
+        "Цена 20× дешевле"
+      ],
+      "sources": [
+        "interview-002: 'Tenable даёт 500+ vulnerabilities без prioritization'",
+        "https://www.tenable.com/pricing",
+        "Gartner Magic Quadrant 2024"
+      ]
+    },
+    {
+      "id": "COMP-002",
+      "name": "Snyk",
+      "tier": "Developer",
+      "pricing": "$7k-$50k/год",
+      "whatTheyDoBetter": [
+        "Deep code analysis (SCA, SAST)",
+        "Developer-focused IDE plugins",
+        "GitHub/GitLab deep integration",
+        "Large vulnerability database для dependencies"
+      ],
+      "whatTheyDoWorse": [
+        "Только code, не infrastructure",
+        "Нет executive summary для CEO",
+        "Нет consolidation (не покрывает infra)",
+        "Developer language, не business language"
+      ],
+      "whatToCopy": [
+        "IDE plugins (VS Code, IntelliJ)",
+        "GitHub PR integration"
+      ],
+      "whereToDifferentiate": [
+        "Code + Infrastructure + Reports в одном",
+        "AI Assistant с business-языком",
+        "Executive Summary для non-technical"
+      ],
+      "sources": [
+        "interview-001: 'Snyk находит реальные проблемы в коде'",
+        "https://snyk.io/pricing/"
+      ]
+    },
+    {
+      "id": "COMP-003",
+      "name": "Rapid7 InsightVM",
+      "tier": "Enterprise",
+      "pricing": "$100k+/год",
+      "whatTheyDoBetter": [
+        "Full security platform (VM + MDR + SIEM)",
+        "Live monitoring",
+        "Threat intelligence integration",
+        "Enterprise-grade support"
+      ],
+      "whatTheyDoWorse": [
+        "Очень дорогой ($100k+)",
+        "Сложный setup (недели)",
+        "Перегруженный UI",
+        "Нет AI Assistant"
+      ],
+      "whatToCopy": [
+        "Live monitoring concept",
+        "Threat intelligence integration"
+      ],
+      "whereToDifferentiate": [
+        "AI Assistant vs manual analysis",
+        "Simple UX vs перегруженный",
+        "Цена 20× дешевле"
+      ],
+      "sources": [
+        "https://www.rapid7.com/pricing/",
+        "G2 reviews 2024"
+      ]
+    },
+    {
+      "id": "COMP-004",
+      "name": "Qualys VMDR",
+      "tier": "Enterprise",
+      "pricing": "$50k-$200k/год",
+      "whatTheyDoBetter": [
+        "Cloud-based scanning",
+        "Large compliance framework coverage",
+        "Agent-based + agentless scanning",
+        "Enterprise scale (millions of assets)"
+      ],
+      "whatTheyDoWorse": [
+        "Enterprise-only pricing",
+        "Сложный UI",
+        "Нет AI",
+        "Долгий sales cycle"
+      ],
+      "whatToCopy": [
+        "Cloud-based architecture",
+        "Compliance framework library"
+      ],
+      "whereToDifferentiate": [
+        "SMB pricing ($1499 vs $50k+)",
+        "AI Assistant",
+        "Simple onboarding"
+      ],
+      "sources": [
+        "https://www.qualys.com/pricing/",
+        "Gartner 2024"
+      ]
+    },
+    {
+      "id": "COMP-005",
+      "name": "Manual security consultants",
+      "tier": "Service",
+      "pricing": "$5k-$50k per audit",
+      "whatTheyDoBetter": [
+        "Human judgment и context",
+        "Custom recommendations",
+        "Personal relationships",
+        "Deep dive в конкретные проблемы"
+      ],
+      "whatTheyDoWorse": [
+        "Разовый, не continuous",
+        "Дорогой ($8k+ per audit)",
+        "Manual, не масштабируется",
+        "Нет tracking исправлений",
+        "Technical language, не business"
+      ],
+      "whatToCopy": [
+        "Personal touch в AI Assistant",
+        "Custom recommendations based on context"
+      ],
+      "whereToDifferentiate": [
+        "Continuous monitoring vs разовый",
+        "AI Assistant с business-языком",
+        "Tracking исправлений",
+        "Цена 10× дешевле"
+      ],
+      "sources": [
+        "interview-001: 'Раз в год нанимаю внешнего консультанта за $8k'",
+        "interview-002: 'Tenable + manual workflow'"
+      ]
+    }
+  ],
+  "stats": {
+    "total": 5,
+    "byTier": {
+      "Enterprise": 3,
+      "Developer": 1,
+      "Service": 1
+    }
+  }
+}

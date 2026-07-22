@@ -346,6 +346,126 @@ export default function CEODashboardPage() {
           </div>
         </div>
 
+        {/* BP-002 BLOCK 6: Market Validation — реальные цифры, не проценты */}
+        <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-violet-500" />
+              <span className="text-sm font-semibold text-foreground">Market Validation</span>
+            </div>
+            <span className="px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
+              Confidence: Low
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <ValidationMetric label="Интервью проведено" value="2" target="/ 30" />
+            <ValidationMetric label="Подтверждённых проблем" value="9" target="" />
+            <ValidationMetric label="Подтверждённых решений" value="0" target="" />
+            <ValidationMetric label="Пилотных клиентов" value="0" target="" />
+            <ValidationMetric label="Платящих клиентов" value="0" target="" />
+          </div>
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="p-2 rounded-lg bg-surface/50 border border-border">
+              <div className="text-[10px] text-muted-2 uppercase tracking-wider mb-1">ICP Coverage</div>
+              <div className="text-foreground">2/5 — Startup Founder ✓, SMB CTO ✓, Enterprise CISO ✗, Security Agency ✗, MSP ✗</div>
+            </div>
+            <div className="p-2 rounded-lg bg-surface/50 border border-border">
+              <div className="text-[10px] text-muted-2 uppercase tracking-wider mb-1">Pilot Signups</div>
+              <div className="text-foreground">2 готовы pilot (interview-001 в сентябре, interview-002 в октябре)</div>
+            </div>
+          </div>
+          <div className="mt-3 text-[11px] text-muted-2">
+            ⚠️ Low confidence — только 2 интервью. Нельзя принимать продуктовые решения на основе предположений. Path to High confidence: 28+ интервью, 5 ICP покрыты, 3+ pilot, 5+ платящих.
+          </div>
+        </div>
+
+        {/* BP-002 BLOCK 7: Founder KPIs — Leading vs Lagging */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Leading Indicators */}
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <span className="text-sm font-semibold text-foreground">Leading Indicators</span>
+              <span className="ml-auto text-[10px] text-muted-2 uppercase tracking-wider">Focus на ранней стадии</span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Интервью", value: "2", target: "30", trend: "↑" },
+                { label: "Демо", value: "0", target: "20", trend: "—" },
+                { label: "Регистрации", value: "0", target: "100", trend: "—" },
+                { label: "Пилоты", value: "0", target: "3", trend: "—" },
+                { label: "Обратная связь", value: "2", target: "30", trend: "↑" },
+              ].map((kpi) => (
+                <div key={kpi.label} className="flex items-center gap-3 p-2 rounded-lg bg-surface/50">
+                  <span className="flex-1 text-xs text-foreground/80">{kpi.label}</span>
+                  <span className="text-[10px] text-muted-2">цель: {kpi.target}</span>
+                  <span className="text-lg font-bold tabular-nums text-foreground w-8 text-right">{kpi.value}</span>
+                  <span className={`text-xs ${kpi.trend === "↑" ? "text-emerald-500" : "text-muted-2"}`}>{kpi.trend}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Lagging Indicators */}
+          <div className="rounded-xl border border-border bg-surface p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign className="w-4 h-4 text-muted-2" />
+              <span className="text-sm font-semibold text-foreground">Lagging Indicators</span>
+              <span className="ml-auto text-[10px] text-muted-2 uppercase tracking-wider">Появятся позже</span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "MRR", value: "$0", target: "$10k Q4 2026" },
+                { label: "ARR", value: "$0", target: "$120k Q4 2026" },
+                { label: "LTV", value: "$0", target: "$2,400" },
+                { label: "CAC", value: "$0", target: "<$300" },
+                { label: "Churn", value: "—", target: "<5%" },
+              ].map((kpi) => (
+                <div key={kpi.label} className="flex items-center gap-3 p-2 rounded-lg bg-surface-2/50">
+                  <span className="flex-1 text-xs text-foreground/80">{kpi.label}</span>
+                  <span className="text-[10px] text-muted-2">цель: {kpi.target}</span>
+                  <span className="text-lg font-bold tabular-nums text-muted-2 w-16 text-right">{kpi.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* BP-002 BLOCK 9: ICP Evolution */}
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-4 h-4 text-violet-500" />
+            <span className="text-sm font-semibold text-foreground">ICP Evolution — интервью по ICP</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+            {[
+              { icp: "Startup Founder", interviews: 1, validated: 6, status: "Validating" },
+              { icp: "SMB CTO", interviews: 1, validated: 4, status: "Validating" },
+              { icp: "Enterprise CISO", interviews: 0, validated: 0, status: "Unknown" },
+              { icp: "Security Agency", interviews: 0, validated: 0, status: "Unknown" },
+              { icp: "MSP", interviews: 0, validated: 0, status: "Unknown" },
+            ].map((c) => (
+              <div key={c.icp} className="p-3 rounded-lg bg-surface-2/50 border border-border">
+                <div className="text-xs font-semibold text-foreground mb-2">{c.icp}</div>
+                <div className="space-y-1 text-[10px]">
+                  <div className="flex justify-between">
+                    <span className="text-muted-2">Интервью:</span>
+                    <span className={`font-bold ${c.interviews > 0 ? "text-emerald-500" : "text-muted-2"}`}>{c.interviews}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-2">Validated:</span>
+                    <span className={`font-bold ${c.validated > 0 ? "text-emerald-500" : "text-muted-2"}`}>{c.validated}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-2">Статус:</span>
+                    <span className={`font-bold ${c.status === "Validating" ? "text-amber-500" : "text-muted-2"}`}>{c.status}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ICP Distribution */}
         <div className="rounded-xl border border-border bg-surface p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -427,6 +547,25 @@ function ReadinessScore({ label, value, color }: { label: string; value: number;
     <div className="text-center">
       <div className={`text-2xl font-bold tabular-nums ${color}`}>{value}%</div>
       <div className="text-[10px] text-muted-2 mt-0.5">{label}</div>
+    </div>
+  );
+}
+
+// BP-002: Market Validation metric — реальные цифры, не проценты
+function ValidationMetric({ label, value, target }: { label: string; value: string; target: string }) {
+  const isZero = value === "0";
+  return (
+    <div className={`p-3 rounded-lg border text-center ${
+      isZero
+        ? "bg-red-500/5 border-red-500/15"
+        : "bg-emerald-500/5 border-emerald-500/15"
+    }`}>
+      <div className="text-[10px] text-muted-2 uppercase tracking-wider mb-1 truncate">{label}</div>
+      <div className={`text-2xl font-bold tabular-nums ${
+        isZero ? "text-red-500" : "text-emerald-500"
+      }`}>
+        {value}<span className="text-sm text-muted-2 ml-1">{target}</span>
+      </div>
     </div>
   );
 }
