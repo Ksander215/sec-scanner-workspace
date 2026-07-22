@@ -395,3 +395,57 @@
 **Контекст**: Разные части платформы использовали разные термины для одной сущности, что путало пользователей и разработчиков.  
 **Обоснование**: Единая терминология упрощает коммуникацию и документацию. Пользователь сразу понимает к какому центру относится функция.  
 **Влияние**: `architecture-registry.json` → `unifiedTerminology` с определениями. Rule 22 в DEVELOPMENT_RULES.md явно запрещает синонимы.
+
+---
+
+## ADR-038: Platform Evolution Framework (INT-049)
+
+**Дата**: 2026-07-21 (INT-049)  
+**Решение**: Платформа переведена с модели независимых функций на модель единой самоэволюционирующей AI-платформы. Каждое изменение автоматически анализируется с точки зрения влияния на все 4 центра.  
+**Контекст**: До INT-049 функции добавлялись без понимания влияния на другие центры. Это приводило к несогласованным изменениям и регрессиям.  
+**Обоснование**: Evolution Engine принудительно анализирует влияние каждого изменения на SIP/AIS/AI CTO/AIO перед реализацией.  
+**Влияние**:  
+- Создан `evolution-registry.json` с 62 features (owner + affectedCenters + impactScore)  
+- Создана `/app/evolution` (4-tab UI: Matrix, Impact, Intent, Pipeline)  
+- `analyzeEvolutionImpact()` и `detectIntent()` в `evolution-registry.ts`  
+- Rule 23 Platform Evolution в DEVELOPMENT_RULES.md  
+
+---
+
+## ADR-039: Command Center replaces Dashboard (INT-049)
+
+**Дата**: 2026-07-21 (INT-049)  
+**Решение**: Главная страница платформы — Command Center (`/app/command-center`), заменяющая Dashboard. Показывает агрегированный статус всех 4 центров.  
+**Контекст**: Dashboard фокусировался только на SIP (security metrics). Не было единой точки управления платформой.  
+**Обоснование**: Command Center — единая точка входа для overview платформы. 4 health cards (Security/Platform/AIS/Automation) дают полную картину за 5 секунд.  
+**Влияние**:  
+- `/app/command-center` (PLAT-021, verified) — новая главная страница  
+- Dashboard (`/app/dashboard`) сохранён как legacy, но больше не главная  
+- Sidebar: Command Center на первом месте  
+
+---
+
+## ADR-040: Dynamic Two-Level Navigation (INT-049)
+
+**Дата**: 2026-07-21 (INT-049)  
+**Решение**: Sidebar реструктурирован с двухуровневой навигацией: первый уровень = 4 AI Centers + Command Center + Evolution + Architecture; второй уровень = Platform Tools (Scanner, Reports, Marketplace, и т.д.).  
+**Контекст**: Старый sidebar имел плоский список из 21 пунктов без группировки. Пользователю было сложно найти нужную функцию.  
+**Обоснование**: Группировка по центрам ответственности (SIP/AIS/AI CTO/AIO) отражает архитектуру платформы и упрощает навигацию.  
+**Влияние**:  
+- AppSidebar.tsx реструктурирован  
+- 7 новых пунктов первого уровня: Command Center, SIP, AIS, AI CTO, AIO, Evolution, Architecture  
+- Существующие 21 пунктов сохранены как второй уровень  
+
+---
+
+## ADR-041: AI Copilot Intent Detection (INT-049)
+
+**Дата**: 2026-07-21 (INT-049)  
+**Решение**: AI Copilot маршрутизирует запросы пользователей в один из 4 центров на основе intent detection. 12 intent patterns + fallback.  
+**Контекст**: До INT-049 AI Copilot работал локально без понимания какой центр должен обработать запрос.  
+**Обоснование**: Pattern-based intent detection простой и предсказуемый. Каждый центр имеет ключевые слова.  
+**Влияние**:  
+- `detectIntent(query)` в `evolution-registry.ts`  
+- Демо на `/app/evolution` → AI Intent tab  
+- 12 intent patterns: scan_request, risk_inquiry, report_request, explain_request, tip_request, goal_inquiry, readiness_inquiry, roadmap_inquiry, trust_inquiry, deploy_request, recovery_request, verify_request  
+- Fallback: AI CTO (confidence 30%)  
