@@ -1,5 +1,5 @@
 {
-  "version": "INT-049-v1",
+  "version": "INT-050-v1",
   "lastUpdated": "2026-07-21T22:00:00+03:00",
   "productionCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
   "githubCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
@@ -1945,6 +1945,33 @@
         "visual": "pass"
       },
       "notes": "Sidebar restructured with first level (4 AI Centers + Command Center + Evolution + Architecture) and second level (Platform Tools: Scanner, Reports, Marketplace, etc). Implements INT-049 BLOCK 6."
+    },
+    "PLAT-024": {
+      "id": "PLAT-024",
+      "name": "Dual Mode Navigation (User Workspace + Founder Console)",
+      "status": "verified",
+      "category": "Platform",
+      "version": "INT-050",
+      "productionUrl": "https://sec-scanner.pro/app",
+      "pages": [],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "sidebar-user.png",
+        "sidebar-founder.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "Sidebar разделён на две зоны: User Workspace (простой SaaS для пользователя — Scanner, Reports, Marketplace, и т.д.) и Founder Console (инженерный контроль — 4 AI Centers, Evolution, Evidence, Architecture). Переключатель в sidebar. Auto-switch при переходе на founder-страницу. Implements INT-050 BLOCK 2-3-5."
     }
   }
 }
