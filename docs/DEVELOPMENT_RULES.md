@@ -663,3 +663,105 @@ AI Copilot → Intent Detection → Routing → Execution Center
 2. Указать `audience` поле в `SidebarSection`
 3. Если `user` — функция должна быть понятна без обучения
 4. Если `founder` — функция может требовать технических знаний
+
+---
+
+## 25. Business Impact First (BP-001)
+
+Перед любой новой задачей агент обязан определить:
+
+1. **Какую ценность получит пользователь?** — конкретная user value
+2. **Как изменится бизнес?** — влияние на MRR/ARR/conversion/retention
+3. **Какие KPI улучшатся?** — конкретные метрики (WAS, conversion rate, etc.)
+4. **Какой центр платформы затронут?** — SIP / AIS / AI CTO / AIO
+5. **Как это влияет на ARR?** — прямой или косвенный revenue impact
+
+Если ответа нет — задача **не должна становиться приоритетной**.
+
+### Примеры
+
+✅ **Хороший task**:
+- "Реализовать регистрацию (EP-002)"
+- Ценность: пользователи могут создавать аккаунты
+- Бизнес: открывает путь к trial → conversion
+- KPI: Registration count, Trial → Paid conversion
+- Центр: AIS (user flow) + AIO (backend)
+- ARR: прямой — без регистрации нет paid users
+
+❌ **Плохой task** (без business impact):
+- "Добавить ещё одну вкладку в Settings"
+- Ценность: неясна
+- Бизнес: не влияет
+- KPI: нет
+- Центр: неясно
+- ARR: нет
+
+### Шаблон для новой задачи
+
+```markdown
+## Task: [название]
+
+### Business Impact
+- User value: [что получит пользователь]
+- Business impact: [влияние на MRR/ARR/conversion]
+- KPIs: [какие метрики улучшатся]
+- Center: [SIP/AIS/AI CTO/AIO]
+- ARR impact: [прямой/косвенный revenue]
+
+### Если нет ответа хотя бы на один пункт — задача откладывается
+```
+
+### Исключения
+
+- **Tech debt**: задачи по рефакторингу без прямой business value, но необходимые для stability
+- **Compliance**: SOC2/audit задачи без прямой revenue, но необходимые для enterprise
+- **Documentation**: обновление docs без прямой revenue, но необходимые для onboarding
+
+Эти исключения должны быть явно помечены как "tech debt" / "compliance" / "docs".
+
+---
+
+## 26. Founder Review (4 точки зрения) — BP-001 BLOCK 9
+
+После каждой задачи обязательна оценка с 4 точек зрения:
+
+### 1. Engineer
+- Архитектура стала лучше/хуже?
+- Технический долг увеличился/уменьшился?
+- Сложность поддержки?
+
+### 2. Product (User)
+- Пользователь понял что произошло?
+- UX стал проще/сложнее?
+- Time-to-value изменился?
+
+### 3. CEO (Business)
+- Как это влияет на revenue?
+- Как это влияет на sales cycle?
+- Как это влияет на competitive position?
+
+### 4. Investor
+- Как это влияет на valuation?
+- Как это влияет на runway?
+- Как это влияет на exit strategy?
+
+---
+
+## 27. Platform Evolution Report (5 Impacts) — BP-001 BLOCK 10
+
+Каждая задача завершается отчётом с 5 impacts:
+
+1. **Technical Impact** — что изменилось в коде/архитектуре
+2. **Product Impact** — что изменилось для пользователя
+3. **Business Impact** — что изменилось для бизнеса
+4. **Commercial Impact** — что изменилось для коммерции
+5. **Investment Impact** — что изменилось для инвесторов
+
+Пример:
+```
+Technical: добавлен auth module, +500 строк кода
+Product: пользователь может регистрироваться
+Business: открывает path to revenue
+Commercial: поднимает Commercial Readiness с 18% до 25%
+Investment: показывает investors что product готов к monetization
+```

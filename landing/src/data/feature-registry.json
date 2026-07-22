@@ -1,5 +1,5 @@
 {
-  "version": "EP-001-v1",
+  "version": "BP-001-v1",
   "lastUpdated": "2026-07-21",
   "auditNotes": "INT-043 audit: PLAT-001 и AIS-008 помечены broken — на Production возвращают 404 fallback. AIS-007 (SoloNotification) помечен deprecated — заменён на AISSystemEvent в INT-040 v2. PLAT-002 (Feature Registry) помечен broken — версия устарела (INT-038-v2), требует расширения статусами.",
   "features": [
@@ -837,6 +837,18 @@
       "category": "Platform",
       "required": true,
       "version": "EP-001"
+    },
+    {
+      "id": "PLAT-027",
+      "name": "Business Foundation",
+      "description": "CEO Dashboard расширен: North Star Metric (WAS), Sales Pipeline, Revenue Forecast (18 мес), Product-Market Fit assessment (63/100), ICP Distribution (5 profiles). 4 business documents: ICP, Business Journey, Pricing, Value Proposition. Rule 25 (Business Impact First). Implements BP-001.",
+      "status": "verified",
+      "pages": [
+        "/app/ceo"
+      ],
+      "category": "Platform",
+      "required": true,
+      "version": "BP-001"
     }
   ]
 }

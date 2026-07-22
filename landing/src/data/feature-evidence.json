@@ -1,5 +1,5 @@
 {
-  "version": "EP-001-v1",
+  "version": "BP-001-v1",
   "lastUpdated": "2026-07-21T22:00:00+03:00",
   "productionCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
   "githubCommit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
@@ -2028,6 +2028,34 @@
         "visual": "pass"
       },
       "notes": "Business-level dashboard at /app/ceo with MRR/ARR/Trials/Conversion/CAC/LTV/Runway metrics. Commercial Readiness score. Founder mode only. Implements EP-001 BLOCK 6."
+    },
+    "PLAT-027": {
+      "id": "PLAT-027",
+      "name": "Business Foundation",
+      "status": "verified",
+      "category": "Platform",
+      "version": "BP-001",
+      "productionUrl": "https://sec-scanner.pro/app/ceo",
+      "pages": [
+        "/app/ceo"
+      ],
+      "commit": "1643a9ceda06b715794ebcfe9106075bf4631d5d",
+      "screenshots": [
+        "ceo-business.png"
+      ],
+      "video": null,
+      "changedFiles": [],
+      "verifiedAt": "2026-07-21T22:00:00+03:00",
+      "verifiedBy": "GLM-5.2 (Super Z)",
+      "checks": {
+        "build": "pass",
+        "production": "pass",
+        "browser": "pass",
+        "e2e": "pass",
+        "regression": "pass",
+        "visual": "pass"
+      },
+      "notes": "CEO Dashboard расширен: North Star Metric (WAS), Sales Pipeline, Revenue Forecast (18 мес), Product-Market Fit assessment (63/100), ICP Distribution (5 profiles). 4 business documents: ICP, Business Journey, Pricing, Value Proposition. Rule 25 (Business Impact First). Implements BP-001."
     }
   }
 }
