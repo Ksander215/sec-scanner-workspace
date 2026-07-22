@@ -514,3 +514,56 @@
 **Контекст**: Пользователь не понимает "Adaptive Intelligence System" — это инженерный термин.  
 **Обоснование**: Unified Terminology — пользователь видит "AI Assistant", фаундер видит "AIS" в Founder mode.  
 **Влияние**: User Home использует "AI Assistant". Sidebar в User mode не показывает AIS. AIS Settings в /app/settings требует переименования (TODO EP-002).
+
+---
+
+## ADR-048: Business Foundation (BP-001)
+
+**Дата**: 2026-07-21 (BP-001)  
+**Решение**: Создана бизнес-архитектура вокруг платформы: 5 ICP, 4 тарифа, Business Journey, Value Proposition, PMF assessment. Business layer встроен в CEO Dashboard (не новая страница).  
+**Контекст**: До BP-001 платформа строилась от инфраструктуры к пользователю. Business-цели не были формализованы.  
+**Обоснование**: "Каждая новая техническая задача должна отвечать не только 'Как реализовать?', но и 'Кто это купит? За сколько? Как увеличит ARR?'".  
+**Влияние**:  
+- 4 business документа (ICP, BUSINESS_JOURNEY, PRICING, VALUE_PROPOSITION)  
+- product-market-fit.json (63/100, C+)  
+- CEO Dashboard расширен (+5 секций)  
+- Rule 25 (Business Impact First)  
+- ROADMAP.md перестроен (Business→Product→UX→AI→Platform→Infra)  
+
+---
+
+## ADR-049: North Star Metric — Weekly Active Scans (BP-001)
+
+**Дата**: 2026-07-21 (BP-001)  
+**Решение**: North Star Metric = Weekly Active Scans (WAS). Цель: 100 WAS к Q4 2026, 5000 WAS к Q4 2027.  
+**Контекст**: Нужна одна метрика, которая коррелирует с value delivery, retention и revenue.  
+**Обоснование**: WAS коррелирует с: (1) value delivery (пользователь получает value когда сканирует), (2) retention (регулярные сканы = регулярная ценность), (3) revenue (больше сканов = выше план).  
+**Влияние**: CEO Dashboard показывает WAS prominently. 1000 WAS × $499 × 80% paid = $400k MRR (цель Q2 2027).
+
+---
+
+## ADR-050: Rule 25 Business Impact First (BP-001)
+
+**Дата**: 2026-07-21 (BP-001)  
+**Решение**: Перед любой новой задачей агент обязан определить: user value, business impact, KPIs, center, ARR impact. Если ответа нет — задача не должна становиться приоритетной.  
+**Контекст**: До BP-001 задачи планировались по технической необходимости, не по business value.  
+**Обоснование**: Каждая задача должна двигать бизнес. Если не двигает — это tech debt или docs (явно помеченные).  
+**Влияние**: Все будущие EP/BP задачи должны включать Business Impact section.
+
+---
+
+## ADR-051: Roadmap Transformation (BP-001 BLOCK 11)
+
+**Дата**: 2026-07-21 (BP-001)  
+**Решение**: Roadmap перестроен с Business→Product→UX→AI→Platform→Infrastructure. Вместо INT-XXX теперь EP-XXX (Evolution/Product) и BP-XXX (Business Product).  
+**Контекст**: INT-XXX нумерация была технической. Не отражала business priority.  
+**Обоснование**: Roadmap должен начинаться с business goal, заканчиваться infrastructure. Каждая задача связана с revenue impact.  
+**Влияние**:  
+- EP-002: Auth+Billing (P0, Q3 2026)  
+- EP-003: Real Integrations (P0, Q3 2026)  
+- EP-004: Real-time Scanner (P0, Q4 2026)  
+- EP-005: Onboarding (P1, Q4 2026)  
+- EP-006: Referral (P1, Q1 2027)  
+- EP-007: Enterprise Features (P1, Q1 2027)  
+- EP-008: SEO+Content (P1, Q4 2026)  
+- EP-009: SOC2 (P2, Q2 2027)  

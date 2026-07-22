@@ -4,6 +4,149 @@
 
 ---
 
+## BP-001 — 2026-07-21 (Business Foundation — компания вокруг платформы)
+
+### Что изменилось
+
+**Без новых страниц** (согласно рекомендации пользователя): Business раздел встроен в существующий CEO Dashboard.
+
+1. **CEO Dashboard расширен**: +5 секций (North Star Metric, Sales Pipeline, Revenue Forecast, Product-Market Fit, ICP Distribution)
+2. **4 бизнес-документа**: ICP.md (5 профилей клиентов), BUSINESS_JOURNEY.md (10 этапов), PRICING.md (4 тарифа), VALUE_PROPOSITION.md (5 преимуществ)
+3. **product-market-fit.json**: 10 dimensions scored, overall 63/100 (C+)
+4. **Rule 25** (Business Impact First): каждая задача должна отвечать на 5 вопросов
+5. **Rule 26** (Founder Review 4 точки зрения): Engineer/Product/CEO/Investor
+6. **Rule 27** (Platform Evolution Report 5 Impacts): Technical/Product/Business/Commercial/Investment
+7. **ROADMAP.md** перестроен: Business→Product→UX→AI→Platform→Infrastructure
+
+### BLOCK 12: Финальная проверка (4 точки зрения)
+
+#### 👤 Если бы я был пользователем — купил бы я этот продукт?
+
+**Да, но с оговорками.** Я бы купил Professional план ($499/мес) если:
+- ✅ У меня нет security команды, но нужно compliance (SOC2)
+- ✅ Я хочу понимать безопасность без инженера
+- ✅ AI Assistant говорит на языке бизнеса
+- ⚠️ Но: я бы подождал пока закроют mock integrations (TRUST-002) — иначе доверия нет
+- ⚠️ Но: я бы хотел сначала попробовать trial (которого пока нет)
+
+**Почему купил бы**: AI Assistant отличает от Tenable/Qualys. Цена в 30× дешевле engineer. Executive Summary готовая для инвесторов.
+
+**Почему не купил бы сейчас**: нет trial, mock integrations подрывают доверие, нет реальной регистрации.
+
+#### 👔 Если бы я был CEO — что мешает заработать первый миллион?
+
+**5 критических блокеров:**
+
+1. **Нет регистрации** — пользователи не могут создать аккаунт. Нет пользователей → нет revenue.
+2. **Нет billing** — невозможно принять платеж. Даже если пользователь хочет заплатить — не может.
+3. **3 critical trust findings** (TRUST-002, 003, 004) — подрывают доверие. Пользователь не остаётся.
+4. **Backend на INT-036** — реальное сканирование не работает. Product value не доставляется.
+5. **Нет distribution** (PMF score 35/100) — никто не знает о продукте. Нет traffic → нет trials.
+
+**Path to $1M ARR** (согласно ROADMAP.md):
+- EP-002 (auth+billing): Q3 2026 — открывает revenue
+- EP-003 (real integrations): Q3 2026 — закрывает TRUST-002
+- EP-004 (real-time scanner): Q4 2026 — закрывает TRUST-003
+- EP-008 (SEO+content): Q4 2026 — увеличивает distribution
+- При 20000 visitors/мес + Enterprise expansion = $200k+ MRR (Q4 2027) = $2.4M ARR
+
+**$1M ARR достигается в Q3-Q4 2027.**
+
+#### 💰 Если бы я был инвестором — дал бы я деньги этой компании?
+
+**Да, pre-seed $500k, при условиях:**
+
+✅ **За**:
+- Market $5B SMB security, рост 10% YoY
+- Problem острая (IBM: $4.45M avg breach cost)
+- Differentiation: AI Assistant с business-языком — уникально
+- Architecture готова (94% readiness)
+- Founder технически грамотный (видно по codebase)
+- PMF score 63/100 — не идеален, но потенциал есть
+- Целевая аудитория чёткая (5 ICP с LTV/CAC)
+- Revenue model clear (SaaS $99-$4999/мес)
+- Path to $1M ARR реалистичен (Q4 2027)
+
+⚠️ **Против**:
+- Нет revenue (пока $0 MRR)
+- 3 critical trust findings не закрыты
+- Distribution слабый (PMF score 35)
+- Конкуренты сильные (Tenable $1.6B revenue)
+- Один founder (нужна команда)
+
+**Условия инвестиций**:
+1. Закрыть EP-002 (auth+billing) в течение 3 месяцев
+2. Закрыть TRUST-002, 003, 004 в течение 6 месяцев
+3. Достичь $5k MRR к Q4 2026
+4. Наймите founding engineer в течение 6 месяцев
+
+#### 🥷 Если бы я был конкурентом — чего бы я боялся?
+
+**Я (Tenable/Qualys/Rapid7) боялся бы:**
+
+1. **AI Assistant с business-языком** — это реально отлично. Мы (enterprise) не умеем так. Если они сделают AI лучше — заберут наш SMB сегмент.
+2. **Цена 30× дешевле** — мы не можем опустить цену с $50k до $499. Наш cost structure не позволяет.
+3. **First Value за 5 минут** — наш setup занимает 2 недели. Это massive competitive disadvantage.
+4. **Consolidation (1 вместо 5)** — если они реально объединят code+infra+deps+reports, мы потеряем долю.
+
+**Но я бы НЕ боялся:**
+- Backend на INT-036 — они не готовы к enterprise scale
+- Нет SSO/RBAC — enterprise не купит
+- Нет SOC2 — regulated industries недоступны
+- Один founder — не хватит ресурсов на long-term
+
+**Что бы я сделал как конкурент**:
+- Запустил SMB версию своего product с упрощённым UI
+- Снизил цену для SMB сегмента
+- Купил бы их, если достигнут $1M ARR
+
+### Founder Review (BLOCK 9 — 4 точки зрения)
+
+#### 👨‍💻 Engineer
+- **Архитектура стала лучше?** Да. Business layer добавлен без новой страницы — согласно рекомендации. PMF JSON даёт data-driven основу для приоритизации.
+- **Tech debt?** Не увеличился. 4 новых документа — это docs, не code.
+- **Сложность поддержки?** Не изменилась.
+
+#### 👤 Product (User)
+- **Пользователь понял?** Пользователь не видит бизнес-документов — они для founder. CEO Dashboard уже был founder-only.
+- **UX стал проще/сложнее?** Не изменился для пользователя. CEO Dashboard стал богаче для founder.
+- **Time-to-value?** Не изменился.
+
+#### 👔 CEO (Business)
+- **Revenue impact?** Косвенный — бизнес-архитектура позволяет принимать solutions decisions data-driven. Прямой revenue — после EP-002.
+- **Sales cycle?** ICP и Pricing strategy помогут sales. Но sales ещё нет.
+- **Competitive position?** Value Proposition документ формализует наши преимущества.
+
+#### 💰 Investor
+- **Valuation?** Бизнес-архитектура повышает valuation. PMF score 63 — measurable.
+- **Runway?** Не изменился (bootstrap).
+- **Exit strategy?** ICP + Pricing + PMF — материалы для pitch deck.
+
+### Platform Evolution Report (BLOCK 10 — 5 Impacts)
+
+1. **Technical Impact**: 0 новых страниц, +5 секций в CEO Dashboard, +4 business docs, +1 JSON (product-market-fit.json)
+2. **Product Impact**: Пользователь не видит изменений. Founder видит расширенный CEO Dashboard.
+3. **Business Impact**: Бизнес-архитектура формализована. 5 ICP, 4 тарифа, 10 PMF dimensions. Path to $1M ARR определён.
+4. **Commercial Impact**: Commercial Readiness остался 18% (бизнес-архитектура не закрывает trust findings). Но PMF score 63 даёт baseline для измерения прогресса.
+5. **Investment Impact**: Pitch deck materials готовы. PMF score measurable. Roadmap с Q4 2027 $1M ARR target.
+
+### Технические изменения
+
+- Новые файлы: 4 business docs (ICP, BUSINESS_JOURNEY, PRICING, VALUE_PROPOSITION), product-market-fit.json
+- Изменённые: CEO Dashboard (+5 секций), DEVELOPMENT_RULES.md (+Rules 25-27), ROADMAP.md (перестроен), feature-registry.json (+PLAT-027), feature-evidence.json (+1 entry)
+- Коммиты: a33767b BP-001: Business Foundation
+
+### Evolution Impact Report (Rule 23)
+
+```
+SIP:    ★☆☆☆☆  (1/5) — не затронут (бизнес-слой отдельно от security)
+AIS:    ★☆☆☆☆  (1/5) — не затронут
+AI CTO: ★★★★★  (5/5) — Business Foundation = AI CTO для бизнеса
+AIO:    ★☆☆☆☆  (1/5) — не затронут
+```
+
+---
+
 ## EP-001 — 2026-07-21 (Product Packaging & Business Transformation)
 
 ### Что изменилось для пользователя

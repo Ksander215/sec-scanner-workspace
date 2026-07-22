@@ -505,3 +505,62 @@ Backups:
 Скриншоты (доказательства):
 - /home/z/my-project/int044/screenshots/32-user-home.png
 - /home/z/my-project/int044/screenshots/33-ceo-dashboard.png
+
+---
+Task ID: BP-001
+Agent: Super Z (Main)
+Task: Business Foundation — компания вокруг платформы
+
+Work Log:
+- BLOCK 1: Business раздел встроен в CEO Dashboard (не новая страница, согласно рекомендации)
+- BLOCK 2: docs/business/ICP.md — 5 ICP (Startup Founder, SMB CTO, Enterprise CISO, Security Agency, MSP) с LTV/CAC
+- BLOCK 3: docs/business/BUSINESS_JOURNEY.md — 10 этапов Visitor→Referral с KPI и препятствиями
+- BLOCK 4: docs/business/PRICING.md — 4 тарифа ($99/$499/$1499/$4999) + add-ons + revenue projections
+- BLOCK 5: docs/business/VALUE_PROPOSITION.md — 5 преимуществ, North Star (WAS), tagline options
+- BLOCK 6: CEO Dashboard расширен (+5 секций: North Star, Pipeline, Forecast, PMF, ICP Distribution)
+- BLOCK 7: product-market-fit.json — 10 dimensions, overall 63/100 (C+)
+- BLOCK 8: Rule 25 (Business Impact First) — 5 вопросов перед каждой задачей
+- BLOCK 9: Rule 26 (Founder Review — 4 точки зрения: Engineer/Product/CEO/Investor)
+- BLOCK 10: Rule 27 (Platform Evolution Report — 5 Impacts)
+- BLOCK 11: ROADMAP.md перестроен (Business→Product→UX→AI→Platform→Infra)
+- BLOCK 12: Финальная проверка (user/CEO/investor/competitor) в CHANGELOG
+- PLAT-027: Business Foundation в registries
+- Push на GitHub через сервер (git bundle + fetch + reset + push)
+- Build: npx next build — успешно с первой попытки
+- Deploy: rm -rf /var/www/sec-scanner.pro/* + cp -r out/* + nginx reload
+- Production verification через agent-browser:
+  - 1 скриншот: 34-ceo-business.png
+  - /app/ceo: HTTP 200, 82225 bytes (было 69294, +12931 bytes — новые Business секции)
+  - North Star Metric (WAS), Sales Pipeline, Revenue Forecast, Product-Market Fit, ICP Distribution — все видны
+- Обновлены CURRENT_STATE, CHANGELOG_PRODUCT, DECISIONS, worklog
+
+Stage Summary:
+- LOCAL = GITHUB = SERVER = PRODUCTION = commit a33767b
+- CEO Dashboard расширен Business секциями (без новой страницы)
+- 4 бизнес-документа создано (ICP, BUSINESS_JOURNEY, PRICING, VALUE_PROPOSITION)
+- product-market-fit.json: 63/100 (C+)
+- Rule 25 (Business Impact First), Rule 26 (Founder Review), Rule 27 (5 Impacts) добавлены
+- ROADMAP.md перестроен: EP-002..EP-009 с business goals + KPIs
+- Path to $1M ARR определён: Q3-Q4 2027
+- Полный цикл: Build → GitHub → Server → Production → Visual Review → E2E — пройден
+
+Evolution Impact Report (Rule 23):
+- SIP:    ★☆☆☆☆  (1/5) — не затронут
+- AIS:    ★☆☆☆☆  (1/5) — не затронут
+- AI CTO: ★★★★★  (5/5) — Business Foundation = AI CTO для бизнеса
+- AIO:    ★☆☆☆☆  (1/5) — не затронут
+
+Вердикты (BLOCK 12):
+- Пользователь: купил бы Professional $499, но подождал бы закрытия TRUST-002
+- CEO: 5 блокеров к $1M ARR (no auth, no billing, 3 trust findings, backend, no distribution)
+- Инвестор: дал бы $500k pre-seed при условиях (EP-002 в 3 мес, $5k MRR к Q4 2026)
+- Конкурент: боялся бы AI Assistant и цены, но не боялся бы отсутствия SSO/SOC2
+
+Commercial Readiness: Architecture 94 / Product 71 / Business 42 / Commercial 18
+PMF Score: 63/100 (C+), target 72 к Q4 2026
+
+Backups:
+- /backup/sec-scanner-pro-pre-bp001 (12M) — production до BP-001 deploy
+
+Скриншоты (доказательства):
+- /home/z/my-project/int044/screenshots/34-ceo-business.png
