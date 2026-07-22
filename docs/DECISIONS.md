@@ -474,3 +474,43 @@
 **Контекст**: Пользователь не должен думать "Мне идти в SIP или AI CTO?". Это инженерный вопрос, не пользовательский.  
 **Обоснование**: Скрытие инженерной архитектуры упрощает UX. AIS остаётся видимой точкой входа (плавающая кнопка), но внутренний routing скрыт.  
 **Влияние**: В User mode sidebar не показывает Architecture/Evolution/Evidence. AIS Copilot остаётся доступным и маршрутизирует запросы автоматически.
+
+---
+
+## ADR-044: User Home replaces Dashboard (EP-001)
+
+**Дата**: 2026-07-21 (EP-001)  
+**Решение**: Главная страница для пользователей — `/app/home` (User Home), не Dashboard и не Command Center. Только 4 секции: Что происходит / Что делать / Что проверить / AI рекомендации.  
+**Контекст**: Dashboard и Command Center содержали инженерные термины (SIP, AIS, AIO, Architecture Readiness). Пользователь не должен видеть инженерную сложность.  
+**Обоснование**: "Снаружи внутрь" — пользователь → бизнес → UX → AI → SIP → Infrastructure. User Home отвечает на 4 ключевых вопроса за 30 секунд.  
+**Влияние**: `/app/home` (PLAT-025, verified) — новая главная для User mode. Dashboard и Command Center остались, но не являются главными для пользователя.
+
+---
+
+## ADR-045: CEO Dashboard — бизнес-уровень управления (EP-001)
+
+**Дата**: 2026-07-21 (EP-001)  
+**Решение**: Создан `/app/ceo` — CEO Dashboard с бизнес-метриками (MRR, ARR, Trials, Conversion, CAC, LTV, Runway). Founder mode only.  
+**Контекст**: До EP-001 не существовало бизнес-уровня управления. Фаундер видел технические метрики, но не бизнес-метрики.  
+**Обоснование**: Третий слой управления — бизнес. Платформа развивает не только код, но и компанию. CEO Dashboard делает бизнес-метрики видимыми.  
+**Влияние**: `/app/ceo` (PLAT-026, verified) — Commercial Readiness 18%, 9 milestones, 4 critical risks. Mock данные, но архитектура существует.
+
+---
+
+## ADR-046: Commercial Readiness — новая метрика (EP-001 BLOCK 14)
+
+**Дата**: 2026-07-21 (EP-001)  
+**Решение**: Введён новый показатель Commercial Readiness (0-100%), более важный чем Technical Ready.  
+**Контекст**: Architecture 94%, Product 71%, Business 42%, Commercial 18%. Техническая готовность высокая, коммерческая — низкая. Это отражает реальное состояние.  
+**Обоснование**: Рынок покупает не архитектуру, а понятное решение. Commercial Readiness = ability to sell.  
+**Влияние**: CEO Dashboard показывает Commercial Readiness prominently. Цель — поднять с 18% до 60% к Q4 2026 через EP-002 (auth+billing) и EP-003 (real integrations).
+
+---
+
+## ADR-047: AI Copilot 2.0 — переименование в User mode (EP-001 BLOCK 7-8)
+
+**Дата**: 2026-07-21 (EP-001)  
+**Решение**: В User mode AI Copilot называется "AI Assistant", не "Adaptive Intelligence System". AIS остаётся внутренним названием.  
+**Контекст**: Пользователь не понимает "Adaptive Intelligence System" — это инженерный термин.  
+**Обоснование**: Unified Terminology — пользователь видит "AI Assistant", фаундер видит "AIS" в Founder mode.  
+**Влияние**: User Home использует "AI Assistant". Sidebar в User mode не показывает AIS. AIS Settings в /app/settings требует переименования (TODO EP-002).

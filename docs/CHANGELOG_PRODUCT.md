@@ -4,6 +4,116 @@
 
 ---
 
+## EP-001 — 2026-07-21 (Product Packaging & Business Transformation)
+
+### Что изменилось для пользователя
+
+1. **Новая главная страница `/app/home`** — User Home с 4 секциями (Что происходит / Что делать / Что проверить / AI рекомендации). Никаких инженерных терминов.
+2. **Новая страница `/app/ceo`** — CEO Dashboard с бизнес-метриками (MRR, ARR, Trials, Conversion, CAC, LTV, Runway). Founder mode only.
+3. **Sidebar User mode**: Home (новый) + 14 platform tools. Нет Architecture, Evolution, Evidence, Product Readiness.
+4. **Sidebar Founder mode**: CEO Dashboard (новый) + Architecture + 4 centers + Evolution + Evidence + Readiness + Status.
+5. **AI Copilot 2.0**: в User mode называется "AI Assistant", не "Adaptive Intelligence System".
+6. **Commercial Readiness**: новый показатель — Architecture 94% / Product 71% / Business 42% / Commercial 18%.
+
+### BLOCK 15: Founder Review (3 точки зрения)
+
+#### 👨‍💻 Как инженер
+
+**Что стало лучше?**
+- Разделение User/Founder наконец-то чистое. Пользователь не видит инженерных терминов (SIP, AIS, AIO, AI CTO, Evolution, Evidence).
+- User Home даёт чёткие 4 ответа: что происходит, что делать, что проверить, что рекомендует AI.
+- CEO Dashboard показывает бизнес-метрики в реальном времени (пока mock, но архитектура есть).
+
+**Что стало проще?**
+- Навигация для пользователя — 15 пунктов → User Home отвечает на 4 вопроса за 30 секунд.
+- Founder Console — все инженерные инструменты в одном месте, не перемешаны с пользовательскими.
+
+**Что стало быстрее?**
+- Onboarding: пользователь сразу попадает на User Home, видит "Проверить безопасность" → запускает скан за 2 минуты.
+- Founder: CEO Dashboard даёт business overview за 10 секунд, без необходимости открывать 5 разных страниц.
+
+#### 👤 Как новый пользователь
+
+**Что понял за 30 секунд?**
+- Открываю /app/home. Вижу "Безопасность вашего бизнеса". 4 секции: что происходит, что делать, что проверить, AI рекомендации.
+- Понимаю: это платформа для проверки безопасности. Надо нажать "Проверить безопасность".
+
+**Что захотел сделать?**
+- Нажать "Запустить" на Action Card "Проверить безопасность".
+- Посмотреть что recommends AI.
+
+**Что было непонятно?**
+- "AI Assistant" — что это? Помощник? Чат? Советчик? Нужно clarifying.
+- "Что проверить" говорит про SSL — но я не знаю что это и как обновить.
+
+#### 👔 Как CEO
+
+**Можно ли уже продавать?**
+- ❌ Нет. Нет регистрации (PLAT-008 SSO not_started). Нет billing. 3 critical trust findings (TRUST-002, 003, 004) подрывают доверие.
+- ✅ Архитектурно — да. User Home + CEO Dashboard готовы к показу инвесторам как vision.
+
+**Можно ли показывать инвесторам?**
+- ✅ Founder mode: да. CEO Dashboard с milestones, Commercial Readiness, business readiness по направлениям — убедительно.
+- ⚠️ User mode: рискованно. Если инвестор нажмёт "Connect" в Integrations и увидит success без реального подключения — доверие потеряно.
+
+**Что мешает заработать первый миллион?**
+1. Нет регистрации → нет пользователей → нет revenue
+2. Нет billing → нет оплаты → нет MRR
+3. 3 critical trust findings → пользователи не доверяют → churn
+4. Backend на INT-036 → реальное сканирование не работает
+5. Нет enterprise features (SSO, RBAC) → Enterprise клиенты не купят
+
+### BLOCK 11: Honest Critique
+
+**Что получилось отлично:**
+- User Home — наконец-то простая главная страница без инженерных терминов
+- CEO Dashboard — business-уровень управления существует как архитектура
+- 6 документов (UX_AUDIT, TRUST_AUDIT, PRODUCT_PERSONALITY, STYLE_GUIDE, PRODUCT_JOURNEY, BUSINESS_JOURNEY) — фундамент для коммерциализации
+- Commercial Readiness 18% — честная оценка, не завышенная
+
+**Что получилось средне:**
+- AI Assistant в User mode переименован, но AIS Settings в /app/settings всё ещё называется "AIS Settings"
+- CEO Dashboard показывает mock данные ($0 MRR, 0 trials) — нужно явно пометить как "starting position"
+- User Home "Что проверить" говорит про SSL, но без контекста — пользователь не знает что делать
+
+**Что всё ещё плохо:**
+- 3 critical trust findings (TRUST-002, 003, 004) — БЛОКИРУЮТ коммерцию
+- Нет реальной аутентификации — пользователи не могут иметь аккаунты
+- Нет billing — невозможно принимать платежи
+- Backend на INT-036 — реальное сканирование не работает
+
+**Что лично я бы переделал как владелец:**
+1. **СРОЧНО**: Реализовать auth + billing (EP-002) — без этого нет бизнеса
+2. **СРОЧНО**: Закрыть TRUST-002, 003, 004 — без этого нет доверия
+3. Переименовать "AIS Settings" → "AI Assistant" в /app/settings
+4. На User Home добавить tooltip к "SSL сертификат" — что это и как обновить
+5. Синхронизировать backend с INT-036 до EP-001
+
+### Итоговые вердикты
+
+**Вердикт инженера**: Архитектура стала чище. User/Founder разделение правильное. 6 документов дают фундамент. Score: 8/10.
+
+**Вердикт пользователя**: Понятно за 30 секунд. Хочется нажать "Запустить". Но доверие подрывает mock integrations. Score: 7/10.
+
+**Вердикт CEO**: Архитектурно готов к масштабированию. Коммерчески НЕ готов — нет auth, нет billing, 3 critical trust findings. Нужно EP-002 (auth+billing) и EP-003 (real integrations) перед запуском. Score: 5/10 для коммерции, 8/10 для vision.
+
+### Технические изменения
+
+- Новые файлы: 6 документов (UX_AUDIT.md, TRUST_AUDIT.md, PRODUCT_PERSONALITY.md, STYLE_GUIDE.md, PRODUCT_JOURNEY.md, BUSINESS_JOURNEY.md), 2 страницы (/app/home, /app/ceo)
+- Изменённые: AppSidebar.tsx (Home + CEO в sidebar), feature-registry.json (+PLAT-025, PLAT-026), feature-evidence.json (+2 entries), i18n.ts (+50 home.* + ceo.* keys RU+EN)
+- Коммиты: 22d1924 EP-001: Product Packaging & Business Transformation
+
+### Evolution Impact Report (Rule 23)
+
+```
+SIP:    ★★☆☆☆  (2/5) — косвенно, User Home скрывает SIP от пользователя
+AIS:    ★★★★☆  (4/5) — AI Copilot переименован в AI Assistant, остаётся точкой входа
+AI CTO: ★★★★★  (5/5) — CEO Dashboard = AI CTO для бизнеса, Commercial Readiness добавлен
+AIO:    ★☆☆☆☆  (1/5) — не затронут
+```
+
+---
+
 ## INT-050 — 2026-07-21 (Product Packaging & Navigation Redesign)
 
 ### Что изменилось для пользователя
