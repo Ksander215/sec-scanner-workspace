@@ -335,3 +335,61 @@ Backups:
 Скриншоты (доказательства):
 - /home/z/my-project/int044/screenshots/23-architecture-map.png
 - /home/z/my-project/int044/screenshots/24-architecture-sip.png
+
+---
+Task ID: INT-049
+Agent: Super Z (Main)
+Task: Platform Evolution Framework & Unified Workspace
+
+Work Log:
+- BLOCK 1-2: Создан evolution-registry.json (62 features с owner/dependencies/affectedCenters/impactScore)
+- BLOCK 1: evolution-registry.ts с TypeScript типами + analyzeEvolutionImpact() + detectIntent()
+- BLOCK 3: Evolution Impact Analysis — analyzeEvolutionImpact возвращает impactStars, evolutionChain, requiredUpdates, requiredTests, affectedKPIs, affectedModules
+- BLOCK 4: /app/evolution с 4 табами (Matrix/Impact/Intent/Pipeline)
+- BLOCK 5: /app/command-center — заменяет Dashboard, 4 health cards (SIP/AIS/AI CTO/AIO), recommendations, next actions, current goals, recent activity
+- BLOCK 6: Dynamic Two-Level Navigation — Sidebar реструктурирован (7 пунктов первого уровня + 21 второго уровня)
+- BLOCK 7: AI Copilot Intent Detection — detectIntent() с 12 intent patterns + fallback
+- BLOCK 8: Rule 23 (Platform Evolution) в DEVELOPMENT_RULES.md
+- BLOCK 9-11: Architecture Governance + Product Sync + Evolution Pipeline (в Rule 23)
+- i18n: +50 evolution.* + command.* keys (RU+EN), +7 sidebar.* center keys
+- PLAT-021..023: 3 новых features в registries
+- Push на GitHub через сервер (6 итераций bundle+push из-за TypeScript fixes)
+- Build: npx next build — успешно после исправлений:
+  - Дубликаты Activity и GitBranch в импортах AppSidebar.tsx
+  - IntentResult и EvolutionImpactReport типы null-safe (| null)
+  - onSelect callback signature (string | null)
+  - CENTER_ICON map keys (ShieldCheck → SIP: ShieldCheck)
+- Deploy: rm -rf /var/www/sec-scanner.pro/* + cp -r out/* + nginx reload
+- Production verification через agent-browser:
+  - 4 скриншота: 25-command-center.png, 26-evolution-matrix.png, 27-evolution-intent.png, 28-evolution-intent-sip.png
+  - /app/command-center: HTTP 200, 83746 bytes — 4 health cards (SIP 94%, Platform 55%, AIS 82%, AIO 37%)
+  - /app/evolution: HTTP 200, 181204 bytes — 4 tabs (Matrix/Impact/Intent/Pipeline)
+  - /app/evolution → AI Intent → "Просканируй сайт" → routed to SIP (scan_request, confidence 85%)
+  - Sidebar показывает новые 4 центра: SIP — Security, AIS — Intelligence, AI CTO — Strategy, AIO — Operations
+  - Все 11 ключевых страниц возвращают HTTP 200 с уникальным контентом
+- Обновлены CURRENT_STATE, CHANGELOG_PRODUCT, DECISIONS, worklog
+
+Stage Summary:
+- LOCAL = GITHUB = SERVER = PRODUCTION = commit d4454a5
+- Command Center работает: 4 health cards + recommendations + next actions + current goals + recent activity
+- Evolution Matrix работает: 62 features с owner + 4-center stars + impact score
+- AI Intent Detection работает: "Просканируй сайт" → scan_request → SIP (85% confidence)
+- Dynamic Sidebar: 7 пунктов первого уровня (4 centers + Command Center + Evolution + Architecture)
+- Rule 23 Platform Evolution добавлен (Evolution Impact Report обязательный)
+- 3 новых features (PLAT-021..023) в registries
+- Полный цикл: Build → GitHub → Server → Production → Visual Review → E2E — пройден
+
+Evolution Impact Report (Rule 23):
+- SIP:    ★★★★☆  (4/5) — Dashboard обновлён, Command Center агрегирует SIP данные
+- AIS:    ★★★☆☆  (3/5) — Sidebar перестроен, AIS центр на первом уровне
+- AI CTO: ★★★★★  (5/5) — Evolution Registry создан, Rule 23 добавлен
+- AIO:    ★★☆☆☆  (2/5) — AIO центр на первом уровне sidebar, но автоматизация не реализована
+
+Backups:
+- /backup/sec-scanner-pro-pre-int049 (12M) — production до INT-049 deploy
+
+Скриншоты (доказательства):
+- /home/z/my-project/int044/screenshots/25-command-center.png
+- /home/z/my-project/int044/screenshots/26-evolution-matrix.png
+- /home/z/my-project/int044/screenshots/27-evolution-intent.png
+- /home/z/my-project/int044/screenshots/28-evolution-intent-sip.png

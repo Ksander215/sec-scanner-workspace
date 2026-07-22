@@ -4,6 +4,62 @@
 
 ---
 
+## INT-049 — 2026-07-21 (Platform Evolution Framework & Unified Workspace)
+
+### Что изменилось для пользователя
+
+1. **Новая страница `/app/command-center`** — заменяет Dashboard как главная страница. Показывает статус всех 4 центров: Security Health (SIP 94%), Platform Health (55%), AIS Status (82%), Automation (AIO 37%)
+2. **Новая страница `/app/evolution`** — Evolution Matrix с 4 табами: Matrix (62 features с owner + stars), Impact Analysis, AI Intent Detection, Pipeline
+3. **Dynamic Two-Level Navigation**: Sidebar реструктурирован — первый уровень (4 AI Centers + Command Center + Evolution + Architecture), второй уровень (Platform Tools: Scanner, Reports, Marketplace, и т.д.)
+4. **AI Copilot Intent Detection**: вводишь запрос → определяется intent → маршрутизация в центр. Пример: "Просканируй сайт" → SIP, "Разверни новую сборку" → AIO
+5. **Evolution Impact Analysis**: каждая функция имеет owner center + 4-center stars + impact score + evolution chain + required updates + tests
+6. **Rule 23 Platform Evolution**: любая задача не завершена без Evolution Impact Report (4 звезды для каждого центра)
+
+### BLOCK 12 Product Review (обязательный)
+
+**Что изменилось для пользователя**: Появились Command Center и Evolution Matrix. Sidebar реструктурирован с 4 центрами на первом уровне.
+
+**Как изменилась архитектура**: Каждая функция теперь имеет owner center (SIP/AIS/AI CTO/AIO) и evolution impact map.
+
+**Какие центры были затронуты**: ALL 4 (SIP, AIS, AI CTO, AIO) — Command Center агрегирует данные из всех центров.
+
+**Какие новые связи появились**: Command Center → 4 centers; Evolution Matrix → Feature Registry + Architecture Registry + Evidence Registry.
+
+**Как изменилась навигация**: Sidebar первый уровень = 4 centers + Command Center + Evolution + Architecture. Второй уровень = platform tools.
+
+**Какие сценарии стали проще**: Главная страница теперь Command Center с overview всех центров (вместо分散ённых dashboard/scanner/reports).
+
+**Какие регрессии проверены**: Все 11 ключевых страниц возвращают HTTP 200 с уникальным контентом. Dashboard по-прежнему доступен.
+
+**Что автоматически распространилось**: PLAT-021..023 добавлены в feature-registry + evidence. Architecture Registry unchanged ( centers scores unchanged).
+
+**Скриншоты**: 25-command-center.png, 26-evolution-matrix.png, 27-evolution-intent.png, 28-evolution-intent-sip.png
+
+**E2E проверка 4 центров**: /app/architecture/{sip,ais,cto,aio} все HTTP 200
+
+**AI Copilot routing**: "Просканируй сайт" → scan_request → SIP (подтверждено через agent-browser)
+
+**Evolution Engine**: 62 features имеют owner + affectedCenters + impactScore в evolution-registry.json
+
+**GitHub → Server → Production → Evidence**: commit d4454a5 на всех 4 источниках
+
+### Технические изменения
+
+- Новые файлы: evolution-registry.json (62 features), evolution-registry.ts (TypeScript + analyzeEvolutionImpact + detectIntent), /app/evolution/page.tsx (4-tab UI), /app/command-center/page.tsx (unified control)
+- Изменённые: DEVELOPMENT_RULES.md (+Rule 23 Platform Evolution), AppSidebar.tsx (restructured 2-level navigation), AppLayout.tsx (+7 breadcrumb keys), feature-registry.json (+PLAT-021..023), feature-evidence.json (+3 entries), i18n.ts (+50 evolution.* + command.* keys, +7 sidebar center keys)
+- Коммиты: 7006bbe → 97a0e62 → 414cfee → 23197dc → 9ebf405 → d4454a5 INT-049
+
+### Evolution Impact Report (Rule 23)
+
+```
+SIP:    ★★★★☆  (4/5) — Dashboard обновлён, Command Center агрегирует SIP данные
+AIS:    ★★★☆☆  (3/5) — Sidebar перестроен, AIS центр на первом уровне
+AI CTO: ★★★★★  (5/5) — Evolution Registry создан, Rule 23 добавлен
+AIO:    ★★☆☆☆  (2/5) — AIO центр на первом уровне sidebar, но автоматизация не реализована
+```
+
+---
+
 ## INT-048 — 2026-07-21 (Unified AI Architecture: SIP + AIS + AI CTO + AIO)
 
 ### Что изменилось для пользователя
