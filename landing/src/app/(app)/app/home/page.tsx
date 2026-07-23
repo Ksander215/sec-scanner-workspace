@@ -28,31 +28,68 @@ import {
   Radar,
   Search,
   Zap,
-  Send,
   TrendingUp,
   Lock,
   Clock,
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Code,
 } from "lucide-react";
+import {
+  getDemoFindings,
+  generateExecutiveSummary,
+  getTopActions,
+  sortByBusinessImpact,
+  getRiskLevelColor,
+  type BusinessFinding,
+} from "@/lib/findings-translator";
 
 export default function UserHomePage() {
   const { t } = useI18n();
   const [domain, setDomain] = useState("");
   const [checking, setChecking] = useState(false);
-  const [result, setResult] = useState<null | { found: number; critical: number; recommendation: string }>(null);
+  const [findings, setFindings] = useState<BusinessFinding[] | null>(null);
+  const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
+  const [showTechnical, setShowTechnical] = useState<Set<string>>(new Set());
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCheck = () => {
     if (!domain.trim()) return;
     setChecking(true);
-    setResult(null);
-    // Simulate AI check (will be replaced by real backend in EP-004)
+    setFindings(null);
+    // EP-001: Result = Security Review format (demo data, honestly marked)
+    // EP-004 will replace with real backend check
     setTimeout(() => {
       setChecking(false);
-      setResult({
-        found: 3,
-        critical: 1,
-        recommendation: "Найдена критическая проблема: устаревший SSL сертификат. Рекомендую обновить — это займёт 15 минут и устранит риск перехвата данных.",
-      });
+      setFindings(getDemoFindings(domain));
     }, 3000);
+  };
+
+  const executiveSummary = findings ? generateExecutiveSummary(findings, domain) : "";
+  const topActions = findings ? getTopActions(findings, 5) : [];
+  const sortedFindings = findings ? sortByBusinessImpact(findings) : [];
+  const critical = findings?.filter((f) => f.businessRiskLevel === "Критический").length || 0;
+  const totalFixTime = findings?.reduce((s, f) => {
+    const m = f.fixTime.match(/(\d+)/);
+    return s + (m ? parseInt(m[1]) : 0);
+  }, 0) || 0;
+
+  const toggleTechnical = (id: string) => {
+    setShowTechnical((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const copyDeveloperTask = (finding: BusinessFinding) => {
+    const task = `**${finding.developerTask.title}**\n\n${finding.developerTask.description}\n\n**Priority:** ${finding.developerTask.priority}\n**Estimate:** ${finding.developerTask.estimate}\n**Labels:** ${finding.developerTask.labels.join(", ")}`;
+    navigator.clipboard.writeText(task);
+    setCopiedId(finding.id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -175,14 +212,14 @@ export default function UserHomePage() {
                 </motion.div>
               )}
 
-              {result && (
+              {findings && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl border border-border bg-surface p-5"
+                  className="rounded-xl border border-border bg-surface p-5 space-y-4"
                 >
                   {/* Demo badge — CX-001 improvement #1 */}
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-2 mb-2">
                     <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
                       {t("home.result.demo")}
                     </span>
@@ -190,81 +227,143 @@ export default function UserHomePage() {
                       {t("home.result.demoNote")}
                     </span>
                   </div>
-                  {/* Executive Summary First (BLOCK 4) */}
-                  <div className="flex items-start gap-3 mb-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                      result.critical > 0 ? "bg-red-500/10" : "bg-emerald-500/10"
-                    }`}>
-                      {result.critical > 0 ? (
-                        <AlertCircle className="w-5 h-5 text-red-500" />
-                      ) : (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                      )}
+
+                  {/* EP-001: AI Executive Summary (First Value) */}
+                  <div className="flex items-start gap-3 pb-3 border-b border-border">
+                    <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-semibold text-foreground mb-1">
-                        {t("home.result.title")}
+                      <div className="text-[10px] font-bold tracking-wider text-violet-500 uppercase mb-1">
+                        {t("securityReview.aiSummary")}
                       </div>
-                      <div className="text-xs text-muted-2 mb-3">
-                        {t("home.result.subtitle").replace("{{domain}}", domain)}
+                      <p className="text-sm text-foreground/90 leading-relaxed">
+                        {executiveSummary}
+                      </p>
+                      <div className="mt-2 flex items-center gap-4 text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+                          <span className="text-foreground/70">{critical} {t("securityReview.critical")}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-amber-500" />
+                          <span className="text-foreground/70">~{totalFixTime} {t("securityReview.hours")}</span>
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* What happened → Why dangerous → What to do → Time */}
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-violet-500 mt-0.5 w-20 shrink-0">
-                        {t("home.result.whatHappened")}
-                      </span>
-                      <span className="text-xs text-foreground/80">
-                        {t("home.result.found").replace("{{count}}", String(result.found)).replace("{{critical}}", String(result.critical))}
+                  {/* EP-003: Top Actions (бизнес-приоритет, не CVSS) */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className="w-3.5 h-3.5 text-violet-500" />
+                      <span className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
+                        {t("securityReview.topActions")}
                       </span>
                     </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-red-500 mt-0.5 w-20 shrink-0">
-                        {t("home.result.whyDangerous")}
-                      </span>
-                      <span className="text-xs text-foreground/80">
-                        {t("home.result.danger")}
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mt-0.5 w-20 shrink-0">
-                        {t("home.result.whatToDo")}
-                      </span>
-                      <span className="text-xs text-foreground/80">
-                        {result.recommendation}
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 mt-0.5 w-20 shrink-0">
-                        {t("home.result.timeNeeded")}
-                      </span>
-                      <span className="text-xs text-foreground/80">
-                        {t("home.result.time")}
-                      </span>
+                    <div className="space-y-1.5">
+                      {topActions.map((finding, i) => (
+                        <div
+                          key={finding.id}
+                          className={`flex items-center gap-2 p-2 rounded-lg border text-xs ${
+                            finding.businessRiskLevel === "Критический"
+                              ? "border-red-500/20 bg-red-500/5"
+                              : finding.businessRiskLevel === "Высокий"
+                              ? "border-orange-500/20 bg-orange-500/5"
+                              : "border-amber-500/20 bg-amber-500/5"
+                          }`}
+                        >
+                          <span className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                            finding.businessRiskLevel === "Критический" ? "bg-red-500/20 text-red-500" :
+                            finding.businessRiskLevel === "Высокий" ? "bg-orange-500/20 text-orange-500" :
+                            "bg-amber-500/20 text-amber-500"
+                          }`}>{i + 1}</span>
+                          <span className="text-foreground/80 flex-1 truncate">{finding.businessTitle}</span>
+                          <span className="text-muted-2 shrink-0 flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> {finding.fixTime}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* All Findings — раскрывающийся список */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileBarChart className="w-3.5 h-3.5 text-violet-500" />
+                      <span className="text-[11px] font-semibold text-foreground uppercase tracking-wider">
+                        {t("securityReview.allFindings")} ({findings.length})
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      {sortedFindings.map((finding) => {
+                        const expanded = expandedFinding === finding.id;
+                        const showTech = showTechnical.has(finding.id);
+                        const copied = copiedId === finding.id;
+                        const riskColor = getRiskLevelColor(finding.businessRiskLevel);
+                        return (
+                          <div key={finding.id} className="rounded-lg border border-border overflow-hidden">
+                            <button
+                              onClick={() => setExpandedFinding(expanded ? null : finding.id)}
+                              className="w-full p-2.5 flex items-start gap-2 hover:bg-surface-2/50 transition-colors text-left"
+                            >
+                              {expanded ? <ChevronDown className="w-3 h-3 text-muted-2 shrink-0 mt-0.5" /> : <ChevronRight className="w-3 h-3 text-muted-2 shrink-0 mt-0.5" />}
+                              <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${riskColor}`}>
+                                {finding.businessRiskLevel}
+                              </span>
+                              <span className="text-xs font-medium text-foreground flex-1">{finding.businessTitle}</span>
+                              <span className="text-[10px] text-muted-2 shrink-0">{finding.fixTime}</span>
+                            </button>
+                            <AnimatePresence>
+                              {expanded && (
+                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t border-border">
+                                  <div className="p-3 space-y-2">
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-violet-500 mt-0.5 w-20 shrink-0">{t("securityReview.whatHappened")}</span>
+                                      <span className="text-xs text-foreground/80">{finding.businessTitle}</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-red-500 mt-0.5 w-20 shrink-0">{t("securityReview.whyDangerous")}</span>
+                                      <span className="text-xs text-foreground/80">{finding.businessImpact}</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mt-0.5 w-20 shrink-0">{t("securityReview.whatToDo")}</span>
+                                      <span className="text-xs text-foreground/80">{finding.nextStep}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 pt-1.5 border-t border-border">
+                                      <button onClick={() => copyDeveloperTask(finding)} className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${copied ? "bg-emerald-500/10 text-emerald-600" : "bg-violet-500/10 text-violet-600"} transition-colors`}>
+                                        {copied ? <><Check className="w-2.5 h-2.5" /> {t("securityReview.copied")}</> : <><Copy className="w-2.5 h-2.5" /> {t("securityReview.copyTask")}</>}
+                                      </button>
+                                      <button onClick={() => toggleTechnical(finding.id)} className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium ${showTech ? "bg-foreground/10 text-foreground" : "bg-surface-2 text-muted-2"} transition-colors`}>
+                                        <Code className="w-2.5 h-2.5" /> {t("securityReview.technicalDetails")}
+                                      </button>
+                                    </div>
+                                    {showTech && (
+                                      <div className="p-2 rounded-md bg-surface-2/50 border border-border text-[10px] space-y-1">
+                                        {finding.cve && <div><span className="text-muted-2">CVE: </span><code className="text-foreground/80">{finding.cve}</code></div>}
+                                        {finding.cvss && <div><span className="text-muted-2">CVSS: </span><span className="text-foreground/80 font-bold">{finding.cvss}</span></div>}
+                                        {finding.port && <div><span className="text-muted-2">Port: </span><code className="text-foreground/80">{finding.port}</code></div>}
+                                        <div><span className="text-muted-2">Technical: </span><code className="text-foreground/60">{finding.technicalTitle}</code></div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* CTA: Pricing (после получения ценности) */}
                   <div className="flex items-center gap-2 pt-3 border-t border-border">
-                    <Link
-                      href="/app/scanner"
-                      className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-medium hover:bg-violet-700 transition-colors"
-                    >
-                      {t("home.result.details")}
-                    </Link>
-                    <button className="px-3 py-1.5 rounded-lg bg-surface-2 text-foreground/70 text-xs font-medium hover:bg-foreground/5 transition-colors">
-                      {t("home.result.technicalDetails")}
-                    </button>
-                    {/* Commercial UX (BLOCK 8) */}
-                    <Link
-                      href="/app/pricing"
-                      className="ml-auto px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
-                    >
+                    <Link href="/app/pricing" className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" />
                       {t("home.result.upgrade")}
+                    </Link>
+                    <Link href="/app/security-review" className="px-3 py-1.5 rounded-lg bg-surface-2 text-foreground/70 text-xs font-medium hover:bg-foreground/5 transition-colors">
+                      {t("securityReview.title")}
                     </Link>
                   </div>
                 </motion.div>
@@ -272,7 +371,7 @@ export default function UserHomePage() {
             </AnimatePresence>
 
             {/* Examples */}
-            {!checking && !result && (
+            {!checking && !findings && (
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] text-muted-2">{t("home.firstValue.examples")}:</span>
                 {["example.com", "mycompany.ru", "test.site"].map((ex) => (
@@ -298,16 +397,16 @@ export default function UserHomePage() {
           <p className="text-xs text-muted-2 mb-4">{t("home.ai.subtitle")}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {[
-              { text: t("home.ai.prompt1"), icon: Radar },
-              { text: t("home.ai.prompt2"), icon: TrendingUp },
-              { text: t("home.ai.prompt3"), icon: AlertCircle },
-              { text: t("home.ai.prompt4"), icon: FileBarChart },
+              { text: t("home.ai.prompt1"), icon: Radar, href: "/app/security-review" },
+              { text: t("home.ai.prompt2"), icon: TrendingUp, href: "/app/security-review" },
+              { text: t("home.ai.prompt3"), icon: AlertCircle, href: "/app/security-review" },
+              { text: t("home.ai.prompt4"), icon: FileBarChart, href: "/app/reports" },
             ].map((p, i) => {
               const Icon = p.icon;
               return (
                 <Link
                   key={i}
-                  href="/app/scanner"
+                  href={p.href}
                   className="flex items-center gap-2 p-2.5 rounded-lg bg-surface/50 border border-border/50 hover:border-violet-500/20 transition-colors group"
                 >
                   <Icon className="w-3.5 h-3.5 text-violet-500 shrink-0" />
