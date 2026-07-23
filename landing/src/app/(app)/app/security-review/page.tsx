@@ -109,12 +109,16 @@ Technical: ${finding.technicalTitle}${finding.cve ? ` (${finding.cve})` : ""}`;
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-2xl font-bold text-foreground tracking-tight">
                 {t("securityReview.title")}
               </h1>
               <p className="text-sm text-muted-2">{t("securityReview.subtitle")}</p>
             </div>
+            {/* CX-001: Demo badge */}
+            <span className="px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+              Demo
+            </span>
           </div>
         </div>
 

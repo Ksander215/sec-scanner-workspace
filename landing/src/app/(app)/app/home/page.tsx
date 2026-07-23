@@ -181,6 +181,15 @@ export default function UserHomePage() {
                   animate={{ opacity: 1, y: 0 }}
                   className="rounded-xl border border-border bg-surface p-5"
                 >
+                  {/* Demo badge — CX-001 improvement #1 */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider">
+                      {t("home.result.demo")}
+                    </span>
+                    <span className="text-[10px] text-muted-2">
+                      {t("home.result.demoNote")}
+                    </span>
+                  </div>
                   {/* Executive Summary First (BLOCK 4) */}
                   <div className="flex items-start gap-3 mb-4">
                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${

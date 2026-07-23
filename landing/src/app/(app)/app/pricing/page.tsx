@@ -287,6 +287,11 @@ export default function PricingPage() {
                 >
                   {t(plan.ctaKey)}
                 </Button>
+                {plan.id === "professional" && (
+                  <p className="text-center text-[11px] text-muted-2 mt-2">
+                    {t("pricing2.trialNote")}
+                  </p>
+                )}
               </motion.div>
             );
           })}
