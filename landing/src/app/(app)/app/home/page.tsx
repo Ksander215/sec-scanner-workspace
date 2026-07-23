@@ -164,55 +164,33 @@ function UserHomeContent() {
       <div className="max-w-4xl mx-auto space-y-6 py-6">
         <AnimatePresence mode="wait">
 
-          {/* BLOCK 1: Hero V5 — Friendly First Impression (50/50 split) */}
+          {/* BLOCK 1: Welcome */}
           {step === "welcome" && (
             <motion.div
               key="welcome"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="pt-8"
+              className="max-w-2xl mx-auto pt-12"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center min-h-[60vh]">
-
-                {/* LEFT: Conversation (50%) */}
-                <div>
-                  <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight mb-4">
-                    {t("heroV5.headline")}
-                  </h1>
-                  <p className="text-base text-muted-2 mb-6 leading-relaxed">
-                    {t("heroV5.subheadline")}
-                  </p>
-
-                  {/* Input */}
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="text"
-                      value={domain}
-                      onChange={(e) => setDomain(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && domain.trim() && startCheck(domain)}
-                      placeholder={t("heroV5.placeholder")}
-                      className="flex-1 px-4 py-3 rounded-xl bg-surface border border-border text-sm text-foreground placeholder:text-muted-2 focus:border-violet-500/40 focus:outline-none transition-colors"
-                    />
-                    <button
-                      onClick={() => domain.trim() ? startCheck(domain) : setStep("role")}
-                      className="px-5 py-3 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-80 transition-opacity whitespace-nowrap"
-                    >
-                      {t("heroV5.cta")}
-                    </button>
-                  </div>
-
-                  {/* Trust badges */}
-                  <div className="flex items-center gap-3 text-[11px] text-muted-2">
-                    <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> {t("heroV5.free")}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-emerald-500" /> {t("heroV5.minute")}</span>
-                    <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-emerald-500" /> {t("heroV5.clear")}</span>
-                  </div>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center mx-auto mb-6">
+                  <Sparkles className="w-8 h-8 text-white" />
                 </div>
-
-                {/* RIGHT: Live animation (50%) */}
-                <div className="hidden md:block">
-                  <HeroLiveAnimation t={t} />
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-3">
+                  {t("ife.welcome.title")}
+                </h1>
+                <p className="text-sm text-muted-2 mb-8">
+                  {t("ife.welcome.subtitle")}
+                </p>
+                <button
+                  onClick={() => setStep("role")}
+                  className="px-8 py-3.5 rounded-xl bg-violet-600 text-white text-base font-semibold hover:bg-violet-700 transition-colors shadow-lg shadow-violet-500/20"
+                >
+                  {t("ife.welcome.cta")}
+                </button>
+                <div className="mt-4 text-[11px] text-muted-2">
+                  {t("ife.welcome.trust")}
                 </div>
               </div>
             </motion.div>
@@ -572,131 +550,5 @@ function UserHomeContent() {
         </AnimatePresence>
       </div>
     </Container>
-  );
-}
-
-/* ─── Hero Live Animation — циклическая демо-анимация ────────────────── */
-
-function HeroLiveAnimation({ t }: { t: (key: string) => string }) {
-  const [phase, setPhase] = useState<"checking" | "score" | "summary" | "recommendations">("checking");
-
-  useEffect(() => {
-    const cycle = () => {
-      setPhase("checking");
-      setTimeout(() => setPhase("score"), 5000);
-      setTimeout(() => setPhase("summary"), 8000);
-      setTimeout(() => setPhase("recommendations"), 11000);
-      // Loop back after 14s
-      setTimeout(() => cycle(), 14000);
-    };
-    cycle();
-  }, []);
-
-  return (
-    <div className="relative rounded-2xl border border-border bg-surface/60 backdrop-blur-sm p-5 overflow-hidden">
-      {/* Subtle glow */}
-      <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-violet-500/5 blur-3xl" />
-      <div className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-cyan-500/5 blur-3xl" />
-
-      <div className="relative z-10">
-        {/* Phase: Checking */}
-        {phase === "checking" && (
-          <div className="space-y-2.5">
-            <div className="text-[10px] font-bold tracking-wider text-muted-2 uppercase mb-3">
-              {t("heroV5.animChecking")}
-            </div>
-            {[
-              { label: "SSL", delay: 0 },
-              { label: "DNS", delay: 0.5 },
-              { label: "Headers", delay: 1.0 },
-              { label: "Ports", delay: 1.5 },
-              { label: "AI Analysis", delay: 2.0 },
-            ].map((item, i) => (
-              <motion.div
-                key={item.label}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: item.delay, duration: 0.4 }}
-                className="flex items-center gap-2.5 text-sm"
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: item.delay + 0.3, type: "spring", stiffness: 200 }}
-                  className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0"
-                >
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                </motion.div>
-                <span className="text-foreground/70">{item.label}</span>
-                <span className="text-[10px] text-emerald-500 ml-auto">{t("heroV5.animDone")}</span>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {/* Phase: Security Score */}
-        {phase === "score" && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-4">
-            <div className="text-[10px] font-bold tracking-wider text-muted-2 uppercase mb-2">Security Score</div>
-            <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 150 }}
-              className="text-5xl font-bold text-emerald-500 mb-3"
-            >
-              87
-            </motion.div>
-            <div className="w-full h-2.5 rounded-full bg-foreground/5 overflow-hidden mx-auto max-w-[200px]">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: "87%" }}
-                transition={{ duration: 1, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 rounded-full"
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {/* Phase: AI Summary */}
-        {phase === "summary" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-                <Sparkles className="w-3 h-3 text-white" />
-              </div>
-              <span className="text-[10px] font-bold tracking-wider text-violet-500 uppercase">AI Executive Summary</span>
-            </div>
-            <p className="text-xs text-foreground/70 leading-relaxed">
-              {t("heroV5.animSummary")}
-            </p>
-          </motion.div>
-        )}
-
-        {/* Phase: Recommendations */}
-        {phase === "recommendations" && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-1.5">
-            <div className="text-[10px] font-bold tracking-wider text-muted-2 uppercase mb-2">
-              {t("heroV5.animRecommendations")}
-            </div>
-            {[
-              { label: "CSP", delay: 0 },
-              { label: "HSTS", delay: 0.2 },
-              { label: "Security Headers", delay: 0.4 },
-            ].map((rec) => (
-              <motion.div
-                key={rec.label}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: rec.delay, duration: 0.3 }}
-                className="flex items-center gap-2 text-xs"
-              >
-                <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                <span className="text-foreground/70">{rec.label}</span>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </div>
-    </div>
   );
 }
