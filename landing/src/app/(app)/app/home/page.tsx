@@ -13,9 +13,10 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n-context";
 import { Container } from "@/components/ui/Container";
 import {
@@ -47,13 +48,38 @@ import {
 } from "@/lib/findings-translator";
 
 export default function UserHomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <UserHomeContent />
+    </Suspense>
+  );
+}
+
+function UserHomeContent() {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
   const [domain, setDomain] = useState("");
   const [checking, setChecking] = useState(false);
   const [findings, setFindings] = useState<BusinessFinding[] | null>(null);
   const [expandedFinding, setExpandedFinding] = useState<string | null>(null);
   const [showTechnical, setShowTechnical] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Auto-fill domain from landing page query param and auto-check
+  useEffect(() => {
+    const domainParam = searchParams.get("domain");
+    if (domainParam && !domain && !findings && !checking) {
+      setDomain(domainParam);
+      // Auto-trigger check after short delay
+      setTimeout(() => {
+        setChecking(true);
+        setTimeout(() => {
+          setChecking(false);
+          setFindings(getDemoFindings(domainParam));
+        }, 3000);
+      }, 500);
+    }
+  }, [searchParams, domain, findings, checking]);
 
   const handleCheck = () => {
     if (!domain.trim()) return;
