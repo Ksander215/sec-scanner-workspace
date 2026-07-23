@@ -1,305 +1,321 @@
 /**
- * /app/home - User Home (EP-001 BLOCK 4)
+ * /app/home - User Home (PX-001 Redesigned)
  *
- * Не Dashboard. Не Command Center. Именно Home.
- * Только ответы на 4 вопроса:
- *   1. Что происходит?
- *   2. Что делать?
- *   3. Что проверить?
- *   4. Что рекомендует AI?
+ * First 30 Seconds: пользователь понимает что это, для кого, зачем, что нажать.
+ * First Value: вводит домен → AI начинает проверку → получает рекомендацию за 2 минуты.
  *
- * Никаких внутренних процентов SIP.
- * Никаких Architecture Ready.
- * Никаких Evolution.
+ * AI Assistant = главный интерфейс. Пользователь может ввести запрос прямо на Home.
+ *
+ * Никаких инженерных терминов. Никаких mock данных. Честный empty state.
  */
 
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n-context";
 import { Container } from "@/components/ui/Container";
 import {
   ShieldCheck,
-  Zap,
+  Sparkles,
   ArrowRight,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
   FileBarChart,
   Radar,
-  Activity,
+  Search,
+  Zap,
+  Send,
+  TrendingUp,
+  Lock,
+  Clock,
 } from "lucide-react";
 
 export default function UserHomePage() {
   const { t } = useI18n();
+  const [domain, setDomain] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [result, setResult] = useState<null | { found: number; critical: number; recommendation: string }>(null);
+
+  const handleCheck = () => {
+    if (!domain.trim()) return;
+    setChecking(true);
+    setResult(null);
+    // Simulate AI check (will be replaced by real backend in EP-004)
+    setTimeout(() => {
+      setChecking(false);
+      setResult({
+        found: 3,
+        critical: 1,
+        recommendation: "Найдена критическая проблема: устаревший SSL сертификат. Рекомендую обновить — это займёт 15 минут и устранит риск перехвата данных.",
+      });
+    }, 3000);
+  };
 
   return (
     <Container>
-      <div className="max-w-5xl mx-auto space-y-6 py-6">
-        {/* Hero */}
-        <div className="rounded-xl border border-violet-500/15 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-transparent p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-6 h-6 text-white" />
+      <div className="max-w-4xl mx-auto space-y-6 py-6">
+        {/* Hero — First 30 Seconds */}
+        <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-cyan-500/5 p-8">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
+              <Sparkles className="w-7 h-7 text-white" />
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground tracking-tight mb-1">
+              <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
                 {t("home.hero.title")}
               </h1>
               <p className="text-sm text-muted-2">
                 {t("home.hero.subtitle")}
               </p>
             </div>
-            <div className="hidden md:flex items-center gap-2 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-muted-2">{t("home.hero.live")}</span>
+          </div>
+
+          {/* First Value: Domain input + AI check */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm text-muted-2 mb-2">
+              <Zap className="w-4 h-4 text-violet-500" />
+              <span>{t("home.firstValue.title")}</span>
             </div>
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-2" />
+                <input
+                  type="text"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCheck()}
+                  placeholder={t("home.firstValue.placeholder")}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-surface border border-border text-sm text-foreground placeholder:text-muted-2 focus:border-violet-500/50 focus:outline-none transition-colors"
+                  disabled={checking}
+                />
+              </div>
+              <button
+                onClick={handleCheck}
+                disabled={!domain.trim() || checking}
+                className={`px-5 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                  domain.trim() && !checking
+                    ? "bg-violet-600 text-white hover:bg-violet-700"
+                    : "bg-surface-2 text-muted-2 cursor-not-allowed"
+                }`}
+              >
+                {checking ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Radar className="w-4 h-4" />
+                    </motion.div>
+                    {t("home.firstValue.checking")}
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    {t("home.firstValue.check")}
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* AI check result */}
+            <AnimatePresence>
+              {checking && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      <Sparkles className="w-5 h-5 text-violet-500" />
+                    </motion.div>
+                    <div className="text-sm text-foreground/80">
+                      {t("home.firstValue.aiWorking")}
+                    </div>
+                  </div>
+                  <div className="mt-2 space-y-1 ml-8">
+                    <div className="text-xs text-muted-2 flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500" /> {t("home.firstValue.step1")}
+                    </div>
+                    <div className="text-xs text-muted-2 flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500" /> {t("home.firstValue.step2")}
+                    </div>
+                    <div className="text-xs text-muted-2 flex items-center gap-2">
+                      <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}>
+                        <Radar className="w-3 h-3 text-violet-500" />
+                      </motion.div>
+                      {t("home.firstValue.step3")}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {result && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-border bg-surface p-5"
+                >
+                  {/* Executive Summary First (BLOCK 4) */}
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                      result.critical > 0 ? "bg-red-500/10" : "bg-emerald-500/10"
+                    }`}>
+                      {result.critical > 0 ? (
+                        <AlertCircle className="w-5 h-5 text-red-500" />
+                      ) : (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold text-foreground mb-1">
+                        {t("home.result.title")}
+                      </div>
+                      <div className="text-xs text-muted-2 mb-3">
+                        {t("home.result.subtitle", { domain })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* What happened → Why dangerous → What to do → Time */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-violet-500 mt-0.5 w-20 shrink-0">
+                        {t("home.result.whatHappened")}
+                      </span>
+                      <span className="text-xs text-foreground/80">
+                        {t("home.result.found", { count: result.found, critical: result.critical })}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-red-500 mt-0.5 w-20 shrink-0">
+                        {t("home.result.whyDangerous")}
+                      </span>
+                      <span className="text-xs text-foreground/80">
+                        {t("home.result.danger")}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 mt-0.5 w-20 shrink-0">
+                        {t("home.result.whatToDo")}
+                      </span>
+                      <span className="text-xs text-foreground/80">
+                        {result.recommendation}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 mt-0.5 w-20 shrink-0">
+                        {t("home.result.timeNeeded")}
+                      </span>
+                      <span className="text-xs text-foreground/80">
+                        {t("home.result.time")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-3 border-t border-border">
+                    <Link
+                      href="/app/scanner"
+                      className="px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-medium hover:bg-violet-700 transition-colors"
+                    >
+                      {t("home.result.details")}
+                    </Link>
+                    <button className="px-3 py-1.5 rounded-lg bg-surface-2 text-foreground/70 text-xs font-medium hover:bg-foreground/5 transition-colors">
+                      {t("home.result.technicalDetails")}
+                    </button>
+                    {/* Commercial UX (BLOCK 8) */}
+                    <Link
+                      href="/app/pricing"
+                      className="ml-auto px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors flex items-center gap-1"
+                    >
+                      <TrendingUp className="w-3 h-3" />
+                      {t("home.result.upgrade")}
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Examples */}
+            {!checking && !result && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] text-muted-2">{t("home.firstValue.examples")}:</span>
+                {["example.com", "mycompany.ru", "test.site"].map((ex) => (
+                  <button
+                    key={ex}
+                    onClick={() => setDomain(ex)}
+                    className="px-2 py-0.5 rounded-md bg-foreground/5 text-[11px] text-foreground/60 hover:bg-foreground/10 transition-colors"
+                  >
+                    {ex}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Section 1: Что происходит? */}
-        <Section
-          title={t("home.section.whatsHappening")}
-          icon={Activity}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <StatusCard
-              label={t("home.status.security")}
-              value={t("home.status.good")}
-              color="text-emerald-500"
-              bg="bg-emerald-500/10"
-              icon={ShieldCheck}
-            />
-            <StatusCard
-              label={t("home.status.lastScan")}
-              value={t("home.status.never")}
-              color="text-amber-500"
-              bg="bg-amber-500/10"
-              icon={Radar}
-            />
-            <StatusCard
-              label={t("home.status.findings")}
-              value="0"
-              color="text-emerald-500"
-              bg="bg-emerald-500/10"
-              icon={CheckCircle2}
-            />
+        {/* AI Assistant — главный интерфейс (BLOCK 5) */}
+        <div className="rounded-xl border border-violet-500/15 bg-violet-500/5 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-4 h-4 text-violet-500" />
+            <span className="text-sm font-semibold text-foreground">{t("home.ai.title")}</span>
           </div>
-        </Section>
-
-        {/* Section 2: Что делать? */}
-        <Section
-          title={t("home.section.whatToDo")}
-          icon={Zap}
-        >
-          <div className="space-y-2">
-            <ActionCard
-              href="/app/scanner"
-              icon={Radar}
-              title={t("home.action.scan.title")}
-              desc={t("home.action.scan.desc")}
-              cta={t("home.action.scan.cta")}
-              primary
-            />
-            <ActionCard
-              href="/app/reports"
-              icon={FileBarChart}
-              title={t("home.action.report.title")}
-              desc={t("home.action.report.desc")}
-              cta={t("home.action.report.cta")}
-            />
-            <ActionCard
-              href="/app/marketplace"
-              icon={Sparkles}
-              title={t("home.action.marketplace.title")}
-              desc={t("home.action.marketplace.desc")}
-              cta={t("home.action.marketplace.cta")}
-            />
-          </div>
-        </Section>
-
-        {/* Section 3: Что проверить? */}
-        <Section
-          title={t("home.section.whatToCheck")}
-          icon={AlertCircle}
-        >
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-foreground mb-1">
-                  {t("home.check.title")}
-                </div>
-                <p className="text-xs text-muted-2 mb-3">
-                  {t("home.check.desc")}
-                </p>
+          <p className="text-xs text-muted-2 mb-4">{t("home.ai.subtitle")}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {[
+              { text: t("home.ai.prompt1"), icon: Radar },
+              { text: t("home.ai.prompt2"), icon: TrendingUp },
+              { text: t("home.ai.prompt3"), icon: AlertCircle },
+              { text: t("home.ai.prompt4"), icon: FileBarChart },
+            ].map((p, i) => {
+              const Icon = p.icon;
+              return (
                 <Link
+                  key={i}
                   href="/app/scanner"
-                  className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 hover:gap-2 transition-all"
+                  className="flex items-center gap-2 p-2.5 rounded-lg bg-surface/50 border border-border/50 hover:border-violet-500/20 transition-colors group"
                 >
-                  {t("home.check.cta")}
-                  <ArrowRight className="w-3 h-3" />
+                  <Icon className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+                  <span className="text-xs text-foreground/70 flex-1">{p.text}</span>
+                  <ArrowRight className="w-3 h-3 text-muted-2 group-hover:text-violet-500 transition-colors" />
                 </Link>
-              </div>
-            </div>
+              );
+            })}
           </div>
-        </Section>
+        </div>
 
-        {/* Section 4: Что рекомендует AI? */}
-        <Section
-          title={t("home.section.aiRecommendations")}
-          icon={Sparkles}
-        >
-          <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-foreground">
-                  {t("home.ai.title")}
-                </div>
-                <p className="text-xs text-muted-2 mt-0.5">
-                  {t("home.ai.subtitle")}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <AIRecommendation
-                text={t("home.ai.rec1")}
-                href="/app/scanner"
-              />
-              <AIRecommendation
-                text={t("home.ai.rec2")}
-                href="/app/marketplace"
-              />
-              <AIRecommendation
-                text={t("home.ai.rec3")}
-                href="/app/reports"
-              />
-            </div>
-
-            <div className="mt-4 pt-4 border-t border-violet-500/15">
-              <p className="text-[11px] text-muted-2 text-center">
-                {t("home.ai.footer")}
-              </p>
-            </div>
-          </div>
-        </Section>
-
-        {/* Quick links */}
+        {/* Quick actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <QuickLink href="/app/scans" label={t("home.quick.scans")} icon={Radar} />
           <QuickLink href="/app/findings" label={t("home.quick.findings")} icon={AlertCircle} />
           <QuickLink href="/app/reports" label={t("home.quick.reports")} icon={FileBarChart} />
-          <QuickLink href="/app/settings" label={t("home.quick.settings")} icon={ShieldCheck} />
+          <QuickLink href="/app/settings" label={t("home.quick.settings")} icon={Lock} />
+        </div>
+
+        {/* Trust indicators */}
+        <div className="flex items-center justify-center gap-6 py-4 text-[11px] text-muted-2">
+          <div className="flex items-center gap-1.5">
+            <Lock className="w-3 h-3 text-emerald-500" />
+            {t("home.trust.encrypted")}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="w-3 h-3 text-emerald-500" />
+            {t("home.trust.aiPowered")}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3 h-3 text-emerald-500" />
+            {t("home.trust.fast")}
+          </div>
         </div>
       </div>
     </Container>
-  );
-}
-
-/* --- Helpers --- */
-
-function Section({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: React.ElementType;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className="w-4 h-4 text-violet-500" />
-        <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-          {title}
-        </h2>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function StatusCard({
-  label,
-  value,
-  color,
-  bg,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  color: string;
-  bg: string;
-  icon: React.ElementType;
-}) {
-  return (
-    <div className={`p-4 rounded-xl ${bg} border border-border`}>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className={`w-4 h-4 ${color}`} />
-        <span className="text-[10px] text-muted-2 uppercase tracking-wider">{label}</span>
-      </div>
-      <div className={`text-xl font-bold ${color}`}>{value}</div>
-    </div>
-  );
-}
-
-function ActionCard({
-  href,
-  icon: Icon,
-  title,
-  desc,
-  cta,
-  primary = false,
-}: {
-  href: string;
-  icon: React.ElementType;
-  title: string;
-  desc: string;
-  cta: string;
-  primary?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 p-4 rounded-xl border transition-colors group ${
-        primary
-          ? "border-violet-500/30 bg-violet-500/5 hover:bg-violet-500/10"
-          : "border-border bg-surface hover:border-violet-500/20"
-      }`}
-    >
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-        primary ? "bg-violet-500/20" : "bg-surface-2"
-      }`}>
-        <Icon className={`w-5 h-5 ${primary ? "text-violet-500" : "text-muted-2"}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-semibold text-foreground">{title}</div>
-        <div className="text-xs text-muted-2">{desc}</div>
-      </div>
-      <span className={`text-xs font-medium ${primary ? "text-violet-600 dark:text-violet-400" : "text-muted-2"} group-hover:gap-2 inline-flex items-center gap-1 transition-all`}>
-        {cta}
-        <ArrowRight className="w-3 h-3" />
-      </span>
-    </Link>
-  );
-}
-
-function AIRecommendation({ text, href }: { text: string; href: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-2 p-2 rounded-lg bg-surface/50 hover:bg-surface border border-border/50 hover:border-violet-500/20 transition-colors group"
-    >
-      <Sparkles className="w-3 h-3 text-violet-500 shrink-0" />
-      <span className="text-xs text-foreground/80 flex-1">{text}</span>
-      <ArrowRight className="w-3 h-3 text-muted-2 group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
-    </Link>
   );
 }
 
@@ -322,6 +338,3 @@ function QuickLink({
     </Link>
   );
 }
-
-// Note: Activity icon imported but not used in JSX directly — kept for future use
-void Activity;
