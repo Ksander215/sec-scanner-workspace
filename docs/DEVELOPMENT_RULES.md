@@ -1010,3 +1010,87 @@ ALL LAYERS: ✅ COMPLETE / ❌ INCOMPLETE
 | Конверсия Hero → Scan | Не измеряется | +50% |
 | Конверсия Report → Pricing | Не измеряется | +40% |
 | Конверсия Pricing → Checkout | 0% | ≥60% |
+
+---
+
+## 36. Impact Before Implementation (SYS-001)
+
+Перед написанием кода обязательно заполнить таблицу:
+
+| Метрика | Сейчас | После | Почему |
+|---------|--------|-------|--------|
+| Understanding | | | |
+| Trust | | | |
+| Desire | | | |
+| WOW | | | |
+| TTFV | | | |
+| Conversion | | | |
+| **PVS** | | | |
+
+Если таблица отсутствует — код писать запрещено.
+
+### PVS Formula
+
+```
+PVS = Understanding×0.25 + Trust×0.25 + Desire×0.20 + TTFV_score×0.20 + Conversion×0.10
+
+TTFV_score = max(0, min(100, round((180 - TTFV_seconds) / 120 × 100)))
+```
+
+### Current PVS: 38/100
+
+---
+
+## 37. One Hypothesis Per Iteration (SYS-001)
+
+За одну итерацию разрешается проверять только одну гипотезу.
+
+- ✅ Упростить Hero
+- ✅ Упростить Scanner
+- ❌ Упростить Hero И Scanner одновременно
+
+Это гарантирует чистоту измерений — если улучшится, мы знаем что именно сработало.
+
+---
+
+## 38. Evidence After Deployment (SYS-001)
+
+После деплоя обязательно заполнить:
+
+| Метрика | Expected | Actual | Подтвердилось? |
+|---------|----------|--------|----------------|
+| TTFV | 60 сек | 72 сек | ✅ Да |
+| Trust | 35→50 | 45 | ⚠️ Частично |
+| Conversion | 0%→5% | 0% | ❌ Нет |
+
+Без этого таблицы задача считается **незавершённой** (Rule 30 — INCOMPLETE).
+
+---
+
+## 39. Product Evolution Cycle (SYS-001)
+
+Все UX/CX/PX задачи обязаны проходить только этот цикл:
+
+```
+AUDIT → HYPOTHESIS → DESIGN → IMPLEMENTATION → VALIDATION → MEASUREMENT → DECISION
+```
+
+Другой цикл запрещён.
+
+### Стадии
+
+| Стадия | Код | Что делается | Артефакт |
+|--------|-----|-------------|----------|
+| Audit | CX-XXA | Измерить текущее. Факты. | Audit doc |
+| Hypothesis | (в Card) | "Если X, то Y с A до B" | Experiment Card |
+| Design | CX-XXB | Описать изменение | Design spec |
+| Implementation | CX-XXC | Код, build, deploy | Commit + Deploy Report |
+| Validation | CX-XXD | Измерить на production | Evidence (metrics) |
+| Measurement | (в Decision Log) | Expected vs Actual | Metrics table |
+| Decision | (в Decision Log) | Confirmed/Rejected/Iterate | Decision entry |
+
+### Запрещается
+
+- Объединять стадии A/B/C/D в один commit
+- Делать CX/PX/UX задачи вне этого цикла
+- Не измерять PVS до и после
