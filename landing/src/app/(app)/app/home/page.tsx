@@ -1,12 +1,14 @@
 /**
- * /app/home - User Home (PX-001 Redesigned)
+ * /app/home - User Home (PX-005 Hero V3)
  *
- * First 30 Seconds: пользователь понимает что это, для кого, зачем, что нажать.
+ * Hero V3 отвечает на 5 вопросов за 5 секунд:
+ *   1. Что это? → "AI Security Advisor для вашего бизнеса"
+ *   2. Для кого? → "Для компаний без security-команды"
+ *   3. Что получу? → "Понимание безопасности без инженера"
+ *   4. Почему доверять? → "AI переводит техническое на язык бизнеса"
+ *   5. Что делать дальше? → "Введите адрес сайта → проверка за 2 минуты"
+ *
  * First Value: вводит домен → AI начинает проверку → получает рекомендацию за 2 минуты.
- *
- * AI Assistant = главный интерфейс. Пользователь может ввести запрос прямо на Home.
- *
- * Никаких инженерных терминов. Никаких mock данных. Честный empty state.
  */
 
 "use client";
@@ -56,23 +58,40 @@ export default function UserHomePage() {
   return (
     <Container>
       <div className="max-w-4xl mx-auto space-y-6 py-6">
-        {/* Hero — First 30 Seconds */}
+        {/* Hero V3 — 5 вопросов за 5 секунд */}
         <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-cyan-500/5 p-8">
-          <div className="flex items-start gap-4 mb-6">
+          <div className="flex items-start gap-4 mb-4">
             <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
               <Sparkles className="w-7 h-7 text-white" />
             </div>
             <div className="flex-1">
+              {/* Q1: Что это? */}
               <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
                 {t("home.hero.title")}
               </h1>
-              <p className="text-sm text-muted-2">
+              {/* Q2: Для кого? + Q3: Что получу? */}
+              <p className="text-sm text-muted-2 mb-3">
                 {t("home.hero.subtitle")}
               </p>
+              {/* Q4: Почему доверять? — 3 trust badges */}
+              <div className="flex items-center gap-4 text-[11px] text-muted-2 mb-4">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-violet-500" />
+                  {t("home.hero.trust1")}
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                  {t("home.hero.trust2")}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-amber-500" />
+                  {t("home.hero.trust3")}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* First Value: Domain input + AI check */}
+          {/* Q5: Что делать дальше? — domain input */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-muted-2 mb-2">
               <Zap className="w-4 h-4 text-violet-500" />
