@@ -981,6 +981,24 @@ const translations: Record<Locale, Record<string, string>> = {
     // ─── INT-027 New Keys ──────────────────────────────────────────────
     "hero.whatIsIt": "Что это?",
     "hero.whatIsItAnswer": "Security Intelligence Platform",
+
+    // ─── Landing Hero V2 (PX-002) ──────────────────────────────────────
+    "landing.heroV2.headline": "Через две минуты вы увидите свой сайт глазами злоумышленника",
+    "landing.heroV2.subheadline": "Введите адрес — AI покажет что открыто, что уязвимо и что исправить первым",
+    "landing.heroV2.riskHigh": "Риск: Высокий",
+    "landing.heroV2.risk1": "SSL сертификат истекает через 3 дня",
+    "landing.heroV2.risk2": "SSH порт открыт для всех",
+    "landing.heroV2.risk3": "Заголовки безопасности отсутствуют",
+    "landing.heroV2.aiRecommendation": "AI рекомендует: начните с SSL — это 15 минут",
+    "landing.heroV2.trust1": "2 минуты",
+    "landing.heroV2.trust2": "Без регистрации",
+    "landing.heroV2.trust3": "Только домен",
+    "landing.heroV2.cta": "Проверить мой сайт",
+    "landing.heroV2.preview": "Что вы получите",
+    "landing.heroV2.previewCritical": "Критичные риски",
+    "landing.heroV2.previewPlan": "План исправлений",
+    "landing.heroV2.previewReport": "Отчёт PDF",
+
     "hero.forWhomShort": "Для кого?",
     "hero.forWhomAnswer": "Для компаний, которым важна безопасность данных, команд разработки и специалистов по InfoSec",
     "hero.whatDoes": "Что делает?",
@@ -4535,6 +4553,24 @@ const translations: Record<Locale, Record<string, string>> = {
     // ─── INT-027 New Keys ──────────────────────────────────────────────
     "hero.whatIsIt": "What is it?",
     "hero.whatIsItAnswer": "Security Intelligence Platform",
+
+    // ─── Landing Hero V2 (PX-002) ──────────────────────────────────────
+    "landing.heroV2.headline": "In two minutes you'll see your site through an attacker's eyes",
+    "landing.heroV2.subheadline": "Enter your address — AI will show what's exposed, what's vulnerable, and what to fix first",
+    "landing.heroV2.riskHigh": "Risk: High",
+    "landing.heroV2.risk1": "SSL certificate expires in 3 days",
+    "landing.heroV2.risk2": "SSH port open to everyone",
+    "landing.heroV2.risk3": "Security headers missing",
+    "landing.heroV2.aiRecommendation": "AI recommends: start with SSL — it's 15 minutes",
+    "landing.heroV2.trust1": "2 minutes",
+    "landing.heroV2.trust2": "No registration",
+    "landing.heroV2.trust3": "Just a domain",
+    "landing.heroV2.cta": "Check my site",
+    "landing.heroV2.preview": "What you'll get",
+    "landing.heroV2.previewCritical": "Critical risks",
+    "landing.heroV2.previewPlan": "Fix plan",
+    "landing.heroV2.previewReport": "PDF report",
+
     "hero.forWhomShort": "For whom?",
     "hero.forWhomAnswer": "For companies that value data security, dev teams, and InfoSec professionals",
     "hero.whatDoes": "What does it do?",
