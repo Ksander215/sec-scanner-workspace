@@ -1057,6 +1057,19 @@ const translations: Record<Locale, Record<string, string>> = {
     "heroV4.trustNoreg": "Без регистрации",
     "heroV4.trustDomain": "Только домен",
 
+    // ─── Hero V5 — Friendly First Impression (CX-002C) ─────────────────
+    "heroV5.headline": "Проверим, как ваш сайт выглядит глазами специалиста по безопасности",
+    "heroV5.subheadline": "Мы проведём быструю проверку и покажем результат понятным языком. Без технического шума. Без регистрации.",
+    "heroV5.placeholder": "example.com",
+    "heroV5.cta": "Проверить сайт",
+    "heroV5.free": "бесплатно",
+    "heroV5.minute": "около минуты",
+    "heroV5.clear": "понятным языком",
+    "heroV5.animChecking": "Проверка",
+    "heroV5.animDone": "проверено",
+    "heroV5.animSummary": "Ваш сайт хорошо настроен. Есть несколько рекомендаций, которые помогут повысить уровень защиты.",
+    "heroV5.animRecommendations": "Рекомендации",
+
     "hero.forWhomShort": "Для кого?",
     "hero.forWhomAnswer": "Для компаний, которым важна безопасность данных, команд разработки и специалистов по InfoSec",
     "hero.whatDoes": "Что делает?",
@@ -4686,6 +4699,19 @@ const translations: Record<Locale, Record<string, string>> = {
     "heroV4.trustTime": "A minute",
     "heroV4.trustNoreg": "No registration",
     "heroV4.trustDomain": "Just a domain",
+
+    // ─── Hero V5 — Friendly First Impression (CX-002C) ─────────────────
+    "heroV5.headline": "Let's see how your site looks through a security expert's eyes",
+    "heroV5.subheadline": "We'll run a quick check and show the results in plain language. No technical noise. No registration.",
+    "heroV5.placeholder": "example.com",
+    "heroV5.cta": "Check site",
+    "heroV5.free": "free",
+    "heroV5.minute": "about a minute",
+    "heroV5.clear": "plain language",
+    "heroV5.animChecking": "Checking",
+    "heroV5.animDone": "checked",
+    "heroV5.animSummary": "Your site is well configured. There are a few recommendations that can help improve your security level.",
+    "heroV5.animRecommendations": "Recommendations",
 
     "hero.forWhomShort": "For whom?",
     "hero.forWhomAnswer": "For companies that value data security, dev teams, and InfoSec professionals",
