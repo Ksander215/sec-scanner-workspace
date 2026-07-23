@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { CheckCircle2, Clock, Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 
 export function Hero() {
@@ -21,24 +22,23 @@ export function Hero() {
       <div className="absolute inset-0 grid-bg" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,var(--color-background)_70%)]" />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+      <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
 
-        {/* Спокойный вопрос, не маркетинг */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
           className="text-center"
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.15] text-foreground mb-6">
-            {t("heroV4.landingHeadline")}
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-[1.2] text-foreground mb-5">
+            {t("heroV5.headline")}
           </h1>
-          <p className="text-lg md:text-xl text-muted-2 mb-10 max-w-xl mx-auto">
-            {t("heroV4.landingSubheadline")}
+          <p className="text-base md:text-lg text-muted-2 mb-8 max-w-xl mx-auto leading-relaxed">
+            {t("heroV5.subheadline")}
           </p>
         </motion.div>
 
-        {/* Input прямо на лендинге */}
+        {/* Input */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -51,7 +51,7 @@ export function Hero() {
               value={domain}
               onChange={(e) => setDomain(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCheck()}
-              placeholder={t("heroV4.domainPlaceholder")}
+              placeholder={t("heroV5.placeholder")}
               className="flex-1 px-4 py-3.5 rounded-xl bg-surface border border-border text-base text-foreground placeholder:text-muted-2 focus:border-violet-500/40 focus:outline-none transition-colors"
               autoFocus
             />
@@ -64,12 +64,14 @@ export function Hero() {
                   : "bg-surface-2 text-muted-2 cursor-not-allowed"
               }`}
             >
-              {t("heroV4.domainCta")}
+              {t("heroV5.cta")}
             </button>
           </div>
-          <p className="mt-4 text-center text-xs text-muted-2">
-            {t("heroV4.trust")}
-          </p>
+          <div className="flex items-center justify-center gap-4 mt-4 text-[11px] text-muted-2">
+            <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> {t("heroV5.free")}</span>
+            <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-emerald-500" /> {t("heroV5.minute")}</span>
+            <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-emerald-500" /> {t("heroV5.clear")}</span>
+          </div>
         </motion.div>
       </div>
     </section>
