@@ -85,6 +85,13 @@ const sidebarSections: SidebarSection[] = [
     audience: "user",
   },
   {
+    id: "security-review",
+    labelKey: "sidebar.securityReview",
+    icon: ShieldCheck,
+    href: "/app/security-review",
+    audience: "user",
+  },
+  {
     id: "findings",
     labelKey: "sidebar.findings",
     icon: Bug,

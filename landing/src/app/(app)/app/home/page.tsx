@@ -178,7 +178,7 @@ export default function UserHomePage() {
                         {t("home.result.title")}
                       </div>
                       <div className="text-xs text-muted-2 mb-3">
-                        {t("home.result.subtitle", { domain })}
+                        {t("home.result.subtitle").replace("{{domain}}", domain)}
                       </div>
                     </div>
                   </div>
@@ -190,7 +190,7 @@ export default function UserHomePage() {
                         {t("home.result.whatHappened")}
                       </span>
                       <span className="text-xs text-foreground/80">
-                        {t("home.result.found", { count: result.found, critical: result.critical })}
+                        {t("home.result.found").replace("{{count}}", String(result.found)).replace("{{critical}}", String(result.critical))}
                       </span>
                     </div>
                     <div className="flex items-start gap-2">

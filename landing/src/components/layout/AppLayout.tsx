@@ -42,6 +42,7 @@ const SEGMENT_I18N_KEYS: Record<string, string> = {
   "ais": "sidebar.aisCenter",
   "cto": "sidebar.ctoCenter",
   "aio": "sidebar.aioCenter",
+  "security-review": "sidebar.securityReview",
   pricing: "nav.pricing",
   settings: "sidebar.settings",
   workspace: "sidebar.workspace",
