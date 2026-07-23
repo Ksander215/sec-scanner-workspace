@@ -95,45 +95,69 @@ export default function UserHomePage() {
   return (
     <Container>
       <div className="max-w-4xl mx-auto space-y-6 py-6">
-        {/* Hero V3 — 5 вопросов за 5 секунд */}
+        {/* PX-002: Hero V2 — From Product to Desire */}
         <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/5 to-cyan-500/5 p-8">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shrink-0">
-              <Sparkles className="w-7 h-7 text-white" />
+          {/* BLOCK 1: Эмоциональный триггер */}
+          <div className="mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-2">
+              {t("home.heroV2.headline")}
+            </h1>
+            <p className="text-sm text-muted-2">
+              {t("home.heroV2.subheadline")}
+            </p>
+          </div>
+
+          {/* BLOCK 2: Визуальная карточка — что увидит пользователь */}
+          <div className="rounded-xl border border-border bg-surface/80 p-5 mb-6 max-w-md">
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-border">
+              <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <AlertCircle className="w-4 h-4 text-red-500" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-foreground">example.com</div>
+                <div className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Риск: Высокий</div>
+              </div>
             </div>
-            <div className="flex-1">
-              {/* Q1: Что это? */}
-              <h1 className="text-3xl font-bold text-foreground tracking-tight mb-1">
-                {t("home.hero.title")}
-              </h1>
-              {/* Q2: Для кого? + Q3: Что получу? */}
-              <p className="text-sm text-muted-2 mb-3">
-                {t("home.hero.subtitle")}
-              </p>
-              {/* Q4: Почему доверять? — 3 trust badges */}
-              <div className="flex items-center gap-4 text-[11px] text-muted-2 mb-4">
-                <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-violet-500" />
-                  {t("home.hero.trust1")}
-                </span>
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                  {t("home.hero.trust2")}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-amber-500" />
-                  {t("home.hero.trust3")}
-                </span>
+            <div className="space-y-1.5 mb-3">
+              <div className="flex items-center gap-2 text-xs text-foreground/70">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                SSL сертификат истекает через 3 дня
+              </div>
+              <div className="flex items-center gap-2 text-xs text-foreground/70">
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                SSH порт открыт для всех
+              </div>
+              <div className="flex items-center gap-2 text-xs text-foreground/70">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Заголовки безопасности отсутствуют
+              </div>
+            </div>
+            <div className="pt-2 border-t border-border">
+              <div className="flex items-center gap-1.5 text-[11px] text-violet-500">
+                <Sparkles className="w-3 h-3" />
+                <span>AI рекомендует: начните с SSL — это 15 минут</span>
               </div>
             </div>
           </div>
 
-          {/* Q5: Что делать дальше? — domain input */}
+          {/* BLOCK 3: Момент доверия */}
+          <div className="flex items-center gap-4 text-[11px] text-muted-2 mb-4">
+            <span className="flex items-center gap-1">
+              <Clock className="w-3 h-3 text-emerald-500" />
+              {t("home.heroV2.trust1")}
+            </span>
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-emerald-500" />
+              {t("home.heroV2.trust2")}
+            </span>
+            <span className="flex items-center gap-1">
+              <Zap className="w-3 h-3 text-emerald-500" />
+              {t("home.heroV2.trust3")}
+            </span>
+          </div>
+
+          {/* BLOCK 4: Усиленный CTA + domain input */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm text-muted-2 mb-2">
-              <Zap className="w-4 h-4 text-violet-500" />
-              <span>{t("home.firstValue.title")}</span>
-            </div>
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-2" />
@@ -169,11 +193,39 @@ export default function UserHomePage() {
                 ) : (
                   <>
                     <ShieldCheck className="w-4 h-4" />
-                    {t("home.firstValue.check")}
+                    {t("home.heroV2.cta")}
                   </>
                 )}
               </button>
             </div>
+
+            {/* BLOCK 5: First Success Preview */}
+            {!checking && !findings && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] text-muted-2">{t("home.heroV2.preview")}:</span>
+                {["AI Summary", "Критичные риски", "План исправлений", "Отчёт PDF"].map((item) => (
+                  <span key={item} className="px-2 py-0.5 rounded-md bg-foreground/5 text-[10px] text-foreground/50">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Examples */}
+            {!checking && !findings && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] text-muted-2">{t("home.firstValue.examples")}:</span>
+                {["example.com", "mycompany.ru", "test.site"].map((ex) => (
+                  <button
+                    key={ex}
+                    onClick={() => setDomain(ex)}
+                    className="px-2 py-0.5 rounded-md bg-foreground/5 text-[11px] text-foreground/60 hover:bg-foreground/10 transition-colors"
+                  >
+                    {ex}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* AI check result */}
             <AnimatePresence>
