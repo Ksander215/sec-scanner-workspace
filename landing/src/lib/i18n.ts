@@ -999,6 +999,13 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.heroV2.previewPlan": "План исправлений",
     "landing.heroV2.previewReport": "Отчёт PDF",
 
+    // ─── Landing Hero V3 — desire capture (PX-002 iteration) ───────────
+    "landing.heroV3.headline": "Что видит злоумышленник на вашем сайте прямо сейчас?",
+    "landing.heroV3.subheadline": "Введите адрес — через 2 минуты вы узнаете, что открыто, что уязвимо и что исправить первым",
+    "landing.heroV3.placeholder": "ваш-сайт.ru",
+    "landing.heroV3.cta": "Проверить",
+    "landing.heroV3.cardLabel": "Вот что вы увидите через 2 минуты",
+
     "hero.forWhomShort": "Для кого?",
     "hero.forWhomAnswer": "Для компаний, которым важна безопасность данных, команд разработки и специалистов по InfoSec",
     "hero.whatDoes": "Что делает?",
@@ -4570,6 +4577,13 @@ const translations: Record<Locale, Record<string, string>> = {
     "landing.heroV2.previewCritical": "Critical risks",
     "landing.heroV2.previewPlan": "Fix plan",
     "landing.heroV2.previewReport": "PDF report",
+
+    // ─── Landing Hero V3 — desire capture (PX-002 iteration) ───────────
+    "landing.heroV3.headline": "What does an attacker see on your site right now?",
+    "landing.heroV3.subheadline": "Enter your address — in 2 minutes you'll know what's exposed, what's vulnerable, and what to fix first",
+    "landing.heroV3.placeholder": "your-site.com",
+    "landing.heroV3.cta": "Check",
+    "landing.heroV3.cardLabel": "Here's what you'll see in 2 minutes",
 
     "hero.forWhomShort": "For whom?",
     "hero.forWhomAnswer": "For companies that value data security, dev teams, and InfoSec professionals",
