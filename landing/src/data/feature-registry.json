@@ -1,5 +1,5 @@
 {
-  "version": "BP-002-v1",
+  "version": "PX-004-v1",
   "lastUpdated": "2026-07-22",
   "auditNotes": "INT-043 audit: PLAT-001 и AIS-008 помечены broken — на Production возвращают 404 fallback. AIS-007 (SoloNotification) помечен deprecated — заменён на AISSystemEvent в INT-040 v2. PLAT-002 (Feature Registry) помечен broken — версия устарела (INT-038-v2), требует расширения статусами.",
   "features": [
@@ -861,6 +861,18 @@
       "category": "Platform",
       "required": true,
       "version": "BP-002"
+    },
+    {
+      "id": "PLAT-029",
+      "name": "Human First Security Center",
+      "description": "Security Review page at /app/security-review that translates technical findings into business language. AI Executive Summary first, 3-5 actions by business impact, each problem has: what happened / why dangerous / what to do / time. Technical details (CVE, CVSS, ports) hidden in collapsible block. Copy task for developer (Jira/GitHub/Linear). Explain simpler button. Rule 29 (Human-First Security). Implements PX-004.",
+      "status": "verified",
+      "pages": [
+        "/app/security-review"
+      ],
+      "category": "Platform",
+      "required": true,
+      "version": "PX-004"
     }
   ]
 }
