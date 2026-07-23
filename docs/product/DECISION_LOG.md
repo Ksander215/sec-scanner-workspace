@@ -32,6 +32,28 @@
 
 ---
 
+### 2026-07-23 | CX-002A — TTFV Audit
+
+**Причина**: Необходимо измерить реальный путь пользователя до первой ценности.
+
+**Что изменили**: Ничего (audit only). Создан `docs/product/CX-002A_AUDIT.md`.
+
+**Гипотеза**: Первая ценность появляется слишком поздно.
+
+**Результат**:
+
+| Метрика | Expected | Actual | Подтвердилось? |
+|---------|----------|--------|----------------|
+| TTFV | ~180 сек | ~180 сек (7 экранов, 12 кликов) | ✅ Да |
+| First Value screen | Security Review | Security Review (7-й экран) | ✅ Да |
+| Trust minimum | Низкий | 20% на Findings | ✅ Да |
+| WOW Score | Низкий до Security Review | 1-4/10 до Security Review, 8/10 на нём | ✅ Да |
+| PVS | 38 | 38 (Understanding=70, Trust=35, Desire=40, TTFV=17, Conversion=0) | ✅ Да |
+
+**Итог**: Confirmed — первая ценность появляется на 7-м экране через ~180 секунд и 12 кликов. Trust падает до 20% на Findings. WOW только на Security Review.
+
+---
+
 ## Template для новой записи
 
 ```markdown
