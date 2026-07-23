@@ -1,6 +1,6 @@
 {
-  "version": "PX-004-v1",
-  "lastUpdated": "2026-07-22",
+  "version": "PX-005-v1",
+  "lastUpdated": "2026-07-23",
   "auditNotes": "INT-043 audit: PLAT-001 и AIS-008 помечены broken — на Production возвращают 404 fallback. AIS-007 (SoloNotification) помечен deprecated — заменён на AISSystemEvent в INT-040 v2. PLAT-002 (Feature Registry) помечен broken — версия устарела (INT-038-v2), требует расширения статусами.",
   "features": [
     {
@@ -873,6 +873,19 @@
       "category": "Platform",
       "required": true,
       "version": "PX-004"
+    },
+    {
+      "id": "PLAT-030",
+      "name": "Platform Recovery & Source of Truth",
+      "description": "PX-005: Recovery Audit (PX-001..PX-004 verified), Recovery Registry, Hero V3 (5 questions), pricing.ts (single source of truth), SOURCE_OF_TRUTH.md, Rules 30-33 (Recovery First, Deployment Report, Evidence Before Conclusion, Repository First). All PX modules recovered and verified.",
+      "status": "verified",
+      "pages": [
+        "/app/home",
+        "/app/security-review"
+      ],
+      "category": "Platform",
+      "required": true,
+      "version": "PX-005"
     }
   ]
 }

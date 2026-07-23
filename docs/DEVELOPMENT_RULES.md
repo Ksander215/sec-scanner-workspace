@@ -870,3 +870,93 @@ Investment: показывает investors что product готов к monetiza
 > "Повысит ли она вероятность того, что пользователь получит ценность быстрее, доверится продукту сильнее или станет платящим клиентом?"
 
 Если ответ отрицательный — функция не должна иметь приоритет, даже если она технически интересна.
+
+---
+
+## 30. Recovery First (PX-005)
+
+Любая задача считается выполненной только если существует:
+
+1. ✅ **Локально** — `git rev-parse HEAD` показывает commit с изменениями
+2. ✅ **GitHub** — `git ls-remote origin main` показывает тот же commit
+3. ✅ **Сервер** — `/var/www/sec-scanner-build` на том же commit
+4. ✅ **Production** — `curl https://sec-scanner.pro/<route>` возвращает 200 с новым контентом
+
+Если хотя бы один слой отсутствует — задача считается **INCOMPLETE**.
+
+### Запрет tar-деплоя
+
+Tar-деплой (загрузка файлов напрямую на сервер без git) запрещён как основной способ. Только:
+1. `git commit` (LOCAL)
+2. `git push` (GITHUB)
+3. `git pull` на сервере (SERVER)
+4. `next build` + `cp out/* /var/www/sec-scanner.pro/` (PRODUCTION)
+
+---
+
+## 31. Deployment Report (PX-005)
+
+После каждой задачи автоматически формируется Deployment Report:
+
+```
+DEPLOYMENT REPORT
+=================
+
+LOCAL
+  Commit: <hash>
+  Status: OK / FAIL
+
+GITHUB
+  Commit: <hash>
+  Status: OK / FAIL
+
+SERVER
+  Commit: <hash>
+  Status: OK / FAIL
+
+PRODUCTION
+  Version: <hash>
+  HTTP: 200 / FAIL
+  Status: OK / FAIL
+
+ALL LAYERS: ✅ COMPLETE / ❌ INCOMPLETE
+```
+
+Если хотя бы один слой отсутствует: `STATUS: INCOMPLETE` — без исключений.
+
+---
+
+## 32. Evidence Before Conclusion (PX-005)
+
+Запрещается писать:
+- "Done"
+- "Ready"
+- "Completed"
+- "Successfully deployed"
+
+без доказательств.
+
+### Принцип: Сначала Evidence, потом Conclusion
+
+Каждое заявление о завершении должно сопровождаться:
+- `git rev-parse HEAD` — commit hash
+- `curl -s -o /dev/null -w '%{http_code}'` — HTTP статус
+- Скриншот (для UI изменений)
+- `git ls-remote origin main` — подтверждение push
+
+Без evidence — заявление не действительно.
+
+---
+
+## 33. Repository First (PX-005)
+
+Перед началом любой новой задачи модель обязана:
+
+1. **Проверить состояние LOCAL**: `git status` — должен быть clean
+2. **Проверить текущий commit**: `git rev-parse HEAD`
+3. **Сверить с GITHUB**: `git ls-remote origin main` — должен совпадать
+4. **Сверить с SERVER**: SSH `cd /var/www/sec-scanner-build && git rev-parse HEAD`
+
+Только после подтверждения синхронизации всех слоёв — приступать к реализации.
+
+Если слои рассинхронизированы — сначала восстановить синхронизацию (Rule 30), потом начинать новую задачу.
