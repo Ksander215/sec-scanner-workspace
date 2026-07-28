@@ -1,0 +1,12 @@
+export type { UserAggregate } from './user-aggregate.js';
+export { assertSingleProfile, assertSessionHasContext } from './user-aggregate.js';
+export type { IntelligenceAggregate } from './intelligence-aggregate.js';
+export { assertConfidenceRange, assertNarrativeHasRole } from './intelligence-aggregate.js';
+export type { CommunicationAggregate } from './communication-aggregate.js';
+export { assertNotificationHasType, assertNoTipRepetition } from './communication-aggregate.js';
+export type { ProviderAggregate } from './provider-aggregate.js';
+export { assertProviderHasCredentials } from './provider-aggregate.js';
+export type { PluginAggregate } from './plugin-aggregate.js';
+export { assertPluginHasManifest, assertPermissionsWithinScope } from './plugin-aggregate.js';
+export type { TrustAggregate } from './trust-aggregate.js';
+export { assertZoneGateCrossing, assertActionWithinAutonomy, assertAuditEntry } from './trust-aggregate.js';

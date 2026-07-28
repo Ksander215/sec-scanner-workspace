@@ -38,12 +38,18 @@ docs/ais/
 │   ├── GOV-003.000-AIS-Decision-Governance-Model.md  [L5] [APPROVED]
 │   └── GOV-004.000-Domain-Governance-Standard.md      [L5] [APPROVED]
 ├── 05-reports/
+│   ├── REP-000-AIS.000-Repository-Recovery-Report.md            [APPROVED]
 │   ├── REP-001-AIS.000-Constitution-Establishment-Report.md       [APPROVED]
 │   ├── REP-002-AIS.000-Compliance-Audit-Report.md                [APPROVED]
 │   ├── REP-003-AIS.000-Architecture-Refinement-Report.md         [APPROVED]
 │   ├── REP-004-AIS.000-Architecture-Baseline-Establishment-Report.md [APPROVED]
 │   ├── REP-005-AIS.000-Domain-Foundation-Establishment-Report.md  [APPROVED]
-│   └── REP-006-AIS.000-Domain-Modeling-Report.md                 [APPROVED]
+│   ├── REP-006-AIS.000-Domain-Modeling-Report.md                 [APPROVED]
+│   ├── REP-007-AIS.000-Domain-Baseline-Certification-Report.md   [APPROVED]
+│   ├── REP-008-AIS.000-Architecture-Baseline-Verification-Report.md [APPROVED]
+│   ├── REP-009-AIS.000-Architecture-Closure-Report.md            [APPROVED]
+│   ├── REP-010-AIS.000-Execution-Engine-Foundation-Report.md     [APPROVED]
+│   └── TST-001.000-Foundation-Validation-Report.md               [APPROVED]
 ├── 06-baselines/
 │   ├── BAS-000.000-Architecture-Repository-Manifest.md             [APPROVED]
 │   └── BAS-001.000-Architecture-Baseline-Manifest.md               [APPROVED]
@@ -96,6 +102,10 @@ docs/ais/
 | TASK-AIS-002A.000 | DOM-001.000, GOV-004.000, REP-005-AIS.000 |
 | TASK-AIS-002B.000 | DOM-002.000, ADR-014, REP-006-AIS.000 |
 | TASK-AIS-000X.000 | BAS-000.000, REP-000-AIS.000, IDX-001.000 |
+| TASK-AIS-000Y.000 | REP-008-AIS.000, BAS-003.000, GOV-005.000 |
+| TASK-AIS-002C.000 | BAS-002.000, REP-007-AIS.000, CER-001.000 |
+| TASK-AIS-002D.000 | REP-009-AIS.000, GOV-006.000, CER-002.000 |
+| TASK-AIS-003A.000 | REP-010-AIS.000, SRC-001.000, TST-001.000 |
 
 ---
 

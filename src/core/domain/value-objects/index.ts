@@ -1,0 +1,12 @@
+export { ConfidenceLevel, classifyConfidence } from './confidence-level.js';
+export { UserRole } from './user-role.js';
+export { ReadingSpeedValue } from './reading-speed.js';
+export type { ReadingSpeed } from './reading-speed.js';
+export { NavigationSpeedValue } from './navigation-speed.js';
+export type { NavigationSpeed } from './navigation-speed.js';
+export { FrequencyModeValue } from './frequency-mode.js';
+export type { FrequencyMode } from './frequency-mode.js';
+export { NotificationType } from './notification-type.js';
+export type { NotificationLifetime } from './notification-lifetime.js';
+export type { LifetimePolicy } from './lifetime-policy.js';
+export type { PluginPermission } from './plugin-permission.js';
