@@ -1,6 +1,6 @@
 /**
  * AIS Execution Engine — Public API
- * Core Runtime, version 0.1.0 (foundation skeleton)
+ * Core Runtime, version 0.2.0 (execution pipeline)
  *
  * Conforms to:
  * - CON-001.000 (Constitution)
@@ -13,6 +13,10 @@
 
 // Engine
 export { ExecutionEngine } from './engine/execution-engine.js';
+
+// Execution Pipeline
+export { ExecutionPipeline } from './pipeline/execution-pipeline.js';
+export type { PipelineConfig } from './pipeline/execution-pipeline.js';
 
 // Runtime
 export { Runtime, ServiceRegistry, DefaultLifecycleHooks } from './runtime/index.js';
