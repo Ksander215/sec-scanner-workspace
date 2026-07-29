@@ -67,3 +67,7 @@ export * from './tool/index.js';
 // Identity Runtime (AIS-003F)
 export { IdentityRuntime } from './identity/identity-runtime.js';
 export type { IdentityRuntimeConfig } from './identity/identity-runtime.js';
+
+// Capability Runtime (AIS-003G)
+export { CapabilityRuntime } from './capability/capability-runtime.js';
+export type { CapabilityRuntimeConfig } from './capability/capability-runtime.js';
