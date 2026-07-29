@@ -63,3 +63,7 @@ export type { Timestamp, Identifier, SemVer, Result } from './types/common.js';
 
 // Tool Runtime (AIS-003C)
 export * from './tool/index.js';
+
+// Identity Runtime (AIS-003F)
+export { IdentityRuntime } from './identity/identity-runtime.js';
+export type { IdentityRuntimeConfig } from './identity/identity-runtime.js';
