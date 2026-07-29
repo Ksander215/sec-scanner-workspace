@@ -1,6 +1,6 @@
 /**
  * AIS Execution Engine — Public API
- * Core Runtime, version 0.2.0 (execution pipeline)
+ * Core Runtime, version 0.3.0 (execution pipeline + tool runtime)
  *
  * Conforms to:
  * - CON-001.000 (Constitution)
@@ -60,3 +60,6 @@ export {
   EngineState,
 } from './types/common.js';
 export type { Timestamp, Identifier, SemVer, Result } from './types/common.js';
+
+// Tool Runtime (AIS-003C)
+export * from './tool/index.js';
