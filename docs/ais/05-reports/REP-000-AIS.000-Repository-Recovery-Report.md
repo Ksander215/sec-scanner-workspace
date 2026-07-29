@@ -147,7 +147,7 @@ All documents exist at their declared paths. No broken paths detected.
 | Field | Value |
 |-------|-------|
 | Message | `docs: restore AIS architecture baseline v1.0` |
-| Hash | `f629a445c0ac6c75b466ef44196111344e716be6` |
+| Hash | `5ba74a1d0194f06eddf168705a1a9e30009302d3` |
 | Files added | 30 documents (29 + INDEX.md) |
 | Source files modified | 0 |
 
@@ -156,7 +156,7 @@ All documents exist at their declared paths. No broken paths detected.
 | Field | Value |
 |-------|-------|
 | Tag | `ais-baseline-v1.0` |
-| Hash | `f629a445c0ac6c75b466ef44196111344e716be6` |
+| Hash | `5ba74a1d0194f06eddf168705a1a9e30009302d3` |
 | Points to | The commit above |
 | Verification | ✅ Tag hash matches commit hash |
 

@@ -71,3 +71,7 @@ export type { IdentityRuntimeConfig } from './identity/identity-runtime.js';
 // Capability Runtime (AIS-003G)
 export { CapabilityRuntime } from './capability/capability-runtime.js';
 export type { CapabilityRuntimeConfig } from './capability/capability-runtime.js';
+
+// Workflow Runtime (AIS-003H)
+export { WorkflowRuntime } from './workflow/workflow-runtime.js';
+export type { WorkflowRuntimeConfig } from './workflow/workflow-runtime.js';
