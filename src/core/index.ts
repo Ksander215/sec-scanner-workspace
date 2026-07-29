@@ -1,6 +1,6 @@
 /**
  * AIS Execution Engine — Public API
- * Core Runtime, version 0.3.0 (execution pipeline + tool runtime)
+ * Core Runtime, version 0.4.0 (execution pipeline + cognitive runtime)
  *
  * Conforms to:
  * - CON-001.000 (Constitution)
@@ -75,3 +75,7 @@ export type { CapabilityRuntimeConfig } from './capability/capability-runtime.js
 // Workflow Runtime (AIS-003H)
 export { WorkflowRuntime } from './workflow/workflow-runtime.js';
 export type { WorkflowRuntimeConfig } from './workflow/workflow-runtime.js';
+
+// Cognitive Runtime (AIS-003I)
+export { CognitiveRuntime } from './cognitive/cognitive-runtime.js';
+export type { CognitiveRuntimeConfig } from './cognitive/cognitive-runtime.js';
