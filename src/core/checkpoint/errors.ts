@@ -39,6 +39,7 @@ export class CheckpointCorruptedError extends CheckpointError {
 }
 
 export class CheckpointStateError extends CheckpointError {
+  public readonly currentStatus: string;
   constructor(
     currentStatusOrMessage: string,
     checkpointId?: string,

@@ -27,6 +27,7 @@ export class ContextNotFoundError extends ContextError {
 }
 
 export class ContextSizeExceededError extends ContextError {
+  public readonly currentSize: number;
   public readonly actualSize: number;
   constructor(
     currentSize: number,
@@ -39,8 +40,8 @@ export class ContextSizeExceededError extends ContextError {
       contextId,
     );
     this.name = 'ContextSizeExceededError';
-    this.actualSize = currentSize;
     this.currentSize = currentSize;
+    this.actualSize = currentSize;
   }
 }
 
