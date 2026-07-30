@@ -29,24 +29,24 @@ describe('NavigationRuntime', () => {
 
   describe('navigation', () => {
     it('should navigate', () => { nav.navigate('/projects'); expect(nav.currentPath).toBe('/projects'); });
-    it('should build history', () => { nav.navigate('/projects'); nav.navigate('/settings'); expect(nav.historyCount).toBe(3); });
-    it('should navigate with params', () => { nav.navigate('/conversation', { id: '123' }); expect(nav.getState().history[1]!.params).toEqual({ id: '123' }); });
+    it('should build history', () => { nav.navigate('/projects'); nav.navigate('/settings'); expect(nav.historyCount).toBe(2); });
+    it('should navigate with params', () => { nav.navigate('/conversation', { id: '123' }); expect(nav.getState().history[0]!.params).toEqual({ id: '123' }); });
     it('should truncate forward history', () => { nav.navigate('/projects'); nav.navigate('/settings'); nav.goBack(); nav.navigate('/memory'); expect(nav.getState().canGoForward).toBe(false); });
   });
 
   describe('history', () => {
-    it('should go back', () => { nav.navigate('/projects'); nav.goBack(); expect(nav.currentPath).toBe('/'); });
+    it('should go back', () => { nav.start(); nav.navigate('/projects'); nav.goBack(); expect(nav.currentPath).toBe('/'); });
     it('should throw on goBack at start', () => { expect(() => nav.goBack()).toThrow(NavigationHistoryError); });
-    it('should go forward', () => { nav.navigate('/projects'); nav.goBack(); nav.goForward(); expect(nav.currentPath).toBe('/projects'); });
-    it('should throw on goForward at end', () => { expect(() => nav.goForward()).toThrow(NavigationHistoryError); });
-    it('should report canGoBack', () => { expect(nav.getState().canGoBack).toBe(false); nav.navigate('/projects'); expect(nav.getState().canGoBack).toBe(true); });
-    it('should report canGoForward', () => { expect(nav.getState().canGoForward).toBe(false); nav.navigate('/projects'); nav.goBack(); expect(nav.getState().canGoForward).toBe(true); });
+    it('should go forward', () => { nav.start(); nav.navigate('/projects'); nav.goBack(); nav.goForward(); expect(nav.currentPath).toBe('/projects'); });
+    it('should throw on goForward at end', () => { nav.start(); expect(() => nav.goForward()).toThrow(NavigationHistoryError); });
+    it('should report canGoBack', () => { expect(nav.getState().canGoBack).toBe(false); nav.start(); nav.navigate('/projects'); expect(nav.getState().canGoBack).toBe(true); });
+    it('should report canGoForward', () => { expect(nav.getState().canGoForward).toBe(false); nav.start(); nav.navigate('/projects'); nav.goBack(); expect(nav.getState().canGoForward).toBe(true); });
   });
 
   describe('getState', () => {
-    it('should return current screen', () => { expect(nav.getState().current?.title).toBe('Home'); });
-    it('should return full history', () => { nav.navigate('/projects'); expect(nav.getState().history.length).toBe(2); });
-    it('should return correct index', () => { nav.navigate('/projects'); nav.navigate('/settings'); expect(nav.getState().historyIndex).toBe(2); });
+    it('should return current screen', () => { nav.start(); expect(nav.getState().current?.title).toBe('Home'); });
+    it('should return full history', () => { nav.start(); nav.navigate('/projects'); expect(nav.getState().history.length).toBe(2); });
+    it('should return correct index', () => { nav.start(); nav.navigate('/projects'); nav.navigate('/settings'); expect(nav.getState().historyIndex).toBe(2); });
     it('should return null before start', () => { const n = new NavigationRuntime(); expect(n.getState().current).toBeNull(); });
   });
 });

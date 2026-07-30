@@ -15,8 +15,8 @@ describe('DiagnosticsRuntime', () => {
 
   describe('methods', () => {
     it('register health check', () => { rt.registerHealthCheck("db", async () => ({healthy:true})); expect(rt.getHealthCheckCount()).toBe(1); });
-    it('run health checks', () => { rt.registerHealthCheck("db", async () => ({healthy:true})); const r = await rt.runHealthChecks(); expect(r.db.healthy).toBe(true); });
-    it('unhealthy', () => { rt.registerHealthCheck("f", async () => ({healthy:false, message:"err"})); const r = await rt.runHealthChecks(); expect(r.f.healthy).toBe(false); });
+    it('run health checks', async () => { rt.registerHealthCheck("db", async () => ({healthy:true})); const r = await rt.runHealthChecks(); expect(r.db.healthy).toBe(true); });
+    it('unhealthy', async () => { rt.registerHealthCheck("f", async () => ({healthy:false, message:"err"})); const r = await rt.runHealthChecks(); expect(r.f.healthy).toBe(false); });
     it('record metric', () => { rt.recordMetric("cpu", 75.5); expect(rt.getMetric("cpu")).toBe(75.5); });
     it('get missing metric', () => { expect(rt.getMetric("m")).toBeUndefined(); });
     it('getAllMetrics', () => { rt.recordMetric("a", 1); rt.recordMetric("b", 2); expect(rt.getAllMetrics().size).toBe(2); });
@@ -26,7 +26,7 @@ describe('DiagnosticsRuntime', () => {
     it('multiple logs', () => { rt.log("info", "a"); rt.log("error", "b"); expect(rt.getLogs().length).toBe(2); });
     it('log levels', () => { rt.log("warn", "w"); rt.log("debug", "d"); expect(rt.getLogs()[0]!.level).toBe("warn"); });
     it('health check count', () => { rt.registerHealthCheck("a", async () => ({healthy:true})); rt.registerHealthCheck("b", async () => ({healthy:true})); expect(rt.getHealthCheckCount()).toBe(2); });
-    it('empty health checks', () => { const r = await rt.runHealthChecks(); expect(Object.keys(r).length).toBe(0); });
+    it('empty health checks', async () => { const r = await rt.runHealthChecks(); expect(Object.keys(r).length).toBe(0); });
     it('multiple metrics', () => { rt.recordMetric("a", 1); rt.recordMetric("a", 2); expect(rt.getMetric("a")).toBe(2); });
   });
 

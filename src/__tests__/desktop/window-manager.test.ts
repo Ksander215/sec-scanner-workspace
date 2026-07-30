@@ -70,7 +70,7 @@ describe('WindowManager', () => {
     it('should update bounds', () => { const w = wm.create({ type: WindowType.Main }); wm.updateBounds(w.id, { width: 800 }); expect(wm.getById(w.id).bounds.width).toBe(800); });
     it('should update position', () => { const w = wm.create({ type: WindowType.Main }); wm.updateBounds(w.id, { x: 100, y: 200 }); expect(wm.getById(w.id).bounds.x).toBe(100); });
     it('should throw on non-existent', () => { expect(() => wm.updateBounds('bad' as WindowId, {})).toThrow(WindowNotFoundError); });
-    it('should update timestamp', () => { const w = wm.create({ type: WindowType.Main }); const t = w.updatedAt; wm.updateBounds(w.id, { width: 100 }); expect(wm.getById(w.id).updatedAt).not.toBe(t); });
+    it('should update timestamp', async () => { const w = wm.create({ type: WindowType.Main }); const t = w.updatedAt; await new Promise(r => setTimeout(r, 2)); wm.updateBounds(w.id, { width: 100 }); expect(wm.getById(w.id).updatedAt).not.toBe(t); });
   });
 
   describe('layout', () => {

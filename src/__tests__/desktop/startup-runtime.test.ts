@@ -16,13 +16,13 @@ describe('StartupRuntime', () => {
   describe('methods', () => {
     it('register step', () => { rt.registerStep("s1", async () => {}); expect(rt.getStepCount()).toBe(1); });
     it('register multiple', () => { rt.registerStep("s1", async () => {}); rt.registerStep("s2", async () => {}); expect(rt.getStepCount()).toBe(2); });
-    it('run sequence', () => { let ran = false; rt.registerStep("s1", async () => { ran = true; }); await rt.runStartupSequence(); expect(ran).toBe(true); });
-    it('completed steps', () => { rt.registerStep("s1", async () => {}); rt.registerStep("s2", async () => {}); await rt.runStartupSequence(); expect(rt.getCompletedSteps().length).toBe(2); });
-    it('startup duration', () => { await rt.runStartupSequence(); expect(rt.getStartupDuration()).toBeGreaterThanOrEqual(0); });
-    it('step completed', () => { rt.registerStep("s1", async () => {}); await rt.runStartupSequence(); expect(rt.isStepCompleted("s1")).toBe(true); });
+    it('run sequence', async () => { let ran = false; rt.registerStep("s1", async () => { ran = true; }); await rt.runStartupSequence(); expect(ran).toBe(true); });
+    it('completed steps', async () => { rt.registerStep("s1", async () => {}); rt.registerStep("s2", async () => {}); await rt.runStartupSequence(); expect(rt.getCompletedSteps().length).toBe(2); });
+    it('startup duration', async () => { await rt.runStartupSequence(); expect(rt.getStartupDuration()).toBeGreaterThanOrEqual(0); });
+    it('step completed', async () => { rt.registerStep("s1", async () => {}); await rt.runStartupSequence(); expect(rt.isStepCompleted("s1")).toBe(true); });
     it('step not completed before run', () => { rt.registerStep("s1", async () => {}); expect(rt.isStepCompleted("s1")).toBe(false); });
-    it('empty sequence', () => { await rt.runStartupSequence(); expect(rt.getCompletedSteps().length).toBe(0); });
-    it('steps in order', () => { const o: string[] = []; rt.registerStep("a", async () => { o.push("a"); }); rt.registerStep("b", async () => { o.push("b"); }); await rt.runStartupSequence(); expect(o).toEqual(["a","b"]); });
+    it('empty sequence', async () => { await rt.runStartupSequence(); expect(rt.getCompletedSteps().length).toBe(0); });
+    it('steps in order', async () => { const o: string[] = []; rt.registerStep("a", async () => { o.push("a"); }); rt.registerStep("b", async () => { o.push("b"); }); await rt.runStartupSequence(); expect(o).toEqual(["a","b"]); });
     it('step count', () => { rt.registerStep("a", async () => {}); expect(rt.getStepCount()).toBe(1); });
   });
 
