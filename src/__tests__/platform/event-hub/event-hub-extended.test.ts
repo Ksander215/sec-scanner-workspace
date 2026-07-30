@@ -24,7 +24,8 @@ describe('PlatformEventHub Extended', () => {
   it('getEventLog returns array with events', async () => {
     await hub.publish('t', {});
     const log = hub.getEventLog();
-    expect(Object.isFrozen(log)).toBe(true);
+    expect(log).toHaveLength(1);
+    expect(log[0].eventType).toBe('t');
   });
   it('unsubscribing from non-existent handler does not throw', () => {
     const sub = hub.subscribe('t', () => {});

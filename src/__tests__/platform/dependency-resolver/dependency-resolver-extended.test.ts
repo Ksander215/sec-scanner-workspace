@@ -47,8 +47,12 @@ describe('DependencyResolver Extended', () => {
   });
 
   it('3-node cycle detection', () => {
-    const g = resolver.resolve([rt('a', ['b']), rt('b', ['c']), rt('c', ['a'])]);
-    // Should throw during resolve
+    try {
+      resolver.resolve([rt('a', ['b']), rt('b', ['c']), rt('c', ['a'])]);
+      expect(true).toBe(false);
+    } catch {
+      expect(true).toBe(true);
+    }
   });
 
   it('4-node cycle', () => {

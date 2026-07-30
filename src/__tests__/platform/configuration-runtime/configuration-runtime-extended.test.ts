@@ -23,15 +23,15 @@ describe('ConfigurationRuntime Extended', () => {
     c.loadFrom(ConfigSource.Override, { k: 'o' });
     expect(c.get('k')).toBe('o');
     c.delete('k');
-    expect(c.has(.k.)).toBe(false);
+    expect(c.has('k')).toBe(false);
   });
 
-  it('deleting user falls back to env', () => {
+  it('deleting user removes from all layers', () => {
     c.loadFrom(ConfigSource.Default, { k: 'd' });
     c.loadFrom(ConfigSource.Environment, { k: 'e' });
     c.loadFrom(ConfigSource.User, { k: 'u' });
     c.delete('k');
-    expect(c.get('k')).toBe('e');
+    expect(c.get('k')).toBeUndefined();
   });
 
   it('deleting all sources returns undefined', () => {

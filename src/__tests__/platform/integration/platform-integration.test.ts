@@ -105,7 +105,7 @@ describe('Platform Integration', () => {
     it('Diagnostics reflect platform state', async () => {
       platform.registerRuntime(makeContract('a'));
       await platform.start();
-      expect(platform.getDiagnostics().runtimeCount).toBeGreaterThan(0);
+      expect(platform.getBootstrapEngine().getDiagnostics().getPlatformInfo().runtimeCount).toBeGreaterThan(0);
     });
 
     it('Platform API facade works', async () => {

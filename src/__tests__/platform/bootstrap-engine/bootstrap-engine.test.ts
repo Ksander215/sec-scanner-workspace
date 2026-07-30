@@ -11,9 +11,25 @@ function rc(id: string, deps: string[] = []): RuntimeContract {
   };
 }
 
+const mockContext = {
+  eventHub: {} as any,
+  commandBus: {} as any,
+  queryBus: {} as any,
+  configuration: {} as any,
+  registry: {} as any,
+  container: {} as any,
+  scheduler: {} as any,
+  healthMonitor: {} as any,
+  metrics: {} as any,
+  diagnostics: {} as any,
+};
+
 describe('BootstrapEngine', () => {
   let engine: BootstrapEngine;
-  beforeEach(() => { engine = new BootstrapEngine(); });
+  beforeEach(() => {
+    engine = new BootstrapEngine();
+    engine.setPlatformContext(mockContext);
+  });
 
   it('bootstraps a single runtime', async () => {
     const result = await engine.bootstrap([rc('rt1')]);
@@ -30,37 +46,28 @@ describe('BootstrapEngine', () => {
     expect(result.success).toBe(true);
     expect(result.initializedRuntimes.indexOf('b')).toBeLessThan(result.initializedRuntimes.indexOf('a'));
   });
-  it('detects cycle and fails', () => {
-    try {
-      await engine.bootstrap([rc('a', ['b']), rc('b', ['a'])]);
-      expect(true).toBe(false);
-    } catch (e) {
-      expect(e).toBeInstanceOf(DependencyCycleError);
-    }
+  it('detects cycle and fails', async () => {
+    const result = await engine.bootstrap([rc('a', ['b']), rc('b', ['a'])]);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
   });
-  it('validates version is not 0.0.0', () => {
-    try {
-      await engine.bootstrap([{
-        id: 'bad', name: 'Bad', version: '0.0.0', description: '', dependencies: [],
-        initialize: async () => {}, activate: async () => {}, shutdown: async () => {},
-        health: async () => ({ status: HealthStatus.Failed, details: '', checkedAt: '', responseTimeMs: 0 }),
-      }]);
-      expect(true).toBe(false);
-    } catch (e) {
-      expect(e.message).toContain('version');
-    }
+  it('validates version is not 0.0.0', async () => {
+    const result = await engine.bootstrap([{
+      id: 'bad', name: 'Bad', version: '0.0.0', description: '', dependencies: [],
+      initialize: async () => {}, activate: async () => {}, shutdown: async () => {},
+      health: async () => ({ status: HealthStatus.Failed, details: '', checkedAt: '', responseTimeMs: 0 }),
+    }]);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('version');
   });
-  it('validates unresolved dependencies', () => {
-    try {
-      await engine.bootstrap([{
-        id: 'a', name: 'A', version: '1.0.0', description: '', dependencies: ['missing'],
-        initialize: async () => {}, activate: async () => {}, shutdown: async () => {},
-        health: async () => ({ status: HealthStatus.Healthy, details: '', checkedAt: '', responseTimeMs: 0 }),
-      }]);
-      expect(true).toBe(false);
-    } catch (e) {
-      expect(e.message).toContain('unresolvable');
-    }
+  it('validates unresolved dependencies', async () => {
+    const result = await engine.bootstrap([{
+      id: 'a', name: 'A', version: '1.0.0', description: '', dependencies: ['missing'],
+      initialize: async () => {}, activate: async () => {}, shutdown: async () => {},
+      health: async () => ({ status: HealthStatus.Healthy, details: '', checkedAt: '', responseTimeMs: 0 }),
+    }]);
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('unresolvable');
   });
   it('provides registry after bootstrap', async () => {
     await engine.bootstrap([rc('a')]);

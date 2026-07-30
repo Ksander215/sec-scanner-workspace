@@ -173,7 +173,9 @@ export class BootstrapEngine {
         phase: Phase.Registration,
       };
       this.descriptors.set(descriptor.id, registered);
-      this.registry.register(registered);
+      if (!this.registry.has(descriptor.id)) {
+        this.registry.register(registered);
+      }
     }
   }
 
@@ -263,5 +265,44 @@ export class BootstrapEngine {
         // Graceful degradation
       }
     }
+  }
+
+  /**
+   * Shutdown all runtimes in reverse initialization order.
+   * Sequence: ShutdownRequested → Flush → Persist → Release → Stopped
+   * Non-critical failures are logged but do not halt shutdown.
+   */
+  async shutdownAll(): Promise<void> {
+    if (!this.platformContext || !this.dependencyGraph) return;
+
+    const order = [...this.dependencyGraph.resolvedOrder].reverse();
+    const shutdownStart = performance.now();
+
+    for (const runtimeId of order) {
+      const contract = this.contracts.get(runtimeId);
+      if (!contract) continue;
+
+      try {
+        await contract.shutdown(this.platformContext);
+      } catch {
+        // Non-critical: individual runtime shutdown failure must not prevent others
+      }
+    }
+
+    this.metrics.record('platform.shutdown.timeMs', performance.now() - shutdownStart);
+  }
+
+  /**
+   * Get the resolved initialization order for external inspection.
+   */
+  getResolvedOrder(): readonly string[] {
+    return this.dependencyGraph?.resolvedOrder ?? [];
+  }
+
+  /**
+   * Get all registered contracts.
+   */
+  getContracts(): ReadonlyMap<string, RuntimeContract> {
+    return this.contracts;
   }
 }

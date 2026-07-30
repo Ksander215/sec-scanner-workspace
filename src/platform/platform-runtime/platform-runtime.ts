@@ -163,11 +163,23 @@ export class PlatformRuntime {
     this.state = PlatformState.ShuttingDown;
     this.diagnostics.setState(this.state);
     await this.eventHub.publish('platform.shutdown.requested', {}, 'platform');
+
+    // Flush metrics
+    this.metrics.record('platform.shutdown.initiated', 1);
+
+    // Stop scheduler first (no new background tasks)
     await this.scheduler.stop();
+
+    // Shutdown all runtimes in reverse order via BootstrapEngine
+    await this.bootstrapEngine.shutdownAll();
+
+    // Stop health monitoring
     this.healthMonitor.stopAutoCheck();
+
     this.state = PlatformState.Stopped;
     this.diagnostics.setState(this.state);
-    await this.eventHub.publish('platform.stopped', {}, 'platform');
+    this.metrics.record('platform.stopped', 1);
+    await this.eventHub.publish('platform.stopped', { runtimeCount: this.contracts.length }, 'platform');
   }
 
   async restart(): Promise<void> {

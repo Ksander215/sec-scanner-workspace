@@ -1,10 +1,35 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { BootstrapEngine } from '../../../platform/bootstrap-engine/bootstrap-engine.js';
+import type { RuntimeContract, PlatformContext } from '../../../platform/types.js';
 import { HealthStatus } from '../../../platform/types.js';
+
+function rc(id: string, deps: string[] = []): RuntimeContract {
+  return {
+    id, name: id, version: '1.0.0', description: `Runtime ${id}`, dependencies: deps,
+    initialize: async () => {}, activate: async () => {}, shutdown: async () => {},
+    health: async () => ({ status: HealthStatus.Healthy, details: '', checkedAt: new Date().toISOString(), responseTimeMs: 0 }),
+  };
+}
+
+const mockContext = {
+  eventHub: {} as any,
+  commandBus: {} as any,
+  queryBus: {} as any,
+  configuration: {} as any,
+  registry: {} as any,
+  container: {} as any,
+  scheduler: {} as any,
+  healthMonitor: {} as any,
+  metrics: {} as any,
+  diagnostics: {} as any,
+};
 
 describe('BootstrapEngine Extended', () => {
   let e: BootstrapEngine;
-  beforeEach(() => { e = new BootstrapEngine(); });
+  beforeEach(() => {
+    e = new BootstrapEngine();
+    e.setPlatformContext(mockContext);
+  });
 
   it('single runtime with init tracking', async () => {
     let inited = false;
@@ -97,6 +122,7 @@ describe('BootstrapEngine Extended', () => {
 
   it('required runtime failure marks as failed not degraded', async () => {
     const e2 = new BootstrapEngine({ requiredRuntimeIds: ['must-have'], enableSecurityValidation: false, maxInitializationRetries: 0 });
+    e2.setPlatformContext(mockContext);
     const r = await e2.bootstrap([{
       id: 'must-have', name: 'MustHave', version: '1.0.0', description: '', dependencies: [],
       initialize: async () => { throw new Error('nope'); },
@@ -106,11 +132,3 @@ describe('BootstrapEngine Extended', () => {
     expect(r.failedRuntimes).toContain('must-have');
   });
 });
-
-function rc(id: string, deps: string[] = []): RuntimeContract {
-  return {
-    id, name: id, version: '1.0.0', description: `Runtime ${id}`, dependencies: deps,
-    initialize: async () => {}, activate: async () => {}, shutdown: async () => {},
-    health: async () => ({ status: HealthStatus.Healthy, details: '', checkedAt: new Date().toISOString(), responseTimeMs: 0 }),
-  };
-}

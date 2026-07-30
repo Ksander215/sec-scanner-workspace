@@ -73,17 +73,39 @@ describe('Runtime Bridges', () => {
     expect(c.id).toBe('desktop-foundation');
     expect(c.dependencies.length).toBe(5);
   });
-  it('memory bridge calls initialize', async () => {
-    let called = false;
-    const c = createMemoryRuntimeBridge({ initialize: async () => { called = true; } });
-    await c.initialize({} as any);
-    expect(called).toBe(true);
+  it('memory bridge initialize registers in container and health monitor', async () => {
+    const mockContainer = { registerSingleton: () => {} };
+    const mockHealthMonitor = { registerCheck: () => {} };
+    const mockEventHub = { publish: async () => ({}) };
+    const ctx = { container: mockContainer, healthMonitor: mockHealthMonitor, eventHub: mockEventHub };
+    let disposed = false;
+    const c = createMemoryRuntimeBridge({ dispose: () => { disposed = true; }, getStats: () => ({ entryCount: 5 }) });
+    await c.initialize(ctx as any);
+    expect(disposed).toBe(false);
   });
-  it('memory bridge calls shutdown', async () => {
-    let called = false;
-    const c = createMemoryRuntimeBridge({ shutdown: async () => { called = true; } });
-    await c.shutdown({} as any);
-    expect(called).toBe(true);
+  it('memory bridge shutdown calls dispose', async () => {
+    let disposed = false;
+    const mockEventHub = { publish: async () => ({}) };
+    const ctx = { eventHub: mockEventHub };
+    const c = createMemoryRuntimeBridge({ dispose: () => { disposed = true; } });
+    await c.shutdown(ctx as any);
+    expect(disposed).toBe(true);
+  });
+  it('memory bridge initialize publishes event', async () => {
+    const published: string[] = [];
+    const mockEventHub = { publish: async (type: string) => { published.push(type); return {} as any; } };
+    const ctx = { container: { registerSingleton: () => {} }, healthMonitor: { registerCheck: () => {} }, eventHub: mockEventHub };
+    const c = createMemoryRuntimeBridge({ getStats: () => ({ entryCount: 0 }) });
+    await c.initialize(ctx as any);
+    expect(published).toContain('runtime.memory.initialized');
+  });
+  it('memory bridge shutdown publishes event', async () => {
+    const published: string[] = [];
+    const mockEventHub = { publish: async (type: string) => { published.push(type); return {} as any; } };
+    const ctx = { eventHub: mockEventHub };
+    const c = createMemoryRuntimeBridge({});
+    await c.shutdown(ctx as any);
+    expect(published).toContain('runtime.memory.shutdown');
   });
   it('bridge version param', () => {
     const c = createMemoryRuntimeBridge({}, '3.0.0');
