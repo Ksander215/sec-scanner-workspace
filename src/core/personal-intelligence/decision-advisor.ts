@@ -43,9 +43,9 @@ export class DecisionAdvisor {
       createdAt: now, resolvedAt: null,
     });
 
-    this.decisions.set(id as unknown , decision);
+    this.decisions.set(id as unknown as string, decision);
 
-    const base = createPackEventBase('PackDecisionCreated', EventClassification.StateChange, id as unknown );
+    const base = createPackEventBase('PackDecisionCreated', EventClassification.StateChange, id as unknown as string);
     void this.contracts.platform.publishEvent('PackDecisionCreated', {
       ...base, sequence: 0, version: '1.0.0',
       payload: { decisionId: id, title, optionCount: options.length, createdAt: now },

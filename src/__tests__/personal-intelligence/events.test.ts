@@ -45,4 +45,3 @@ describe('Events', () => {
     expect(a.eventId).not.toBe(b.eventId);
   });
 });
-});

@@ -134,7 +134,6 @@ describe('Onboarding & First Intelligence', () => {
     const result = r.processOnboardingAnswers({ q1: 'G1', q2: 'P1', q3: 'H1', q4: 'C1' });
     expect(Object.isFrozen(result)).toBe(true);
   });
-});
 
   test('full workflow: onboarding -> morning brief -> evening reflection', async () => {
     const r = new PersonalIntelligencePackRuntime(C);
@@ -151,4 +150,3 @@ describe('Onboarding & First Intelligence', () => {
     expect(state.state).toBe(PackState.Active);
   });
 });
-  
