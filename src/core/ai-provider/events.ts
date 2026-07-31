@@ -6,7 +6,7 @@
  * Events are immutable value objects.
  */
 
-import type { Timestamp, Identifier } from '../types/common.js';
+import type { Timestamp } from '../types/common.js';
 import type {
   ProviderId, ModelId, ExecutionId, StreamId, TraceId, PolicyId, CacheKeyId,
   ProviderState, ExecutionStatus, StreamState, PrivacyLevel,

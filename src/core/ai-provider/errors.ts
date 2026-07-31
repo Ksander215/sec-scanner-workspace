@@ -6,8 +6,6 @@
  * Every error has a code, message, and optional context.
  */
 
-import type { ProviderId, ModelId, ExecutionId, StreamId } from './types.js';
-
 // ═══════════════════════════════════════════════════════════════════
 // BASE ERROR
 // ═══════════════════════════════════════════════════════════════════

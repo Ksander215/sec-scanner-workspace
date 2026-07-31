@@ -6,28 +6,28 @@
  * Publishes domain events via InProcessEventBus when available.
  */
 
-import type { IProviderRegistry } from '../contracts.js';
+import type { IProviderRegistry } from './contracts.js';
 import type {
   ProviderId,
   ProviderDescriptor,
   ProviderHealthCheck,
   ProviderRegistryConfig,
   ProviderSDK,
-} from '../types.js';
-import { ProviderState } from '../types.js';
+} from './types.js';
+import { ProviderState } from './types.js';
 import {
   ProviderAlreadyRegisteredError,
   ProviderNotFoundError,
   ProviderLimitExceededError,
-} from '../errors.js';
+} from './errors.js';
 import type {
   ProviderRegisteredEvent,
   ProviderUnregisteredEvent,
   ProviderHealthCheckedEvent,
-} from '../events.js';
-import { EventClassification } from '../../types/common.js';
-import type { DomainEventBase } from '../../domain/events/domain-event.js';
-import type { InProcessEventBus } from '../../events/event-bus.js';
+} from './events.js';
+import { EventClassification } from '../types/common.js';
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
 
 /**
  * Provider Registry — manages provider registration, lookup, and health checks.

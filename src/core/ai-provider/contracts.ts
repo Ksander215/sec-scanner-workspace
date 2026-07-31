@@ -6,11 +6,11 @@
  * These are the ONLY APIs other Runtimes may depend on.
  */
 
-import type { Timestamp, SemVer } from '../types/common.js';
+import type { Timestamp } from '../types/common.js';
 import type {
   ProviderId, ModelId, ExecutionId, StreamId, TraceId, PolicyId, CacheKeyId, TokenAccountId,
   ProviderDescriptor, ModelDescriptor, ModelFilter, ProviderHealthCheck,
-  ExecutionRequest, ExecutionResult, StreamChunk, StreamControl,
+  ExecutionRequest, ExecutionResult, StreamChunk,
   ContextManagementRequest, ContextManagementResult, ContextWindow,
   TokenCountResult, TokenAccount, TokenType, CostReport, CostDetail, CostLimitPolicy,
   RetryConfig, RetryAttempt, FailoverChain, FailoverEvent,
@@ -18,11 +18,9 @@ import type {
   CacheEntry, CacheStats, CacheType,
   ToolInvocation, ToolDefinition,
   PrivacyPolicy, PrivacyEvaluation, PrivacyLevel,
-  ProviderPolicy, PolicyEvaluationResult,
   ExecutionTrace, AIProviderMetrics,
   ExecutionStatus, StreamState, ContextStrategy,
-  BackoffStrategy, FailoverStrategy, AggregationMethod,
-  AIProviderRuntimeConfig,
+  AggregationMethod,
 } from './types.js';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -96,7 +94,7 @@ export interface IContextManager {
   getWindow(modelId: ModelId): Promise<ContextWindow | null>;
   setStrategy(strategy: ContextStrategy): void;
   getStrategy(): ContextStrategy;
-  estimateTokens(messages: readonly ExecutionRequest['messages']): Promise<number>;
+  estimateTokens(messages: ExecutionRequest['messages']): Promise<number>;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -180,7 +178,7 @@ export interface ICacheEngine {
   invalidateByModel(modelId: ModelId): Promise<void>;
   clear(): Promise<void>;
   getStats(): CacheStats;
-  lookup(messages: readonly ExecutionRequest['messages'], modelId: ModelId): Promise<CacheEntry | null>;
+  lookup(messages: ExecutionRequest['messages'], modelId: ModelId): Promise<CacheEntry | null>;
 }
 
 // ═══════════════════════════════════════════════════════════════════
