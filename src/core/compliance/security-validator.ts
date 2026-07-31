@@ -166,7 +166,7 @@ export class SecurityValidator implements ISecurityValidator {
         }
 
         const violations: ComplianceViolation[] = [];
-        const hasPublicFunctions = /(?:export|public)/.test(content);
+        const hasPublicFunctions = /(?:export|public)/.test(content);
         const hasValidation = /(?:validate|sanitize|zod|joi|yup|typeguard|typeof|instanceof|schema|parse)/i.test(content);
 
         if (hasPublicFunctions && !hasValidation) {
