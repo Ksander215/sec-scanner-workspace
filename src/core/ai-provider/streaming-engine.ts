@@ -141,6 +141,7 @@ export class StreamingEngine implements IStreamingEngine {
         eventId: crypto.randomUUID(), sequence: 0,
         aggregateId: streamId as string, aggregateType: 'Stream', version: '1.0.0',
       } as StreamCompletedEvent & DomainEventBase));
+      this.streams.delete(streamId as string);
     }
   }
 
