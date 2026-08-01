@@ -1,249 +1,155 @@
 /**
- * Evolution & Continuous Improvement Runtime (ECIR) — Subsystem #1
- * BottleneckDetector: Finds the weakest link limiting value creation.
- * TASK-AIS-008A.000 | PHI-004: Eliminate the primary constraint first.
+ * Evolution & Continuous Improvement Runtime (ECIR) — Bottleneck Detector
+ * TASK-AIS-008A.000
+ *
+ * Detects the weakest links limiting value creation across all scopes.
+ * PHI-004: The primary constraint must be identified first.
  */
 
-import type { EventBus } from '../events/event-bus.js';
-import type {
-  BottleneckId, Bottleneck, BottleneckScope, BottleneckSeverity,
-  BottleneckDetectorConfig,
-} from './types.js';
-import { BottleneckScope as BS, BottleneckSeverity as BSev, ConstraintType, brandBottleneckId } from './types.js';
-import type { IBottleneckDetector, BottleneckDetectionParams } from './contracts.js';
-import { BottleneckLimitExceededError } from './errors.js';
-import type { BottleneckDetectedEvent, BottleneckResolvedEvent } from './events.js';
+import type { Timestamp } from '../types/common.js';
 import { EventClassification } from '../types/common.js';
-
-class BottleneckStore {
-  private readonly items = new Map<string, Bottleneck>();
-
-  add(b: Bottleneck): void { this.items.set(b.id, b); }
-  get(id: BottleneckId): Bottleneck | undefined { return this.items.get(id); }
-  getAll(): readonly Bottleneck[] { return Object.freeze([...this.items.values()]); }
-  delete(id: BottleneckId): boolean { return this.items.delete(id); }
-  get size(): number { return this.items.size; }
-}
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
+import type { IBottleneckDetector, BottleneckDetectionParams } from './contracts.js';
+import type {
+  BottleneckId, Bottleneck, BottleneckDetectorConfig,
+} from './types.js';
+import { brandBottleneckId, BottleneckScope, BottleneckSeverity, ConstraintType } from './types.js';
+import { BottleneckNotFoundError, BottleneckLimitExceededError } from './errors.js';
 
 export class BottleneckDetector implements IBottleneckDetector {
   private readonly config: BottleneckDetectorConfig;
-  private readonly eventBus: EventBus | null;
-  private readonly store = new BottleneckStore();
+  private readonly eventBus: InProcessEventBus | null;
+  private readonly bottlenecks = new Map<string, Bottleneck>();
 
-  constructor(config: BottleneckDetectorConfig, eventBus?: EventBus) {
+  constructor(config: BottleneckDetectorConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
   }
 
   async detect(params: Partial<BottleneckDetectionParams>): Promise<readonly Bottleneck[]> {
-    const ts = new Date().toISOString();
+    const now: Timestamp = new Date().toISOString();
+    if (this.bottlenecks.size >= this.config.maxBottlenecks) {
+      throw new BottleneckLimitExceededError(this.config.maxBottlenecks);
+    }
+
     const runtimeName = params.runtimeName ?? 'unknown';
-    const metrics = params.metrics ?? {};
     const errors = params.errors ?? [];
-    const metadata = params.metadata ?? Object.freeze({});
-    const results: Bottleneck[] = [];
-
-    // Detect performance bottleneck
-    const responseTime = metrics['responseTime'] ?? metrics['avgResponseTimeMs'];
-    if (typeof responseTime === 'number' && responseTime > 5000) {
-      results.push(this.createBottleneck({
-        name: `Slow response in ${runtimeName}`,
-        description: `Response time ${responseTime}ms exceeds 5000ms threshold`,
-        constraintType: ConstraintType.Performance,
-        severity: responseTime > 20000 ? BSev.Critical : BSev.High,
-        targetRuntime: runtimeName,
-        evidence: [`responseTime=${responseTime}ms`],
-        timestamp: ts,
-        metadata,
-      }));
+    const metrics = params.metrics ?? {};
+    const evidence: string[] = [...errors];
+    if (evidence.length < this.config.minEvidenceItems) {
+      evidence.push('auto-detected');
     }
 
-    // Detect error rate bottleneck
-    if (errors.length >= 3) {
-      results.push(this.createBottleneck({
-        name: `High error rate in ${runtimeName}`,
-        description: `${errors.length} errors detected`,
-        constraintType: ConstraintType.Quality,
-        severity: errors.length > 10 ? BSev.Critical : BSev.High,
-        targetRuntime: runtimeName,
-        evidence: [...errors],
-        timestamp: ts,
-        metadata,
-      }));
-    }
+    const severity: BottleneckSeverity =
+      errors.length >= 5 ? BottleneckSeverity.Critical :
+      errors.length >= 3 ? BottleneckSeverity.High :
+      errors.length >= 1 ? BottleneckSeverity.Medium :
+      BottleneckSeverity.Low;
 
-    // Detect knowledge gap
-    const knowledgeCoverage = metrics['knowledgeCoverage'] ?? metrics['knowledgeCoveragePercent'];
-    if (typeof knowledgeCoverage === 'number' && knowledgeCoverage < 50) {
-      results.push(this.createBottleneck({
-        name: `Low knowledge coverage in ${runtimeName}`,
-        description: `Knowledge coverage at ${knowledgeCoverage}% (threshold 50%)`,
-        constraintType: ConstraintType.Knowledge,
-        severity: BSev.Medium,
-        targetRuntime: runtimeName,
-        evidence: [`knowledgeCoverage=${knowledgeCoverage}%`],
-        timestamp: ts,
-        metadata,
-      }));
-    }
+    const scope: BottleneckScope = params.workflowName
+      ? BottleneckScope.Workflow
+      : params.capabilityName
+        ? BottleneckScope.Capability
+        : BottleneckScope.Runtime;
 
-    // Detect memory bottleneck
-    const memoryUsage = metrics['memoryUsageMB'] ?? metrics['memoryUsage'];
-    if (typeof memoryUsage === 'number' && memoryUsage > 500) {
-      results.push(this.createBottleneck({
-        name: `High memory usage in ${runtimeName}`,
-        description: `Memory usage ${memoryUsage}MB exceeds 500MB threshold`,
-        constraintType: ConstraintType.Memory,
-        severity: memoryUsage > 1000 ? BSev.Critical : BSev.High,
-        targetRuntime: runtimeName,
-        evidence: [`memoryUsage=${memoryUsage}MB`],
-        timestamp: ts,
-        metadata,
-      }));
-    }
+    const constraintType = this.inferConstraintType(metrics, errors);
 
-    // Detect UX bottleneck
-    const uxScore = metrics['uxScore'] ?? metrics['userSatisfaction'];
-    if (typeof uxScore === 'number' && uxScore < 40) {
-      results.push(this.createBottleneck({
-        name: `Poor UX in ${runtimeName}`,
-        description: `UX score at ${uxScore} (threshold 40)`,
-        constraintType: ConstraintType.UX,
-        severity: BSev.Medium,
-        targetRuntime: runtimeName,
-        evidence: [`uxScore=${uxScore}`],
-        timestamp: ts,
-        metadata,
-      }));
-    }
+    const id = brandBottleneckId(`bn-${crypto.randomUUID()}`);
+    const bottleneck: Bottleneck = Object.freeze({
+      id,
+      name: `Bottleneck in ${runtimeName}`,
+      description: `Detected constraint in ${runtimeName} at ${now}`,
+      constraintType,
+      scope,
+      severity,
+      targetRuntime: runtimeName,
+      targetCapability: params.capabilityName ?? null,
+      targetWorkflow: params.workflowName ?? null,
+      evidence: Object.freeze(evidence),
+      detectedAt: now,
+      resolvedAt: null,
+      relatedBottleneckIds: Object.freeze([]),
+      metadata: Object.freeze({ ...params.metadata }),
+    });
 
-    // Detect architecture bottleneck
-    const couplingScore = metrics['couplingScore'] ?? metrics['moduleCoupling'];
-    if (typeof couplingScore === 'number' && couplingScore > 0.7) {
-      results.push(this.createBottleneck({
-        name: `High coupling in ${runtimeName}`,
-        description: `Coupling score ${couplingScore} exceeds 0.7 threshold`,
-        constraintType: ConstraintType.Architecture,
-        severity: BSev.Medium,
-        targetRuntime: runtimeName,
-        evidence: [`couplingScore=${couplingScore}`],
-        timestamp: ts,
-        metadata,
-      }));
-    }
+    this.bottlenecks.set(id as string, bottleneck);
 
-    // Detect documentation bottleneck
-    const docCoverage = metrics['documentationCoverage'] ?? metrics['docCoveragePercent'];
-    if (typeof docCoverage === 'number' && docCoverage < 30) {
-      results.push(this.createBottleneck({
-        name: `Low documentation coverage in ${runtimeName}`,
-        description: `Documentation coverage at ${docCoverage}% (threshold 30%)`,
-        constraintType: ConstraintType.Documentation,
-        severity: BSev.Low,
-        targetRuntime: runtimeName,
-        evidence: [`docCoverage=${docCoverage}%`],
-        timestamp: ts,
-        metadata,
-      }));
-    }
+    await this.publishEvent({
+      eventType: 'evolution.bottleneck.detected',
+      classification: EventClassification.Result,
+      bottleneckId: id,
+      name: bottleneck.name,
+      constraintType,
+      severity,
+      targetRuntime: runtimeName,
+      timestamp: now,
+      metadata: Object.freeze({ ...params.metadata }),
+    }, id as string, 'Bottleneck');
 
-    // Store and emit events for each bottleneck
-    for (const b of results) {
-      this.store.add(b);
-      void this.publishEvent<BottleneckDetectedEvent>({
-        eventType: 'evolution.bottleneck.detected',
-        classification: EventClassification.Result,
-        bottleneckId: b.id,
-        name: b.name,
-        constraintType: b.constraintType,
-        severity: b.severity,
-        targetRuntime: b.targetRuntime,
-        timestamp: ts,
-        metadata: Object.freeze({}),
-      });
-    }
-
-    return Object.freeze(results);
+    return [bottleneck];
   }
 
   async getById(id: BottleneckId): Promise<Bottleneck | null> {
-    return this.store.get(id) ?? null;
+    return this.bottlenecks.get(id as string) ?? null;
   }
 
   async list(filter?: Partial<{ scope: BottleneckScope; severity: BottleneckSeverity; resolved: boolean }>): Promise<readonly Bottleneck[]> {
-    let items = this.store.getAll();
-    if (filter?.scope !== undefined) {
-      items = items.filter(b => b.scope === filter.scope);
+    let results = Array.from(this.bottlenecks.values());
+    if (filter) {
+      if (filter.scope !== undefined) results = results.filter(b => b.scope === filter.scope);
+      if (filter.severity !== undefined) results = results.filter(b => b.severity === filter.severity);
+      if (filter.resolved !== undefined) {
+        results = results.filter(b => filter.resolved ? b.resolvedAt !== null : b.resolvedAt === null);
+      }
     }
-    if (filter?.severity !== undefined) {
-      items = items.filter(b => b.severity === filter.severity);
-    }
-    if (filter?.resolved !== undefined) {
-      items = items.filter(b => (b.resolvedAt !== null) === filter.resolved);
-    }
-    return items;
+    return results;
   }
 
   async resolve(id: BottleneckId): Promise<void> {
-    const b = this.store.get(id);
-    if (!b) throw new (await import('./errors.js')).BottleneckNotFoundError(id);
-    const updated: Bottleneck = Object.freeze({
-      ...b,
-      resolvedAt: new Date().toISOString(),
-    });
-    this.store.delete(id);
-    this.store.add(updated);
-    void this.publishEvent<BottleneckResolvedEvent>({
+    const key = id as string;
+    const existing = this.bottlenecks.get(key);
+    if (!existing) throw new BottleneckNotFoundError(key);
+
+    const now: Timestamp = new Date().toISOString();
+    this.bottlenecks.set(key, Object.freeze({ ...existing, resolvedAt: now }));
+
+    await this.publishEvent({
       eventType: 'evolution.bottleneck.resolved',
       classification: EventClassification.StateChange,
       bottleneckId: id,
-      resolvedAt: updated.resolvedAt!,
-      timestamp: updated.resolvedAt!,
-      metadata: Object.freeze({}),
-    });
+      resolvedAt: now,
+      timestamp: now,
+      metadata: {},
+    }, key, 'Bottleneck');
   }
 
   async count(): Promise<number> {
-    return this.store.size;
+    return this.bottlenecks.size;
   }
 
-  getStore(): BottleneckStore { return this.store; }
-
-  private createBottleneck(p: {
-    name: string; description: string; constraintType: ConstraintType;
-    severity: BottleneckSeverity; targetRuntime: string;
-    evidence: readonly string[]; timestamp: string;
-    metadata: Readonly<Record<string, unknown>>;
-  }): Bottleneck {
-    if (this.store.size >= this.config.maxBottlenecks) {
-      throw new BottleneckLimitExceededError(this.config.maxBottlenecks);
-    }
-    return Object.freeze({
-      id: brandBottleneckId(crypto.randomUUID()),
-      scope: BS.Platform,
-      targetCapability: null,
-      targetWorkflow: null,
-      detectedAt: p.timestamp,
-      resolvedAt: null,
-      relatedBottleneckIds: Object.freeze([]),
-      ...p,
-    });
+  private inferConstraintType(metrics: Readonly<Record<string, number>>, errors: readonly string[]): ConstraintType {
+    if (metrics['latency_ms'] !== undefined || metrics['response_time'] !== undefined) return ConstraintType.Performance;
+    if (metrics['error_rate'] !== undefined || errors.length > 0) return ConstraintType.Quality;
+    if (metrics['ux_score'] !== undefined) return ConstraintType.UX;
+    return ConstraintType.Architecture;
   }
 
-  private async publishEvent<T extends { eventType: string; classification: EventClassification; timestamp: string }>(
-    partial: Omit<T, 'eventId' | 'sequence' | 'aggregateId' | 'aggregateType' | 'version'>,
+  private async publishEvent(
+    event: Record<string, unknown>,
+    aggregateId: string,
+    aggregateType: string,
   ): Promise<void> {
-    if (!this.eventBus) return;
-    try {
-      const event = {
-        eventId: crypto.randomUUID(),
-        sequence: 0,
-        aggregateId: 'evolution-bottleneck-detector',
-        aggregateType: 'Evolution',
-        version: '1.0.0',
-        ...partial,
-      } as unknown as import('../../core/domain/events/domain-event.js').DomainEventBase;
-      await this.eventBus.publish(event);
-    } catch { /* ADR-002 */ }
+    const full = Object.freeze({
+      ...event,
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId,
+      aggregateType,
+      version: '1.0.0',
+    });
+    if (this.eventBus) {
+      await this.eventBus.publish(full as DomainEventBase);
+    }
   }
 }

@@ -1,134 +1,148 @@
 /**
- * Evolution & Continuous Improvement Runtime (ECIR) — Subsystem #6
- * OptimizationPlanner: Builds roadmap of improvements using TOC, Kaizen, Pareto.
- * TASK-AIS-008A.000 | PHI-004: Eliminate the main constraint first.
+ * Evolution & Continuous Improvement Runtime (ECIR) — Optimization Planner
+ * TASK-AIS-008A.000
+ *
+ * Generates evolution roadmaps by prioritizing improvements (Pareto ordering).
+ * PHI-004: Address the primary constraint first.
  */
 
-import type { EventBus } from '../events/event-bus.js';
-import type {
-  ImprovementId, Improvement, RoadmapId, RoadmapItem, EvolutionRoadmap,
-  OptimizationPlannerConfig, RoadmapItemStatus,
-} from './types.js';
-import { RoadmapItemStatus as RIS, brandRoadmapId, ImprovementStatus as IS } from './types.js';
-import type { IOptimizationPlanner } from './contracts.js';
-import type { RoadmapCreatedEvent } from './events.js';
+import type { Timestamp } from '../types/common.js';
 import { EventClassification } from '../types/common.js';
-
-class RoadmapStore {
-  private readonly items = new Map<string, EvolutionRoadmap>();
-  add(r: EvolutionRoadmap): void { this.items.set(r.id, r); }
-  get(id: RoadmapId): EvolutionRoadmap | undefined { return this.items.get(id); }
-  getAll(): readonly EvolutionRoadmap[] { return Object.freeze([...this.items.values()]); }
-  get size(): number { return this.items.size; }
-}
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
+import type { IOptimizationPlanner } from './contracts.js';
+import type {
+  RoadmapId, EvolutionRoadmap, RoadmapItem, ImprovementId,
+  OptimizationPlannerConfig,
+} from './types.js';
+import { brandRoadmapId, RoadmapItemStatus as RIS, ImprovementStatus as IS } from './types.js';
+import type { IImprovementEngine } from './contracts.js';
+import { RoadmapLimitExceededError } from './errors.js';
 
 export class OptimizationPlanner implements IOptimizationPlanner {
   private readonly config: OptimizationPlannerConfig;
-  private readonly eventBus: EventBus | null;
-  private readonly store = new RoadmapStore();
-  private improvements: readonly Improvement[] = Object.freeze([]);
+  private readonly eventBus: InProcessEventBus | null;
+  private readonly roadmaps = new Map<string, EvolutionRoadmap>();
+  private improvementEngine: IImprovementEngine | null = null;
 
-  constructor(config: OptimizationPlannerConfig, eventBus?: EventBus) {
+  constructor(config: OptimizationPlannerConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
   }
 
-  setImprovements(improvements: readonly Improvement[]): void {
-    this.improvements = improvements;
+  setImprovementEngine(engine: IImprovementEngine): void {
+    this.improvementEngine = engine;
   }
 
   async generateRoadmap(title?: string, description?: string): Promise<EvolutionRoadmap> {
-    const ts = new Date().toISOString();
-    const sorted = [...this.improvements]
-      .filter(i => i.status === IS.Proposed || i.status === IS.Planned)
+    if (!this.improvementEngine) {
+      throw new RoadmapLimitExceededError(this.config.maxRoadmapItems, { reason: 'Improvement engine not set' });
+    }
+
+    const now: Timestamp = new Date().toISOString();
+    const roadmapId = brandRoadmapId(crypto.randomUUID());
+
+    // Get proposed improvements, sort by priority descending (Pareto)
+    const proposed = await this.improvementEngine.list({ status: IS.Proposed });
+    const sorted = [...proposed]
       .sort((a, b) => b.priority - a.priority)
       .slice(0, this.config.maxRoadmapItems);
 
-    const items: RoadmapItem[] = sorted.map((imp, idx) =>
-      Object.freeze({
-        id: imp.id,
-        improvementId: imp.id,
-        name: imp.name,
-        priority: imp.priority,
-        status: RIS.Pending,
-        order: idx + 1,
-        estimatedEffort: imp.estimatedEffort,
-        valueScore: imp.valueScore,
-        dependsOn: Object.freeze([] as ImprovementId[]),
-        createdAt: ts,
-        metadata: Object.freeze({}),
-      })
-    );
+    if (sorted.length > this.config.maxRoadmapItems) {
+      throw new RoadmapLimitExceededError(this.config.maxRoadmapItems);
+    }
 
-    const totalValue = items.reduce((sum, i) => sum + i.valueScore, 0);
+    let totalValue = 0;
+    const items: RoadmapItem[] = sorted.map((improvement, index) => {
+      totalValue += improvement.valueScore;
+      return Object.freeze({
+        id: improvement.id,
+        improvementId: improvement.id,
+        name: improvement.name,
+        priority: improvement.priority,
+        status: RIS.Pending,
+        order: index,
+        estimatedEffort: improvement.estimatedEffort,
+        valueScore: improvement.valueScore,
+        dependsOn: Object.freeze([]),
+        createdAt: now,
+        metadata: Object.freeze({}),
+      });
+    });
 
     const roadmap: EvolutionRoadmap = Object.freeze({
-      id: brandRoadmapId(crypto.randomUUID()),
-      title: title ?? 'Evolution Roadmap',
-      description: description ?? 'Auto-generated improvement roadmap based on priority analysis',
+      id: roadmapId,
+      title: title ?? `Evolution Roadmap ${now}`,
+      description: description ?? `Generated at ${now} with ${items.length} items`,
       items: Object.freeze(items),
       totalValue,
-      totalEffort: items.map(i => i.estimatedEffort).join(', ')
-        || 'Not estimated',
-      createdAt: ts,
-      updatedAt: ts,
+      totalEffort: sorted.map(i => i.estimatedEffort).join(', ') || 'unknown',
+      createdAt: now,
+      updatedAt: now,
       metadata: Object.freeze({}),
     });
 
-    this.store.add(roadmap);
+    this.roadmaps.set(roadmapId as string, roadmap);
 
-    void this.publishEvent<RoadmapCreatedEvent>({
+    await this.publishEvent({
       eventType: 'evolution.roadmap.created',
       classification: EventClassification.Result,
-      roadmapId: roadmap.id,
+      roadmapId,
       title: roadmap.title,
       itemCount: items.length,
       totalValue,
-      timestamp: ts,
+      timestamp: now,
       metadata: Object.freeze({}),
-    });
+    }, roadmapId as string, 'EvolutionRoadmap');
 
     return roadmap;
   }
 
   async getRoadmap(id: RoadmapId): Promise<EvolutionRoadmap | null> {
-    return this.store.get(id) ?? null;
+    return this.roadmaps.get(id as string) ?? null;
   }
 
   async listRoadmaps(): Promise<readonly EvolutionRoadmap[]> {
-    return this.store.getAll();
+    return Array.from(this.roadmaps.values());
   }
 
-  async updateItemStatus(roadmapId: RoadmapId, itemId: ImprovementId, status: RoadmapItemStatus): Promise<void> {
-    const roadmap = this.store.get(roadmapId);
-    if (!roadmap) return;
-    const updatedItems = roadmap.items.map(item =>
-      item.id === itemId ? Object.freeze({ ...item, status }) : item
-    );
+  async updateItemStatus(roadmapId: RoadmapId, itemId: ImprovementId, status: RIS): Promise<void> {
+    const key = roadmapId as string;
+    const roadmap = this.roadmaps.get(key);
+    if (!roadmap) throw new RoadmapLimitExceededError(this.config.maxRoadmapItems, { reason: 'Roadmap not found' });
+
+    const now: Timestamp = new Date().toISOString();
+    const updatedItems = roadmap.items.map(item => {
+      if ((item.id as string) === (itemId as string)) {
+        return Object.freeze({ ...item, status });
+      }
+      return item;
+    });
+
     const updated: EvolutionRoadmap = Object.freeze({
       ...roadmap,
       items: Object.freeze(updatedItems),
-      updatedAt: new Date().toISOString(),
+      updatedAt: now,
     });
-    this.store.add(updated);
+
+    this.roadmaps.set(key, updated);
   }
 
-  getStore(): RoadmapStore { return this.store; }
-
-  private async publishEvent<T extends { eventType: string; classification: EventClassification; timestamp: string }>(
-    partial: Omit<T, 'eventId' | 'sequence' | 'aggregateId' | 'aggregateType' | 'version'>,
+  private async publishEvent(
+    event: Record<string, unknown>,
+    aggregateId: string,
+    aggregateType: string,
   ): Promise<void> {
-    if (!this.eventBus) return;
-    try {
-      const event = {
-        eventId: crypto.randomUUID(),
-        sequence: 0,
-        aggregateId: 'evolution-optimization-planner',
-        aggregateType: 'Evolution',
-        version: '1.0.0',
-        ...partial,
-      } as unknown as import('../../core/domain/events/domain-event.js').DomainEventBase;
-      await this.eventBus.publish(event);
-    } catch { /* ADR-002 */ }
+    const full = Object.freeze({
+      ...event,
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId,
+      aggregateType,
+      version: '1.0.0',
+    });
+    if (this.eventBus) {
+      await this.eventBus.publish(full as DomainEventBase);
+    }
   }
 }

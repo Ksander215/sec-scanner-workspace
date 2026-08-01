@@ -1,4 +1,4 @@
-/*
+/**
  * Evolution & Continuous Improvement Runtime (ECIR) — Orchestrator (#15)
  * TASK-AIS-008A.000
  *
@@ -6,9 +6,8 @@
  * Conforms to IEvolutionRuntime from contracts.ts.
  */
 
-import type { EventBus } from '../events/event-bus.js';
-import type { EvolutionRuntimeConfig, EvolutionMetrics, EvolutionState } from './types.js';
-import { EvolutionState as ES } from './types.js';
+import type { Timestamp } from '../types/common.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
 import type {
   IBottleneckDetector, IConstraintAnalyzer, IImprovementEngine,
   IValueAnalyzer, IOpportunityCostEngine, IOptimizationPlanner,
@@ -17,11 +16,14 @@ import type {
   ITechDebtAnalyzer, IRecommendationPrioritizer, IEvolutionRuntime,
   EvolutionAnalysisResult,
 } from './contracts.js';
-import type { ValueAnalysis, OpportunityCost } from './types.js';
-import { EvolutionNotInitializedError, EvolutionDisposedError } from './errors.js';
-import type { EvolutionInitializedEvent, EvolutionStateChangedEvent, EvolutionAnalysisCompletedEvent } from './events.js';
+import type {
+  EvolutionRuntimeConfig, EvolutionMetrics, EvolutionState,
+  ValueAnalysis, OpportunityCost, Improvement, ConstraintAnalysis,
+} from './types.js';
+import { EvolutionState as ES, ImprovementStatus as IS } from './types.js';
 import { EventClassification } from '../types/common.js';
-import { DefaultEvolutionRuntimeConfig } from './types.js';
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import { EvolutionNotInitializedError, EvolutionDisposedError } from './errors.js';
 
 import { BottleneckDetector } from './bottleneck-detector.js';
 import { ConstraintAnalyzer } from './constraint-analyzer.js';
@@ -35,8 +37,12 @@ import { FeedbackCollector } from './feedback-collector.js';
 import { LearningLoop } from './learning-loop.js';
 import { EvolutionGraph } from './evolution-graph.js';
 import { ArchitectureOptimizer } from './architecture-optimizer.js';
-import { TechnicalDebtAnalyzer } from './tech-debt-analyzer.js';
+import { TechDebtAnalyzer } from './tech-debt-analyzer.js';
 import { RecommendationPrioritizer } from './recommendation-prioritizer.js';
+
+interface Disposable {
+  dispose(): void;
+}
 
 export class EvolutionRuntime implements IEvolutionRuntime {
   // ─── Subsystems ──────────────────────────────────────────────
@@ -52,44 +58,71 @@ export class EvolutionRuntime implements IEvolutionRuntime {
   private readonly _learningLoop: LearningLoop;
   private readonly _evolutionGraph: EvolutionGraph;
   private readonly _architectureOptimizer: ArchitectureOptimizer;
-  private readonly _techDebtAnalyzer: TechnicalDebtAnalyzer;
+  private readonly _techDebtAnalyzer: TechDebtAnalyzer;
   private readonly _recommendationPrioritizer: RecommendationPrioritizer;
 
   // ─── Internal State ──────────────────────────────────────────
-  private readonly eventBus: EventBus | undefined;
+  private readonly eventBus: InProcessEventBus | null;
   private _state: EvolutionState = ES.Uninitialized;
   private _disposed = false;
+  private _lastAnalysisAt: Timestamp | null = null;
 
-  constructor(config?: Partial<EvolutionRuntimeConfig>, eventBus?: EventBus) {
-    const cfg = { ...DefaultEvolutionRuntimeConfig, ...config };
-    this.eventBus = eventBus;
+  constructor(config: EvolutionRuntimeConfig, eventBus?: InProcessEventBus | null) {
+    this.eventBus = eventBus ?? null;
 
-    this._bottleneckDetector = new BottleneckDetector(cfg.bottleneckDetector, this.eventBus);
-    this._constraintAnalyzer = new ConstraintAnalyzer(cfg.constraintAnalyzer, this.eventBus);
-    this._improvementEngine = new ImprovementEngine(cfg.improvementEngine, this.eventBus);
-    this._valueAnalyzer = new ValueAnalyzer(cfg.valueAnalyzer, this.eventBus);
-    this._opportunityCostEngine = new OpportunityCostEngine(cfg.opportunityCost, this.eventBus);
-    this._optimizationPlanner = new OptimizationPlanner(cfg.optimizationPlanner, this.eventBus);
-    this._experimentRuntime = new ExperimentRuntime(cfg.experiment, this.eventBus);
-    this._kpiRuntime = new KPIRuntime(cfg.kpi, this.eventBus);
-    this._feedbackCollector = new FeedbackCollector(cfg.feedbackCollector, this.eventBus);
-    this._learningLoop = new LearningLoop(cfg.learningLoop, this.eventBus);
-    this._evolutionGraph = new EvolutionGraph(cfg.evolutionGraph, this.eventBus);
-    this._architectureOptimizer = new ArchitectureOptimizer(cfg.architectureOptimizer, this.eventBus);
-    this._techDebtAnalyzer = new TechnicalDebtAnalyzer(cfg.techDebt, this.eventBus);
-    this._recommendationPrioritizer = new RecommendationPrioritizer(cfg.prioritizer);
+    // Create all 15 subsystem instances
+    this._bottleneckDetector = new BottleneckDetector(config.bottleneckDetector, this.eventBus);
+    this._constraintAnalyzer = new ConstraintAnalyzer(config.constraintAnalyzer, this.eventBus);
+    this._improvementEngine = new ImprovementEngine(config.improvementEngine, this.eventBus);
+    this._valueAnalyzer = new ValueAnalyzer(config.valueAnalyzer, this.eventBus);
+    this._opportunityCostEngine = new OpportunityCostEngine(config.opportunityCost, this.eventBus);
+    this._optimizationPlanner = new OptimizationPlanner(config.optimizationPlanner, this.eventBus);
+    this._experimentRuntime = new ExperimentRuntime(config.experiment, this.eventBus);
+    this._kpiRuntime = new KPIRuntime(config.kpi, this.eventBus);
+    this._feedbackCollector = new FeedbackCollector(config.feedbackCollector, this.eventBus);
+    this._learningLoop = new LearningLoop(config.learningLoop, this.eventBus);
+    this._evolutionGraph = new EvolutionGraph(config.evolutionGraph, this.eventBus);
+    this._architectureOptimizer = new ArchitectureOptimizer(config.architectureOptimizer, this.eventBus);
+    this._techDebtAnalyzer = new TechDebtAnalyzer(config.techDebt, this.eventBus);
+    this._recommendationPrioritizer = new RecommendationPrioritizer(config.prioritizer);
+
+    // Wire cross-references: setImprovementEngine on subsystems that need it
+    this._valueAnalyzer.setImprovementEngine(this._improvementEngine);
+    this._opportunityCostEngine.setImprovementEngine(this._improvementEngine);
+    this._optimizationPlanner.setImprovementEngine(this._improvementEngine);
+    this._recommendationPrioritizer.setImprovementEngine(this._improvementEngine);
   }
 
-  get state(): EvolutionState { return this._state; }
-
-  assertNotDisposed(): void {
-    if (this._disposed) throw new EvolutionDisposedError();
+  get state(): EvolutionState {
+    return this._state;
   }
 
   async initialize(): Promise<void> {
     this.assertNotDisposed();
-    this.transitionState(ES.Initializing, ES.Ready);
-    void this.publishEvent<EvolutionInitializedEvent>({
+
+    // Uninitialized → Initializing
+    this._state = ES.Initializing;
+    await this.publishEvent({
+      eventType: 'evolution.runtime.stateChanged',
+      classification: EventClassification.StateChange,
+      fromState: ES.Uninitialized,
+      toState: ES.Initializing,
+      timestamp: new Date().toISOString(),
+      metadata: Object.freeze({}),
+    });
+
+    // Initializing → Ready
+    this._state = ES.Ready;
+    await this.publishEvent({
+      eventType: 'evolution.runtime.stateChanged',
+      classification: EventClassification.StateChange,
+      fromState: ES.Initializing,
+      toState: ES.Ready,
+      timestamp: new Date().toISOString(),
+      metadata: Object.freeze({}),
+    });
+
+    await this.publishEvent({
       eventType: 'evolution.runtime.initialized',
       classification: EventClassification.StateChange,
       subsystemCount: 15,
@@ -100,21 +133,85 @@ export class EvolutionRuntime implements IEvolutionRuntime {
 
   async shutdown(): Promise<void> {
     this.assertNotDisposed();
-    this.transitionState(this._state, ES.Stopped);
+
+    // Current → Stopping
+    const prevState = this._state;
+    this._state = ES.Stopping;
+    await this.publishEvent({
+      eventType: 'evolution.runtime.stateChanged',
+      classification: EventClassification.StateChange,
+      fromState: prevState,
+      toState: ES.Stopping,
+      timestamp: new Date().toISOString(),
+      metadata: Object.freeze({}),
+    });
+
+    // Dispose all subsystems
+    const subsystems: unknown[] = [
+      this._bottleneckDetector,
+      this._constraintAnalyzer,
+      this._improvementEngine,
+      this._valueAnalyzer,
+      this._opportunityCostEngine,
+      this._optimizationPlanner,
+      this._experimentRuntime,
+      this._kpiRuntime,
+      this._feedbackCollector,
+      this._learningLoop,
+      this._evolutionGraph,
+      this._architectureOptimizer,
+      this._techDebtAnalyzer,
+      this._recommendationPrioritizer,
+    ];
+    for (const s of subsystems) {
+      if (typeof (s as Disposable).dispose === 'function') {
+        try { (s as Disposable).dispose(); } catch { /* best-effort */ }
+      }
+    }
+
+    // Stopping → Stopped
+    this._state = ES.Stopped;
+    await this.publishEvent({
+      eventType: 'evolution.runtime.stateChanged',
+      classification: EventClassification.StateChange,
+      fromState: ES.Stopping,
+      toState: ES.Stopped,
+      timestamp: new Date().toISOString(),
+      metadata: Object.freeze({}),
+    });
+
     this._disposed = true;
   }
 
   async analyze(): Promise<EvolutionAnalysisResult> {
     this.assertInitialized();
     this.assertNotDisposed();
+
     const startMs = Date.now();
-    this.transitionState(this._state, ES.Analyzing);
+
+    // Ready → Analyzing
+    this._state = ES.Analyzing;
+    await this.publishEvent({
+      eventType: 'evolution.runtime.stateChanged',
+      classification: EventClassification.StateChange,
+      fromState: ES.Ready,
+      toState: ES.Analyzing,
+      timestamp: new Date().toISOString(),
+      metadata: Object.freeze({}),
+    });
 
     // Step 1: Detect bottlenecks
     const bottlenecks = await this._bottleneckDetector.detect({});
 
-    // Step 2: Create improvements for each bottleneck
-    const improvements: Awaited<ReturnType<typeof this._improvementEngine.propose>>[] = [];
+    // Step 2: Analyze constraints for each bottleneck
+    const constraintAnalyses: ConstraintAnalysis[] = [];
+    for (const b of bottlenecks) {
+      const ca = await this._constraintAnalyzer.analyze(b.id);
+      constraintAnalyses.push(ca);
+    }
+
+    // Step 3: Propose improvements for each bottleneck
+    const improvements: Improvement[] = [];
     for (const b of bottlenecks) {
       const imp = await this._improvementEngine.propose({
         name: `Fix: ${b.name}`,
@@ -130,37 +227,48 @@ export class EvolutionRuntime implements IEvolutionRuntime {
       improvements.push(imp);
     }
 
-    // Step 3: Prioritize improvements
-    const prioritized = await this._recommendationPrioritizer.prioritize(improvements);
-
     // Step 4: Analyze value for top improvements
     const valueAnalyses: ValueAnalysis[] = [];
-    for (const imp of prioritized.slice(0, 10)) {
+    for (const imp of improvements.slice(0, 10)) {
       const va = await this._valueAnalyzer.analyze(imp.id);
       valueAnalyses.push(va);
     }
 
-    // Step 5: Analyze opportunity costs
+    // Step 5: Calculate opportunity costs for top improvements
     const opportunityCosts: OpportunityCost[] = [];
-    for (const imp of prioritized.slice(0, 5)) {
+    for (const imp of improvements.slice(0, 5)) {
       const oc = await this._opportunityCostEngine.analyze(imp.id);
       opportunityCosts.push(oc);
     }
 
-    // Step 6: Generate roadmap
-    this._optimizationPlanner.setImprovements(prioritized);
+    // Step 6: Prioritize improvements
+    const prioritized = await this._recommendationPrioritizer.prioritize(improvements);
+
+    // Step 7: Generate roadmap
     const roadmap = await this._optimizationPlanner.generateRoadmap();
 
-    this.transitionState(ES.Analyzing, ES.Ready);
+    // Analyzing → Ready
+    this._state = ES.Ready;
+    const now: Timestamp = new Date().toISOString();
+    this._lastAnalysisAt = now;
+
+    await this.publishEvent({
+      eventType: 'evolution.runtime.stateChanged',
+      classification: EventClassification.StateChange,
+      fromState: ES.Analyzing,
+      toState: ES.Ready,
+      timestamp: now,
+      metadata: Object.freeze({}),
+    });
 
     const durationMs = Date.now() - startMs;
-    void this.publishEvent<EvolutionAnalysisCompletedEvent>({
+    await this.publishEvent({
       eventType: 'evolution.analysis.completed',
       classification: EventClassification.Result,
       bottlenecksFound: bottlenecks.length,
-      timestamp: new Date().toISOString(),
       improvementsProposed: improvements.length,
       durationMs,
+      timestamp: now,
       metadata: Object.freeze({}),
     });
 
@@ -176,8 +284,20 @@ export class EvolutionRuntime implements IEvolutionRuntime {
 
   async getMetrics(): Promise<EvolutionMetrics> {
     this.assertInitialized();
-    const [bnCount, impList, expList, kpiList, fbList, lrList, graphCount, tdList] = await Promise.all([
-      this._bottleneckDetector.count(),
+    this.assertNotDisposed();
+
+    const [
+      bnList,
+      impList,
+      expList,
+      kpiList,
+      fbList,
+      lrList,
+      graphCount,
+      tdList,
+      totalTechDebtCost,
+    ] = await Promise.all([
+      this._bottleneckDetector.list(),
       this._improvementEngine.list(),
       this._experimentRuntime.list(),
       this._kpiRuntime.list(),
@@ -185,16 +305,20 @@ export class EvolutionRuntime implements IEvolutionRuntime {
       this._learningLoop.list(),
       this._evolutionGraph.count(),
       this._techDebtAnalyzer.list(),
+      this._techDebtAnalyzer.getTotalCost(),
     ]);
-    const activeBN = bnCount - (await this._bottleneckDetector.list({ resolved: true })).length;
+
+    const totalBottlenecks = bnList.length;
+    const resolvedBottlenecks = bnList.filter(b => b.resolvedAt !== null).length;
+
     return Object.freeze({
-      totalBottlenecksDetected: bnCount,
-      activeBottlenecks: activeBN,
-      resolvedBottlenecks: bnCount - activeBN,
+      totalBottlenecksDetected: totalBottlenecks,
+      activeBottlenecks: totalBottlenecks - resolvedBottlenecks,
+      resolvedBottlenecks,
       totalImprovements: impList.length,
-      activeImprovements: impList.filter(i => i.status === 'InProgress').length,
-      completedImprovements: impList.filter(i => i.status === 'Completed').length,
-      failedImprovements: impList.filter(i => i.status === 'Failed').length,
+      activeImprovements: impList.filter(i => i.status === IS.InProgress).length,
+      completedImprovements: impList.filter(i => i.status === IS.Completed).length,
+      failedImprovements: impList.filter(i => i.status === IS.Failed).length,
       totalExperiments: expList.length,
       successfulExperiments: expList.filter(e => e.status === 'Completed').length,
       totalKPIs: kpiList.length,
@@ -205,10 +329,11 @@ export class EvolutionRuntime implements IEvolutionRuntime {
       evolutionGraphNodes: graphCount,
       techDebtItems: tdList.length,
       resolvedTechDebt: tdList.filter(t => t.resolvedAt !== null).length,
-      totalTechDebtCost: 0,
+      totalTechDebtCost,
       averageImprovementPriority: impList.length > 0
-        ? impList.reduce((s, i) => s + i.priority, 0) / impList.length : 0,
-      lastAnalysisAt: null,
+        ? impList.reduce((s, i) => s + i.priority, 0) / impList.length
+        : 0,
+      lastAnalysisAt: this._lastAnalysisAt,
       metadata: Object.freeze({}),
     });
   }
@@ -234,28 +359,23 @@ export class EvolutionRuntime implements IEvolutionRuntime {
     if (this._state === ES.Uninitialized) throw new EvolutionNotInitializedError();
   }
 
-  private transitionState(from: EvolutionState, to: EvolutionState): void {
-    this._state = to;
-    void this.publishEvent<EvolutionStateChangedEvent>({
-      eventType: 'evolution.runtime.stateChanged',
-      classification: EventClassification.StateChange,
-      fromState: from,
-      timestamp: new Date().toISOString(),
-      toState: to,
-      metadata: Object.freeze({}),
-    });
+  private assertNotDisposed(): void {
+    if (this._disposed) throw new EvolutionDisposedError();
   }
 
-  private async publishEvent<T extends { eventType: string; classification: EventClassification; timestamp: string }>(
-    partial: Omit<T, 'eventId' | 'sequence' | 'aggregateId' | 'aggregateType' | 'version'>,
+  private async publishEvent(
+    event: Record<string, unknown>,
   ): Promise<void> {
-    if (!this.eventBus) return;
-    try {
-      const event = {
-        aggregateId: 'evolution-runtime', aggregateType: 'Evolution', version: '1.0.0',
-        ...partial,
-      } as unknown as import('../../core/domain/events/domain-event.js').DomainEventBase;
-      await this.eventBus.publish(event);
-    } catch { /* ADR-002 */ }
+    const full = Object.freeze({
+      ...event,
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId: 'evolution-runtime',
+      aggregateType: 'EvolutionRuntime',
+      version: '1.0.0',
+    });
+    if (this.eventBus) {
+      await this.eventBus.publish(full as DomainEventBase);
+    }
   }
 }

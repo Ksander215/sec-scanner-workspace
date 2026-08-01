@@ -1,105 +1,116 @@
 /**
- * Evolution & Continuous Improvement Runtime (ECIR) — Subsystem #12
- * ArchitectureOptimizer: Can we simplify? Remove layers? Merge runtimes?
+ * Evolution & Continuous Improvement Runtime (ECIR) — Architecture Optimizer
  * TASK-AIS-008A.000
+ *
+ * Analyzes architecture for simplification, decoupling, and cohesion improvements.
  */
 
-import type { EventBus } from '../events/event-bus.js';
-import type {
-  EvolutionNodeId, ArchOptimizationSuggestion, ArchOptimizationType,
-  ArchitectureOptimizerConfig,
-} from './types.js';
-import { brandEvolutionNodeId, ArchOptimizationType as AOT } from './types.js';
-import type { IArchitectureOptimizer } from './contracts.js';
-import type { ArchOptimizationSuggestedEvent } from './events.js';
+import type { Timestamp } from '../types/common.js';
 import { EventClassification } from '../types/common.js';
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
+import type { IArchitectureOptimizer } from './contracts.js';
+import type {
+  EvolutionNodeId, ArchOptimizationSuggestion, ArchitectureOptimizerConfig,
+} from './types.js';
+import { brandEvolutionNodeId, ArchOptimizationType } from './types.js';
 
-class SuggestionStore {
-  private readonly items = new Map<string, ArchOptimizationSuggestion>();
-  add(s: ArchOptimizationSuggestion): void { this.items.set(s.id, s); }
-  get(id: EvolutionNodeId): ArchOptimizationSuggestion | undefined { return this.items.get(id); }
-  getAll(): readonly ArchOptimizationSuggestion[] { return Object.freeze([...this.items.values()]); }
-  get size(): number { return this.items.size; }
-}
+const CYCLING_TYPES = [
+  ArchOptimizationType.Simplify,
+  ArchOptimizationType.ReduceCoupling,
+  ArchOptimizationType.ImproveCohesion,
+] as const;
 
 export class ArchitectureOptimizer implements IArchitectureOptimizer {
   private readonly config: ArchitectureOptimizerConfig;
-  private readonly eventBus: EventBus | null;
-  private readonly store = new SuggestionStore();
+  private readonly eventBus: InProcessEventBus | null;
+  private suggestions = new Map<string, ArchOptimizationSuggestion>();
 
-  constructor(config: ArchitectureOptimizerConfig, eventBus?: EventBus) {
+  constructor(config: ArchitectureOptimizerConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
   }
 
   async analyze(modules?: readonly string[]): Promise<readonly ArchOptimizationSuggestion[]> {
-    const ts = new Date().toISOString();
-    const targetModules = modules ?? Object.freeze([]);
-    const suggestions: ArchOptimizationSuggestion[] = [];
+    const now: Timestamp = new Date().toISOString();
+    const targetModules = modules ?? ['core'];
+    const results: ArchOptimizationSuggestion[] = [];
 
-    const templateSuggestion = (type: ArchOptimizationType, title: string, desc: string, impact: number): ArchOptimizationSuggestion =>
-      Object.freeze({
-        id: brandEvolutionNodeId(crypto.randomUUID()),
-        type, title, description: desc,
-        affectedModules: targetModules,
-        estimatedImpact: impact,
-        estimatedEffort: Math.ceil(impact * 2),
-        risk: impact * 0.3,
-        createdAt: ts,
-        metadata: Object.freeze({}),
-      });
+    for (const module of targetModules) {
+      if (results.length >= this.config.maxSuggestions) break;
 
-    if (suggestions.length < this.config.maxSuggestions) {
-      suggestions.push(templateSuggestion(
-        AOT.ReduceCoupling,
-        'Reduce inter-module coupling',
-        'High coupling detected between modules. Consider introducing intermediate abstractions or event-based communication.',
-        70,
-      ));
+      for (const type of CYCLING_TYPES) {
+        if (results.length >= this.config.maxSuggestions) break;
+
+        const id = brandEvolutionNodeId(crypto.randomUUID());
+        const title = `${type} for ${module}`;
+        const description = `Architecture optimization suggestion: ${type} in module ${module}`;
+        const estimatedImpact = 50 + Math.random() * 50;
+
+        const suggestion: ArchOptimizationSuggestion = Object.freeze({
+          id,
+          type,
+          title,
+          description,
+          affectedModules: Object.freeze([...targetModules]),
+          estimatedImpact: Math.round(estimatedImpact * 100) / 100,
+          estimatedEffort: Math.ceil(estimatedImpact * 2),
+          risk: Math.round(estimatedImpact * 0.3 * 100) / 100,
+          createdAt: now,
+          metadata: Object.freeze({}),
+        });
+
+        this.suggestions.set(id as string, suggestion);
+        results.push(suggestion);
+
+        await this.publishEvent({
+          eventType: 'evolution.arch.suggested',
+          classification: EventClassification.Result,
+          nodeId: id,
+          type,
+          title,
+          estimatedImpact: suggestion.estimatedImpact,
+          timestamp: now,
+          metadata: Object.freeze({}),
+        }, id as string, 'ArchOptimization');
+      }
     }
-    if (suggestions.length < this.config.maxSuggestions) {
-      suggestions.push(templateSuggestion(
-        AOT.ImproveCohesion,
-        'Improve module cohesion',
-        'Some modules have low internal cohesion. Consider grouping related responsibilities more tightly.',
-        55,
-      ));
-    }
 
-    for (const s of suggestions) {
-      this.store.add(s);
-      void this.publishEvent<ArchOptimizationSuggestedEvent>({
-        eventType: 'evolution.arch.suggested', classification: EventClassification.Result,
-        nodeId: s.id, type: s.type, title: s.title, estimatedImpact: s.estimatedImpact,
-        timestamp: ts, metadata: Object.freeze({}),
-      });
-    }
-
-    return Object.freeze(suggestions);
+    return Object.freeze(results);
   }
 
   async getById(id: EvolutionNodeId): Promise<ArchOptimizationSuggestion | null> {
-    return this.store.get(id) ?? null;
+    return this.suggestions.get(id as string) ?? null;
   }
 
   async list(): Promise<readonly ArchOptimizationSuggestion[]> {
-    return this.store.getAll();
+    return Array.from(this.suggestions.values());
   }
 
-  async count(): Promise<number> { return this.store.size; }
+  async count(): Promise<number> {
+    return this.suggestions.size;
+  }
 
-  getStore(): SuggestionStore { return this.store; }
+  /** Reset internal state. Used by EvolutionRuntime.shutdown(). */
+  dispose(): void {
+    this.suggestions = new Map();
+  }
 
-  private async publishEvent<T extends { eventType: string; classification: EventClassification; timestamp: string }>(
-    partial: Omit<T, 'eventId' | 'sequence' | 'aggregateId' | 'aggregateType' | 'version'>,
+  private async publishEvent(
+    event: Record<string, unknown>,
+    aggregateId: string,
+    aggregateType: string,
   ): Promise<void> {
-    if (!this.eventBus) return;
-    try {
-      const event = {
-        aggregateId: 'evolution-architecture-optimizer', aggregateType: 'Evolution', version: '1.0.0',
-        ...partial,
-      } as unknown as import('../../core/domain/events/domain-event.js').DomainEventBase;
-      await this.eventBus.publish(event);
-    } catch { /* ADR-002 */ }
+    const full = Object.freeze({
+      ...event,
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId,
+      aggregateType,
+      version: '1.0.0',
+    });
+    if (this.eventBus) {
+      await this.eventBus.publish(full as DomainEventBase);
+    }
   }
 }

@@ -4,118 +4,147 @@
  * TASK-AIS-008A.000
  */
 
-import type { EventBus } from '../events/event-bus.js';
+import type { Timestamp } from '../types/common.js';
+import { EventClassification } from '../types/common.js';
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
+import type { IFeedbackCollector, FeedbackCollectionParams } from './contracts.js';
 import type {
   FeedbackId, FeedbackEntry, FeedbackSource, FeedbackSentiment,
   FeedbackCollectorConfig,
 } from './types.js';
 import { brandFeedbackId } from './types.js';
-import type { IFeedbackCollector, FeedbackCollectionParams } from './contracts.js';
-import { FeedbackNotFoundError, FeedbackLimitExceededError } from './errors.js';
 import type { FeedbackReceivedEvent, FeedbackProcessedEvent } from './events.js';
-import { EventClassification } from '../types/common.js';
+import { FeedbackNotFoundError, FeedbackLimitExceededError } from './errors.js';
 
-class FeedbackStore {
-  private readonly items = new Map<string, FeedbackEntry>();
-  add(f: FeedbackEntry): void { this.items.set(f.id, f); }
-  get(id: FeedbackId): FeedbackEntry | undefined { return this.items.get(id); }
-  getAll(): readonly FeedbackEntry[] { return Object.freeze([...this.items.values()]); }
-  update(id: FeedbackId, f: FeedbackEntry): void { this.items.set(id, f); }
-  get size(): number { return this.items.size; }
-}
-
-const INSIGHT_PATTERNS: Partial<Record<FeedbackSentiment, readonly string[]>> = {
-  Negative: ['Potential bottleneck', 'Quality concern', 'UX friction detected'] as const,
-  Positive: ['Working well', 'Value confirmed', 'User satisfied'] as const,
-  Critical: ['Critical issue', 'Immediate action needed', 'Value destruction detected'] as const,
-  Neutral: ['Observation', 'Data point recorded', 'Monitoring recommended'] as const,
-};
+const INSIGHT_KEYWORDS: readonly string[] = Object.freeze([
+  'slow', 'error', 'confusing', 'broken', 'crash', 'bug', 'timeout',
+  'frustrating', 'unclear', 'missing', 'wrong', 'fail', 'lag',
+  'complex', 'difficult', 'unresponsive', 'inconsistent',
+]);
 
 export class FeedbackCollector implements IFeedbackCollector {
   private readonly config: FeedbackCollectorConfig;
-  private readonly eventBus: EventBus | null;
-  private readonly store = new FeedbackStore();
+  private readonly eventBus: InProcessEventBus | null;
+  private readonly feedback = new Map<string, FeedbackEntry>();
 
-  constructor(config: FeedbackCollectorConfig, eventBus?: EventBus) {
+  constructor(config: FeedbackCollectorConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
   }
 
   async collect(params: FeedbackCollectionParams): Promise<FeedbackEntry> {
-    if (this.store.size >= this.config.maxFeedback) {
+    if (this.feedback.size >= this.config.maxFeedback) {
       throw new FeedbackLimitExceededError(this.config.maxFeedback);
     }
-    const ts = new Date().toISOString();
+
+    const now: Timestamp = new Date().toISOString();
+    const id = brandFeedbackId(crypto.randomUUID());
+
     const entry: FeedbackEntry = Object.freeze({
-      id: brandFeedbackId(crypto.randomUUID()),
+      id,
       source: params.source,
       sentiment: params.sentiment,
       content: params.content,
       relatedBottleneckId: params.relatedBottleneckId,
       relatedImprovementId: params.relatedImprovementId,
-      receivedAt: ts,
+      receivedAt: now,
       processed: false,
       processedAt: null,
       extractedInsights: Object.freeze([]),
-      metadata: params.metadata,
+      metadata: Object.freeze({ ...params.metadata }),
     });
-    this.store.add(entry);
-    void this.publishEvent<FeedbackReceivedEvent>({
-      eventType: 'evolution.feedback.received', classification: EventClassification.Action,
-      feedbackId: entry.id, source: params.source, sentiment: params.sentiment,
-      timestamp: ts, metadata: Object.freeze({}),
-    });
-    if (this.config.autoProcessEnabled) {
-      return this.process(entry.id);
-    }
+
+    this.feedback.set(id as string, entry);
+
+    const event = Object.freeze({
+      eventType: 'evolution.feedback.received',
+      classification: EventClassification.Action,
+      feedbackId: id,
+      source: params.source,
+      sentiment: params.sentiment,
+      timestamp: now,
+      metadata: Object.freeze({}),
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId: id as string,
+      aggregateType: 'FeedbackEntry',
+      version: '1.0.0',
+    } as FeedbackReceivedEvent & DomainEventBase);
+
+    this.eventBus?.publish(event);
+
     return entry;
   }
 
   async process(feedbackId: FeedbackId): Promise<FeedbackEntry> {
-    const existing = this.store.get(feedbackId);
-    if (!existing) throw new FeedbackNotFoundError(feedbackId);
-    const ts = new Date().toISOString();
-    const insights = INSIGHT_PATTERNS[existing.sentiment] ?? ['General feedback recorded'];
+    const key = feedbackId as string;
+    const existing = this.feedback.get(key);
+    if (!existing) throw new FeedbackNotFoundError(key);
+
+    const now: Timestamp = new Date().toISOString();
+    const insights = this.extractInsights(existing.content);
+
     const updated: FeedbackEntry = Object.freeze({
       ...existing,
       processed: true,
-      processedAt: ts,
+      processedAt: now,
       extractedInsights: Object.freeze(insights),
     });
-    this.store.update(feedbackId, updated);
-    void this.publishEvent<FeedbackProcessedEvent>({
-      eventType: 'evolution.feedback.processed', classification: EventClassification.Result,
-      feedbackId, insightCount: insights.length, timestamp: ts, metadata: Object.freeze({}),
-    });
+
+    this.feedback.set(key, updated);
+
+    const event = Object.freeze({
+      eventType: 'evolution.feedback.processed',
+      classification: EventClassification.Result,
+      feedbackId,
+      insightCount: insights.length,
+      timestamp: now,
+      metadata: Object.freeze({}),
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId: key,
+      aggregateType: 'FeedbackEntry',
+      version: '1.0.0',
+    } as FeedbackProcessedEvent & DomainEventBase);
+
+    this.eventBus?.publish(event);
+
     return updated;
   }
 
   async getById(id: FeedbackId): Promise<FeedbackEntry | null> {
-    return this.store.get(id) ?? null;
+    return this.feedback.get(id as string) ?? null;
   }
 
   async list(filter?: Partial<{ source: FeedbackSource; sentiment: FeedbackSentiment; processed: boolean }>): Promise<readonly FeedbackEntry[]> {
-    let items = this.store.getAll();
-    if (filter?.source !== undefined) items = items.filter(f => f.source === filter.source);
-    if (filter?.sentiment !== undefined) items = items.filter(f => f.sentiment === filter.sentiment);
-    if (filter?.processed !== undefined) items = items.filter(f => f.processed === filter.processed);
-    return items;
+    let results = Array.from(this.feedback.values());
+    if (filter) {
+      if (filter.source !== undefined) results = results.filter(f => f.source === filter.source);
+      if (filter.sentiment !== undefined) results = results.filter(f => f.sentiment === filter.sentiment);
+      if (filter.processed !== undefined) results = results.filter(f => f.processed === filter.processed);
+    }
+    return results;
   }
 
-  async count(): Promise<number> { return this.store.size; }
+  async count(): Promise<number> {
+    return this.feedback.size;
+  }
 
-  getStore(): FeedbackStore { return this.store; }
+  private extractInsights(content: string): string[] {
+    const lower = content.toLowerCase();
+    const insights: string[] = [];
 
-  private async publishEvent<T extends { eventType: string; classification: EventClassification; timestamp: string }>(
-    partial: Omit<T, 'eventId' | 'sequence' | 'aggregateId' | 'aggregateType' | 'version'>,
-  ): Promise<void> {
-    if (!this.eventBus) return;
-    try {
-      const event = {
-        aggregateId: 'evolution-feedback-collector', aggregateType: 'Evolution', version: '1.0.0',
-        ...partial,
-      } as unknown as import('../../core/domain/events/domain-event.js').DomainEventBase;
-      await this.eventBus.publish(event);
-    } catch { /* ADR-002 */ }
+    for (const keyword of INSIGHT_KEYWORDS) {
+      if (lower.includes(keyword)) {
+        insights.push(`Keyword detected: "${keyword}" — potential issue area identified`);
+      }
+    }
+
+    if (insights.length === 0) {
+      insights.push('General feedback recorded — no specific issue keywords detected');
+    }
+
+    return insights;
   }
 }

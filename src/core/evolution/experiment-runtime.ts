@@ -1,58 +1,59 @@
 /**
- * Evolution & Continuous Improvement Runtime (ECIR) — Subsystem #7
- * ExperimentRuntime: A/B experiments — measure, compare, keep the best.
- * TASK-AIS-008A.000 | PHI-007: Every change must have proof of effectiveness.
+ * Evolution & Continuous Improvement Runtime (ECIR) — Experiment Runtime
+ * TASK-AIS-008A.000
+ *
+ * Manages A/B experiments to validate improvement hypotheses.
+ * Supports auto-timeout, confidence calculation, and winner determination.
  */
 
-import type { EventBus } from '../events/event-bus.js';
+import type { Timestamp } from '../types/common.js';
+import { EventClassification } from '../types/common.js';
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
+import type { IExperimentRuntime } from './contracts.js';
 import type {
   ExperimentId, Experiment, ExperimentStatus, ExperimentConfig,
 } from './types.js';
-import { ExperimentStatus as ES, brandExperimentId } from './types.js';
-import type { IExperimentRuntime, ExperimentProposalParams } from './contracts.js';
+import { brandExperimentId, ExperimentStatus as ES } from './types.js';
+import type { ExperimentProposalParams } from './contracts.js';
 import {
-  ExperimentNotFoundError, ExperimentLimitExceededError,
-  ExperimentStateError,
+  ExperimentNotFoundError, ExperimentLimitExceededError, ExperimentStateError,
 } from './errors.js';
-import type { ExperimentStartedEvent, ExperimentCompletedEvent } from './events.js';
-import { EventClassification } from '../types/common.js';
 
-const VALID_TRANSITIONS: Record<ExperimentStatus, readonly ExperimentStatus[]> = {
+const EXPERIMENT_TRANSITIONS: Record<ExperimentStatus, readonly ExperimentStatus[]> = Object.freeze({
   [ES.Proposed]: Object.freeze([ES.Running, ES.Cancelled]),
-  [ES.Running]: Object.freeze([ES.Completed, ES.Failed, ES.Cancelled]),
+  [ES.Running]: Object.freeze([ES.Completed, ES.Failed, ES.Cancelled, ES.Inconclusive]),
   [ES.Completed]: Object.freeze([]),
   [ES.Failed]: Object.freeze([ES.Proposed]),
   [ES.Cancelled]: Object.freeze([]),
-  [ES.Inconclusive]: Object.freeze([]),
-};
-
-class ExperimentStore {
-  private readonly items = new Map<string, Experiment>();
-  add(e: Experiment): void { this.items.set(e.id, e); }
-  get(id: ExperimentId): Experiment | undefined { return this.items.get(id); }
-  getAll(): readonly Experiment[] { return Object.freeze([...this.items.values()]); }
-  update(id: ExperimentId, e: Experiment): void { this.items.set(id, e); }
-  get size(): number { return this.items.size; }
-}
+  [ES.Inconclusive]: Object.freeze([ES.Proposed]),
+});
 
 export class ExperimentRuntime implements IExperimentRuntime {
   private readonly config: ExperimentConfig;
-  private readonly eventBus: EventBus | null;
-  private readonly store = new ExperimentStore();
+  private readonly eventBus: InProcessEventBus | null;
+  private readonly experiments = new Map<string, Experiment>();
+  private readonly timeouts = new Map<string, NodeJS.Timeout>();
 
-  constructor(config: ExperimentConfig, eventBus?: EventBus) {
+  constructor(config: ExperimentConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
   }
 
   async propose(params: ExperimentProposalParams): Promise<Experiment> {
-    if (this.store.size >= this.config.maxExperiments) {
+    if (this.experiments.size >= this.config.maxExperiments) {
       throw new ExperimentLimitExceededError(this.config.maxExperiments);
     }
-    const ts = new Date().toISOString();
+
+    const now: Timestamp = new Date().toISOString();
+    const id = brandExperimentId(crypto.randomUUID());
+
     const experiment: Experiment = Object.freeze({
-      id: brandExperimentId(crypto.randomUUID()),
+      id,
+      name: params.name,
+      description: params.description,
       status: ES.Proposed,
+      improvementId: params.improvementId,
       variantA: params.variantA,
       variantB: params.variantB,
       metricName: params.metricName,
@@ -62,100 +63,197 @@ export class ExperimentRuntime implements IExperimentRuntime {
       confidence: 0,
       startedAt: null,
       completedAt: null,
-      proposedAt: ts,
-      metadata: params.metadata,
-      name: params.name,
-      description: params.description,
-      improvementId: params.improvementId,
+      proposedAt: now,
+      metadata: Object.freeze({ ...params.metadata }),
     });
-    this.store.add(experiment);
+
+    this.experiments.set(id as string, experiment);
     return experiment;
   }
 
   async start(experimentId: ExperimentId): Promise<void> {
-    const existing = this.store.get(experimentId);
-    if (!existing) throw new ExperimentNotFoundError(experimentId);
-    if (!VALID_TRANSITIONS[existing.status].includes(ES.Running)) {
-      throw new ExperimentStateError(experimentId, existing.status, ES.Running);
+    const key = experimentId as string;
+    const existing = this.experiments.get(key);
+    if (!existing) throw new ExperimentNotFoundError(key);
+
+    const validTargets = EXPERIMENT_TRANSITIONS[existing.status];
+    if (!validTargets.includes(ES.Running)) {
+      throw new ExperimentStateError(key, existing.status, ES.Running);
     }
-    const ts = new Date().toISOString();
-    this.store.update(experimentId, Object.freeze({
-      ...existing, status: ES.Running, startedAt: ts,
-    }));
-    void this.publishEvent<ExperimentStartedEvent>({
+
+    // Check max concurrent experiments
+    const runningCount = Array.from(this.experiments.values()).filter(e => e.status === ES.Running).length;
+    if (runningCount >= this.config.maxConcurrentExperiments) {
+      throw new ExperimentStateError(key, existing.status, ES.Running, { reason: 'Max concurrent experiments reached' });
+    }
+
+    const now: Timestamp = new Date().toISOString();
+
+    const updated: Experiment = Object.freeze({
+      ...existing,
+      status: ES.Running,
+      startedAt: now,
+    });
+
+    this.experiments.set(key, updated);
+
+    await this.publishEvent({
       eventType: 'evolution.experiment.started',
       classification: EventClassification.Action,
-      experimentId, name: existing.name, improvementId: existing.improvementId,
-      timestamp: ts, metadata: Object.freeze({}),
-    });
+      experimentId,
+      name: updated.name,
+      improvementId: updated.improvementId,
+      timestamp: now,
+      metadata: Object.freeze({}),
+    }, key, 'Experiment');
+
+    // Set up auto-timeout
+    const timer = setTimeout(() => {
+      this.failExperiment(experimentId, `Experiment timed out after ${this.config.experimentTimeoutMs}ms`);
+    }, this.config.experimentTimeoutMs);
+    timer.unref();
+    this.timeouts.set(key, timer);
   }
 
   async complete(experimentId: ExperimentId, resultA: number, resultB: number): Promise<void> {
-    const existing = this.store.get(experimentId);
-    if (!existing) throw new ExperimentNotFoundError(experimentId);
+    const key = experimentId as string;
+    const existing = this.experiments.get(key);
+    if (!existing) throw new ExperimentNotFoundError(key);
+
     if (existing.status !== ES.Running) {
-      throw new ExperimentStateError(experimentId, existing.status, ES.Completed);
+      throw new ExperimentStateError(key, existing.status, ES.Completed);
     }
-    const ts = new Date().toISOString();
-    const winner = resultA > resultB ? 'A' as const : resultB > resultA ? 'B' as const : null;
-    const better = Math.max(resultA, resultB);
-    const worse = Math.min(resultA, resultB);
-    const confidence = worse === 0 ? 1 : Math.min(1, better / (better + worse));
-    const finalStatus = confidence >= this.config.minConfidence
-      ? ES.Completed : ES.Inconclusive;
-    this.store.update(experimentId, Object.freeze({
+
+    // Clear timeout
+    const timer = this.timeouts.get(key);
+    if (timer) {
+      clearTimeout(timer);
+      this.timeouts.delete(key);
+    }
+
+    const now: Timestamp = new Date().toISOString();
+
+    // Calculate confidence: 1 - (|A-B| / max(|A|, |B|, 0.001))
+    const maxAbs = Math.max(Math.abs(resultA), Math.abs(resultB), 0.001);
+    const confidence = 1 - (Math.abs(resultA - resultB) / maxAbs);
+
+    // Determine winner: A if A >= B, else B
+    const winner: 'A' | 'B' = resultA >= resultB ? 'A' : 'B';
+
+    const updated: Experiment = Object.freeze({
       ...existing,
-      status: finalStatus,
+      status: ES.Completed,
       variantAResult: resultA,
       variantBResult: resultB,
       winner,
       confidence,
-      completedAt: ts,
-    }));
-    void this.publishEvent<ExperimentCompletedEvent>({
+      completedAt: now,
+    });
+
+    this.experiments.set(key, updated);
+
+    await this.publishEvent({
       eventType: 'evolution.experiment.completed',
       classification: EventClassification.Result,
-      experimentId, winner, confidence, timestamp: ts, metadata: Object.freeze({}),
-    });
+      experimentId,
+      winner,
+      confidence,
+      timestamp: now,
+      metadata: Object.freeze({}),
+    }, key, 'Experiment');
   }
 
   async cancel(experimentId: ExperimentId): Promise<void> {
-    const existing = this.store.get(experimentId);
-    if (!existing) throw new ExperimentNotFoundError(experimentId);
-    if (!VALID_TRANSITIONS[existing.status].includes(ES.Cancelled)) {
-      throw new ExperimentStateError(experimentId, existing.status, ES.Cancelled);
+    const key = experimentId as string;
+    const existing = this.experiments.get(key);
+    if (!existing) throw new ExperimentNotFoundError(key);
+
+    const validTargets = EXPERIMENT_TRANSITIONS[existing.status];
+    if (!validTargets.includes(ES.Cancelled)) {
+      throw new ExperimentStateError(key, existing.status, ES.Cancelled);
     }
-    this.store.update(experimentId, Object.freeze({
-      ...existing, status: ES.Cancelled, completedAt: new Date().toISOString(),
-    }));
+
+    // Clear timeout if running
+    const timer = this.timeouts.get(key);
+    if (timer) {
+      clearTimeout(timer);
+      this.timeouts.delete(key);
+    }
+
+    const now: Timestamp = new Date().toISOString();
+
+    const updated: Experiment = Object.freeze({
+      ...existing,
+      status: ES.Cancelled,
+      completedAt: now,
+    });
+
+    this.experiments.set(key, updated);
   }
 
   async getById(id: ExperimentId): Promise<Experiment | null> {
-    return this.store.get(id) ?? null;
+    return this.experiments.get(id as string) ?? null;
   }
 
   async list(filter?: Partial<{ status: ExperimentStatus }>): Promise<readonly Experiment[]> {
-    let items = this.store.getAll();
+    let results = Array.from(this.experiments.values());
     if (filter?.status !== undefined) {
-      items = items.filter(e => e.status === filter.status);
+      results = results.filter(e => e.status === filter.status);
     }
-    return items;
+    return results;
   }
 
-  async count(): Promise<number> { return this.store.size; }
+  async count(): Promise<number> {
+    return this.experiments.size;
+  }
 
-  getStore(): ExperimentStore { return this.store; }
+  private async failExperiment(experimentId: ExperimentId, reason: string): Promise<void> {
+    const key = experimentId as string;
+    const existing = this.experiments.get(key);
+    if (!existing || existing.status !== ES.Running) return;
 
-  private async publishEvent<T extends { eventType: string; classification: EventClassification; timestamp: string }>(
-    partial: Omit<T, 'eventId' | 'sequence' | 'aggregateId' | 'aggregateType' | 'version'>,
+    // Clear timeout
+    const timer = this.timeouts.get(key);
+    if (timer) {
+      clearTimeout(timer);
+      this.timeouts.delete(key);
+    }
+
+    const now: Timestamp = new Date().toISOString();
+
+    const updated: Experiment = Object.freeze({
+      ...existing,
+      status: ES.Failed,
+      completedAt: now,
+    });
+
+    this.experiments.set(key, updated);
+
+    await this.publishEvent({
+      eventType: 'evolution.experiment.failed',
+      classification: EventClassification.Error,
+      experimentId,
+      reason,
+      timestamp: now,
+      metadata: Object.freeze({}),
+    }, key, 'Experiment');
+  }
+
+  private async publishEvent(
+    event: Record<string, unknown>,
+    aggregateId: string,
+    aggregateType: string,
   ): Promise<void> {
-    if (!this.eventBus) return;
-    try {
-      const event = {
-        aggregateId: 'evolution-experiment-runtime', aggregateType: 'Evolution', version: '1.0.0',
-        ...partial,
-      } as unknown as import('../../core/domain/events/domain-event.js').DomainEventBase;
-      await this.eventBus.publish(event);
-    } catch { /* ADR-002 */ }
+    const full = Object.freeze({
+      ...event,
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId,
+      aggregateType,
+      version: '1.0.0',
+    });
+    if (this.eventBus) {
+      await this.eventBus.publish(full as DomainEventBase);
+    }
   }
 }

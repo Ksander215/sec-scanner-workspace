@@ -1,91 +1,109 @@
 /**
- * Evolution & Continuous Improvement Runtime (ECIR) — Subsystem #5
- * OpportunityCostEngine: If we improve X, what can we NOT improve?
- * TASK-AIS-008A.000 | PHI-006: Local optimization is forbidden.
+ * Evolution & Continuous Improvement Runtime (ECIR) — Opportunity Cost Engine
+ * TASK-AIS-008A.000
+ *
+ * Analyzes opportunity cost of pursuing one improvement over alternatives.
+ * PHI-006: Avoid local optimization; consider global value impact.
  */
 
-import type { EventBus } from '../events/event-bus.js';
+import type { Timestamp } from '../types/common.js';
+import { EventClassification } from '../types/common.js';
+import type { DomainEventBase } from '../domain/events/domain-event.js';
+import type { InProcessEventBus } from '../events/event-bus.js';
+import type { IOpportunityCostEngine } from './contracts.js';
 import type {
   ImprovementId, OpportunityCost, OpportunityCostConfig,
 } from './types.js';
-import type { IOpportunityCostEngine } from './contracts.js';
-import type { OpportunityCostAnalyzedEvent } from './events.js';
-import { EventClassification } from '../types/common.js';
-
-class OpportunityCostStore {
-  private readonly items = new Map<string, OpportunityCost>();
-  private readonly byImprovement = new Map<string, OpportunityCost>();
-
-  add(a: OpportunityCost): void {
-    this.items.set(a.improvementId, a);
-    this.byImprovement.set(a.improvementId, a);
-  }
-  getByImprovement(id: ImprovementId): OpportunityCost | undefined { return this.byImprovement.get(id); }
-  getAll(): readonly OpportunityCost[] { return Object.freeze([...this.items.values()]); }
-  get size(): number { return this.items.size; }
-}
+import type { IImprovementEngine } from './contracts.js';
+import { OpportunityCostError } from './errors.js';
 
 export class OpportunityCostEngine implements IOpportunityCostEngine {
-  private readonly eventBus: EventBus | null;
-  private readonly store = new OpportunityCostStore();
+  private readonly config: OpportunityCostConfig;
+  private readonly eventBus: InProcessEventBus | null;
+  private readonly analyses = new Map<string, OpportunityCost>();
+  private improvementEngine: IImprovementEngine | null = null;
 
-  constructor(config: OpportunityCostConfig, eventBus?: EventBus) {
-    void config;
+  constructor(config: OpportunityCostConfig, eventBus?: InProcessEventBus | null) {
+    this.config = config;
     this.eventBus = eventBus ?? null;
   }
 
+  setImprovementEngine(engine: IImprovementEngine): void {
+    this.improvementEngine = engine;
+  }
+
   async analyze(improvementId: ImprovementId): Promise<OpportunityCost> {
-    const ts = new Date().toISOString();
+    if (!this.improvementEngine) {
+      throw new OpportunityCostError('Improvement engine not set');
+    }
+
+    const improvement = await this.improvementEngine.getById(improvementId);
+    if (!improvement) {
+      throw new OpportunityCostError(`Improvement not found: ${improvementId as string}`);
+    }
+
+    const now: Timestamp = new Date().toISOString();
+
+    // Get other proposed improvements as foregone alternatives
+    const allImprovements = await this.improvementEngine.list({ status: undefined as never });
+    const others = allImprovements
+      .filter(i => (i.id as string) !== (improvementId as string))
+      .sort((a, b) => b.valueScore - a.valueScore)
+      .slice(0, this.config.maxForegoneItems);
+
+    const foregoneImprovements = others.map(i => i.id);
+    const foregoneValue = others.reduce((sum, i) => sum + i.valueScore, 0);
+    const foregoneImpact = others.reduce((sum, i) => sum + i.impactScore, 0);
+    const netBenefit = improvement.valueScore - foregoneValue;
 
     const analysis: OpportunityCost = Object.freeze({
       improvementId,
-      foregoneImprovements: Object.freeze([] as ImprovementId[]),
-      foregoneValue: 0,
-      foregoneImpact: 0,
-      netBenefit: 0,
-      analyzedAt: ts,
+      foregoneImprovements: Object.freeze(foregoneImprovements),
+      foregoneValue,
+      foregoneImpact,
+      netBenefit,
+      analyzedAt: now,
       metadata: Object.freeze({}),
     });
 
-    this.store.add(analysis);
+    this.analyses.set(improvementId as string, analysis);
 
-    void this.publishEvent<OpportunityCostAnalyzedEvent>({
+    await this.publishEvent({
       eventType: 'evolution.opportunityCost.analyzed',
       classification: EventClassification.Result,
       improvementId,
-      netBenefit: analysis.netBenefit,
-      foregoneCount: analysis.foregoneImprovements.length,
-      timestamp: ts,
+      netBenefit,
+      foregoneCount: foregoneImprovements.length,
+      timestamp: now,
       metadata: Object.freeze({}),
-    });
+    }, improvementId as string, 'OpportunityCost');
 
     return analysis;
   }
 
   async getByImprovementId(improvementId: ImprovementId): Promise<OpportunityCost | null> {
-    return this.store.getByImprovement(improvementId) ?? null;
+    return this.analyses.get(improvementId as string) ?? null;
   }
 
   async listAnalyses(): Promise<readonly OpportunityCost[]> {
-    return this.store.getAll();
+    return Array.from(this.analyses.values());
   }
 
-  getStore(): OpportunityCostStore { return this.store; }
-
-  private async publishEvent<T extends { eventType: string; classification: EventClassification; timestamp: string }>(
-    partial: Omit<T, 'eventId' | 'sequence' | 'aggregateId' | 'aggregateType' | 'version'>,
+  private async publishEvent(
+    event: Record<string, unknown>,
+    aggregateId: string,
+    aggregateType: string,
   ): Promise<void> {
-    if (!this.eventBus) return;
-    try {
-      const event = {
-        eventId: crypto.randomUUID(),
-        sequence: 0,
-        aggregateId: 'evolution-opportunity-cost',
-        aggregateType: 'Evolution',
-        version: '1.0.0',
-        ...partial,
-      } as unknown as import('../../core/domain/events/domain-event.js').DomainEventBase;
-      await this.eventBus.publish(event);
-    } catch { /* ADR-002 */ }
+    const full = Object.freeze({
+      ...event,
+      eventId: crypto.randomUUID(),
+      sequence: 0,
+      aggregateId,
+      aggregateType,
+      version: '1.0.0',
+    });
+    if (this.eventBus) {
+      await this.eventBus.publish(full as DomainEventBase);
+    }
   }
 }
