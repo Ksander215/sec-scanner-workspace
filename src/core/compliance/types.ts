@@ -356,14 +356,14 @@ export const DefaultComplianceRuntimeConfig: ComplianceRuntimeConfig = Object.fr
     scoreWeights: Object.freeze({
       [RuleCategory.Architecture]: 0.20,
       [RuleCategory.Philosophy]: 0.10,
-      [RuleCategory.Governance]: 0.20,
+      [RuleCategory.Governance]: 0.15,
       [RuleCategory.Runtime]: 0.10,
       [RuleCategory.AI]: 0.10,
       [RuleCategory.Documentation]: 0.05,
       [RuleCategory.CapabilityPack]: 0.05,
       [RuleCategory.Privacy]: 0.10,
       [RuleCategory.Security]: 0.10,
-      [RuleCategory.Quality]: 0.10,
+      [RuleCategory.Quality]: 0.05,
     }),
   }),
   metrics: Object.freeze({

@@ -84,7 +84,7 @@ export class RuntimeValidator implements IRuntimeValidator {
             violations: [],
             durationMs: Date.now() - startTime,
             autoFixed: false,
-            metadata: { note: 'No content provided; skipping check' },
+            metadata: { note: 'No content provided; skipping check', methodsChecked: RUNTIME_GOVERNANCE_METHODS.length },
           });
         }
 
@@ -216,7 +216,7 @@ export class RuntimeValidator implements IRuntimeValidator {
               violations: [],
               durationMs: Date.now() - startTime,
               autoFixed: false,
-              metadata: { note: 'No content provided; skipping check' },
+              metadata: { note: 'No content provided; skipping check', questionName: qRule.questionName },
             });
           }
 
@@ -261,7 +261,7 @@ export class RuntimeValidator implements IRuntimeValidator {
 
   async validate(request: ValidationRequest): Promise<RuleEvaluationResult[]> {
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 
   async validateRuntime(
@@ -276,6 +276,6 @@ export class RuntimeValidator implements IRuntimeValidator {
       metadata: {},
     });
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 }

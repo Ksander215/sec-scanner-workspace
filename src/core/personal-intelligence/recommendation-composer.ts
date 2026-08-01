@@ -22,9 +22,11 @@ export class RecommendationComposer {
   private contracts: PersonalIntelligenceContracts;
   private recommendations = new Map<string, PackRecommendation>();
   private readonly ttlHours: number;
+  private readonly _maxRecommendations: number;
 
-  constructor(contracts: PersonalIntelligenceContracts, _maxRecommendations = 200, ttlHours = 168) {
+  constructor(contracts: PersonalIntelligenceContracts, maxRecommendations = 200, ttlHours = 168) {
     this.contracts = contracts;
+    this._maxRecommendations = maxRecommendations;
     this.ttlHours = ttlHours;
   }
 
@@ -82,6 +84,7 @@ export class RecommendationComposer {
 
     this.recommendations.set(id as unknown as string, recommendation);
     this.evictExpired();
+    this.evictOldestIfNeeded();
 
     const base = createPackEventBase('RecommendationComposed', EventClassification.Info, id as unknown as string);
     void this.contracts.platform.publishEvent('RecommendationComposed', {
@@ -150,6 +153,17 @@ export class RecommendationComposer {
   getRecommendationCount(): number { return this.recommendations.size; }
   getAcceptedCount(): number { return this.getByStatus(RSt.Accepted).length; }
   getRejectedCount(): number { return this.getByStatus(RSt.Rejected).length; }
+
+  private evictOldestIfNeeded(): void {
+    const active = this.getActiveRecommendations();
+    if (active.length > this._maxRecommendations) {
+      const sorted = Array.from(active).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      const toRemove = sorted.length - this._maxRecommendations;
+      for (let i = 0; i < toRemove; i++) {
+        this.recommendations.delete(sorted[i].id as unknown as string);
+      }
+    }
+  }
 
   evictExpired(): number {
     const now = new Date().toISOString();

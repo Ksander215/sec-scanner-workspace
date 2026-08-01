@@ -224,7 +224,7 @@ describe('First Intelligence Experience Extended', () => {
     test('knowledge graph from conversation + goals', async () => {
       const r = new PersonalIntelligencePackRuntime(C);
       await r.initialize();
-      const conv = r.conversationInterpreter.interpret('I want to set a goal for launching AIS v1');
+      const conv = await r.conversationInterpreter.interpret('I want to set a goal for launching AIS v1');
       expect(conv.intent).toBe('GoalSetting');
       
       const goalNode = r.knowledgeSynthesizer.addNode(KnowledgeNodeType.Project, 'AIS v1 Launch', 'Main product', 'conversation');
@@ -283,7 +283,7 @@ describe('First Intelligence Experience Extended', () => {
       r.valueAnalyzer.createAssessment(ValueDimension.UserValue, 'D', ['r'], 'u', ['m'], 'i', 0.5);
       r.recommendationComposer.composeRecommendation('T', 'D', why);
       r.knowledgeSynthesizer.addNode(KnowledgeNodeType.Note, 'N', 'C', 's');
-      r.conversationInterpreter.interpret('test');
+      await r.conversationInterpreter.interpret('test');
       r.habitInsights.detectHabit('H', 'D', HabitDirection.Positive);
       r.priorityOptimizer.calculatePriority('g1', { deadline: 5, importance: 8, urgency: 6, energy: 7, context: 5, dependencies: 4, risk: 3, value: 9 });
       r.dashboard.addInsight('I', 'D', 'c', 's');

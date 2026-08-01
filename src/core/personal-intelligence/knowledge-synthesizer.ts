@@ -19,12 +19,15 @@ export class KnowledgeSynthesizer {
   private contracts: PersonalIntelligenceContracts;
   private nodes = new Map<string, KnowledgeNode>();
   private edges = new Map<string, KnowledgeEdge>();
-  constructor(contracts: PersonalIntelligenceContracts, _maxNodes = 5000) {
+  private readonly _maxNodes: number;
+  constructor(contracts: PersonalIntelligenceContracts, maxNodes = 5000) {
     this.contracts = contracts;
+    this._maxNodes = maxNodes;
   }
 
   addNode(type: KnowledgeNodeType, title: string, content: string, source: string, tags?: readonly string[]): KnowledgeNode {
     if (!title.trim()) throw new KnowledgeNodeError('title is required');
+    if (this.nodes.size >= this._maxNodes) throw new KnowledgeNodeError('Maximum node limit reached', 'MAX_NODES_REACHED');
     const now = new Date().toISOString() as Timestamp;
     const id = crypto.randomUUID() as unknown as PackKnowledgeNodeId;
     const node: KnowledgeNode = Object.freeze({

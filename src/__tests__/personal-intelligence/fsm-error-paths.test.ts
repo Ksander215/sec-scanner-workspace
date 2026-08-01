@@ -4,7 +4,14 @@ import { GoalPlanner } from '../../core/personal-intelligence/goal-planner.js';
 import { ConstraintAnalyzer } from '../../core/personal-intelligence/constraint-analyzer.js';
 import { DailyBriefGenerator } from '../../core/personal-intelligence/daily-brief-generator.js';
 import { ReflectionEngine } from '../../core/personal-intelligence/reflection-engine.js';
-import { GoalStatus, GoalLevel, ConstraintSeverity, ConstraintLifecycle, PackState, BriefType, ReflectionPeriod, RecommendationStatus } from '../../core/personal-intelligence/types.js';
+import { ValueAnalyzer } from '../../core/personal-intelligence/value-analyzer.js';
+import { RecommendationComposer } from '../../core/personal-intelligence/recommendation-composer.js';
+import { KnowledgeSynthesizer } from '../../core/personal-intelligence/knowledge-synthesizer.js';
+import { ConversationInterpreter } from '../../core/personal-intelligence/conversation-interpreter.js';
+import { HabitInsights } from '../../core/personal-intelligence/habit-insights.js';
+import { PriorityOptimizer } from '../../core/personal-intelligence/priority-optimizer.js';
+import { PersonalDashboard } from '../../core/personal-intelligence/personal-dashboard.js';
+import { GoalStatus, GoalLevel, ConstraintSeverity, ConstraintLifecycle, PackState, BriefType, ReflectionPeriod, RecommendationStatus, ValueDimension, KnowledgeNodeType, KnowledgeEdgeType } from '../../core/personal-intelligence/types.js';
 import { PackDisposedError, GoalValidationError, GoalNotFoundError, BriefNotFoundError, ReflectionGenerationError, DecisionNotFoundError, ConstraintNotFoundError, ConstraintAnalysisError, ValueAssessmentError, RecommendationComposeError, RecommendationNotFoundError, KnowledgeNodeError, KnowledgeEdgeError, ConversationInterpretError, HabitInsightError, PriorityCalculationError, DashboardGenerationError } from '../../core/personal-intelligence/errors.js';
 
 const C = {
@@ -152,9 +159,9 @@ describe('FSM Error Paths', () => {
     test('KnowledgeSynthesizer getNode throws KnowledgeNodeError', () => {
       expect(() => new KnowledgeSynthesizer(C).getNode('nonexistent')).toThrow(KnowledgeNodeError);
     });
-    test('ConversationInterpreter getInterpretation throws ConversationInterpretError', () => {
+    test('ConversationInterpreter getInterpretation throws ConversationInterpretError', async () => {
       const ci = new ConversationInterpreter(C);
-      ci.interpret('test');
+      await ci.interpret('test');
       expect(() => ci.getInterpretation('nonexistent')).toThrow(ConversationInterpretError);
     });
     test('HabitInsights getHabit throws HabitInsightError', () => {
@@ -229,11 +236,11 @@ describe('FSM Error Paths', () => {
       const n = ks.addNode(KnowledgeNodeType.Note, 'N', 'C', 's');
       expect(() => ks.addEdge(n.id, 'nonexistent' as any, KnowledgeEdgeType.RelatedTo)).toThrow(KnowledgeEdgeError);
     });
-    test('ConversationInterpreter empty input throws ConversationInterpretError', () => {
-      expect(() => new ConversationInterpreter(C).interpret('')).toThrow(ConversationInterpretError);
+    test('ConversationInterpreter empty input throws ConversationInterpretError', async () => {
+      await expect(new ConversationInterpreter(C).interpret('')).rejects.toThrow(ConversationInterpretError);
     });
-    test('ConversationInterpreter whitespace input throws ConversationInterpretError', () => {
-      expect(() => new ConversationInterpreter(C).interpret('   ')).toThrow(ConversationInterpretError);
+    test('ConversationInterpreter whitespace input throws ConversationInterpretError', async () => {
+      await expect(new ConversationInterpreter(C).interpret('   ')).rejects.toThrow(ConversationInterpretError);
     });
     test('HabitInsights empty name throws HabitInsightError', () => {
       expect(() => new HabitInsights(C).detectHabit('', 'D', 'Positive' as any)).toThrow(HabitInsightError);
@@ -254,11 +261,10 @@ describe('FSM Error Paths', () => {
       const localR = new PersonalIntelligencePackRuntime(localC);
       let sawInitializing = false;
       localC.platform.publishEvent = async (type: string, payload: any) => {
-        if (type === 'PackStateChanged' && payload?.newState === 'Initializing') sawInitializing = true;
+        if (type === 'PackStateChanged' && payload?.payload?.newState === 'Initializing') sawInitializing = true;
       };
       await localR.initialize();
       expect(sawInitializing).toBe(true);
     });
   });
-
-
+});

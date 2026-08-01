@@ -56,7 +56,7 @@ describe('ValueValidator', () => {
     expect(rule!.name).toBe('Runtime declares value dimensions');
     expect(rule!.severity).toBe(RuleSeverity.Error);
     expect(rule!.enforcementLevel).toBe(EnforcementLevel.Blocking);
-    expect(rule!.category).toBe(RuleCategory.Runtime);
+    expect(rule!.category).toBe(RuleCategory.Philosophy);
   });
   it('should register VAL-002 rule', async () => {
     const rule = await ruleEngine.getRule(brandRuleId('VAL-002'));
@@ -230,14 +230,14 @@ describe('ValueValidator', () => {
     }
   });
   it('VAL-003 should detect multiple patterns', async () => {
-    const content = `const engagementRate = 0.95; const engagementScore = 0.8;`;
+    const content = `const engagementRate = 0.95; const timeOnSite = 5000;`;
     const result = await ruleEngine.evaluateRule(brandRuleId('VAL-003'), makeRequest(content));
     if (!result.passed) {
       expect(result.violations.length).toBeGreaterThanOrEqual(2);
     }
   });
   it('VAL-003 should have metadata patternsChecked', async () => {
-    const result = await ruleEngine.evaluateRule(brandRuleId('VAL-003'), makeRequest(''));
+    const result = await ruleEngine.evaluateRule(brandRuleId('VAL-003'), makeRequest('const x = 1;'));
     expect(result.metadata.patternsChecked).toBe(4);
   });
 
@@ -370,7 +370,7 @@ describe('ValueValidator', () => {
     }
   });
   it('VAL-003 should have metadata patternsChecked=4', async () => {
-    const result = await ruleEngine.evaluateRule(brandRuleId('VAL-003'), makeRequest(''));
+    const result = await ruleEngine.evaluateRule(brandRuleId('VAL-003'), makeRequest('const x = 1;'));
     expect(result.metadata.patternsChecked).toBe(4);
   });
   it('VAL-001 should have Blocking enforcement', async () => {

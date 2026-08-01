@@ -445,8 +445,8 @@ describe('DefaultComplianceRuntimeConfig', () => {
     expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Architecture]).toBe(0.20);
   });
 
-  it('should have Governance weight of 0.20', () => {
-    expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Governance]).toBe(0.20);
+  it('should have Governance weight of 0.15', () => {
+    expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Governance]).toBe(0.15);
   });
 });
 

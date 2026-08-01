@@ -56,7 +56,7 @@ describe('ConstraintValidator', () => {
     expect(rule!.name).toBe('Runtime exposes getConstraintReport');
     expect(rule!.severity).toBe(RuleSeverity.Error);
     expect(rule!.enforcementLevel).toBe(EnforcementLevel.Blocking);
-    expect(rule!.category).toBe(RuleCategory.Runtime);
+    expect(rule!.category).toBe(RuleCategory.Governance);
   });
   it('should register CONSTR-002 rule', async () => {
     const rule = await ruleEngine.getRule(brandRuleId('CONSTR-002'));

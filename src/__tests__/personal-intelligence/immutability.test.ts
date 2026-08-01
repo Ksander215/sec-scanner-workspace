@@ -334,25 +334,25 @@ describe('Immutability (Object.freeze)', () => {
   });
 
   describe('ConversationInterpreter', () => {
-    test('returned interpretation is frozen', () => {
-      const i = new ConversationInterpreter(C).interpret('I want to set a goal');
+    test('returned interpretation is frozen', async () => {
+      const i = await new ConversationInterpreter(C).interpret('I want to set a goal');
       expect(Object.isFrozen(i)).toBe(true);
     });
-    test('entities array is frozen', () => {
-      const i = new ConversationInterpreter(C).interpret('goal: launch product');
+    test('entities array is frozen', async () => {
+      const i = await new ConversationInterpreter(C).interpret('goal: launch product');
       expect(Object.isFrozen(i.entities)).toBe(true);
     });
-    test('suggestedActions array is frozen', () => {
-      const i = new ConversationInterpreter(C).interpret('I want to set a goal');
+    test('suggestedActions array is frozen', async () => {
+      const i = await new ConversationInterpreter(C).interpret('I want to set a goal');
       expect(Object.isFrozen(i.suggestedActions)).toBe(true);
     });
-    test('goalIds is frozen', () => {
-      const i = new ConversationInterpreter(C).interpret('test');
+    test('goalIds is frozen', async () => {
+      const i = await new ConversationInterpreter(C).interpret('test');
       expect(Object.isFrozen(i.goalIds)).toBe(true);
     });
-    test('getAllInterpretations result is frozen', () => {
+    test('getAllInterpretations result is frozen', async () => {
       const ci = new ConversationInterpreter(C);
-      ci.interpret('test');
+      await ci.interpret('test');
       expect(Object.isFrozen(ci.getAllInterpretations())).toBe(true);
     });
   });

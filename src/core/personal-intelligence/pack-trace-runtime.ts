@@ -5,6 +5,7 @@
  * In-process distributed tracing for all pack operations.
  */
 import type { Timestamp } from '../types/common.js';
+import { PackError } from './errors.js';
 import type { PackTraceSpanId, PackTraceSpan, TraceEvent } from './types.js';
 import { TraceStatus as TS } from './types.js';
 
@@ -112,7 +113,7 @@ export class PackTraceRuntime {
 
   private getOrThrow(id: string): PackTraceSpan {
     const s = this.spans.get(id);
-    if (!s) throw new Error(`Trace span not found: ${id}`);
+    if (!s) throw new PackError(`Trace span not found: ${id}`, 'TRACE_SPAN_NOT_FOUND');
     return s;
   }
 }

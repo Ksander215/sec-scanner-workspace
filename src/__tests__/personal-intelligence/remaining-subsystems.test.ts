@@ -56,21 +56,21 @@ describe('ConversationInterpreter', () => {
 test('searchNodes finds by title', () => { const k = new KnowledgeSynthesizer(contracts); k.addNode(KnowledgeNodeType.Note,'Special Title','Content','s'); k.addNode(KnowledgeNodeType.Note,'Other','Content','s'); expect(k.searchNodes('Special').length).toBe(1); });
 test('throws on missing source node for edge', () => { const k = new KnowledgeSynthesizer(contracts); const n = k.addNode(KnowledgeNodeType.Note,'A','C','s'); expect(() => k.addEdge('invalid' as any, n.id, KnowledgeEdgeType.RelatedTo)).toThrow(); });
 test('dispose clears', () => { const k = new KnowledgeSynthesizer(contracts); k.addNode(KnowledgeNodeType.Note,'A','C','s'); k.dispose(); expect(k.getNodeCount()).toBe(0); expect(k.getEdgeCount()).toBe(0); });
-test('detects GoalSetting intent', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('goal something'); expect(r.intent).toBe(ConversationIntent.GoalSetting); });
-test('detects DecisionMaking intent', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('decide something'); expect(r.intent).toBe(ConversationIntent.DecisionMaking); });
-test('detects Reflection intent', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('reflect something'); expect(r.intent).toBe(ConversationIntent.Reflection); });
+test('detects GoalSetting intent', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('goal something'); expect(r.intent).toBe(ConversationIntent.GoalSetting); });
+test('detects DecisionMaking intent', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('decide something'); expect(r.intent).toBe(ConversationIntent.DecisionMaking); });
+test('detects Reflection intent', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('reflect something'); expect(r.intent).toBe(ConversationIntent.Reflection); });
 });
 
 describe('HabitInsights', () => {
-test('detects Planning intent', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('plan something'); expect(r.intent).toBe(ConversationIntent.Planning); });
-test('detects ConstraintExploration intent', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('constraint something'); expect(r.intent).toBe(ConversationIntent.ConstraintExploration); });
-test('detects ValueInquiry intent', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('value something'); expect(r.intent).toBe(ConversationIntent.ValueInquiry); });
-test('detects General intent', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('hello world something'); expect(r.intent).toBe(ConversationIntent.General); });
-test('extracts entities', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('goal: learn TypeScript'); expect(r.entities.length).toBeGreaterThan(0); });
-test('generates suggested actions', () => { const i = new ConversationInterpreter(contracts); const r = i.interpret('I need to decide something'); expect(r.suggestedActions.length).toBeGreaterThan(0); });
-test('throws on empty input', () => { const i = new ConversationInterpreter(contracts); expect(() => i.interpret('')).toThrow(); });
-test('getInterpretationCount', () => { const i = new ConversationInterpreter(contracts); i.interpret('hello'); expect(i.getInterpretationCount()).toBe(1); });
-test('dispose clears', () => { const i = new ConversationInterpreter(contracts); i.interpret('hello'); i.dispose(); expect(i.getInterpretationCount()).toBe(0); });
+test('detects Planning intent', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('plan something'); expect(r.intent).toBe(ConversationIntent.Planning); });
+test('detects ConstraintExploration intent', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('constraint something'); expect(r.intent).toBe(ConversationIntent.ConstraintExploration); });
+test('detects ValueInquiry intent', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('value something'); expect(r.intent).toBe(ConversationIntent.ValueInquiry); });
+test('detects General intent', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('hello world something'); expect(r.intent).toBe(ConversationIntent.General); });
+test('extracts entities', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('goal: learn TypeScript'); expect(r.entities.length).toBeGreaterThan(0); });
+test('generates suggested actions', async () => { const i = new ConversationInterpreter(contracts); const r = await i.interpret('I need to decide something'); expect(r.suggestedActions.length).toBeGreaterThan(0); });
+test('throws on empty input', async () => { const i = new ConversationInterpreter(contracts); await expect(i.interpret('')).rejects.toThrow(); });
+test('getInterpretationCount', async () => { const i = new ConversationInterpreter(contracts); await i.interpret('hello'); expect(i.getInterpretationCount()).toBe(1); });
+test('dispose clears', async () => { const i = new ConversationInterpreter(contracts); await i.interpret('hello'); i.dispose(); expect(i.getInterpretationCount()).toBe(0); });
 test('detects Positive habit', () => { const h = new HabitInsights(contracts); const habit = h.detectHabit('Habit','desc',HabitDirection.Positive); expect(habit.direction).toBe(HabitDirection.Positive); expect(habit.strength).toBe(HabitStrength.Emerging); expect(habit.observationCount).toBe(1); });
 test('detects Negative habit', () => { const h = new HabitInsights(contracts); const habit = h.detectHabit('Habit','desc',HabitDirection.Negative); expect(habit.direction).toBe(HabitDirection.Negative); expect(habit.strength).toBe(HabitStrength.Emerging); expect(habit.observationCount).toBe(1); });
 test('detects Neutral habit', () => { const h = new HabitInsights(contracts); const habit = h.detectHabit('Habit','desc',HabitDirection.Neutral); expect(habit.direction).toBe(HabitDirection.Neutral); expect(habit.strength).toBe(HabitStrength.Emerging); expect(habit.observationCount).toBe(1); });

@@ -21,17 +21,50 @@ export class ConversationInterpreter {
     this.contracts = contracts;
   }
 
-  interpret(input: string, _context?: Readonly<Record<string, unknown>>): ConversationInterpretation {
+  async interpret(input: string, _context?: Readonly<Record<string, unknown>>): Promise<ConversationInterpretation> {
     if (!input.trim()) throw new ConversationInterpretError('input is required');
     const now = new Date().toISOString() as Timestamp;
     const id = crypto.randomUUID();
-    const intent = this.detectIntent(input);
-    const entities = this.extractEntities(input);
+
+    // Try AI provider first, fall back to keyword matching
+    let intent: ConversationIntent = CI.General;
+    let entities: ConversationEntity[] = [];
+    let confidence = 0.4;
+
+    try {
+      if (this.contracts.aiProvider.isAvailable()) {
+        const systemPrompt = `You are a conversation interpreter. Classify the user input into one of these intents: ${Object.values(CI).join(', ')}. Return a JSON object with fields: "intent" (one of the intent values), "entities" (array of {type, value, confidence}), "confidence" (number 0-1).`;
+        const response = await this.contracts.aiProvider.complete(systemPrompt + '\n\nUser input: ' + input);
+        const parsed = JSON.parse(response);
+        if (parsed && typeof parsed.intent === 'string' && Object.values(CI).includes(parsed.intent as ConversationIntent)) {
+          intent = parsed.intent as ConversationIntent;
+          confidence = typeof parsed.confidence === 'number' ? Math.max(0, Math.min(1, parsed.confidence)) : confidence;
+          if (Array.isArray(parsed.entities)) {
+            entities = parsed.entities.filter((e: unknown) =>
+              typeof e === 'object' && e !== null && 'type' in e && 'value' in e
+            ).map((e: any) => ({
+              type: String(e.type), value: String(e.value),
+              confidence: typeof e.confidence === 'number' ? e.confidence : 0.5,
+            }));
+          }
+        }
+      }
+    } catch {
+      // Fall back to keyword matching
+    }
+
+    // Keyword matching fallback (always used if AI unavailable or returned invalid data)
+    if (intent === CI.General && confidence === 0.4 && entities.length === 0) {
+      intent = this.detectIntent(input);
+      entities = this.extractEntities(input);
+      confidence = this.calculateConfidence(intent, entities);
+    }
+
     const suggestedActions = this.generateSuggestedActions(intent, entities);
     const summary = this.generateSummary(intent, entities);
 
     const interpretation: ConversationInterpretation = Object.freeze({
-      id, intent, confidence: this.calculateConfidence(intent, entities),
+      id, intent, confidence,
       entities: Object.freeze(entities),
       goalIds: Object.freeze([]), decisionIds: Object.freeze([]), constraintIds: Object.freeze([]),
       summary, suggestedActions: Object.freeze(suggestedActions),

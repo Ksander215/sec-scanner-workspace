@@ -378,7 +378,9 @@ askQuestion () { }`;
     }
   });
   it('RUN-001 should detect method variants', async () => {
-    const content = `async getConstraintReport (params) { return {}; }`;
+    const content = `async getConstraintReport (params) { return {}; }
+getValueMetrics () { return {}; }
+askQuestion () { return {}; }`;
     const result = await ruleEngine.evaluateRule(brandRuleId('RUN-001'), makeRequest(content));
     expect(result.passed).toBe(true);
   });

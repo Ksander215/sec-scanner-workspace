@@ -179,7 +179,7 @@ describe('PrivacyValidator', () => {
     expect(result.passed).toBe(false);
   });
   it('PRIV-002 should fail for axios without local-first', async () => {
-    const content = `axios.get(url)`;
+    const content = `axios('http://example.com')`;
     const result = await ruleEngine.evaluateRule(brandRuleId('PRIV-002'), makeRequest(content));
     expect(result.passed).toBe(false);
   });

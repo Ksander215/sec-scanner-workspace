@@ -1789,8 +1789,8 @@ describe('DefaultComplianceRuntimeConfig', () => {
     expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Philosophy]).toBe(0.10);
   });
 
-  it('scoreWeights should have Governance weight of 0.20', () => {
-    expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Governance]).toBe(0.20);
+  it('scoreWeights should have Governance weight of 0.15', () => {
+    expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Governance]).toBe(0.15);
   });
 
   it('scoreWeights should have Runtime weight of 0.10', () => {
@@ -1817,14 +1817,14 @@ describe('DefaultComplianceRuntimeConfig', () => {
     expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Security]).toBe(0.10);
   });
 
-  it('scoreWeights should have Quality weight of 0.10', () => {
-    expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Quality]).toBe(0.10);
+  it('scoreWeights should have Quality weight of 0.05', () => {
+    expect(DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights[RuleCategory.Quality]).toBe(0.05);
   });
 
-  it('scoreWeights should sum to 1.1', () => {
+  it('scoreWeights should sum to 1.0', () => {
     const weights = DefaultComplianceRuntimeConfig.reportGenerator.scoreWeights;
     const total = Object.values(weights).reduce((sum, w) => sum + w, 0);
-    expect(total).toBeCloseTo(1.1, 10);
+    expect(total).toBeCloseTo(1.0, 10);
   });
 
   // metrics defaults

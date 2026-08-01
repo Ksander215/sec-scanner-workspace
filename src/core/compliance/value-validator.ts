@@ -49,7 +49,7 @@ export class ValueValidator implements IValueValidator {
       id: brandRuleId('VAL-001'),
       name: 'Runtime declares value dimensions',
       description: 'Runtime must declare which value dimensions it supports',
-      category: RuleCategory.Runtime,
+      category: RuleCategory.Philosophy,
       severity: RuleSeverity.Error,
       enforcementLevel: EnforcementLevel.Blocking,
       autoFix: AutoFixCapability.None,
@@ -71,7 +71,7 @@ export class ValueValidator implements IValueValidator {
           return Object.freeze({
             ruleId: brandRuleId('VAL-001'),
             ruleName: 'Runtime declares value dimensions',
-            category: RuleCategory.Runtime,
+            category: RuleCategory.Philosophy,
             severity: RuleSeverity.Error,
             passed: true,
             violations: [],
@@ -89,7 +89,7 @@ export class ValueValidator implements IValueValidator {
             id: brandViolationId('VAL-001-v-1'),
             ruleId: brandRuleId('VAL-001'),
             ruleName: 'Runtime declares value dimensions',
-            category: RuleCategory.Runtime,
+            category: RuleCategory.Philosophy,
             severity: RuleSeverity.Error,
             enforcementLevel: EnforcementLevel.Blocking,
             state: ViolationState.Detected,
@@ -107,7 +107,7 @@ export class ValueValidator implements IValueValidator {
         return Object.freeze({
           ruleId: brandRuleId('VAL-001'),
           ruleName: 'Runtime declares value dimensions',
-          category: RuleCategory.Runtime,
+          category: RuleCategory.Philosophy,
           severity: RuleSeverity.Error,
           passed: violations.length === 0,
           violations,
@@ -123,7 +123,7 @@ export class ValueValidator implements IValueValidator {
       id: brandRuleId('VAL-002'),
       name: 'Runtime exposes getValueMetrics',
       description: 'Runtime must expose a getValueMetrics method',
-      category: RuleCategory.Runtime,
+      category: RuleCategory.Philosophy,
       severity: RuleSeverity.Critical,
       enforcementLevel: EnforcementLevel.Blocking,
       autoFix: AutoFixCapability.None,
@@ -145,7 +145,7 @@ export class ValueValidator implements IValueValidator {
           return Object.freeze({
             ruleId: brandRuleId('VAL-002'),
             ruleName: 'Runtime exposes getValueMetrics',
-            category: RuleCategory.Runtime,
+            category: RuleCategory.Philosophy,
             severity: RuleSeverity.Critical,
             passed: true,
             violations: [],
@@ -163,7 +163,7 @@ export class ValueValidator implements IValueValidator {
             id: brandViolationId('VAL-002-v-1'),
             ruleId: brandRuleId('VAL-002'),
             ruleName: 'Runtime exposes getValueMetrics',
-            category: RuleCategory.Runtime,
+            category: RuleCategory.Philosophy,
             severity: RuleSeverity.Critical,
             enforcementLevel: EnforcementLevel.Blocking,
             state: ViolationState.Detected,
@@ -181,7 +181,7 @@ export class ValueValidator implements IValueValidator {
         return Object.freeze({
           ruleId: brandRuleId('VAL-002'),
           ruleName: 'Runtime exposes getValueMetrics',
-          category: RuleCategory.Runtime,
+          category: RuleCategory.Philosophy,
           severity: RuleSeverity.Critical,
           passed: violations.length === 0,
           violations,
@@ -277,7 +277,7 @@ export class ValueValidator implements IValueValidator {
 
   async validate(request: ValidationRequest): Promise<RuleEvaluationResult[]> {
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 
   async validateValueCompliance(
@@ -292,6 +292,6 @@ export class ValueValidator implements IValueValidator {
       metadata: {},
     });
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 }

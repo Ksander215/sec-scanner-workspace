@@ -118,7 +118,7 @@ describe('TraceValidator', () => {
     expect(result.passed).toBe(false);
   });
   it('TRACE-001 should detect ADR in file path', async () => {
-    const content = `This is some ADR content without principle refs`;
+    const content = `This is some ADR content without any refs`;
     const result = await ruleEngine.evaluateRule(brandRuleId('TRACE-001'), makeRequest(content, 'docs/adr/001.md'));
     expect(result.passed).toBe(false);
   });
@@ -198,7 +198,7 @@ class Foo {}`;
     expect(result.passed).toBe(true);
   });
   it('TRACE-003 should pass for test file with governance terms', async () => {
-    const content = `it('complies with policy', () => { expect(x).toBe(1); });`;
+    const content = `it('governs the interface', () => { expect(x).toBe(1); });`;
     const result = await ruleEngine.evaluateRule(brandRuleId('TRACE-003'), makeRequest(content, 'foo.test.ts'));
     expect(result.passed).toBe(true);
   });
@@ -299,7 +299,7 @@ class Foo {}`;
     expect(results.length).toBe(3);
   });
   it('TRACE-001 should pass for ADR with gov keyword', async () => {
-    const content = `ADR-001: Decision. gov policy applies.`;
+    const content = `ADR-001: Decision. governance policy applies.`;
     const result = await ruleEngine.evaluateRule(brandRuleId('TRACE-001'), makeRequest(content, 'ADR-001.md'));
     expect(result.passed).toBe(true);
   });

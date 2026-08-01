@@ -112,12 +112,12 @@ describe('Boundary Conditions', () => {
       const c = new ConstraintAnalyzer(C).detectConstraint('Нехватка времени', 'Описание проблемы на русском', ConstraintSeverity.Major);
       expect(c.title).toContain('Нехватка');
     });
-    test('ConversationInterpreter handles Russian input', () => {
-      const i = new ConversationInterpreter(C).interpret('моя цель на этот квартал');
+    test('ConversationInterpreter handles Russian input', async () => {
+      const i = await new ConversationInterpreter(C).interpret('моя цель на этот квартал');
       expect(i.intent).toBe('GoalSetting');
     });
-    test('ConversationInterpreter handles mixed language', () => {
-      const i = new ConversationInterpreter(C).interpret('I need to решить эту проблему');
+    test('ConversationInterpreter handles mixed language', async () => {
+      const i = await new ConversationInterpreter(C).interpret('I need to решить эту проблему');
       expect(i).toBeDefined();
     });
     test('DecisionAdvisor handles very long description', () => {
@@ -307,26 +307,26 @@ describe('Boundary Conditions', () => {
       const ci = new ConversationInterpreter(C);
       expect(ci.getByIntent('GoalSetting' as any).length).toBe(0);
     });
-    test('entity extraction from goal: pattern', () => {
+    test('entity extraction from goal: pattern', async () => {
       const ci = new ConversationInterpreter(C);
-      const i = ci.interpret('goal: launch product by Q4');
+      const i = await ci.interpret('goal: launch product by Q4');
       const goalEntity = i.entities.find(e => e.type === 'goal');
       expect(goalEntity).toBeDefined();
     });
-    test('entity extraction from decision: pattern', () => {
+    test('entity extraction from decision: pattern', async () => {
       const ci = new ConversationInterpreter(C);
-      const i = ci.interpret('decision: hire contractor vs outsource');
+      const i = await ci.interpret('decision: hire contractor vs outsource');
       const decEntity = i.entities.find(e => e.type === 'decision');
       expect(decEntity).toBeDefined();
     });
-    test('confidence > 0.5 for specific intent with entities', () => {
+    test('confidence > 0.5 for specific intent with entities', async () => {
       const ci = new ConversationInterpreter(C);
-      const i = ci.interpret('goal: improve team productivity');
+      const i = await ci.interpret('goal: improve team productivity');
       expect(i.confidence).toBeGreaterThan(0.5);
     });
-    test('confidence is lower for general input', () => {
+    test('confidence is lower for general input', async () => {
       const ci = new ConversationInterpreter(C);
-      const i = ci.interpret('hello world');
+      const i = await ci.interpret('hello world');
       expect(i.confidence).toBeLessThanOrEqual(0.5);
     });
   });

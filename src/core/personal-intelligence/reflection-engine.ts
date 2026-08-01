@@ -91,11 +91,32 @@ export class ReflectionEngine {
   // ── Private helpers ──────────────────────────────────────
 
   private analyzeAccomplishments(period: ReflectionPeriod, date: string): readonly string[] {
-    return Object.freeze([
-      `Completed planned tasks for ${date}`,
-      `Made progress on ${period.toLowerCase()} goals`,
-      `Resolved blocking issues`,
-    ]);
+    const items: string[] = [];
+    // Try to read from contracts for richer accomplishments
+    try {
+      const entries = this.contracts.memory.query({ date });
+      if (Array.isArray(entries) && entries.length > 0) {
+        items.push(`Processed ${entries.length} memory entries for ${date}`);
+      }
+    } catch { /* fall through to fallback */ }
+    try {
+      const goals = this.contracts.personal.getGoals();
+      if (Array.isArray(goals) && goals.length > 0) {
+        for (const g of goals.slice(0, 3)) {
+          const title = typeof g === 'object' && g !== null && 'title' in g ? String((g as any).title) : String(g);
+          items.push(`Made progress on goal: ${title}`);
+        }
+      }
+    } catch { /* fall through to fallback */ }
+    // Fallback if no contract data available
+    if (items.length === 0) {
+      items.push(
+        `Completed planned tasks for ${date}`,
+        `Made progress on ${period.toLowerCase()} goals`,
+        `Resolved blocking issues`,
+      );
+    }
+    return Object.freeze(items);
   }
 
   private analyzeNotAccomplished(period: ReflectionPeriod, date: string): readonly string[] {

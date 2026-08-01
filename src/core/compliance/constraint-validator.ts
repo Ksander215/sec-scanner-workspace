@@ -49,7 +49,7 @@ export class ConstraintValidator implements IConstraintValidator {
       id: brandRuleId('CONSTR-001'),
       name: 'Runtime exposes getConstraintReport',
       description: 'Runtime must expose a getConstraintReport method',
-      category: RuleCategory.Runtime,
+      category: RuleCategory.Governance,
       severity: RuleSeverity.Error,
       enforcementLevel: EnforcementLevel.Blocking,
       autoFix: AutoFixCapability.None,
@@ -71,7 +71,7 @@ export class ConstraintValidator implements IConstraintValidator {
           return Object.freeze({
             ruleId: brandRuleId('CONSTR-001'),
             ruleName: 'Runtime exposes getConstraintReport',
-            category: RuleCategory.Runtime,
+            category: RuleCategory.Governance,
             severity: RuleSeverity.Error,
             passed: true,
             violations: [],
@@ -89,7 +89,7 @@ export class ConstraintValidator implements IConstraintValidator {
             id: brandViolationId('CONSTR-001-v-1'),
             ruleId: brandRuleId('CONSTR-001'),
             ruleName: 'Runtime exposes getConstraintReport',
-            category: RuleCategory.Runtime,
+            category: RuleCategory.Governance,
             severity: RuleSeverity.Error,
             enforcementLevel: EnforcementLevel.Blocking,
             state: ViolationState.Detected,
@@ -107,7 +107,7 @@ export class ConstraintValidator implements IConstraintValidator {
         return Object.freeze({
           ruleId: brandRuleId('CONSTR-001'),
           ruleName: 'Runtime exposes getConstraintReport',
-          category: RuleCategory.Runtime,
+          category: RuleCategory.Governance,
           severity: RuleSeverity.Error,
           passed: violations.length === 0,
           violations,
@@ -156,7 +156,7 @@ export class ConstraintValidator implements IConstraintValidator {
         }
 
         const violations: ComplianceViolation[] = [];
-        const hasConstraintObj = /(?:constraint|Constraint)\s*[:{]/.test(content);
+        const hasConstraintObj = /(?:constraint|Constraint)\s*[=:{]/.test(content);
         const hasEvidence = /(?:evidence|Evidence|reason|Reason|source|Source|justification)/.test(content);
 
         if (hasConstraintObj && !hasEvidence) {
@@ -272,7 +272,7 @@ export class ConstraintValidator implements IConstraintValidator {
 
   async validate(request: ValidationRequest): Promise<RuleEvaluationResult[]> {
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 
   async validateConstraintCompliance(
@@ -287,6 +287,6 @@ export class ConstraintValidator implements IConstraintValidator {
       metadata: {},
     });
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 }

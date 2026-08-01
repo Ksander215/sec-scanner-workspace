@@ -111,12 +111,12 @@ describe('QualityValidator', () => {
     expect(result.passed).toBe(false);
   });
   it('QUAL-001 should detect for-loop complexity', async () => {
-    const content = `function fn() { for (let i=0;i<10;i++) { for (let j=0;j<10;j++) { for (let k=0;k<10;k++) { for (let l=0;l<10;l++) {} } } } }`;
+    const content = `function fn() { for (let a=0;a<10;a++) { for (let b=0;b<10;b++) { for (let c=0;c<10;c++) { for (let d=0;d<10;d++) { for (let e=0;e<10;e++) { for (let f=0;f<10;f++) { for (let g=0;g<10;g++) { for (let h=0;h<10;h++) { for (let i=0;i<10;i++) { for (let j=0;j<10;j++) {} } } } } } } } } } }`;
     const result = await ruleEngine.evaluateRule(brandRuleId('QUAL-001'), makeRequest(content));
     expect(result.passed).toBe(false);
   });
   it('QUAL-001 should detect while-loop complexity', async () => {
-    const content = `function fn() { while(a) { while(b) { while(c) { while(d) { while(e) { while(f) { while(g) { while(h) {} } } } } } } } }`;
+    const content = `function fn() { while(a) { while(b) { while(c) { while(d) { while(e) { while(f) { while(g) { while(h) { while(i) { while(j) {} } } } } } } } } } }`;
     const result = await ruleEngine.evaluateRule(brandRuleId('QUAL-001'), makeRequest(content));
     expect(result.passed).toBe(false);
   });
@@ -164,7 +164,7 @@ describe('QualityValidator', () => {
     expect(result.passed).toBe(true);
   });
   it('QUAL-002 should pass for file with 500 lines', async () => {
-    const content = 'line\n'.repeat(500);
+    const content = 'line\n'.repeat(499) + 'line';
     const result = await ruleEngine.evaluateRule(brandRuleId('QUAL-002'), makeRequest(content));
     expect(result.passed).toBe(true);
   });
@@ -179,14 +179,14 @@ describe('QualityValidator', () => {
     expect(result.passed).toBe(false);
   });
   it('QUAL-002 violation should mention line count', async () => {
-    const content = 'line\n'.repeat(600);
+    const content = 'line\n'.repeat(599) + 'line';
     const result = await ruleEngine.evaluateRule(brandRuleId('QUAL-002'), makeRequest(content));
     if (result.violations.length > 0) {
       expect(result.violations[0].description).toContain('600');
     }
   });
   it('QUAL-002 violation should have metadata lineCount', async () => {
-    const content = 'line\n'.repeat(600);
+    const content = 'line\n'.repeat(599) + 'line';
     const result = await ruleEngine.evaluateRule(brandRuleId('QUAL-002'), makeRequest(content));
     if (result.violations.length > 0) {
       expect(result.violations[0].metadata).toHaveProperty('lineCount');

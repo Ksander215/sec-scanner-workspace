@@ -217,11 +217,11 @@ test('KnowledgeSynthesizer: nodes with tags', () => {
       k.addNode(KnowledgeNodeType.Note, 'N', 'C', 's', ['tag1','tag2','tag3']);
       expect(k.getNodesByType(KnowledgeNodeType.Note)[0].tags.length).toBe(3);
     });
-test('ConversationInterpreter: multiple interpretations', () => {
+test('ConversationInterpreter: multiple interpretations', async () => {
       const i = new ConversationInterpreter(contracts);
-      i.interpret('I want to set a new goal for Q1');
-      i.interpret('Help me decide between option A and B');
-      i.interpret('Let me reflect on last week');
+      await i.interpret('I want to set a new goal for Q1');
+      await i.interpret('Help me decide between option A and B');
+      await i.interpret('Let me reflect on last week');
       expect(i.getInterpretationCount()).toBe(3);
       expect(i.getByIntent(ConversationIntent.GoalSetting).length).toBe(1);
       expect(i.getByIntent(ConversationIntent.DecisionMaking).length).toBe(1);

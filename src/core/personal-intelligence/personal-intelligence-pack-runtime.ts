@@ -62,9 +62,10 @@ export class PersonalIntelligencePackRuntime {
     const maxK = this.config.maxKnowledgeNodes;
     const maxH = this.config.maxHabits;
     const ttlR = this.config.recommendationTtlHours;
+    const maxRef = this.config.maxReflectionHistory ?? maxB;
 
     this._dailyBrief = new DailyBriefGenerator(contracts, maxB);
-    this._reflection = new ReflectionEngine(contracts, maxB);
+    this._reflection = new ReflectionEngine(contracts, maxRef);
     this._goalPlanner = new GoalPlanner(contracts, maxG);
     this._decisionAdvisor = new DecisionAdvisor(contracts, maxD);
     this._constraintAnalyzer = new ConstraintAnalyzer(contracts, maxC);

@@ -159,8 +159,8 @@ export class RecommendationNotFoundError extends PackError {
 // ─── Knowledge Errors ────────────────────────────────────────
 
 export class KnowledgeNodeError extends PackError {
-  constructor(reason?: string) {
-    super(reason ?? 'Knowledge node operation failed', 'KNOWLEDGE_NODE_ERROR');
+  constructor(reason?: string, code?: string) {
+    super(reason ?? 'Knowledge node operation failed', code ?? 'KNOWLEDGE_NODE_ERROR');
     this.name = 'KnowledgeNodeError';
   }
 }

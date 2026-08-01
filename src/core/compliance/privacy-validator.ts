@@ -279,7 +279,7 @@ export class PrivacyValidator implements IPrivacyValidator {
 
   async validate(request: ValidationRequest): Promise<RuleEvaluationResult[]> {
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 
   async validatePrivacy(
@@ -296,6 +296,6 @@ export class PrivacyValidator implements IPrivacyValidator {
       metadata: {},
     });
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 }

@@ -352,9 +352,9 @@ describe('Event Publishing Verification', () => {
       { input: 'random text', intent: 'General' },
     ];
     for (const c of cases) {
-      test(`interpret("${c.input}") publishes ConversationInterpreted with intent=${c.intent}`, () => {
+      test(`interpret("${c.input}") publishes ConversationInterpreted with intent=${c.intent}`, async () => {
         const { C, evts } = mkC();
-        new ConversationInterpreter(C).interpret(c.input);
+        await new ConversationInterpreter(C).interpret(c.input);
         const e = evts.find(x => x.type === 'ConversationInterpreted');
         expect(e).toBeDefined();
         expect(e!.payload.intent).toBe(c.intent);
@@ -363,14 +363,14 @@ describe('Event Publishing Verification', () => {
         expect(e!.payload.interpretedAt).toBeDefined();
       });
     }
-    test('Russian keyword for goal triggers GoalSetting intent', () => {
+    test('Russian keyword for goal triggers GoalSetting intent', async () => {
       const { C, evts } = mkC();
-      new ConversationInterpreter(C).interpret('моя цель на этот квартал');
+      await new ConversationInterpreter(C).interpret('моя цель на этот квартал');
       expect(evts.find(x => x.type === 'ConversationInterpreted')!.payload.intent).toBe('GoalSetting');
     });
-    test('Russian keyword for decision triggers DecisionMaking intent', () => {
+    test('Russian keyword for decision triggers DecisionMaking intent', async () => {
       const { C, evts } = mkC();
-      new ConversationInterpreter(C).interpret('нужно решить эту проблему');
+      await new ConversationInterpreter(C).interpret('нужно решить эту проблему');
       expect(evts.find(x => x.type === 'ConversationInterpreted')!.payload.intent).toBe('DecisionMaking');
     });
   });

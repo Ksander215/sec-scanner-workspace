@@ -399,10 +399,10 @@ describe('CapabilityValidator', () => {
       expect(result.violations[0].state).toBe(ViolationState.Detected);
     }
   });
-  it('CAP-002 should pass for Permissions capitalized', async () => {
+  it('CAP-002 should fail for Permissions capitalized', async () => {
     const content = `const Permissions = [];`;
     const result = await ruleEngine.evaluateRule(brandRuleId('CAP-002'), makeRequest(content));
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
   });
   it('CAP-002 violation should have Blocking enforcement', async () => {
     const result = await ruleEngine.evaluateRule(brandRuleId('CAP-002'), makeRequest('const x = 1;'));

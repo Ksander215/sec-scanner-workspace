@@ -326,7 +326,7 @@ export class QualityValidator implements IQualityValidator {
 
   async validate(request: ValidationRequest): Promise<RuleEvaluationResult[]> {
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 
   async validateQuality(
@@ -343,6 +343,6 @@ export class QualityValidator implements IQualityValidator {
       metadata: {},
     });
     const result = await this.ruleEngine.evaluateRules(request);
-    return [...result.results];
+    return Object.freeze([...result.results]) as RuleEvaluationResult[];
   }
 }

@@ -226,37 +226,37 @@ describe('ValueValidator', () => {
   // --- VAL-001 ---
   describe('VAL-001: Declares value dimensions', () => {
     it('passes with no content', async () => {
-      const req = makeReq('src/runtime.ts', undefined, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', undefined, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-001'));
       expect(r?.passed).toBe(true);
     });
     it('passes with valueDimension', async () => {
       const content = 'const valueDimensions = ["VD-001"];';
-      const req = makeReq('src/runtime.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', content, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-001'));
       expect(r?.passed).toBe(true);
     });
     it('passes with ValueDimension', async () => {
       const content = 'enum ValueDimension { Value = "VD-001" }';
-      const req = makeReq('src/runtime.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', content, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-001'));
       expect(r?.passed).toBe(true);
     });
     it('fails without value dimensions', async () => {
       const content = 'export class Runtime { run() {} }';
-      const req = makeReq('src/runtime.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', content, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-001'));
       expect(r?.passed).toBe(false);
     });
     it('violation has Error severity', async () => {
       const content = 'class Foo {}';
-      const req = makeReq('src/foo.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/foo.ts', content, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-001'));
       expect(r?.violations[0]?.severity).toBe(RuleSeverity.Error);
     });
   });
@@ -264,30 +264,30 @@ describe('ValueValidator', () => {
   // --- VAL-002 ---
   describe('VAL-002: Exposes getValueMetrics', () => {
     it('passes with no content', async () => {
-      const req = makeReq('src/runtime.ts', undefined, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', undefined, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-002');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-002'));
       expect(r?.passed).toBe(true);
     });
     it('passes with getValueMetrics method', async () => {
       const content = 'async getValueMetrics() { return {}; }';
-      const req = makeReq('src/runtime.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', content, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-002');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-002'));
       expect(r?.passed).toBe(true);
     });
     it('fails without getValueMetrics', async () => {
       const content = 'export class Runtime { run() {} }';
-      const req = makeReq('src/runtime.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', content, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-002');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-002'));
       expect(r?.passed).toBe(false);
     });
     it('has Critical severity', async () => {
       const content = 'class Foo {}';
-      const req = makeReq('src/foo.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/foo.ts', content, [RuleCategory.Philosophy]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'VAL-002');
+      const r = result.results.find((x) => String(x.ruleId).includes('VAL-002'));
       expect(r?.severity).toBe(RuleSeverity.Critical);
     });
   });
@@ -390,30 +390,30 @@ describe('ConstraintValidator', () => {
   // --- CONSTR-001 ---
   describe('CONSTR-001: Exposes getConstraintReport', () => {
     it('passes with no content', async () => {
-      const req = makeReq('src/runtime.ts', undefined, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', undefined, [RuleCategory.Governance]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'CONSTR-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('CONSTR-001'));
       expect(r?.passed).toBe(true);
     });
     it('passes with getConstraintReport', async () => {
       const content = 'async getConstraintReport() { return {}; }';
-      const req = makeReq('src/runtime.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', content, [RuleCategory.Governance]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'CONSTR-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('CONSTR-001'));
       expect(r?.passed).toBe(true);
     });
     it('fails without getConstraintReport', async () => {
       const content = 'export class Runtime {}';
-      const req = makeReq('src/runtime.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/runtime.ts', content, [RuleCategory.Governance]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'CONSTR-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('CONSTR-001'));
       expect(r?.passed).toBe(false);
     });
     it('has Error severity', async () => {
       const content = 'class Foo {}';
-      const req = makeReq('src/foo.ts', content, [RuleCategory.Runtime]);
+      const req = makeReq('src/foo.ts', content, [RuleCategory.Governance]);
       const result = await engine.evaluateRules(req);
-      const r = result.results.find((x) => (x.ruleId as string) === 'CONSTR-001');
+      const r = result.results.find((x) => String(x.ruleId).includes('CONSTR-001'));
       expect(r?.severity).toBe(RuleSeverity.Error);
     });
   });
