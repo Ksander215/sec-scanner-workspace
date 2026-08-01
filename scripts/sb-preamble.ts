@@ -1,0 +1,28 @@
+import { describe, it, expect, vi } from 'vitest';
+import type { InProcessEventBus } from '@/core/events/event-bus';
+import { GoalInterpreter } from '@/core/solution-builder/goal-interpreter';
+import { DomainAnalyzer } from '@/core/solution-builder/domain-analyzer';
+import { RequirementExtractor } from '@/core/solution-builder/requirement-extractor';
+import { SolutionPlanner } from '@/core/solution-builder/solution-planner';
+import { CapabilitySelector } from '@/core/solution-builder/capability-selector';
+import { WorkflowComposer } from '@/core/solution-builder/workflow-composer';
+import { KnowledgeComposer } from '@/core/solution-builder/knowledge-composer';
+import { AIConfigRuntime } from '@/core/solution-builder/ai-config-runtime';
+import { DesktopComposer } from '@/core/solution-builder/desktop-composer';
+import { SolutionValidator } from '@/core/solution-builder/solution-validator';
+import { SolutionOptimizer } from '@/core/solution-builder/solution-optimizer';
+import { DeploymentPlanner } from '@/core/solution-builder/deployment-planner';
+import { LifecycleManager } from '@/core/solution-builder/lifecycle-manager';
+import { SolutionCatalog } from '@/core/solution-builder/solution-catalog';
+import { SolutionRuntime } from '@/core/solution-builder/solution-runtime';
+import { DefaultSolutionBuilderConfig, brandSolutionId, brandGoalId, brandRequirementId, brandBlueprintId, brandCapabilitySelectionId, brandWorkflowPackageId, brandKnowledgePackageId, brandAIConfigId, brandDesktopConfigId, brandValidationReportId, brandDeploymentPlanId, brandCatalogEntryId, brandOptimizationReportId, GoalPriority, RequirementType, BusinessDomain, WorkflowComplexity, SolutionState, LifecycleTransition, ValidationVerdict, AIProviderType, CostStrategy, DesktopLayout, ThemeType, KnowledgePackType, SolutionBuilderState, GoalLimitExceededError, RequirementLimitExceededError, BlueprintLimitExceededError, LifecycleTransitionError, CatalogLimitExceededError } from '@/core/solution-builder/types';
+import type { Goal, DomainAnalysis, Requirement, SolutionBlueprint, SolutionManifest } from '@/core/solution-builder/types';
+
+const eb = () => ({ publish: vi.fn().mockResolvedValue(undefined), subscribe: vi.fn(), unsubscribe: vi.fn() }) as unknown as InProcessEventBus;
+const sid = (n: string) => brandSolutionId(n);
+const now = () => new Date().toISOString();
+const goalStub = (s: string) => Object.freeze({ id: brandGoalId('g-'+s), solutionId: sid(s), rawInput: 'test', primaryGoal: 'test goal', subGoals: Object.freeze([]), constraints: Object.freeze([]), kpis: Object.freeze([]), stakeholders: Object.freeze([]), risks: Object.freeze([]), priority: GoalPriority.Medium, interpretedAt: now(), metadata: Object.freeze({}) });
+const domainStub = (s: string, bd: BusinessDomain = BusinessDomain.General) => Object.freeze({ solutionId: sid(s), industry: bd, businessDomain: bd, subjectArea: bd, terminology: Object.freeze(['term1','term2']), bestPractices: Object.freeze(['bp1']), analyzedAt: now(), metadata: Object.freeze({}) });
+const bpStub = (s: string) => Object.freeze({ id: brandBlueprintId('bp-'+s), solutionId: sid(s), name: 'test', description: 'bp', runtimeDependencies: Object.freeze(['core-runtime']), capabilityDependencies: Object.freeze(['security']), workflowPackages: Object.freeze([]), knowledgePackages: Object.freeze([]), aiConfigId: null, desktopConfigId: null, estimatedCost: 100, estimatedROI: 2.0, complexity: WorkflowComplexity.Moderate, createdAt: now(), metadata: Object.freeze({}) });
+const reqsEmpty = Object.freeze([] as const);
+const minManifest = (s: string) => Object.freeze({ solutionId: sid(s), version: '1.0.0', name: 'test', description: 'test', goal: 'test', expectedValue: 'value', businessDomain: BusinessDomain.General, constraints: Object.freeze([]), stakeholders: Object.freeze([]), kpis: Object.freeze([]), runtimeDependencies: Object.freeze([]), capabilityDependencies: Object.freeze([]), workflowPackages: Object.freeze([]), knowledgePackages: Object.freeze([]), aiConfiguration: null, desktopConfiguration: null, securityProfile: Object.freeze({}), privacyProfile: Object.freeze({}), complianceStatus: ValidationVerdict.Pass, marketplaceDependencies: Object.freeze([]), evolutionHistory: Object.freeze([]), metrics: Object.freeze({ buildTimeMs: 100, solutionComplexity: WorkflowComplexity.Simple, estimatedROI: 1.5, estimatedCost: 50, capabilityReuse: 0.7, workflowComplexity: WorkflowComplexity.Simple, aiCost: 10, aiLatencyMs: 100, userSatisfactionPrediction: 0.8, constraintScore: 0.9, complianceScore: 0.95, evolutionScore: 0.7 }), deploymentConfiguration: null, license: 'MIT', author: 'test', digitalSignature: null, createdAt: now(), updatedAt: now(), metadata: Object.freeze({}) });
