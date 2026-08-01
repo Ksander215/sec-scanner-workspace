@@ -10,7 +10,7 @@ import type { Timestamp } from '../types/common.js';
 import type {
   BottleneckId, ImprovementId, ExperimentId, KPIId, FeedbackId,
   EvolutionNodeId, TechDebtId, RoadmapId, LearningRecordId,
-  BottleneckSeverity, ConstraintType, ImprovementStatus, ExperimentStatus,
+  BottleneckSeverity, ConstraintType, ImprovementStatus,
   FeedbackSource, FeedbackSentiment, LearningOutcome,
   TechDebtPriority, ArchOptimizationType, ValueDimension,
   EvolutionState,

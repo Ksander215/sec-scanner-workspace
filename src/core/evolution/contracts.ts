@@ -12,19 +12,19 @@ import type {
   Bottleneck, BottleneckSeverity, BottleneckScope, ConstraintType,
   Improvement, ImprovementStatus,
   Experiment, ExperimentStatus,
-  KPIDefinition, KPIMeasurement, KPIComparison,
+  KPIDefinition, KPIComparison,
   FeedbackEntry, FeedbackSource, FeedbackSentiment,
   LearningRecord, LearningOutcome,
   EvolutionNode, EvolutionEdge,
   TechDebtItem, TechDebtPriority,
-  ArchOptimizationSuggestion, ArchOptimizationType,
+  ArchOptimizationSuggestion,
   ValueAnalysis, OpportunityCost,
   ConstraintAnalysis,
-  RoadmapItem, EvolutionRoadmap,
+  EvolutionRoadmap,
   EvolutionMetrics,
   EvolutionState,
-  ValueDimension,
 } from './types.js';
+import { KPDirection, RoadmapItemStatus } from './types.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // BOTTLENECK DETECTOR CONTRACT
