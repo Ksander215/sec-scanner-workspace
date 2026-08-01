@@ -161,6 +161,10 @@ export class DomainAnalyzer implements IDomainAnalyzer {
     return Object.freeze([...this.analyses.values()]);
   }
 
+  async count(): Promise<number> {
+    return this.analyses.size;
+  }
+
   // ─── Detection Helpers ───────────────────────────────────────────
 
   private detectDomain(input: string): BusinessDomain {

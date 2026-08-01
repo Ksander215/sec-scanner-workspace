@@ -633,6 +633,15 @@ export interface SolutionBuilderRuntimeConfig {
   readonly eventBusEnabled: boolean;
 }
 
+// Re-export errors for convenience
+export {
+  GoalLimitExceededError,
+  RequirementLimitExceededError,
+  BlueprintLimitExceededError,
+  LifecycleTransitionError,
+  CatalogLimitExceededError,
+} from './errors.js';
+
 export const DefaultSolutionBuilderConfig: SolutionBuilderRuntimeConfig = Object.freeze({
   goalInterpreter: Object.freeze({ maxGoals: 1000, maxSubGoals: 20, timeoutMs: 30_000 }),
   domainAnalyzer: Object.freeze({ maxDomains: 100, maxTerminology: 500, timeoutMs: 15_000 }),

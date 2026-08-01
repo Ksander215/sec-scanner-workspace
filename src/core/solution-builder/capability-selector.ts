@@ -138,6 +138,10 @@ export class CapabilitySelector implements ICapabilitySelector {
     return Object.freeze(results);
   }
 
+  async list(): Promise<readonly CapabilitySelection[]> {
+    return Object.freeze([...this.selections.values()]);
+  }
+
   async count(): Promise<number> {
     return this.selections.size;
   }

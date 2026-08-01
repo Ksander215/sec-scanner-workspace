@@ -34,6 +34,7 @@ export interface IDomainAnalyzer {
   analyze(solutionId: SolutionId, rawInput: string): Promise<DomainAnalysis>;
   getBySolutionId(solutionId: SolutionId): Promise<DomainAnalysis | null>;
   list(): Promise<readonly DomainAnalysis[]>;
+  count(): Promise<number>;
 }
 
 export interface IRequirementExtractor {
@@ -56,6 +57,7 @@ export interface ICapabilitySelector {
   select(solutionId: SolutionId, blueprint: SolutionBlueprint): Promise<readonly CapabilitySelection[]>;
   getById(id: CapabilitySelectionId): Promise<CapabilitySelection | null>;
   getBySolutionId(solutionId: SolutionId): Promise<readonly CapabilitySelection[]>;
+  list(): Promise<readonly CapabilitySelection[]>;
   count(): Promise<number>;
 }
 
