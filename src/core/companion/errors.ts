@@ -202,6 +202,32 @@ export class ExplainabilityError extends CompanionError {
   }
 }
 
+export class ExplainabilityRecordNotFoundError extends CompanionError {
+  readonly recordId: string;
+  constructor(recordId: string) {
+    super('EXPLAINABILITY_RECORD_NOT_FOUND', `Explainability record not found: ${recordId}`);
+    this.recordId = recordId;
+  }
+}
+
+export class ExplainabilityLimitExceededError extends CompanionError {
+  readonly limit: number;
+  readonly current: number;
+  constructor(limit: number, current: number) {
+    super('EXPLAINABILITY_LIMIT', `Explainability record limit exceeded: ${current}/${limit}`);
+    this.limit = limit;
+    this.current = current;
+  }
+}
+
+export class ValueOptimizationError extends CompanionError {
+  readonly stage: string;
+  constructor(stage: string, message: string) {
+    super('VALUE_OPTIMIZATION_ERROR', `Value optimization error at ${stage}: ${message}`);
+    this.stage = stage;
+  }
+}
+
 export class AIControlError extends CompanionError {
   readonly autonomyLevel: string;
   constructor(autonomyLevel: string, reason: string = '') {

@@ -8,17 +8,22 @@ import type { DomainEventBase } from '../domain/events/domain-event.js';
 import type { InProcessEventBus } from '../events/event-bus.js';
 import type { ISolutionCenter } from './contracts.js';
 import type { SolutionCenterConfig, SolutionInstance } from './types.js';
-import { brandSolutionInstanceId, SolutionStatus } from './types.js';
+import { brandSolutionInstanceId, brandCompanionSessionId, brandCompanionGoalId, SolutionStatus } from './types.js';
 import { SolutionNotFoundError, SolutionLimitExceededError } from './errors.js';
 
 export class SolutionCenter implements ISolutionCenter {
   private readonly config: SolutionCenterConfig;
   private readonly eventBus: InProcessEventBus | null;
   private readonly solutions = new Map<string, SolutionInstance>();
+  private onAnalytics?: (event: 'solutionCreated' | 'solutionCompleted') => void;
 
   constructor(config: SolutionCenterConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
+  }
+
+  setAnalyticsCallback(cb: (event: 'solutionCreated' | 'solutionCompleted') => void): void {
+    this.onAnalytics = cb;
   }
 
   async create(sessionId: string, userId: string, title: string, description?: string, goalId?: string): Promise<SolutionInstance> {
@@ -29,12 +34,13 @@ export class SolutionCenter implements ISolutionCenter {
     const now: Timestamp = new Date().toISOString();
     const id = brandSolutionInstanceId(`sol-${crypto.randomUUID()}`);
     const sol: SolutionInstance = Object.freeze({
-      id, sessionId: sessionId as any, userId, title, description: description ?? '',
-      status: SolutionStatus.Draft, goalId: goalId ? goalId as any : null,
+      id, sessionId: brandCompanionSessionId(sessionId), userId, title, description: description ?? '',
+      status: SolutionStatus.Draft, goalId: goalId ? brandCompanionGoalId(goalId) : null,
       valueScore: this.config.defaultValueScore, workflowsGenerated: 0,
       createdAt: now, completedAt: null, updatedAt: now, metadata: Object.freeze({}),
     });
     this.solutions.set(id as string, sol);
+    this.onAnalytics?.('solutionCreated');
     await this.publishEvent({
       eventType: 'companion.solution.created', classification: 'Result' as const,
       solutionId: id, sessionId, userId, title,
@@ -79,6 +85,7 @@ export class SolutionCenter implements ISolutionCenter {
       ...sol, status: SolutionStatus.Completed, completedAt: now, updatedAt: now,
     });
     this.solutions.set(id, updated);
+    this.onAnalytics?.('solutionCompleted');
     await this.publishEvent({
       eventType: 'companion.solution.completed', classification: 'Result' as const,
       solutionId: id, sessionId: sol.sessionId,

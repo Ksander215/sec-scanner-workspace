@@ -8,17 +8,22 @@ import type { DomainEventBase } from '../domain/events/domain-event.js';
 import type { InProcessEventBus } from '../events/event-bus.js';
 import type { IGoalCenter } from './contracts.js';
 import type { GoalCenterConfig, CompanionGoal } from './types.js';
-import { brandCompanionGoalId, GoalPriority, GoalStatus } from './types.js';
+import { brandCompanionGoalId, brandCompanionSessionId, GoalPriority, GoalStatus } from './types.js';
 import { GoalNotFoundError, GoalLimitExceededError } from './errors.js';
 
 export class GoalCenter implements IGoalCenter {
   private readonly config: GoalCenterConfig;
   private readonly eventBus: InProcessEventBus | null;
   private readonly goals = new Map<string, CompanionGoal>();
+  private onAnalytics?: (event: 'goalCreated' | 'goalCompleted') => void;
 
   constructor(config: GoalCenterConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
+  }
+
+  setAnalyticsCallback(cb: (event: 'goalCreated' | 'goalCompleted') => void): void {
+    this.onAnalytics = cb;
   }
 
   async create(sessionId: string, userId: string, title: string, description?: string, priority?: GoalPriority): Promise<CompanionGoal> {
@@ -29,12 +34,13 @@ export class GoalCenter implements IGoalCenter {
     const now: Timestamp = new Date().toISOString();
     const id = brandCompanionGoalId(`goal-${crypto.randomUUID()}`);
     const goal: CompanionGoal = Object.freeze({
-      id, sessionId: sessionId as any, userId, title,
+      id, sessionId: brandCompanionSessionId(sessionId), userId, title,
       description: description ?? '', priority: priority ?? GoalPriority.Medium,
       status: GoalStatus.Draft, targetDate: null, progress: this.config.defaultProgress,
-      createdAt: now, updatedAt: now, metadata: Object.freeze({}),
+      createdAt: now, completedAt: null, updatedAt: now, metadata: Object.freeze({}),
     });
     this.goals.set(id as string, goal);
+    this.onAnalytics?.('goalCreated');
     await this.publishEvent({
       eventType: 'companion.goal.created', classification: 'Result' as const,
       goalId: id, sessionId, userId, title, priority: goal.priority,
@@ -78,9 +84,10 @@ export class GoalCenter implements IGoalCenter {
     const now: Timestamp = new Date().toISOString();
     const updated: CompanionGoal = Object.freeze({
       ...existing, status: GoalStatus.Completed, progress: 100,
-      completedAt: now as any, updatedAt: now,
+      completedAt: now, updatedAt: now,
     });
     this.goals.set(id, updated);
+    this.onAnalytics?.('goalCompleted');
     await this.publishEvent({
       eventType: 'companion.goal.completed', classification: 'Result' as const,
       goalId: id, sessionId: existing.sessionId,

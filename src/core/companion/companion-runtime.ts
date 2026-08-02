@@ -65,6 +65,18 @@ export class CompanionRuntime implements ICompanionRuntime {
     this.insights = new InsightEngine(this.config.insightEngineConfig, eventBus);
     this.notifications = new NotificationCenter(this.config.notificationCenterConfig, eventBus);
     this.analytics = new AnalyticsDashboard(this.config.analyticsDashboardConfig, eventBus);
+    // Wire analytics callbacks to subsystems
+    this.goals.setAnalyticsCallback((e) => {
+      if (e === 'goalCreated') this.analytics.recordGoalCreated();
+      if (e === 'goalCompleted') this.analytics.recordGoalCompleted();
+    });
+    this.solutions.setAnalyticsCallback((e) => {
+      if (e === 'solutionCreated') this.analytics.recordSolutionCreated();
+      if (e === 'solutionCompleted') this.analytics.recordSolutionCreated();
+    });
+    this.insights.setAnalyticsCallback(() => {
+      this.analytics.recordInsightGenerated();
+    });
   }
 
   async initialize(userId: string): Promise<CompanionSession> {

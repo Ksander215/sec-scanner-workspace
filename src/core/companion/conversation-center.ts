@@ -8,7 +8,7 @@ import type { DomainEventBase } from '../domain/events/domain-event.js';
 import type { InProcessEventBus } from '../events/event-bus.js';
 import type { IConversationCenter } from './contracts.js';
 import type { ConversationCenterConfig, Conversation, ConversationMessage } from './types.js';
-import { brandConversationId, ConversationRole, ConversationId } from './types.js';
+import { brandConversationId, brandCompanionSessionId, ConversationRole, ConversationId } from './types.js';
 import { ConversationNotFoundError, ConversationLimitExceededError, MessageLimitExceededError } from './errors.js';
 
 export class ConversationCenter implements IConversationCenter {
@@ -29,7 +29,7 @@ export class ConversationCenter implements IConversationCenter {
     const now: Timestamp = new Date().toISOString();
     const id = brandConversationId(`conv-${crypto.randomUUID()}`);
     const conv: Conversation = Object.freeze({
-      id, sessionId: sessionId as any, userId, title: title ?? 'New Conversation',
+      id, sessionId: brandCompanionSessionId(sessionId), userId, title: title ?? 'New Conversation',
       messages: [], createdAt: now, updatedAt: now, metadata: Object.freeze({}),
     });
     this.conversations.set(id as string, conv);

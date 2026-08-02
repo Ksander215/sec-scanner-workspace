@@ -16,11 +16,11 @@ describe('NavigationRuntime', () => {
   });
 
   describe('screens', () => {
-    it('should have 9 default screens', () => { expect(nav.getAllScreens().length).toBe(9); });
-    it('should be in order', () => { const s = nav.getAllScreens(); expect(s[0]!.name).toBe(ScreenName.Home); expect(s[8]!.name).toBe(ScreenName.Diagnostics); });
-    it('should register custom', () => { nav.registerScreen({ id: 'x' as any, name: ScreenName.Home, path: '/custom', title: 'Custom', order: 10 }); expect(nav.getAllScreens().length).toBe(10); });
+    it('should have 12 default screens', () => { expect(nav.getAllScreens().length).toBe(12); });
+    it('should be in order', () => { const s = nav.getAllScreens(); expect(s[0]!.name).toBe(ScreenName.Home); expect(s[8]!.name).toBe(ScreenName.Diagnostics); expect(s[9]!.name).toBe(ScreenName.Goals); expect(s[10]!.name).toBe(ScreenName.Solutions); expect(s[11]!.name).toBe(ScreenName.Analytics); });
+    it('should register custom', () => { nav.registerScreen({ id: 'x' as any, name: ScreenName.Home, path: '/custom', title: 'Custom', order: 10 }); expect(nav.getAllScreens().length).toBe(13); });
     it('should throw on duplicate path', () => { expect(() => nav.registerScreen({ id: 'd' as any, name: ScreenName.Home, path: '/', title: 'D', order: 99 })).toThrow(DuplicateScreenError); });
-    it('should unregister', () => { nav.unregisterScreen('/'); expect(nav.getAllScreens().length).toBe(8); });
+    it('should unregister', () => { nav.unregisterScreen('/'); expect(nav.getAllScreens().length).toBe(11); });
     it('should get by path', () => { expect(nav.getScreen('/').title).toBe('Home'); });
     it('should throw on missing path', () => { expect(() => nav.getScreen('/no')).toThrow(ScreenNotFoundError); });
     it('should get by name', () => { expect(nav.getScreenByName(ScreenName.Settings)?.path).toBe('/settings'); });

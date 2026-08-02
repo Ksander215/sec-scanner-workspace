@@ -16,6 +16,9 @@ export enum ScreenName {
   Marketplace = 'Marketplace',
   Settings = 'Settings',
   Diagnostics = 'Diagnostics',
+  Goals = 'Goals',
+  Solutions = 'Solutions',
+  Analytics = 'Analytics',
 }
 
 export interface ScreenDefinition {

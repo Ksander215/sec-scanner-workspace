@@ -8,7 +8,7 @@ import type { DomainEventBase } from '../domain/events/domain-event.js';
 import type { InProcessEventBus } from '../events/event-bus.js';
 import type { IDailyPlanner } from './contracts.js';
 import type { DailyPlannerConfig, DailyPlan, DailyTask } from './types.js';
-import { brandDailyPlanId, brandDailyTaskId, GoalPriority, DailyTaskStatus, DailyPlanId } from './types.js';
+import { brandDailyPlanId, brandDailyTaskId, brandCompanionSessionId, brandCompanionGoalId, GoalPriority, DailyTaskStatus, DailyPlanId } from './types.js';
 import { DailyPlanNotFoundError, TaskLimitExceededError } from './errors.js';
 
 export class DailyPlanner implements IDailyPlanner {
@@ -26,7 +26,7 @@ export class DailyPlanner implements IDailyPlanner {
     const planDate = date ?? now.slice(0, 10);
     const id = brandDailyPlanId(`plan-${crypto.randomUUID()}`);
     const plan: DailyPlan = Object.freeze({
-      id, sessionId: sessionId as any, userId, date: planDate,
+      id, sessionId: brandCompanionSessionId(sessionId), userId, date: planDate,
       focusArea: '', overallPriority: GoalPriority.Medium,
       tasks: [], createdAt: now, updatedAt: now, metadata: Object.freeze({}),
     });
@@ -63,7 +63,7 @@ export class DailyPlanner implements IDailyPlanner {
       id: taskId, planId: planId as unknown as DailyPlanId, title, description: description ?? '',
       status: DailyTaskStatus.Pending, priority: priority ?? GoalPriority.Medium,
       estimatedMinutes: estimatedMinutes ?? this.config.defaultEstimatedMinutes,
-      relatedGoalId: relatedGoalId ? relatedGoalId as any : null,
+      relatedGoalId: relatedGoalId ? brandCompanionGoalId(relatedGoalId) : null,
       completedAt: null, metadata: Object.freeze({}),
     });
     const updated: DailyPlan = Object.freeze({ ...plan, tasks: [...plan.tasks, task], updatedAt: now });

@@ -51,7 +51,7 @@ export class AIControlCenter implements IAIControlCenter {
   }
 
   async getHistory(sessionId: string): Promise<ReadonlyArray<{ from: string; to: string; timestamp: string }>> {
-    return this.history.get(sessionId) ?? [];
+    return Object.freeze([...(this.history.get(sessionId) ?? [])]);
   }
 
   private async publishEvent(event: Record<string, unknown>, aggregateId: string, aggregateType: string): Promise<void> {

@@ -8,7 +8,7 @@ import type { DomainEventBase } from '../domain/events/domain-event.js';
 import type { InProcessEventBus } from '../events/event-bus.js';
 import type { INotificationCenter } from './contracts.js';
 import type { NotificationCenterConfig, CompanionNotification } from './types.js';
-import { brandCompanionNotificationId, NotificationPriority, NotificationStatus } from './types.js';
+import { brandCompanionNotificationId, brandCompanionSessionId, NotificationPriority, NotificationStatus } from './types.js';
 import { NotificationNotFoundError, NotificationLimitExceededError } from './errors.js';
 
 export class NotificationCenter implements INotificationCenter {
@@ -29,7 +29,7 @@ export class NotificationCenter implements INotificationCenter {
     const now: Timestamp = new Date().toISOString();
     const id = brandCompanionNotificationId(`notif-${crypto.randomUUID()}`);
     const notif: CompanionNotification = Object.freeze({
-      id, sessionId: sessionId as any, userId, title, content,
+      id, sessionId: brandCompanionSessionId(sessionId), userId, title, content,
       priority: priority ?? this.config.defaultPriority,
       status: NotificationStatus.Unread, createdAt: now, readAt: null,
       metadata: Object.freeze({}),

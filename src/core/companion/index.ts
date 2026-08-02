@@ -23,3 +23,7 @@ export { InsightEngine } from './insight-engine.js';
 export { NotificationCenter } from './notification-center.js';
 export { AnalyticsDashboard } from './analytics-dashboard.js';
 export { LifecycleManager } from './lifecycle-manager.js';
+export { ExplainabilityCenter } from './explainability-center.js';
+export type { ExplainabilityInput, ExplainableRecommendation } from './explainability-center.js';
+export { ValueOptimizationEngine, OptimizationPhase } from './value-optimization-engine.js';
+export type { OptimizationCycle, ValueAction } from './value-optimization-engine.js';

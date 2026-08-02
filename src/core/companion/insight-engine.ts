@@ -8,17 +8,22 @@ import type { DomainEventBase } from '../domain/events/domain-event.js';
 import type { InProcessEventBus } from '../events/event-bus.js';
 import type { IInsightEngine } from './contracts.js';
 import type { InsightEngineConfig, Insight } from './types.js';
-import { brandInsightId, InsightType } from './types.js';
+import { brandInsightId, brandCompanionSessionId, InsightType } from './types.js';
 import { InsightNotFoundError, InsightLimitExceededError } from './errors.js';
 
 export class InsightEngine implements IInsightEngine {
   private readonly config: InsightEngineConfig;
   private readonly eventBus: InProcessEventBus | null;
   private readonly insights = new Map<string, Insight>();
+  private onAnalytics?: (event: 'insightGenerated') => void;
 
   constructor(config: InsightEngineConfig, eventBus?: InProcessEventBus | null) {
     this.config = config;
     this.eventBus = eventBus ?? null;
+  }
+
+  setAnalyticsCallback(cb: (event: 'insightGenerated') => void): void {
+    this.onAnalytics = cb;
   }
 
   async generate(sessionId: string, userId: string, type: InsightType, title: string, description: string, confidence?: number): Promise<Insight> {
@@ -30,11 +35,12 @@ export class InsightEngine implements IInsightEngine {
     const now: Timestamp = new Date().toISOString();
     const id = brandInsightId(`insight-${crypto.randomUUID()}`);
     const insight: Insight = Object.freeze({
-      id, sessionId: sessionId as any, userId, type, title, description,
+      id, sessionId: brandCompanionSessionId(sessionId), userId, type, title, description,
       confidence: conf, actionable: conf >= 0.7,
       createdAt: now, metadata: Object.freeze({}),
     });
     this.insights.set(id as string, insight);
+    this.onAnalytics?.('insightGenerated');
     await this.publishEvent({
       eventType: 'companion.insight.generated', classification: 'Result' as const,
       insightId: id, sessionId, type, confidence: conf,

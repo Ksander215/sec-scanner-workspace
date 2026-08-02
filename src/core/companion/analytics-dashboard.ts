@@ -49,9 +49,11 @@ export class AnalyticsDashboard implements IAnalyticsDashboard {
     });
   }
 
+  recordGoalCreated(): void { this.totalGoals++; }
   recordGoalCompleted(): void { this.completedGoals++; }
   recordSolutionCreated(): void { this.totalSolutions++; }
   recordInsightGenerated(): void { this.totalInsights++; }
+  recordRecommendationCreated(): void { this.totalRecommendations++; }
   incrementSessions(): void { this.totalSessions++; this.activeSessions++; }
   decrementActiveSessions(): void { this.activeSessions = Math.max(0, this.activeSessions - 1); }
   recordSessionDuration(ms: number): void {

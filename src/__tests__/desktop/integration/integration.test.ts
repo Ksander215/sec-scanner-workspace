@@ -125,7 +125,7 @@ describe('Diagnostics + All Subsystems Integration', () => {
   beforeEach(async () => { diag = new DiagnosticsRuntime(); nav = new NavigationRuntime(); storage = new LocalStorageRuntime(); await diag.initialize(); await nav.initialize(); await storage.initialize(); });
 
   it('should register health checks for subsystems', async () => { diag.registerHealthCheck('navigation', async () => ({ healthy: nav.initialized })); diag.registerHealthCheck('storage', async () => ({ healthy: storage.initialized })); const r = await diag.runHealthChecks(); expect(r.navigation.healthy).toBe(true); expect(r.storage.healthy).toBe(true); });
-  it('should record metrics for subsystems', () => { diag.recordMetric('navScreens', nav.getAllScreens().length); diag.recordMetric('storageSize', storage.size); expect(diag.getMetric('navScreens')).toBe(9); expect(diag.getMetric('storageSize')).toBe(0); });
+  it('should record metrics for subsystems', () => { diag.recordMetric('navScreens', nav.getAllScreens().length); diag.recordMetric('storageSize', storage.size); expect(diag.getMetric('navScreens')).toBe(12); expect(diag.getMetric('storageSize')).toBe(0); });
   it('should log subsystem events', () => { diag.log('info', 'Navigation initialized'); diag.log('info', 'Storage initialized'); expect(diag.getLogs().length).toBe(2); });
 });
 

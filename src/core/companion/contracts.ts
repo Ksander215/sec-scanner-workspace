@@ -95,6 +95,7 @@ export interface IWorkflowDashboard {
   list(sessionId: string): Promise<ReadonlyArray<{ id: string; title: string; status: string; solutionId: string }>>;
   getBySolution(solutionId: string): Promise<ReadonlyArray<{ id: string; title: string; status: string }>>;
   count(sessionId: string): Promise<number>;
+  register(sessionId: string, solutionId: string, workflowId: string, title: string, status?: string): Promise<void>;
 }
 
 export interface ICapabilityManager {
@@ -109,6 +110,7 @@ export interface IMarketplaceCenter {
   browse(sessionId: string, query?: string, category?: string): Promise<ReadonlyArray<{ id: string; title: string; description: string; category: string; rating: number }>>;
   getDetails(sessionId: string, listingId: string): Promise<{ id: string; title: string; description: string; version: string; author: string } | null>;
   install(sessionId: string, listingId: string): Promise<{ instanceId: string; listingId: string }>;
+  seedListings(items: ReadonlyArray<{ id: string; title: string; description: string; category: string; rating: number; version: string; author: string }>): void;
 }
 
 export interface IKnowledgeCenter {
@@ -150,7 +152,12 @@ export interface IAnalyticsDashboard {
   getSummary(): CompanionMetrics;
   getSectionMetrics(section: NavigationSection): SectionMetrics;
   recordVisit(section: NavigationSection, durationMs: number): void;
+  recordGoalCreated(): void;
   recordGoalCompleted(): void;
   recordSolutionCreated(): void;
   recordInsightGenerated(): void;
+  recordRecommendationCreated(): void;
+  incrementSessions(): void;
+  decrementActiveSessions(): void;
+  recordSessionDuration(ms: number): void;
 }

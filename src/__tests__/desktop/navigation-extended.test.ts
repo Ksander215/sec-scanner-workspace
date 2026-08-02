@@ -8,10 +8,10 @@ describe('NavigationRuntime — Extended', () => {
   beforeEach(async () => { nav = new NavigationRuntime(); await nav.initialize(); });
 
   describe('screen registration extended', () => {
-    it('should register 20 custom screens', () => { for (let i = 0; i < 20; i++) nav.registerScreen({ id: `custom-${i}` as any, name: ScreenName.Home, path: `/custom/${i}`, title: `Custom ${i}`, order: 100 + i }); expect(nav.getAllScreens().length).toBe(29); });
+    it('should register 20 custom screens', () => { for (let i = 0; i < 20; i++) nav.registerScreen({ id: `custom-${i}` as any, name: ScreenName.Home, path: `/custom/${i}`, title: `Custom ${i}`, order: 100 + i }); expect(nav.getAllScreens().length).toBe(32); });
     it('should maintain order after multiple registrations', () => { nav.registerScreen({ id: 'z' as any, name: ScreenName.Home, path: '/z', title: 'Z', order: 50 }); const screens = nav.getAllScreens(); const first = screens.findIndex(s => s.path === '/z'); expect(screens[first]!.title).toBe('Z'); });
     it('should register screen with all properties', () => { nav.registerScreen({ id: 'full' as any, name: ScreenName.Home, path: '/full', title: 'Full Screen', icon: 'star', order: 100 }); const s = nav.getScreen('/full'); expect(s.title).toBe('Full Screen'); });
-    it('should handle rapid register/unregister cycles', () => { for (let i = 0; i < 50; i++) { nav.registerScreen({ id: `r${i}` as any, name: ScreenName.Home, path: `/r${i}`, title: `R${i}`, order: i }); nav.unregisterScreen(`/r${i}`); } expect(nav.getAllScreens().length).toBe(9); });
+    it('should handle rapid register/unregister cycles', () => { for (let i = 0; i < 50; i++) { nav.registerScreen({ id: `r${i}` as any, name: ScreenName.Home, path: `/r${i}`, title: `R${i}`, order: i }); nav.unregisterScreen(`/r${i}`); } expect(nav.getAllScreens().length).toBe(12); });
   });
 
   describe('navigation extended', () => {
@@ -36,14 +36,14 @@ describe('NavigationRuntime — Extended', () => {
   });
 
   describe('screen lookup extended', () => {
-    it('should find all 9 default screens by name', () => { const names = [ScreenName.Home, ScreenName.Conversation, ScreenName.Projects, ScreenName.Memory, ScreenName.Knowledge, ScreenName.Workflows, ScreenName.Marketplace, ScreenName.Settings, ScreenName.Diagnostics]; for (const name of names) { expect(nav.getScreenByName(name)).not.toBeNull(); } });
-    it('should return all paths in order', () => { const paths = nav.getAllScreens().map(s => s.path); expect(paths).toEqual(['/', '/conversation', '/projects', '/memory', '/knowledge', '/workflows', '/marketplace', '/settings', '/diagnostics']); });
+    it('should find all 12 default screens by name', () => { const names = [ScreenName.Home, ScreenName.Conversation, ScreenName.Projects, ScreenName.Memory, ScreenName.Knowledge, ScreenName.Workflows, ScreenName.Marketplace, ScreenName.Settings, ScreenName.Diagnostics, ScreenName.Goals, ScreenName.Solutions, ScreenName.Analytics]; for (const name of names) { expect(nav.getScreenByName(name)).not.toBeNull(); } });
+    it('should return all paths in order', () => { const paths = nav.getAllScreens().map(s => s.path); expect(paths).toEqual(['/', '/conversation', '/projects', '/memory', '/knowledge', '/workflows', '/marketplace', '/settings', '/diagnostics', '/goals', '/solutions', '/analytics']); });
   });
 
   describe('edge cases extended', () => {
     it('should handle stop and clear history', async () => { nav.start(); nav.navigate('/projects'); nav.navigate('/settings'); await nav.stop(); expect(nav.historyCount).toBe(0); });
     it('should handle shutdown and clear screens', async () => { await nav.shutdown(); expect(nav.getAllScreens().length).toBe(0); expect(nav.initialized).toBe(false); });
-    it('should handle reinitialization', async () => { await nav.shutdown(); await nav.initialize(); expect(nav.getAllScreens().length).toBe(9); });
+    it('should handle reinitialization', async () => { await nav.shutdown(); await nav.initialize(); expect(nav.getAllScreens().length).toBe(12); });
     it('should handle multiple start calls', async () => { nav.start(); nav.start(); expect(nav.historyCount).toBe(2); });
   });
 });

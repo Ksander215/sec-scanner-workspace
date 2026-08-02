@@ -8,19 +8,22 @@ import { WorkflowsScreen } from '../../ui/screens/workflows.js';
 import { MarketplaceScreen } from '../../ui/screens/marketplace.js';
 import { SettingsScreen } from '../../ui/screens/settings.js';
 import { DiagnosticsScreen } from '../../ui/screens/diagnostics.js';
+import { GoalsScreen } from '../../ui/screens/goals.js';
+import { SolutionsScreen } from '../../ui/screens/solutions.js';
+import { AnalyticsScreen } from '../../ui/screens/analytics.js';
 import { NavigationRuntime } from '../../desktop/navigation-runtime/navigation-runtime.js';
 import { ScreenName } from '../../desktop/navigation-runtime/types.js';
 
 describe('Final Coverage — Screen + Navigation Mapping', () => {
-  const screenClasses = [HomeScreen, ConversationScreen, ProjectsScreen, MemoryScreen, KnowledgeScreen, WorkflowsScreen, MarketplaceScreen, SettingsScreen, DiagnosticsScreen];
-  const screenNames = [ScreenName.Home, ScreenName.Conversation, ScreenName.Projects, ScreenName.Memory, ScreenName.Knowledge, ScreenName.Workflows, ScreenName.Marketplace, ScreenName.Settings, ScreenName.Diagnostics];
-  const screenPaths = ['/', '/conversation', '/projects', '/memory', '/knowledge', '/workflows', '/marketplace', '/settings', '/diagnostics'];
+  const screenClasses = [HomeScreen, ConversationScreen, ProjectsScreen, MemoryScreen, KnowledgeScreen, WorkflowsScreen, MarketplaceScreen, SettingsScreen, DiagnosticsScreen, GoalsScreen, SolutionsScreen, AnalyticsScreen];
+  const screenNames = [ScreenName.Home, ScreenName.Conversation, ScreenName.Projects, ScreenName.Memory, ScreenName.Knowledge, ScreenName.Workflows, ScreenName.Marketplace, ScreenName.Settings, ScreenName.Diagnostics, ScreenName.Goals, ScreenName.Solutions, ScreenName.Analytics];
+  const screenPaths = ['/', '/conversation', '/projects', '/memory', '/knowledge', '/workflows', '/marketplace', '/settings', '/diagnostics', '/goals', '/solutions', '/analytics'];
 
-  it('should have exactly 9 screens matching 9 navigation entries', async () => {
+  it('should have exactly 12 screens matching 12 navigation entries', async () => {
     const nav = new NavigationRuntime();
     await nav.initialize();
-    expect(screenClasses.length).toBe(9);
-    expect(nav.getAllScreens().length).toBe(9);
+    expect(screenClasses.length).toBe(12);
+    expect(nav.getAllScreens().length).toBe(12);
   });
 
   it('should have each screen name in navigation', async () => {
@@ -43,7 +46,7 @@ describe('Final Coverage — Screen + Navigation Mapping', () => {
     const nav = new NavigationRuntime();
     await nav.initialize();
     const screens = nav.getAllScreens();
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 12; i++) {
       expect(screens[i]!.name).toBe(screenNames[i]);
       expect(screens[i]!.path).toBe(screenPaths[i]);
     }
@@ -60,7 +63,7 @@ describe('Final Coverage — Screen + Navigation Mapping', () => {
   });
 
   it('should create all screen instances with correct screenIds', () => {
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 12; i++) {
       const s = new screenClasses[i](`screen-${i}`);
       expect(s.screenId).toBe(`screen-${i}`);
       expect(s.isActive).toBe(false);

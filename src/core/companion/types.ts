@@ -182,6 +182,7 @@ export interface CompanionGoal {
   readonly targetDate: Timestamp | null;
   readonly progress: number;
   readonly createdAt: Timestamp;
+  readonly completedAt: Timestamp | null;
   readonly updatedAt: Timestamp;
   readonly metadata: Readonly<Record<string, unknown>>;
 }

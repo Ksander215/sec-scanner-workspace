@@ -19,6 +19,9 @@ const DEFAULT_SCREENS: readonly ScreenDefinition[] = [
   { id: brandScreen('screen-marketplace'), name: ScreenName.Marketplace, path: '/marketplace', title: 'Marketplace', icon: 'store', order: 6 },
   { id: brandScreen('screen-settings'), name: ScreenName.Settings, path: '/settings', title: 'Settings', icon: 'settings', order: 7 },
   { id: brandScreen('screen-diagnostics'), name: ScreenName.Diagnostics, path: '/diagnostics', title: 'Diagnostics', icon: 'activity', order: 8 },
+  { id: brandScreen('screen-goals'), name: ScreenName.Goals, path: '/goals', title: 'Goals', icon: 'target', order: 9 },
+  { id: brandScreen('screen-solutions'), name: ScreenName.Solutions, path: '/solutions', title: 'Solutions', icon: 'lightbulb', order: 10 },
+  { id: brandScreen('screen-analytics'), name: ScreenName.Analytics, path: '/analytics', title: 'Analytics', icon: 'chart', order: 11 },
 ];
 
 export class NavigationRuntime implements Service {

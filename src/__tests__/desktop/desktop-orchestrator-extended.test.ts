@@ -10,14 +10,14 @@ describe('DesktopRuntime — Extended Orchestrator', () => {
   beforeEach(async () => { dr = new DesktopRuntime(); await dr.initialize(); });
 
   describe('navigation through orchestrator', () => {
-    it('should access all 9 screens via navigation', () => { expect(dr.navigation.getAllScreens().length).toBe(9); });
+    it('should access all 12 screens via navigation', () => { expect(dr.navigation.getAllScreens().length).toBe(12); });
     it('should navigate to conversation', () => { dr.navigation.navigate('/conversation'); expect(dr.navigation.currentPath).toBe('/conversation'); });
     it('should navigate to all default screens', () => {
       const paths = dr.navigation.getAllScreens().map(s => s.path);
       for (const p of paths) { dr.navigation.navigate(p); expect(dr.navigation.currentPath).toBe(p); }
     });
     it('should support full navigation history', () => { dr.navigation.start(); dr.navigation.navigate('/projects'); dr.navigation.navigate('/settings'); dr.navigation.goBack(); expect(dr.navigation.currentPath).toBe('/projects'); });
-    it('should register custom screen through navigation', () => { dr.navigation.registerScreen({ id: 'custom' as any, name: ScreenName.Home, path: '/custom', title: 'Custom', order: 100 }); expect(dr.navigation.getAllScreens().length).toBe(10); });
+    it('should register custom screen through navigation', () => { dr.navigation.registerScreen({ id: 'custom' as any, name: ScreenName.Home, path: '/custom', title: 'Custom', order: 100 }); expect(dr.navigation.getAllScreens().length).toBe(13); });
   });
 
   describe('workspace through orchestrator', () => {
