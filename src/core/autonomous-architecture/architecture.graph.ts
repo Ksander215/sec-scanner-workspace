@@ -1,6 +1,6 @@
 /**
  * Autonomous Architecture Runtime — Architecture Graph Container
- * TASK-AIS-012A.004
+ * TASK-AIS-012A.005
  *
  * Immutable data container over ArchitectureGraphModel.
  * No algorithms. No traversal. No validation. No business logic.
@@ -13,6 +13,8 @@ import type {
   ArchitectureEdge,
   ArchitectureNodeId,
   ArchitectureEdgeId,
+  ArchitectureNodeKind,
+  ArchitectureEdgeKind,
 } from './architecture.model.js';
 
 export class ArchitectureGraph {
@@ -70,5 +72,29 @@ export class ArchitectureGraph {
       nodes: this.model.nodes,
       edges: this.model.edges.filter((e) => e.id !== edgeId),
     });
+  }
+
+  findNode(id: ArchitectureNodeId): ArchitectureNode | undefined {
+    return this.model.nodes.find((n) => n.id === id);
+  }
+
+  findEdge(id: ArchitectureEdgeId): ArchitectureEdge | undefined {
+    return this.model.edges.find((e) => e.id === id);
+  }
+
+  getNodesByKind(kind: ArchitectureNodeKind): readonly ArchitectureNode[] {
+    return this.model.nodes.filter((n) => n.kind === kind);
+  }
+
+  getEdgesByKind(kind: ArchitectureEdgeKind): readonly ArchitectureEdge[] {
+    return this.model.edges.filter((e) => e.kind === kind);
+  }
+
+  getOutgoingEdges(nodeId: ArchitectureNodeId): readonly ArchitectureEdge[] {
+    return this.model.edges.filter((e) => e.from === nodeId);
+  }
+
+  getIncomingEdges(nodeId: ArchitectureNodeId): readonly ArchitectureEdge[] {
+    return this.model.edges.filter((e) => e.to === nodeId);
   }
 }
