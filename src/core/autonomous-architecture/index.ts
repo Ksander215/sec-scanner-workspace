@@ -18,3 +18,5 @@ export * from './architecture.graph-validator.js';
 export * from './services/architecture.graph-snapshot.js';
 
 export * from './services/architecture.graph-diff.js';
+
+export * from './services/architecture.change-set.js';
