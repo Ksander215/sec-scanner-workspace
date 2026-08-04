@@ -22,3 +22,5 @@ export * from './services/architecture.graph-diff.js';
 export * from './services/architecture.change-set.js';
 
 export * from './services/architecture.graph-builder.js';
+
+export * from './services/architecture.graph-factory.js';
