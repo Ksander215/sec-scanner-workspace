@@ -1,6 +1,6 @@
 /**
  * Autonomous Architecture Runtime — Architecture Graph Container
- * TASK-AIS-012A.005
+ * TASK-AIS-012A.008
  *
  * Immutable data container over ArchitectureGraphModel.
  * No algorithms. No traversal. No validation. No business logic.
@@ -96,5 +96,42 @@ export class ArchitectureGraph {
 
   getIncomingEdges(nodeId: ArchitectureNodeId): readonly ArchitectureEdge[] {
     return this.model.edges.filter((e) => e.to === nodeId);
+  }
+
+  getOutgoingNeighbors(nodeId: ArchitectureNodeId): readonly ArchitectureNode[] {
+    return this.model.edges
+      .filter((e) => e.from === nodeId)
+      .map((e) => this.findNode(e.to))
+      .filter((n): n is ArchitectureNode => n !== undefined);
+  }
+
+  getIncomingNeighbors(nodeId: ArchitectureNodeId): readonly ArchitectureNode[] {
+    return this.model.edges
+      .filter((e) => e.to === nodeId)
+      .map((e) => this.findNode(e.from))
+      .filter((n): n is ArchitectureNode => n !== undefined);
+  }
+
+  getNeighbors(nodeId: ArchitectureNodeId): readonly ArchitectureNode[] {
+    const outgoing = this.getOutgoingNeighbors(nodeId);
+    const incoming = this.getIncomingNeighbors(nodeId);
+    const seen = new Set<string>();
+    const result: ArchitectureNode[] = [];
+
+    for (const node of outgoing) {
+      if (!seen.has(node.id)) {
+        seen.add(node.id);
+        result.push(node);
+      }
+    }
+
+    for (const node of incoming) {
+      if (!seen.has(node.id)) {
+        seen.add(node.id);
+        result.push(node);
+      }
+    }
+
+    return result;
   }
 }
