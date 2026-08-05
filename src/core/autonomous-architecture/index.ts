@@ -34,3 +34,5 @@ export * from './services/architecture.history.js';
 export * from './services/architecture.event-bus.js';
 
 export * from './services/architecture.runtime.js';
+
+export * from './services/architecture.runtime-state.js';
