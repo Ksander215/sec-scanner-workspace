@@ -40,3 +40,5 @@ export * from './services/architecture.runtime-state.js';
 export * from './services/architecture.runtime-transition.js';
 
 export * from './services/architecture.runtime-lifecycle.js';
+
+export * from './services/architecture.runtime-controller.js';
