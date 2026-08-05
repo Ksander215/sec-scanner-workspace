@@ -28,3 +28,5 @@ export * from './services/architecture.graph-factory.js';
 export * from './services/architecture.workspace.js';
 
 export * from './services/architecture.operation.js';
+
+export * from './services/architecture.history.js';
