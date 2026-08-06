@@ -1,9 +1,8 @@
 /**
  * Autonomous Architecture Runtime — Architecture Runtime Engine
- * TASK-AIS-012A.027
+ * TASK-AIS-012A.027 / TASK-AIS-013.001
  *
  * Top-level entry point for Runtime execution.
- * No behavior at this stage. Only holds Controller reference.
  */
 
 import { ArchitectureRuntimeController } from './architecture.runtime-controller.js';
@@ -17,5 +16,8 @@ export class ArchitectureRuntimeEngine {
 
   getController(): ArchitectureRuntimeController {
     return this.controller;
+  }
+
+  execute(): void {
   }
 }

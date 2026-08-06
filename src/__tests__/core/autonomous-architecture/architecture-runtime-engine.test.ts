@@ -1,6 +1,6 @@
 /**
  * Autonomous Architecture Runtime — Architecture Runtime Engine Smoke Tests
- * TASK-AIS-012A.027
+ * TASK-AIS-012A.027 / TASK-AIS-013.001
  */
 
 import { describe, it, expect } from 'vitest';
@@ -136,5 +136,47 @@ describe('ArchitectureRuntimeEngine', () => {
     const engine = new ArchitectureRuntimeEngine(controller);
     const engineProto = Object.getOwnPropertyNames(ArchitectureRuntimeEngine.prototype);
     expect(engineProto).not.toContain('getEventBus');
+  });
+
+  describe('execute (TASK-AIS-013.001)', () => {
+    it('should have execute method', () => {
+      const controller = createTestController();
+      const engine = new ArchitectureRuntimeEngine(controller);
+      expect(typeof engine.execute).toBe('function');
+    });
+
+    it('should not throw when called', () => {
+      const controller = createTestController();
+      const engine = new ArchitectureRuntimeEngine(controller);
+      expect(() => engine.execute()).not.toThrow();
+    });
+
+    it('should not mutate Runtime state', () => {
+      const controller = createTestController();
+      const engine = new ArchitectureRuntimeEngine(controller);
+      const runtimeBefore = controller.getRuntime();
+      engine.execute();
+      expect(controller.getRuntime()).toBe(runtimeBefore);
+    });
+
+    it('should not mutate Controller', () => {
+      const controller = createTestController();
+      const engine = new ArchitectureRuntimeEngine(controller);
+      const ctrlBefore = controller.getLifecycle().getTransitionCount();
+      engine.execute();
+      expect(controller.getLifecycle().getTransitionCount()).toBe(ctrlBefore);
+    });
+
+    it('should have no side effects', () => {
+      const controller = createTestController();
+      const engine = new ArchitectureRuntimeEngine(controller);
+      const graphNodesBefore = controller.getRuntime().getWorkspace().getGraph().nodes.length;
+      const historyCountBefore = controller.getRuntime().getHistory().getOperationCount();
+      const lifecycleCountBefore = controller.getLifecycle().getTransitionCount();
+      engine.execute();
+      expect(controller.getRuntime().getWorkspace().getGraph().nodes.length).toBe(graphNodesBefore);
+      expect(controller.getRuntime().getHistory().getOperationCount()).toBe(historyCountBefore);
+      expect(controller.getLifecycle().getTransitionCount()).toBe(lifecycleCountBefore);
+    });
   });
 });
