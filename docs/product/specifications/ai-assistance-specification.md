@@ -1076,7 +1076,7 @@ AI Assistance в AIS — это способность отвечать на в�
 **Противоречия:** Нет.
 
 ### 34.4. User Personas
-**Что проверялось:** §2.1 (Developer), §2.4 (Tech Lead), §2.3 (Architect), §2.5 (Security Engineer), §2.7 (CTO), §8.1 (время поиска), §9.5 (daily usage), §10 (объяснимые рекомендации), §12 (FAQ: AI обучение).
+**Что проверялось:** §2.1 (Developer), §2.4 (Tech Lead), §2.5 (Architect), §2.8 (Security Engineer), §2.7 (CTO), §8.1 (время поиска), §9.5 (daily usage), §10 (объяснимые рекомендации), §12 (FAQ: AI обучение).
 **Результат:** PASS. User Value определён для всех 5 personas.
 **Противоречия:** Нет.
 
