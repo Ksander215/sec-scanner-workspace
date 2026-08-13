@@ -10,6 +10,18 @@
 
 Документ отвечает на три вопроса: **кто** использует платформу, **почему** он это делает и **что меняется** в его работе после внедрения. Он не описывает, как платформа работает, — только для кого она создана и какую ценность приносит.
 
+### Статус документа
+
+Данный документ является **авторитетным источником** personas для всех продуктовых документов. Capability Map (User Value Matrix), Product Positioning, Product Success Metrics и другие документы могут использовать подмножество personas, релевантных своему контексту:
+
+- **Capability Map, User Value Matrix:** 5 personas (Developer, Tech Lead, Architect, Security Engineer, CTO) — отражает пользователей, непосредственно взаимодействующих с capabilities на архитектурном уровне.
+- **Product Vision (§4):** 7 аудиторий — включает Developer, Team, Tech Lead, Architect, Security Engineer, CTO, Company. «Team» и «Company» — это коллективные аудитории, а не отдельные personas.
+- **Product Positioning (§6):** 6 customer value sections — соответствует 6 primary personas (Solo/Backend/Frontend Developer объединены как Developer; Tech Lead, Architect, Security Engineer, Engineering Manager, CTO).
+- **MVP Definition (§2):** 3 целевых клиента — подмножество primary personas, наиболее релевантных для первой версии (Tech Lead, Solo Developer, Startup-команда).
+- **Product Success Metrics (§6):** 5 customer types — подмножество, для которых определены измеримые метрики.
+
+Product Manager является **secondary persona** (§3.1) — он не использует AIS непосредственно, а потребляет данные о техническом состоянии проекта. Это обосновано: Product Manager не взаимодействует с архитектурной моделью напрямую, но получает ценность косвенно через отчёты и метрики.
+
 ---
 
 ## 2. Primary Personas
