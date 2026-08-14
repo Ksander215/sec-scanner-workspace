@@ -255,3 +255,28 @@ Stage Summary:
 - 8 Non-Blocking Observations
 - 8 Unresolved Questions
 - Commit: 5b04f3f, **push pending** (user needs to push manually or provide unredacted PAT)
+
+---
+Task ID: TASK-ARCH-CAPABILITY-001 (cross-audit)
+Agent: Super Z (main)
+Task: Cross-audit and fix of AIS Capability Interaction Architecture Specification
+
+Work Log:
+- Read all dependency documents in full: Foundation (2043 lines), UX (1026 lines), Quality (1526 lines), Capability Map, 12 Product Specifications, Product Decisions, Product Principles, MVP Definition
+- Subagent read all 15 dependency files and produced comprehensive boundary/ownership/dependency summary
+- Performed independent cross-audit of existing 1726-line specification against all dependency documents
+- Found 3 issues:
+  1. CRITICAL: §9.4 falsely claimed 'Discovery не пишет напрямую в Model' — contradicted Foundation §6.1, §6.2, §12.2, §14.1
+  2. MEDIUM: §47 listed 'Quality Architecture Specification' (Architecture Layer) instead of 'Architecture Evolution Specification' (Product Layer) — missing Product Spec in alignment check
+  3. MINOR: OQ-1, UQ-2 referenced the false 'incorporation' concept from old §9.4
+- Applied 5 fixes: §9.3, §9.4, §9.5, OQ-1, UQ-2, §47 (added Evolution Spec), AUDIT-35 (updated), added OBS-9
+- Bumped version to 1.1
+- Committed as b40aeaf, pushed to main
+
+Stage Summary:
+- All 35 audits remain PASS after fixes
+- 9 Non-Blocking Observations (added OBS-9 documenting cross-audit finding)
+- 8 Unresolved Questions (updated UQ-2)
+- 14 Open Questions (updated OQ-1)
+- Key lesson: distinguish ownership (Discovery doesn't own Model) from data flow (Discovery supplies data directly to Model)
+- Commit: b40aeaf, pushed successfully
