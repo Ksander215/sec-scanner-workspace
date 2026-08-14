@@ -4,7 +4,7 @@
 **Уровень документа:** Architecture Layer
 **Зависимости:** TASK-ARCH-FOUNDATION-001, TASK-ARCH-UX-001, TASK-ARCH-QUALITY-001, Product Layer, все Product Specifications
 **Статус:** Draft
-**Версия:** 1.0
+**Версия:** 1.1 (cross-audit fixes: §9.4 Discovery→Model flow, §47 Evolution spec, AUDIT-35)
 
 ---
 
@@ -508,18 +508,19 @@ Architecture Modeling является persistent Source of Truth (Architecture 
 
 ### 9.3 Ключевое различие
 
-Discovery — это процесс преобразования артефактов в данные. Model — это хранилище структурированного понимания проекта. Discovery не становится Model: выход Discovery является входом для Model, но сами данные подвергаются трансформации при incorporation в Model. Model не реимплементирует Discovery: если Discovery не обнаружил компонент, Model не может его создать из ниоткуда.
+Discovery — это процесс преобразования артефактов в данные. Model — это хранилище структурированного понимания проекта. Discovery не становится Model: выход Discovery является входом для Model. Данные Discovery проходят трансформацию внутри самого процесса Discovery, и результат непосредственно поступает в Model (Architecture Foundation, §6.1, §6.2). Model не реимплементирует Discovery: если Discovery не обнаружил компонент, Model не может его создать из ниоткуда.
 
 ### 9.4 Boundary rules
 
-- Discovery не пишет напрямую в Model. Выход Discovery проходит через процесс incorporation.
+- Discovery поставляет структурированные данные непосредственно в Architecture Model. Если Discovery обнаруживает 15 компонентов, эти 15 компонентов становятся элементами Architecture Model (Architecture Foundation, §6.2). Данные Discovery не проходят через промежуточное хранилище или отдельный процесс incorporation.
+- Architecture Modeling владеет Model и отвечает за её целостность, но не является промежуточным звеном между Discovery и Model — Architecture Modeling и Model являются одним и тем же (Architecture Foundation, §4.4; §14.2: «Является Model»).
 - Model не может повторно запустить Discovery для получения данных, которые не были обнаружены изначально. Для этого требуется повторное подключение проекта.
 - Discovery не знает о enrichment (security findings, dependency analysis и т.д.). Enrichment привязывается к Model после его создания.
 - Model не хранит сырые артефакты. Model хранит структурные факты, извлечённые из артефактов.
 
 ### 9.5 Implications
 
-Граница Discovery → Model гарантирует, что Model является единой точкой правды о структуре проекта, а Discovery остаётся чистым процессом преобразования. Повторное discovery не разрушает Model — оно предоставляет новые данные для incorporation.
+Граница Discovery → Model гарантирует, что Model является единой точкой правды о структуре проекта, а Discovery остаётся чистым процессом преобразования. Повторное discovery не разрушает Model — оно уточняет существующие данные и добавляет новые (Architecture Foundation, §6.2).
 
 ---
 ## 10. Model → Knowledge Boundary
@@ -1521,7 +1522,9 @@ Quality Architecture полностью совместима с capability inter
 
 **Technical Debt Tracking Specification.** Compatible. Post-MVP (§16), debt observations bound to Model, not code quality metrics.
 
-**Quality Architecture Specification.** Compatible. Quality collects signals (§23), no ownership of content, no automatic mutation.
+**Architecture Evolution Specification.** Compatible. Post-MVP (§11), observational layer (what changed, not why), depends on Model states stored by Knowledge Persistence.
+
+**Quality Architecture Specification.** Compatible. Quality collects signals (§23), no ownership of content, no automatic mutation. Примечание: Quality Architecture является документом Architecture Layer (TASK-ARCH-QUALITY-001), а не Product Specification — включён для полноты cross-layer верификации.
 
 ### 47.1 Discrepancy: CIA Specification
 
@@ -1575,7 +1578,7 @@ Change Impact Assessment Specification указывает, что базовая
 
 Следующие вопросы требуют дальнейшего обсуждения на уровне Product или Implementation.
 
-**OQ-1.** Как именно происходит процесс incorporation данных Discovery в Model? Требует ли это human approval, или автоматический? Граница автоматизации не определена в текущей архитектуре.
+**OQ-1.** Как именно Discovery трансформирует данные артефактов в структурные факты Model? Требует ли это human approval, или процесс автоматический? Граница автоматизации не определена в текущей архитектуре.
 
 **OQ-2.** Каков минимальный набор OA данных, необходимых для MVP? Текущая архитектура определяет OA как MVP capability, но не определяет minimum viable organizational context.
 
@@ -1676,7 +1679,7 @@ Change Impact Assessment Specification указывает, что базовая
 
 **AUDIT-34: All 10 Product Layer documents aligned.** Verify: Vision, Principles, Decisions, Capability Map, MVP, Metrics, Roadmap, Framework, all Specs. Result: §46. **PASS.**
 
-**AUDIT-35: All 12 Product Specifications aligned.** Verify: Each spec checked against capability interaction architecture. CIA discrepancy noted. Result: §47. **PASS.**
+**AUDIT-35: All 12 Product Specifications aligned + Quality Architecture cross-layer check.** Verify: Each of 12 Product Specs checked against capability interaction architecture, plus TASK-ARCH-QUALITY-001 cross-layer verification. Result: §47 — 12 Product Specs checked (including Architecture Evolution Specification), CIA discrepancy noted. Quality Architecture (Architecture Layer) verified separately. **PASS.**
 
 ---
 ## 51. Non-Blocking Observations
@@ -1699,6 +1702,8 @@ Change Impact Assessment Specification указывает, что базовая
 
 **OBS-8. Visualization and Reports as separate capabilities.** Две projection capabilities (Visualization и Reports) имеют значительное перекрытие: обе читают Model, Analysis, OA и представляют пользователю. Разделение оправдано разными product goals (interactive vs. delivery artifact), но future evolution может рассмотреть convergence. Это не является архитектурным решением сейчас.
 
+**OBS-9. Cross-audit note: Discovery → Model data flow.** Первоначальная версия §9.4 содержала утверждение «Discovery не пишет напрямую в Model», которое противоречило Architecture Foundation (§6.1, §6.2, §12.2, §14.1). Foundation явно определяет: «Результаты Discovery — это данные, которые непосредственно поступают в Architecture Model» (§6.2). Исправлено: §9.4 теперь корректно описывает прямую поставку данных Discovery в Model. Урок: при формулировке boundary rules необходимо отличать ownership (Discovery не владеет Model) от data flow (Discovery поставляет данные непосредственно в Model).
+
 ---
 ## 52. Unresolved Questions
 
@@ -1706,7 +1711,7 @@ Change Impact Assessment Specification указывает, что базовая
 
 **UQ-1. Granularity of human validation for Knowledge.** Архитектура требует human validation для AI → Knowledge transition. Но какой granularity? Каждый AI response? Каждый substantial insight? Explicit user nomination? Это product и UX решение.
 
-**UQ-2. Discovery → Model incorporation process.** Архитектура определяет, что Discovery не пишет напрямую в Model (§9.4). Но процесс incorporation (кто контролирует, можно ли отклонить, можно ли модифицировать) — это product и implementation решение.
+**UQ-2. Discovery → Model data transformation.** Архитектура определяет, что Discovery поставляет данные непосредственно в Model (§9.4). Но уровень трансформации данных внутри процесса Discovery и критерии включения обнаруженных элементов в Model — это product и implementation решение.
 
 **UQ-3. Minimum viable OA for MVP.** OA является MVP capability, но minimum organizational context для meaningful value не определён. Это product решение.
 
