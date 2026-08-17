@@ -38,6 +38,7 @@ import {
   MessageRole,
   DefaultCognitiveRuntimeConfig,
   brandCognitiveSessionId,
+  ProviderAdapterType,
 } from './types.js';
 
 import { createCognitiveFSM } from './cognitive-fsm.js';
@@ -54,6 +55,9 @@ import { CognitivePolicyEngine } from './cognitive-policies.js';
 import { CognitiveMetricsCollector } from './cognitive-metrics.js';
 import { CognitiveTrace } from './cognitive-trace.js';
 
+// Wave 1 TD-1: Real LLM adapter behind feature flag
+import { RealOpenAIAdapter } from './real-provider-wrapper.js';
+
 import type {
   MemoryRuntimeContract,
   KnowledgeRuntimeContract,
@@ -67,7 +71,7 @@ import type {
  * CognitiveRuntime — the central cognitive orchestrator.
  */
 export class CognitiveRuntime {
-  private readonly _config: CognitiveRuntimeConfig;
+  private _config: CognitiveRuntimeConfig;
   private readonly _fsm: StateMachine<CognitiveState>;
   private readonly _intentRuntime: IntentRuntime;
   private readonly _contextBuilder: ContextBuilder;
@@ -173,17 +177,55 @@ export class CognitiveRuntime {
 
   /**
    * Initialize the Cognitive Runtime.
+   * Wave 1 TD-1: When AIS_REAL_LLM=true, registers RealOpenAIAdapter
+   * instead of relying solely on stubs.
    */
   async initialize(): Promise<void> {
     this._fsm.transition(CognitiveState.Initialized);
     this._sessionId = brandCognitiveSessionId(crypto.randomUUID());
 
-    this._trace.info({
-      sessionId: this._sessionId,
-      phase: 'lifecycle',
-      action: 'initialize',
-      message: 'Cognitive Runtime initialized',
-    });
+    // Wave 1 TD-1: Feature flag — register real OpenAI adapter
+    if (process.env.AIS_REAL_LLM === 'true') {
+      try {
+        const realAdapter = new RealOpenAIAdapter();
+        await this._providerRuntime.registerAdapter(realAdapter, {
+          adapterType: ProviderAdapterType.OpenAI,
+          name: 'openai-real',
+          model: process.env.AIS_MODEL ?? 'gpt-4o',
+          apiKey: process.env.OPENAI_API_KEY,
+          maxTokens: 128000,
+          temperature: 0.7,
+          timeoutMs: 60000,
+          metadata: Object.freeze({}),
+        });
+        // Override default provider to use real adapter
+        this._config = {
+          ...this._config,
+          defaultProvider: 'openai-real',
+        };
+        this._trace.info({
+          sessionId: this._sessionId,
+          phase: 'lifecycle',
+          action: 'initialize',
+          message: 'Cognitive Runtime initialized with REAL OpenAI adapter (AIS_REAL_LLM=true)',
+        });
+      } catch (error) {
+        // If real adapter fails to initialize, log and continue with stubs
+        this._trace.warn({
+          sessionId: this._sessionId,
+          phase: 'lifecycle',
+          action: 'initialize',
+          message: `Real adapter initialization failed, falling back to stubs: ${error instanceof Error ? error.message : String(error)}`,
+        });
+      }
+    } else {
+      this._trace.info({
+        sessionId: this._sessionId,
+        phase: 'lifecycle',
+        action: 'initialize',
+        message: 'Cognitive Runtime initialized (stub adapters)',
+      });
+    }
 
     this._metrics.recordSession(true);
   }
