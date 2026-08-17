@@ -17,5 +17,8 @@
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0",
     "vitest": "^4.1.10"
+  },
+  "optionalDependencies": {
+    "openai": "^4.73.0"
   }
 }

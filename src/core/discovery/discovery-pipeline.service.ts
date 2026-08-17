@@ -449,9 +449,19 @@ export class DiscoveryPipelineService implements Service {
 
   /**
    * Resolve a file path to its module name.
+   * For relative imports (starting with '.'), resolves against fromPath's directory.
+   * Returns the dot-separated directory name matching detectModules convention.
    */
-  private resolveModuleName(filePath: string, _fromPath?: string): string {
-    const dir = dirname(filePath).replace(/[/\\]/g, '.');
+  private resolveModuleName(filePath: string, fromPath?: string): string {
+    let resolved = filePath;
+    if (filePath.startsWith('.')) {
+      if (fromPath) {
+        resolved = join(dirname(fromPath), filePath);
+      } else {
+        return filePath;
+      }
+    }
+    const dir = dirname(resolved).replace(/[/\\]/g, '.');
     return dir || filePath;
   }
 }

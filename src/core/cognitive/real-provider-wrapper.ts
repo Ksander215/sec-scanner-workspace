@@ -86,8 +86,8 @@ export class RealOpenAIAdapter implements ProviderAdapter {
     }
 
     try {
-      // Dynamic import — only resolves at runtime when openai is installed
-      // @ts-expect-error -- openai is not a compile-time dependency (zero-dep default build)
+      // Dynamic import — only resolved at runtime when openai is installed.
+      // Cast to OpenAIModule to keep AIS domain types provider-independent.
       const openaiModule = (await import('openai')) as unknown as OpenAIModule;
       const OpenAIClass = openaiModule.default;
       this._openaiClient = new (OpenAIClass as unknown as new (opts: { apiKey: string }) => unknown)({ apiKey });
