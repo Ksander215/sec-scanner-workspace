@@ -72,11 +72,11 @@ interface ScoredNode {
   readonly reason: string;
 }
 
-/** Maximum prompt tokens for project context (target 4k–8k, aim mid-range). */
-const CONTEXT_TOKEN_BUDGET = 6000;
+/** Maximum prompt tokens for project context (target ≤8k total including system prompt + question overhead). */
+const CONTEXT_TOKEN_BUDGET = 5000;
 
-/** Approximate chars per token for code-heavy text. */
-const CHARS_PER_TOKEN = 4;
+/** Approximate chars per token for code-heavy text (conservative: code + markdown backticks inflate token count). */
+const CHARS_PER_TOKEN = 3.5;
 
 /** Max lines per source excerpt in LLM context. */
 const EXCERPT_MAX_LINES = 40;
@@ -313,13 +313,15 @@ export class ExecutionEngine {
    * Find graph nodes relevant to the question using keyword matching
    * and 1-hop neighbor expansion.
    *
-   * v2 fix: slash/dot normalization ("src/core" matches "src.core.cognitive"),
-   * path prefix boost for scope-bounded questions.
+   * v3 fix: WORD-BOUNDARY matching — "engine" no longer matches
+   * "landing.src.lib.engine" (only matches whole path segments).
+   * Multi-segment keywords ("src/core/engine") require contiguous
+   * segment subsequence match.
    *
    * Algorithm (no semantic search, no vectors):
    *   1. Extract keywords from question
-   *   2. Score each node by name overlap (normalized)
-   *   3. Boost Module/Service kinds + path prefix matches
+   *   2. Score each node by segment-level name matching
+   *   3. Boost Module/Service kinds
    *   4. Expand top matches to 1-hop neighbors (reduced score)
    *   5. Return sorted by score descending
    */
@@ -330,26 +332,34 @@ export class ExecutionEngine {
     for (const node of graph.nodes) {
       const name = node.name.toLowerCase();
       const normalizedName = name.replace(/\//g, '.');
+      const nameSegments = normalizedName.split('.');
       let maxScore = 0;
       let bestReason = '';
 
       for (const kw of keywords) {
         const normalizedKw = kw.replace(/\//g, '.');
+        const kwSegments = normalizedKw.split('.');
+
+        // 1. Exact full-name match
         if (normalizedName === normalizedKw) {
           if (10 > maxScore) { maxScore = 10; bestReason = `exact match: "${kw}"`; }
-        } else if (normalizedName.includes(normalizedKw) || normalizedKw.includes(normalizedName)) {
-          const partialScore = kw.length > 3 ? 6 : 4;
-          if (partialScore > maxScore) { maxScore = partialScore; bestReason = `partial match: "${kw}" in "${node.name}"`; }
+          continue;
         }
-        // v2: Path prefix boost — "src/core" strongly boosts src.core.* nodes
-        if ((kw.includes('/') || kw.includes('.')) && normalizedKw.length > 3) {
-          if (normalizedName.startsWith(normalizedKw)) {
-            if (maxScore < 5) {
-              maxScore = 5;
-              bestReason = `path prefix: "${kw}" → "${node.name}"`;
-            } else {
-              maxScore += 3;
-            }
+
+        // 2. Contiguous segment subsequence match
+        //    "src.core.engine" matches "src.core.engine.module" but NOT "landing.src.lib.engine"
+        const segMatch = this.segmentSubsequenceScore(kwSegments, nameSegments);
+        if (segMatch > 0) {
+          const s = Math.min(8, segMatch * 2 + (kwSegments.length > 1 ? 2 : 0));
+          if (s > maxScore) { maxScore = s; bestReason = `segment match: "${kw}" → "${node.name}"`; }
+        }
+
+        // 3. Single-segment keyword: must match a WHOLE segment, not a substring
+        //    "engine" matches node segment "engine" but NOT "execution-engine" or "engine-props"
+        if (kwSegments.length === 1 && kwSegments[0].length > 1) {
+          if (nameSegments.includes(kwSegments[0])) {
+            const s = kwSegments[0].length > 4 ? 5 : 3;
+            if (s > maxScore) { maxScore = s; bestReason = `word match: "${kw}" = segment in "${node.name}"`; }
           }
         }
       }
@@ -381,6 +391,31 @@ export class ExecutionEngine {
     }
 
     return Array.from(expanded.values()).sort((a, b) => b.score - a.score);
+  }
+
+  /**
+   * Check if kwSegments form a contiguous subsequence of nameSegments.
+   * Returns the number of matched segments, or 0 if no contiguous match.
+   *
+   * Examples:
+   *   (['src','core','engine'], ['src','core','engine','module']) → 3
+   *   (['src','core','engine'], ['landing','src','lib','engine']) → 0
+   *   (['engine'], ['src','core','engine']) → 1
+   */
+  private segmentSubsequenceScore(kwSegments: string[], nameSegments: string[]): number {
+    if (kwSegments.length === 0 || kwSegments.length > nameSegments.length) return 0;
+    for (let start = 0; start <= nameSegments.length - kwSegments.length; start++) {
+      let matched = 0;
+      for (let i = 0; i < kwSegments.length; i++) {
+        if (nameSegments[start + i] === kwSegments[i]) {
+          matched++;
+        } else {
+          break;
+        }
+      }
+      if (matched === kwSegments.length) return matched;
+    }
+    return 0;
   }
 
   /**
@@ -506,11 +541,16 @@ export class ExecutionEngine {
 
   /**
    * Find the most important source files for a module.
-   * v2: Combines entry points + discovery files, prioritizes implementation files.
+   * v3: Generalized implementation-file detection — no hardcoded filenames.
+   * Prioritizes: (1) non-index entry points, (2) files whose stem relates
+   * to module name, (3) files with impl-like suffixes, (4) index.ts last.
    */
   private findKeyFiles(mod: ModuleBoundary, discovery: DiscoveryResult, maxFiles: number): string[] {
     const seen = new Set<string>();
     const result: string[] = [];
+
+    // Derive module stem for name-based matching (e.g., "engine" from "src/core/engine")
+    const moduleStem = mod.name.split('/').pop()?.split('-').pop()?.toLowerCase() ?? '';
 
     // Priority 1: Non-index entry points (likely implementation files)
     for (const ep of mod.entryPoints) {
@@ -520,19 +560,35 @@ export class ExecutionEngine {
       }
     }
 
-    // Priority 2: Files from discovery with implementation-like names
-    const implPatterns = [
-      /execution-engine\.ts$/, /cognitive-runtime\.ts$/,
-      /discovery-pipeline\.ts$/, /.*-runtime\.ts$/,
-      /.*-service\.ts$/, /.*\.service\.ts$/,
-    ];
+    // Priority 2: Files from discovery whose stem relates to the module name
     const moduleTsFiles = discovery.files
-      .filter(f => f.relativePath.startsWith(mod.path) && f.relativePath.endsWith('.ts') && !seen.has(f.relativePath))
-      .sort((a, b) => {
-        const aIdx = implPatterns.findIndex(p => p.test(a.relativePath));
-        const bIdx = implPatterns.findIndex(p => p.test(b.relativePath));
-        return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
-      });
+      .filter(f =>
+        f.relativePath.startsWith(mod.path) &&
+        f.relativePath.endsWith('.ts') &&
+        !f.relativePath.endsWith('index.ts') &&
+        !f.relativePath.endsWith('.d.ts') &&
+        !f.relativePath.endsWith('.test.ts') &&
+        !f.relativePath.endsWith('.spec.ts') &&
+        !seen.has(f.relativePath),
+      );
+
+    // Sort by relevance: module-name match first, then impl suffixes, then by size (larger = more important)
+    const implSuffixes = ['.service.ts', '-service.ts', '-runtime.ts', '-pipeline.ts', '-engine.ts', '-handler.ts', '-controller.ts', '-provider.ts', '-adapter.ts', '-gateway.ts', '-repository.ts'];
+    moduleTsFiles.sort((a, b) => {
+      const aStem = a.relativePath.split('/').pop()?.replace('.ts', '').toLowerCase() ?? '';
+      const bStem = b.relativePath.split('/').pop()?.replace('.ts', '').toLowerCase() ?? '';
+      // Module-name stem match gets highest priority
+      const aNameMatch = moduleStem && (aStem === moduleStem || aStem.includes(moduleStem)) ? 0 : 10;
+      const bNameMatch = moduleStem && (bStem === moduleStem || bStem.includes(moduleStem)) ? 0 : 10;
+      if (aNameMatch !== bNameMatch) return aNameMatch - bNameMatch;
+      // Impl-suffix match gets next priority
+      const aSuffix = implSuffixes.findIndex(s => a.relativePath.endsWith(s));
+      const bSuffix = implSuffixes.findIndex(s => b.relativePath.endsWith(s));
+      if (aSuffix !== bSuffix) return (aSuffix === -1 ? 99 : aSuffix) - (bSuffix === -1 ? 99 : bSuffix);
+      // Larger files are likely more important
+      return b.size - a.size;
+    });
+
     for (const f of moduleTsFiles) {
       if (result.length >= maxFiles) break;
       if (!seen.has(f.relativePath)) { seen.add(f.relativePath); result.push(f.relativePath); }
@@ -570,6 +626,14 @@ export class ExecutionEngine {
     projectPath: string,
   ): string {
     const parts: string[] = [];
+
+    // v3: Instruct the LLM to cite specific code from the excerpts below.
+    // This directly addresses AC-03 (concrete code references) and AC-07 (verifiable answers).
+    parts.push(
+      'When answering, you MUST cite specific source files and code patterns from the excerpts below.\n' +
+      'Reference files by their path. Quote or paraphrase actual code (imports, class names, method signatures).\n' +
+      'Do NOT give generic answers — ground every claim in the provided source code.',
+    );
     const maxChars = CONTEXT_TOKEN_BUDGET * CHARS_PER_TOKEN;
     let usedChars = 0;
 
@@ -654,20 +718,19 @@ export class ExecutionEngine {
       const mod = this.findModuleForNode(node.name, discovery);
       if (!mod) continue;
 
-      // Module-level evidence source
-      if (!seenPaths.has(mod.path)) {
-        seenPaths.add(mod.path);
+      // v3: Find key files first — skip module entirely if no readable files found
+      const keyFiles = this.findKeyFiles(mod, discovery, 3);
+      const mainFile = keyFiles[0];
 
-        // v2: Use findKeyFiles for better file selection
-        const keyFiles = this.findKeyFiles(mod, discovery, 3);
-        const mainFile = keyFiles[0];
+      // v3: Skip modules with no actual source files (fixes empty-snippet directory-path bug)
+      if (!mainFile) continue;
+      const mainSnippet = this.readSourceExcerpt(join(projectPath, mainFile), EVIDENCE_SNIPPET_LINES);
+      if (!mainSnippet) continue;
 
-        let snippet = '';
-        if (mainFile) {
-          snippet = this.readSourceExcerpt(join(projectPath, mainFile), EVIDENCE_SNIPPET_LINES);
-        }
+      // Module-level evidence source (only when we have a real file + snippet)
+      if (!seenPaths.has(mainFile)) {
+        seenPaths.add(mainFile);
 
-        // v2: Truncate dependency lists in descriptions
         const MAX_DEPS_DESC = 5;
         const allOut = graph.getOutgoingNeighbors(node.id).map(n => n.name);
         const allIn = graph.getIncomingNeighbors(node.id).map(n => n.name);
@@ -678,20 +741,20 @@ export class ExecutionEngine {
         const relevance = Math.min(1.0, (score / 12) + 0.2);
 
         sources.push({
-          filePath: mainFile || mod.path,
+          filePath: mainFile,
           description: `Module: ${mod.name} (${mod.fileCount} files, ${node.kind}) — ${depInfo}. ${reason}`,
           relevance: parseFloat(relevance.toFixed(2)),
-          snippet,
+          snippet: mainSnippet,
         });
       }
 
       // Per-file evidence sources with individual snippets
-      const keyFiles = this.findKeyFiles(mod, discovery, 3);
       for (const file of keyFiles) {
         if (seenPaths.has(file)) continue;
         seenPaths.add(file);
 
         const snippet = this.readSourceExcerpt(join(projectPath, file), EVIDENCE_SNIPPET_LINES);
+        if (!snippet) continue; // v3: Skip unreadable files
         sources.push({
           filePath: file,
           description: `Source: ${file} (${mod.name})`,
@@ -700,8 +763,8 @@ export class ExecutionEngine {
         });
       }
 
-      // Stop after collecting enough high-relevance sources
-      if (sources.length >= 15) break;
+      // v3: Reduced from 15 to 10 — fewer, higher-quality sources
+      if (sources.length >= 10) break;
     }
 
     // Fallback with real snippets (never return empty snippets again)
