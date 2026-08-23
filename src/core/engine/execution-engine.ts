@@ -92,6 +92,7 @@ const STOP_WORDS = new Set([
   'these', 'those', 'inside', 'within', 'between', 'about', 'into',
   'through', 'during', 'before', 'after', 'above', 'below', 'main',
   'please', 'explain', 'describe', 'tell', 'me', 'my', 'can', 'you',
+  'components', 'parts', 'elements', 'things',
 ]);
 
 // ═══════════════════════════════════════════════════════════════════
@@ -454,7 +455,7 @@ export class ExecutionEngine {
   private buildGraphSection(scoredNodes: ScoredNode[], graph: ArchitectureGraph, maxChars: number): string {
     const lines: string[] = ['## Relevant Architecture (from dependency graph)'];
     const MAX_DEPS_DISPLAY = 7;
-    const MAX_NODES = 8;
+    const MAX_NODES = 6;
     let usedChars = lines[0].length + 1;
 
     for (const { node, score, reason } of scoredNodes.slice(0, MAX_NODES)) {
