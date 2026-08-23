@@ -85,12 +85,17 @@ export class RealOpenAIAdapter implements ProviderAdapter {
       );
     }
 
+    // Support OpenAI-compatible endpoints (e.g., OpenRouter) via OPENAI_BASE_URL
+    const baseURL = config.endpoint ?? process.env.OPENAI_BASE_URL;
+    const clientOpts: Record<string, unknown> = { apiKey };
+    if (baseURL) clientOpts.baseURL = baseURL;
+
     try {
       // Dynamic import — only resolved at runtime when openai is installed.
       // Cast to OpenAIModule to keep AIS domain types provider-independent.
       const openaiModule = (await import('openai')) as unknown as OpenAIModule;
       const OpenAIClass = openaiModule.default;
-      this._openaiClient = new (OpenAIClass as unknown as new (opts: { apiKey: string }) => unknown)({ apiKey });
+      this._openaiClient = new (OpenAIClass as unknown as new (opts: Record<string, unknown>) => unknown)(clientOpts);
     } catch (error) {
       throw new Error(
         `RealOpenAIAdapter: Failed to load OpenAI SDK. ` +
