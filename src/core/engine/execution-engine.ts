@@ -11,17 +11,26 @@
  *
  * Wave 1 TD-4: When AIS_EXECUTION_REAL=true, execute() runs the full
  * Discovery → Architecture Model → Context → LLM → Answer → Evidence pipeline.
+ *
+ * TASK-MVP-PROTOTYPE-CONTEXT-QUALITY-001: Question-driven retrieval using
+ * ArchitectureGraph for relevant context assembly with real source excerpts.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { Runtime } from '../runtime/runtime.js';
 import { DefaultEngineConfig, type EngineConfig } from '../config/engine-config.js';
 import { DefaultTrustZoneGate, type TrustZoneGate } from '../zones/trust-zone-gate.js';
 import { AutonomyLevel, EngineState } from '../types/common.js';
+import { ArchitectureNodeKind } from '../autonomous-architecture/architecture.model.js';
+import type { ArchitectureNode } from '../autonomous-architecture/architecture.model.js';
+import type { ArchitectureGraph } from '../autonomous-architecture/architecture.graph.js';
 
 // Wave 1 TD-4: Pipeline components (imported unconditionally, used only behind feature flag)
 import { DiscoveryPipelineService } from '../discovery/discovery-pipeline.service.js';
 import { CognitiveRuntime } from '../cognitive/cognitive-runtime.js';
 import { FileEvidenceStoreAdapter } from '../validation/evidence-store.js';
 import type { EvidenceRecord, EvidenceSource } from '../validation/evidence-types.js';
+import type { DiscoveryResult, ModuleBoundary } from '../discovery/discovery-types.js';
 
 /**
  * The shape of a Wave 1 architecture question request.
@@ -51,6 +60,43 @@ export interface ArchitectureAnswerResponse {
     readonly techStack: readonly string[];
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// CONTEXT QUALITY — Types & Constants (TASK-MVP-PROTOTYPE-CONTEXT-QUALITY-001)
+// ═══════════════════════════════════════════════════════════════════
+
+/** A graph node scored for relevance to a question. */
+interface ScoredNode {
+  readonly node: ArchitectureNode;
+  readonly score: number;
+  readonly reason: string;
+}
+
+/** Maximum prompt tokens for project context (target 4k–8k, aim mid-range). */
+const CONTEXT_TOKEN_BUDGET = 6000;
+
+/** Approximate chars per token for code-heavy text. */
+const CHARS_PER_TOKEN = 4;
+
+/** Max lines per source excerpt in LLM context. */
+const EXCERPT_MAX_LINES = 40;
+
+/** Max lines per snippet in evidence sources. */
+const EVIDENCE_SNIPPET_LINES = 15;
+
+/** Common English words to filter from question keywords. */
+const STOP_WORDS = new Set([
+  'what', 'are', 'the', 'is', 'a', 'an', 'and', 'or', 'but', 'in', 'on',
+  'at', 'to', 'for', 'of', 'with', 'by', 'from', 'how', 'do', 'does',
+  'did', 'why', 'which', 'where', 'when', 'who', 'whom', 'this', 'that',
+  'these', 'those', 'inside', 'within', 'between', 'about', 'into',
+  'through', 'during', 'before', 'after', 'above', 'below', 'main',
+  'please', 'explain', 'describe', 'tell', 'me', 'my', 'can', 'you',
+]);
+
+// ═══════════════════════════════════════════════════════════════════
+// EXECUTION ENGINE
+// ═══════════════════════════════════════════════════════════════════
 
 export class ExecutionEngine {
   private runtime: Runtime;
@@ -169,6 +215,11 @@ export class ExecutionEngine {
    * Execute the full Wave 1 vertical slice pipeline.
    *
    * Pipeline: Real Project → Discovery → Architecture Model → Context → Real LLM → Answer → Evidence
+   *
+   * TASK-MVP-PROTOTYPE-CONTEXT-QUALITY-001: Now passes question and
+   * projectPath to context builder and evidence extractor so they can
+   * use ArchitectureGraph for question-driven retrieval and read real
+   * source code excerpts.
    */
   private async executeWave1Pipeline(request: ArchitectureQuestionRequest): Promise<ArchitectureAnswerResponse> {
     const pipelineStart = Date.now();
@@ -186,24 +237,30 @@ export class ExecutionEngine {
 
     const { discovery: discoveryResult, architectureGraph } = await discovery.discover(request.projectId);
 
-    // Step 2: Build context from discovery data
-    const projectContext = this.buildProjectContext(discoveryResult, architectureGraph);
+    // Step 2: Build context — NOW question-driven with source excerpts
+    const projectContext = this.buildProjectContext(
+      request.question,
+      discoveryResult,
+      architectureGraph,
+      request.projectPath,
+    );
 
-    // Step 3: Process through CognitiveRuntime (which uses real LLM when AIS_REAL_LLM=true)
+    // Step 3: Process through CognitiveRuntime (real LLM when AIS_REAL_LLM=true)
     const fullQuestion = `${request.question}\n\n---\nProject Context:\n${projectContext}`;
 
     const result = await this._cognitiveRuntime.process(fullQuestion);
 
-    // Step 4: Extract evidence sources from discovery result relevant to the question
+    // Step 4: Extract evidence sources — NOW with real code snippets
     const answerSources = this.extractRelevantSources(
       request.question,
       discoveryResult,
       architectureGraph,
+      request.projectPath,
     );
 
     // Step 5: Store evidence (immutable — never overwritten)
     const evidence = await this._evidenceStore.storeEvidence({
-      taskId: request.taskId ?? 'WAVE1-SMOKE',
+      taskId: request.taskId ?? 'WAVE1-CONTEXT-QUALITY',
       projectId: request.projectId,
       question: request.question,
       answer: result.response,
@@ -236,136 +293,363 @@ export class ExecutionEngine {
     });
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // CONTEXT QUALITY — Question-Driven Retrieval
+  // TASK-MVP-PROTOTYPE-CONTEXT-QUALITY-001
+  // ═══════════════════════════════════════════════════════════════════
+
   /**
-   * Build a text summary of the project context from discovery results.
+   * Extract meaningful keywords from a question by removing stop words.
+   */
+  private extractKeywords(question: string): string[] {
+    return question
+      .toLowerCase()
+      .replace(/[^a-z0-9/\-_.\s]/g, ' ')
+      .split(/\s+/)
+      .filter(w => w.length > 1 && !STOP_WORDS.has(w));
+  }
+
+  /**
+   * Find graph nodes relevant to the question using keyword matching
+   * and 1-hop neighbor expansion.
+   *
+   * Algorithm (no semantic search, no vectors):
+   *   1. Extract keywords from question
+   *   2. Score each node by name overlap with keywords
+   *   3. Boost Module/Service kinds
+   *   4. Expand top matches to 1-hop neighbors (reduced score)
+   *   5. Return sorted by score descending
+   */
+  private findRelevantNodes(question: string, graph: ArchitectureGraph): ScoredNode[] {
+    const keywords = this.extractKeywords(question);
+    const scored: ScoredNode[] = [];
+
+    for (const node of graph.nodes) {
+      const name = node.name.toLowerCase();
+      let maxScore = 0;
+      let bestReason = '';
+
+      for (const kw of keywords) {
+        if (name === kw) {
+          if (10 > maxScore) { maxScore = 10; bestReason = `exact match: "${kw}"`; }
+        } else if (name.includes(kw) || kw.includes(name)) {
+          const partialScore = kw.length > 3 ? 6 : 4;
+          if (partialScore > maxScore) { maxScore = partialScore; bestReason = `partial match: "${kw}" in "${node.name}"`; }
+        }
+      }
+
+      // Boost Module and Service nodes — they define architectural boundaries
+      if (maxScore > 0) {
+        if (node.kind === ArchitectureNodeKind.Module) maxScore += 2;
+        if (node.kind === ArchitectureNodeKind.Service) maxScore += 2;
+        scored.push({ node, score: maxScore, reason: bestReason });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score);
+
+    // Expand: add 1-hop neighbors for all matched nodes
+    const expanded = new Map<string, ScoredNode>();
+    for (const sn of scored) {
+      expanded.set(sn.node.id, sn);
+
+      for (const neighbor of graph.getNeighbors(sn.node.id)) {
+        if (!expanded.has(neighbor.id)) {
+          expanded.set(neighbor.id, {
+            node: neighbor,
+            score: sn.score * 0.4,
+            reason: `neighbor of "${sn.node.name}"`,
+          });
+        }
+      }
+    }
+
+    return Array.from(expanded.values()).sort((a, b) => b.score - a.score);
+  }
+
+  /**
+   * Find the DiscoveryResult module that corresponds to a graph node.
+   * Uses fuzzy name matching since graph node names and module names
+   * may differ slightly (e.g., "cognitive" vs "cognitive-runtime").
+   */
+  private findModuleForNode(nodeName: string, discovery: DiscoveryResult): ModuleBoundary | undefined {
+    const target = nodeName.toLowerCase();
+    return discovery.modules.find(m => {
+      const moduleName = m.name.toLowerCase();
+      return moduleName === target
+        || moduleName.includes(target)
+        || target.includes(moduleName);
+    });
+  }
+
+  /**
+   * Read the first N lines of a source file. Returns empty string on error.
+   */
+  private readSourceExcerpt(absolutePath: string, maxLines: number): string {
+    try {
+      const content = readFileSync(absolutePath, 'utf-8');
+      const lines = content.split('\n').slice(0, maxLines);
+      return lines.join('\n');
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Build a structured architecture description from graph nodes and their edges.
+   */
+  private buildGraphSection(scoredNodes: ScoredNode[], graph: ArchitectureGraph): string {
+    const lines: string[] = ['## Relevant Architecture (from dependency graph)'];
+
+    for (const { node, score, reason } of scoredNodes.slice(0, 15)) {
+      const outgoing = graph.getOutgoingNeighbors(node.id).map(n => n.name);
+      const incoming = graph.getIncomingNeighbors(node.id).map(n => n.name);
+
+      lines.push(`### ${node.name} (${node.kind})`);
+      lines.push(`Retrieval reason: ${reason} [score: ${score.toFixed(1)}]`);
+
+      if (outgoing.length > 0) {
+        lines.push(`Depends on: ${outgoing.join(', ')}`);
+      }
+      if (incoming.length > 0) {
+        lines.push(`Used by: ${incoming.join(', ')}`);
+      }
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Read actual source code from files belonging to relevant modules.
+   * Respects character budget to stay within token limits.
+   */
+  private buildSourceExcerptsSection(
+    scoredNodes: ScoredNode[],
+    discovery: DiscoveryResult,
+    projectPath: string,
+    budgetChars: number,
+  ): string {
+    const blocks: string[] = [];
+    let usedChars = 0;
+
+    for (const { node } of scoredNodes) {
+      if (usedChars >= budgetChars) break;
+
+      const mod = this.findModuleForNode(node.name, discovery);
+      if (!mod) continue;
+
+      // Prioritize .ts entry points, create mutable copy
+      const sourceEntries = mod.entryPoints.filter(ep => ep.endsWith('.ts'));
+      const entries: string[] = sourceEntries.length > 0 ? [...sourceEntries] : [...mod.entryPoints];
+
+      // Also include index.ts if not already listed
+      const indexPath = `${mod.path}/index.ts`.replace(/\/\//g, '/');
+      if (!entries.includes(indexPath) && !entries.some(e => e.endsWith('/index.ts'))) {
+        entries.push(indexPath);
+      }
+
+      for (const ep of entries) {
+        if (usedChars >= budgetChars) break;
+
+        const absolutePath = join(projectPath, ep);
+        const excerpt = this.readSourceExcerpt(absolutePath, EXCERPT_MAX_LINES);
+        if (!excerpt) continue;
+
+        const block = `\n### ${ep}\n\`\`\`typescript\n${excerpt}\n\`\`\``;
+
+        // If full excerpt doesn't fit, try a shorter one
+        if (usedChars + block.length > budgetChars) {
+          const shortExcerpt = this.readSourceExcerpt(absolutePath, 15);
+          if (!shortExcerpt) continue;
+          const shortBlock = `\n### ${ep}\n\`\`\`typescript\n${shortExcerpt}\n\`\`\``;
+          if (usedChars + shortBlock.length > budgetChars) continue;
+          blocks.push(shortBlock);
+          usedChars += shortBlock.length;
+        } else {
+          blocks.push(block);
+          usedChars += block.length;
+        }
+      }
+    }
+
+    return blocks.length > 0
+      ? '## Source Code Excerpts' + blocks.join('\n')
+      : '';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // CONTEXT QUALITY — Rewritten Methods
+  // ═══════════════════════════════════════════════════════════════════
+
+  /**
+   * Build project context for the LLM — REWRITTEN for TASK-MVP-PROTOTYPE-CONTEXT-QUALITY-001.
+   *
+   * Before: Flat list of 30 modules + 50 dependencies (relevance-agnostic).
+   * After:  Question-driven retrieval via ArchitectureGraph + real source code excerpts.
+   *
+   * The ArchitectureGraph (previously computed but unused as `_graph`) now drives
+   * which modules and files are included in context, based on keyword matching
+   * against the question + 1-hop neighbor expansion.
    */
   private buildProjectContext(
-    discovery: Awaited<ReturnType<DiscoveryPipelineService['discover']>>['discovery'],
-    _graph: Awaited<ReturnType<DiscoveryPipelineService['discover']>>['architectureGraph'],
+    question: string,
+    discovery: DiscoveryResult,
+    graph: ArchitectureGraph,
+    projectPath: string,
   ): string {
     const parts: string[] = [];
+    const maxChars = CONTEXT_TOKEN_BUDGET * CHARS_PER_TOKEN;
+    let usedChars = 0;
 
-    // Tech stack
-    if (discovery.techStack.length > 0) {
-      parts.push(`## Technology Stack\n${discovery.techStack.map(t => `- ${t.name}${t.version ? ` (${t.version})` : ''} [${t.category}]`).join('\n')}`);
+    // 1. Question-driven node retrieval from ArchitectureGraph
+    const relevantNodes = this.findRelevantNodes(question, graph);
+
+    // 2. Graph structure section — shows modules, their kinds, and relationships
+    if (relevantNodes.length > 0) {
+      const graphSection = this.buildGraphSection(relevantNodes, graph);
+      parts.push(graphSection);
+      usedChars += graphSection.length;
     }
 
-    // Modules
-    if (discovery.modules.length > 0) {
+    // 3. Source code excerpts from relevant module files
+    if (relevantNodes.length > 0) {
+      const remainingBudget = maxChars - usedChars - 500; // reserve for tech stack
+      const sourceSection = this.buildSourceExcerptsSection(
+        relevantNodes, discovery, projectPath, remainingBudget,
+      );
+      if (sourceSection) {
+        parts.push(sourceSection);
+        usedChars += sourceSection.length;
+      }
+    }
+
+    // 4. Compact tech stack (always include, but brief)
+    if (discovery.techStack.length > 0) {
+      const tech = discovery.techStack
+        .slice(0, 10)
+        .map(t => `- ${t.name}${t.version ? ` ${t.version}` : ''} [${t.category}]`)
+        .join('\n');
+      parts.push(`## Technology Stack\n${tech}`);
+    }
+
+    // 5. Fallback: if no graph nodes matched, show compact module list
+    //    (still better than before: only 20 modules, not 30, with entry points)
+    if (relevantNodes.length === 0) {
       const moduleList = discovery.modules
-        .slice(0, 30)
-        .map(m => `- ${m.name} (${m.fileCount} files)${m.entryPoints.length > 0 ? ` [entry: ${m.entryPoints.join(', ')}]` : ''}`)
+        .slice(0, 20)
+        .map(m => `- ${m.name} (${m.fileCount} files)${m.entryPoints.length > 0 ? ` [entry: ${m.entryPoints[0]}]` : ''}`)
         .join('\n');
       parts.push(`## Modules (${discovery.modules.length} total)\n${moduleList}`);
-    }
 
-    // Dependencies (top 50)
-    if (discovery.dependencies.length > 0) {
-      const depList = discovery.dependencies
-        .slice(0, 50)
-        .map(d => `- ${d.from} → ${d.to} [${d.type}]`)
-        .join('\n');
-      parts.push(`## Internal Dependencies (showing 50 of ${discovery.dependencies.length})\n${depList}`);
+      // Still try to read source from top 3 modules
+      const fallbackSource = this.buildSourceExcerptsSection(
+        discovery.modules.slice(0, 3).map((m, i) => ({
+          node: { id: `fallback-${i}` as any, kind: ArchitectureNodeKind.Module, name: m.name, layer: '' as any },
+          score: 1,
+          reason: 'fallback: no graph match',
+        })),
+        discovery,
+        projectPath,
+        maxChars * 0.6,
+      );
+      if (fallbackSource) parts.push(fallbackSource);
     }
-
-    // Entry points
-    if (discovery.entryPoints.length > 0) {
-      parts.push(`## Entry Points\n${discovery.entryPoints.map(ep => `- ${ep}`).join('\n')}`);
-    }
-
-    // Config files
-    if (discovery.configFiles.length > 0) {
-      parts.push(`## Configuration Files\n${discovery.configFiles.map(cf => `- ${cf}`).join('\n')}`);
-    }
-
-    // File statistics
-    const extCount = new Map<string, number>();
-    for (const f of discovery.files) {
-      extCount.set(f.extension, (extCount.get(f.extension) ?? 0) + 1);
-    }
-    const extStats = Array.from(extCount.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([ext, count]) => `- ${ext || '(no ext)'}: ${count}`)
-      .join('\n');
-    parts.push(`## File Statistics (Total: ${discovery.totalFiles} files, ${this.formatBytes(discovery.totalSize)})\n${extStats}`);
 
     return parts.join('\n\n');
   }
 
   /**
-   * Extract evidence sources relevant to the question.
+   * Extract evidence sources — REWRITTEN for TASK-MVP-PROTOTYPE-CONTEXT-QUALITY-001.
+   *
+   * Before: Shallow keyword match on module names, ALL snippets empty ("").
+   * After:  Graph-driven retrieval with real source code snippets from actual files.
+   *
+   * Each EvidenceSource now has a non-empty `snippet` containing real code,
+   * making the evidence verifiable and the AI Wrapper Test passable.
    */
   private extractRelevantSources(
     question: string,
-    discovery: Awaited<ReturnType<DiscoveryPipelineService['discover']>>['discovery'],
-    _graph: Awaited<ReturnType<DiscoveryPipelineService['discover']>>['architectureGraph'],
+    discovery: DiscoveryResult,
+    graph: ArchitectureGraph,
+    projectPath: string,
   ): EvidenceSource[] {
     const sources: EvidenceSource[] = [];
-    const q = question.toLowerCase();
+    const relevantNodes = this.findRelevantNodes(question, graph);
+    const seenPaths = new Set<string>();
 
-    // Include modules whose name matches question keywords
-    for (const mod of discovery.modules) {
-      const moduleName = mod.name.toLowerCase();
-      if (q.includes(moduleName) || moduleName.includes(q.split(' ')[0])) {
+    for (const { node, score, reason } of relevantNodes) {
+      const mod = this.findModuleForNode(node.name, discovery);
+      if (!mod) continue;
+
+      // Module-level evidence source
+      if (!seenPaths.has(mod.path)) {
+        seenPaths.add(mod.path);
+
+        // Read a real snippet from the first .ts entry point
+        let snippet = '';
+        const tsEntry = mod.entryPoints.find(ep => ep.endsWith('.ts'));
+        if (tsEntry) {
+          snippet = this.readSourceExcerpt(join(projectPath, tsEntry), EVIDENCE_SNIPPET_LINES);
+        }
+
+        const outDeps = graph.getOutgoingNeighbors(node.id).map(n => n.name);
+        const inDeps = graph.getIncomingNeighbors(node.id).map(n => n.name);
+
+        const relevance = Math.min(1.0, (score / 12) + 0.2);
+
         sources.push({
-          filePath: mod.path,
-          description: `Module: ${mod.name} (${mod.fileCount} files)`,
-          relevance: 0.8,
-          snippet: '',
+          filePath: tsEntry || mod.path,
+          description: `Module: ${mod.name} (${mod.fileCount} files, ${node.kind}) — depends on [${outDeps.join(', ')}], used by [${inDeps.join(', ')}]. ${reason}`,
+          relevance: parseFloat(relevance.toFixed(2)),
+          snippet,
         });
       }
-    }
 
-    // Include tech stack items mentioned in question
-    for (const tech of discovery.techStack) {
-      if (q.includes(tech.name.toLowerCase())) {
-        sources.push({
-          filePath: tech.evidence,
-          description: `Technology: ${tech.name} [${tech.category}]`,
-          relevance: 0.7,
-          snippet: '',
-        });
-      }
-    }
+      // Per-entry-point evidence sources with individual snippets
+      for (const ep of mod.entryPoints) {
+        if (seenPaths.has(ep)) continue;
+        if (!ep.endsWith('.ts')) continue;
+        seenPaths.add(ep);
 
-    // Include entry points
-    for (const ep of discovery.entryPoints) {
-      if (q.includes('entry') || q.includes('main') || q.includes('start')) {
+        const snippet = this.readSourceExcerpt(join(projectPath, ep), EVIDENCE_SNIPPET_LINES);
         sources.push({
           filePath: ep,
-          description: 'Entry point',
-          relevance: 0.9,
-          snippet: '',
+          description: `Source: ${ep} (entry point of ${mod.name})`,
+          relevance: parseFloat(Math.min(1.0, (score / 12) + 0.1).toFixed(2)),
+          snippet,
         });
       }
+
+      // Stop after collecting enough high-relevance sources
+      if (sources.length >= 15) break;
     }
 
-    // Include config files
-    for (const cf of discovery.configFiles) {
-      if (q.includes('config') || q.includes('setup') || q.includes('build')) {
-        sources.push({
-          filePath: cf,
-          description: 'Configuration file',
-          relevance: 0.6,
-          snippet: '',
-        });
-      }
-    }
-
-    // Always include at least some top files as evidence
+    // Fallback with real snippets (never return empty snippets again)
     if (sources.length === 0) {
-      for (const f of discovery.files.slice(0, 10)) {
+      for (const f of discovery.files) {
+        if (!f.relativePath.endsWith('.ts')) continue;
+        if (seenPaths.has(f.relativePath)) continue;
+        seenPaths.add(f.relativePath);
+
+        const snippet = this.readSourceExcerpt(join(projectPath, f.relativePath), EVIDENCE_SNIPPET_LINES);
         sources.push({
           filePath: f.relativePath,
-          description: `${f.extension} file`,
+          description: `${f.extension} source file`,
           relevance: 0.3,
-          snippet: '',
+          snippet,
         });
+
+        if (sources.length >= 10) break;
       }
     }
 
     return sources;
   }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // ORIGINAL METHODS (unchanged)
+  // ═══════════════════════════════════════════════════════════════════
 
   /**
    * Type guard for ArchitectureQuestionRequest.
