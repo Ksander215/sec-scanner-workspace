@@ -313,10 +313,13 @@ export class ExecutionEngine {
    * Find graph nodes relevant to the question using keyword matching
    * and 1-hop neighbor expansion.
    *
+   * v2 fix: slash/dot normalization ("src/core" matches "src.core.cognitive"),
+   * path prefix boost for scope-bounded questions.
+   *
    * Algorithm (no semantic search, no vectors):
    *   1. Extract keywords from question
-   *   2. Score each node by name overlap with keywords
-   *   3. Boost Module/Service kinds
+   *   2. Score each node by name overlap (normalized)
+   *   3. Boost Module/Service kinds + path prefix matches
    *   4. Expand top matches to 1-hop neighbors (reduced score)
    *   5. Return sorted by score descending
    */
@@ -326,15 +329,28 @@ export class ExecutionEngine {
 
     for (const node of graph.nodes) {
       const name = node.name.toLowerCase();
+      const normalizedName = name.replace(/\//g, '.');
       let maxScore = 0;
       let bestReason = '';
 
       for (const kw of keywords) {
-        if (name === kw) {
+        const normalizedKw = kw.replace(/\//g, '.');
+        if (normalizedName === normalizedKw) {
           if (10 > maxScore) { maxScore = 10; bestReason = `exact match: "${kw}"`; }
-        } else if (name.includes(kw) || kw.includes(name)) {
+        } else if (normalizedName.includes(normalizedKw) || normalizedKw.includes(normalizedName)) {
           const partialScore = kw.length > 3 ? 6 : 4;
           if (partialScore > maxScore) { maxScore = partialScore; bestReason = `partial match: "${kw}" in "${node.name}"`; }
+        }
+        // v2: Path prefix boost — "src/core" strongly boosts src.core.* nodes
+        if ((kw.includes('/') || kw.includes('.')) && normalizedKw.length > 3) {
+          if (normalizedName.startsWith(normalizedKw)) {
+            if (maxScore < 5) {
+              maxScore = 5;
+              bestReason = `path prefix: "${kw}" → "${node.name}"`;
+            } else {
+              maxScore += 3;
+            }
+          }
         }
       }
 
@@ -397,24 +413,41 @@ export class ExecutionEngine {
 
   /**
    * Build a structured architecture description from graph nodes and their edges.
+   * v2: Truncate dependency lists to MAX_DEPS_DISPLAY, limit nodes to MAX_NODES,
+   * respect character budget.
    */
-  private buildGraphSection(scoredNodes: ScoredNode[], graph: ArchitectureGraph): string {
+  private buildGraphSection(scoredNodes: ScoredNode[], graph: ArchitectureGraph, maxChars: number): string {
     const lines: string[] = ['## Relevant Architecture (from dependency graph)'];
+    const MAX_DEPS_DISPLAY = 7;
+    const MAX_NODES = 8;
+    let usedChars = lines[0].length + 1;
 
-    for (const { node, score, reason } of scoredNodes.slice(0, 15)) {
-      const outgoing = graph.getOutgoingNeighbors(node.id).map(n => n.name);
-      const incoming = graph.getIncomingNeighbors(node.id).map(n => n.name);
+    for (const { node, score, reason } of scoredNodes.slice(0, MAX_NODES)) {
+      const allOutgoing = graph.getOutgoingNeighbors(node.id).map(n => n.name);
+      const allIncoming = graph.getIncomingNeighbors(node.id).map(n => n.name);
+      const outgoing = allOutgoing.slice(0, MAX_DEPS_DISPLAY);
+      const incoming = allIncoming.slice(0, MAX_DEPS_DISPLAY);
 
-      lines.push(`### ${node.name} (${node.kind})`);
-      lines.push(`Retrieval reason: ${reason} [score: ${score.toFixed(1)}]`);
+      const nodeLines: string[] = [];
+      nodeLines.push(`### ${node.name} (${node.kind})`);
+      nodeLines.push(`Retrieval: ${reason} [score: ${score.toFixed(1)}]`);
 
       if (outgoing.length > 0) {
-        lines.push(`Depends on: ${outgoing.join(', ')}`);
+        let depStr = `Depends on: ${outgoing.join(', ')}`;
+        if (allOutgoing.length > MAX_DEPS_DISPLAY) depStr += ` (+${allOutgoing.length - MAX_DEPS_DISPLAY} more)`;
+        nodeLines.push(depStr);
       }
       if (incoming.length > 0) {
-        lines.push(`Used by: ${incoming.join(', ')}`);
+        let depStr = `Used by: ${incoming.join(', ')}`;
+        if (allIncoming.length > MAX_DEPS_DISPLAY) depStr += ` (+${allIncoming.length - MAX_DEPS_DISPLAY} more)`;
+        nodeLines.push(depStr);
       }
-      lines.push('');
+      nodeLines.push('');
+
+      const nodeSection = nodeLines.join('\n') + '\n';
+      if (usedChars + nodeSection.length > maxChars) break;
+      lines.push(...nodeLines);
+      usedChars += nodeSection.length;
     }
 
     return lines.join('\n');
@@ -439,15 +472,8 @@ export class ExecutionEngine {
       const mod = this.findModuleForNode(node.name, discovery);
       if (!mod) continue;
 
-      // Prioritize .ts entry points, create mutable copy
-      const sourceEntries = mod.entryPoints.filter(ep => ep.endsWith('.ts'));
-      const entries: string[] = sourceEntries.length > 0 ? [...sourceEntries] : [...mod.entryPoints];
-
-      // Also include index.ts if not already listed
-      const indexPath = `${mod.path}/index.ts`.replace(/\/\//g, '/');
-      if (!entries.includes(indexPath) && !entries.some(e => e.endsWith('/index.ts'))) {
-        entries.push(indexPath);
-      }
+      // v2: Use smart file selection — implementation files > index.ts
+      const entries = this.findKeyFiles(mod, discovery, 3);
 
       for (const ep of entries) {
         if (usedChars >= budgetChars) break;
@@ -478,6 +504,51 @@ export class ExecutionEngine {
       : '';
   }
 
+  /**
+   * Find the most important source files for a module.
+   * v2: Combines entry points + discovery files, prioritizes implementation files.
+   */
+  private findKeyFiles(mod: ModuleBoundary, discovery: DiscoveryResult, maxFiles: number): string[] {
+    const seen = new Set<string>();
+    const result: string[] = [];
+
+    // Priority 1: Non-index entry points (likely implementation files)
+    for (const ep of mod.entryPoints) {
+      if (result.length >= maxFiles) break;
+      if (ep.endsWith('.ts') && !ep.endsWith('index.ts') && !seen.has(ep)) {
+        seen.add(ep); result.push(ep);
+      }
+    }
+
+    // Priority 2: Files from discovery with implementation-like names
+    const implPatterns = [
+      /execution-engine\.ts$/, /cognitive-runtime\.ts$/,
+      /discovery-pipeline\.ts$/, /.*-runtime\.ts$/,
+      /.*-service\.ts$/, /.*\.service\.ts$/,
+    ];
+    const moduleTsFiles = discovery.files
+      .filter(f => f.relativePath.startsWith(mod.path) && f.relativePath.endsWith('.ts') && !seen.has(f.relativePath))
+      .sort((a, b) => {
+        const aIdx = implPatterns.findIndex(p => p.test(a.relativePath));
+        const bIdx = implPatterns.findIndex(p => p.test(b.relativePath));
+        return (aIdx === -1 ? 99 : aIdx) - (bIdx === -1 ? 99 : bIdx);
+      });
+    for (const f of moduleTsFiles) {
+      if (result.length >= maxFiles) break;
+      if (!seen.has(f.relativePath)) { seen.add(f.relativePath); result.push(f.relativePath); }
+    }
+
+    // Priority 3: index.ts (lowest priority — barrel exports are less useful)
+    for (const ep of mod.entryPoints) {
+      if (result.length >= maxFiles) break;
+      if (ep.endsWith('index.ts') && !seen.has(ep)) {
+        seen.add(ep); result.push(ep);
+      }
+    }
+
+    return result;
+  }
+
   // ═══════════════════════════════════════════════════════════════════
   // CONTEXT QUALITY — Rewritten Methods
   // ═══════════════════════════════════════════════════════════════════
@@ -505,9 +576,10 @@ export class ExecutionEngine {
     // 1. Question-driven node retrieval from ArchitectureGraph
     const relevantNodes = this.findRelevantNodes(question, graph);
 
-    // 2. Graph structure section — shows modules, their kinds, and relationships
+    // 2. Graph structure section (with budget enforcement)
+    const graphBudget = Math.floor(maxChars * 0.3); // max 30% of budget for graph
     if (relevantNodes.length > 0) {
-      const graphSection = this.buildGraphSection(relevantNodes, graph);
+      const graphSection = this.buildGraphSection(relevantNodes, graph, graphBudget);
       parts.push(graphSection);
       usedChars += graphSection.length;
     }
@@ -586,36 +658,43 @@ export class ExecutionEngine {
       if (!seenPaths.has(mod.path)) {
         seenPaths.add(mod.path);
 
-        // Read a real snippet from the first .ts entry point
+        // v2: Use findKeyFiles for better file selection
+        const keyFiles = this.findKeyFiles(mod, discovery, 3);
+        const mainFile = keyFiles[0];
+
         let snippet = '';
-        const tsEntry = mod.entryPoints.find(ep => ep.endsWith('.ts'));
-        if (tsEntry) {
-          snippet = this.readSourceExcerpt(join(projectPath, tsEntry), EVIDENCE_SNIPPET_LINES);
+        if (mainFile) {
+          snippet = this.readSourceExcerpt(join(projectPath, mainFile), EVIDENCE_SNIPPET_LINES);
         }
 
-        const outDeps = graph.getOutgoingNeighbors(node.id).map(n => n.name);
-        const inDeps = graph.getIncomingNeighbors(node.id).map(n => n.name);
+        // v2: Truncate dependency lists in descriptions
+        const MAX_DEPS_DESC = 5;
+        const allOut = graph.getOutgoingNeighbors(node.id).map(n => n.name);
+        const allIn = graph.getIncomingNeighbors(node.id).map(n => n.name);
+        const outDeps = allOut.slice(0, MAX_DEPS_DESC);
+        const inDeps = allIn.slice(0, MAX_DEPS_DESC);
+        const depInfo = `depends on [${outDeps.join(', ')}${allOut.length > MAX_DEPS_DESC ? ` +${allOut.length - MAX_DEPS_DESC} more` : ''}], used by [${inDeps.join(', ')}${allIn.length > MAX_DEPS_DESC ? ` +${allIn.length - MAX_DEPS_DESC} more` : ''}]`;
 
         const relevance = Math.min(1.0, (score / 12) + 0.2);
 
         sources.push({
-          filePath: tsEntry || mod.path,
-          description: `Module: ${mod.name} (${mod.fileCount} files, ${node.kind}) — depends on [${outDeps.join(', ')}], used by [${inDeps.join(', ')}]. ${reason}`,
+          filePath: mainFile || mod.path,
+          description: `Module: ${mod.name} (${mod.fileCount} files, ${node.kind}) — ${depInfo}. ${reason}`,
           relevance: parseFloat(relevance.toFixed(2)),
           snippet,
         });
       }
 
-      // Per-entry-point evidence sources with individual snippets
-      for (const ep of mod.entryPoints) {
-        if (seenPaths.has(ep)) continue;
-        if (!ep.endsWith('.ts')) continue;
-        seenPaths.add(ep);
+      // Per-file evidence sources with individual snippets
+      const keyFiles = this.findKeyFiles(mod, discovery, 3);
+      for (const file of keyFiles) {
+        if (seenPaths.has(file)) continue;
+        seenPaths.add(file);
 
-        const snippet = this.readSourceExcerpt(join(projectPath, ep), EVIDENCE_SNIPPET_LINES);
+        const snippet = this.readSourceExcerpt(join(projectPath, file), EVIDENCE_SNIPPET_LINES);
         sources.push({
-          filePath: ep,
-          description: `Source: ${ep} (entry point of ${mod.name})`,
+          filePath: file,
+          description: `Source: ${file} (${mod.name})`,
           relevance: parseFloat(Math.min(1.0, (score / 12) + 0.1).toFixed(2)),
           snippet,
         });
