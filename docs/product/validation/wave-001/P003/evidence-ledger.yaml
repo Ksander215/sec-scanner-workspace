@@ -1,0 +1,125 @@
+# Evidence Ledger — P00X
+# Fill in after session completion
+
+participant_id: "P00X"
+session_id: "_______________"
+persona: "_______________"  # Developer / Tech Lead / Architect / Security Engineer / Other
+project_scope: "src/core/"
+question: "What are the main architectural boundaries inside src/core, and how do the cognitive, discovery, and engine subsystems interact?"
+familiarity_level: "_______________"  # None / Minimal / Moderate / High
+
+baseline:
+  start_time: "_______________"
+  end_time: "_______________"
+  duration_min: "_______________"
+  completed: true  # true / false
+  answer: |-
+    [Full baseline answer or reference to baseline.md]
+  evidence:
+    - file: "_______________"
+      claim: "_______________"
+      exists: true  # true / false
+      accurate: true  # true / false / partial
+  confidence_self_reported: "___/10"
+  scores:
+    correctness: __  # 0-5
+    completeness: __  # 0-5
+    dependency_understanding: __  # 0-5
+    boundary_understanding: __  # 0-5
+    evidence_quality: __  # 0-5
+    confidence_calibration: __  # 0-3
+    total_b1_b5: __  # 0-25
+  files_inspected: __  # count
+  components_identified: __  # count
+  dependencies_identified: __  # count
+
+ais:
+  start_time: "_______________"
+  end_time: "_______________"
+  duration_min: "_______________"
+  initial_question: |-
+    [Verbatim question]
+  answer: |-
+    [Full raw AIS response or reference to ais-interaction.md]
+  followups:
+    - question: "_______________"
+      answer: |-
+        [Raw response]
+  scores:
+    correctness: __  # 0-5
+    completeness: __  # 0-5
+    dependency_understanding: __  # 0-5
+    boundary_understanding: __  # 0-5
+    evidence_quality: __  # 0-5
+    total_b1_b5: __  # 0-25
+
+verification:
+  total_claims: __
+  verified: __
+  partially_verified: __
+  rejected: __
+  accepted_without_verification: __
+  hallucinated: __
+  grounding_rate: "___%"
+  claims:
+    - claim_text: "_______________"
+      claim_type: "_______________"  # FACT / DERIVED_INSIGHT / HYPOTHESIS / RECOMMENDATION / UNCERTAINTY / CONFLICT
+      evidence_support: "_______________"  # SUPPORTED / PARTIALLY_SUPPORTED / UNSUPPORTED / CONTRADICTED / HALLUCINATED
+      participant_action: "_______________"  # verified / accepted_without_verification / rejected / follow_up
+      participant_result: "_______________"  # VERIFIED / PARTIALLY_VERIFIED / REJECTED
+
+comparison:
+  baseline_score: __  # 0-25
+  ais_score: __  # 0-25
+  delta: __  # ais - baseline
+  baseline_time_min: "_______________"
+  ais_assisted_time_min: "_______________"
+  time_delta_min: "_______________"
+
+  # Per-dimension deltas
+  correctness_delta: __
+  completeness_delta: __
+  dependency_delta: __
+  boundary_delta: __
+  evidence_delta: __
+
+  # Understanding reproduction
+  own_words_explanation: |-
+    [Verbatim or reference]
+  genuine_understanding: true  # true / partially / false
+
+  # AI Wrapper Test
+  ai_wrapper_test: "_______________"  # PASS / FAIL
+  participant_ai_wrapper_answer: |-
+    [Verbatim]
+
+trust_calibration:
+  accepted_unsupported_claims: __  # count
+  failed_to_verify: __  # count
+  noticed_hallucination: __  # count
+  challenged_ais: __  # count
+  corrected_ais: __  # count
+  overall_trust_calibration: "_______________"  # Well-calibrated / Over-trusting / Under-trusting / Mixed
+
+participant_feedback:
+  q1_difficulty: |-
+    [Verbatim]
+  q2_ais_helped: |-
+    [Verbatim]
+  q3_ais_gaps: |-
+    [Verbatim]
+  q4_verified_independently: |-
+    [Verbatim]
+  q5_more_useful: |-
+    [Verbatim]
+  q6_reuse_when: |-
+    [Verbatim]
+  q7_trust_boundaries: |-
+    [Verbatim]
+
+observer_notes: |-
+  [Reference to observer-notes.md or inline notes]
+
+session_validity:
+  valid: true  # true / partial / false
+  issues: []
