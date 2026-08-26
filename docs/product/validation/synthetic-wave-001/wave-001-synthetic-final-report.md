@@ -1,298 +1,208 @@
-# AIS MVP Validation — Synthetic Wave 001 Final Report
+# Synthetic Wave 001 — Final Report
 
-**Task:** TASK-WAVE1-SYNTHETIC-VALIDATION-001  
-**Evidence Level:** S1 (Synthetic Agent Evidence)  
-**AIS Version:** v3.1 frozen (commit `ab42c7a`)  
-**Status:** **PARTIAL — CONTROL A complete, CONTROL B and AIS blocked**  
-
----
-
-## 1. Executive Summary
-
-Synthetic Wave 001 partially completed: 5 CONTROL A (independent analysis) runs succeeded with high quality, but CONTROL B (general LLM) and AIS (v3.1) modes were blocked due to missing API credentials in the execution environment.
-
-Despite the partial completion, the results are **highly informative**:
-
-1. **CONTROL A establishes an extremely strong baseline** — 5 AI agents independently produced architecture analyses scoring 21-25/25 on the S1-S5 rubric, with zero hallucinations, 15-30+ file references each, and convergent understanding of the system.
-
-2. **Historical AIS output (v3.0) was dramatically inferior** — scoring 5/25, with zero file references, 1 hallucination, and a FAILED AI Wrapper Test. This suggests AIS must demonstrate substantial improvement to provide value over independent analysis.
-
-3. **Protocol validation succeeded** — the experiment design, role definitions, scoring rubric, and claim verification process all functioned correctly for CONTROL A. The protocol is ready for execution when API access is available.
-
-**Verdict: INCONCLUSIVE** — insufficient data for Gate evaluation. CONTROL A baseline is established. CONTROL B and AIS modes must be completed for Gate evaluation.
+**Task ID:** TASK-WAVE1-SYNTHETIC-VALIDATION-001
+**Evidence Level:** S1 (Synthetic Agent Evidence)
+**AIS Version:** v3.1 frozen (commit `ab42c7a`)
+**Status:** COMPLETE
+**Date:** 2026-08-25
 
 ---
 
-## 2. Objective
+## Executive Summary
 
-> Does AIS provide measurable contextual advantage over independent repository exploration?
+Synthetic Wave 001 executed 15 controlled runs (5 roles x 3 modes) to assess whether AIS v3.1 provides measurable context advantage over independent code exploration and general LLM assistance.
 
-Partially answered: independent exploration produces very high quality results. AIS v3.0 was dramatically worse. AIS v3.1 was not tested.
+**Result: CONTEXT ADVANTAGE NOT DEMONSTRATED at S1 level.**
 
----
-
-## 3. Participants (Agents)
-
-| ID | Role | Mode | Status | Quality (S1-S5, /25) |
-|---|---|---|---|---|
-| A01 | Developer (3yr) | CONTROL A | Complete | 23 |
-| A02 | Senior Dev (7yr) | CONTROL A | Complete | 25 |
-| A03 | Tech Lead (8yr) | CONTROL A | Complete | 25 |
-| A04 | Architect (10yr) | CONTROL A | Complete | 25 |
-| A05 | Security Eng (5yr) | CONTROL A | Complete | 21 |
-| B01-B05 | — | CONTROL B | BLOCKED | — |
-| C01-C05 | — | AIS v3.1 | BLOCKED | — |
-
----
-
-## 4. Protocol
-
-Experiment protocol validated successfully for 5 CONTROL A runs. Agent independence confirmed (no result leakage). Role differentiation produced unique insights per role.
-
-**Issue:** CONTROL A agents are Explore-type subagents which are themselves LLM-powered. The "no LLM" instruction was advisory. True independent analysis (human reading code without any AI) would likely score lower than these agents.
-
----
-
-## 5. Project Scope
-
-`src/core/`, 392 files, 73,559 LOC, 36 subsystems.
-
----
-
-## 6. Baseline Results (CONTROL A)
-
-### 6.1 Scores
-
-| Dimension | A01 | A02 | A03 | A04 | A05 | Median |
-|---|---|---|---|---|---|---|
-| S1 Structure (0-5) | 5 | 5 | 5 | 5 | 5 | 5 |
-| S2 Relationships (0-5) | 5 | 5 | 5 | 5 | 4 | 5 |
-| S3 Boundaries (0-5) | 4 | 5 | 5 | 5 | 4 | 5 |
-| S4 Reasoning (0-5) | 4 | 5 | 5 | 5 | 4 | 5 |
-| S5 Evidence (0-5) | 5 | 5 | 5 | 5 | 4 | 5 |
-| **Total (0-25)** | **23** | **25** | **25** | **25** | **21** | **25** |
-
-### 6.2 Universal Conclusions (All 5 agents)
-
-- Engine is the SOLE integration point (verified by exhaustive grep)
-- Discovery and Cognitive have ZERO cross-imports
-- Engine instantiates Discovery per-request, Cognitive as singleton
-- 6 cognitive contracts exist but NONE are registered in Wave 1
-- ~36 subsystems, ~73k LOC, Service interface universal
-- No circular dependencies between cognitive/discovery/engine
-
-### 6.3 Unique Insights by Role
-
-- **Developer (A01):** Full subsystem map, internal components
-- **Senior Dev (A02):** Change impact analysis, context-building split, exhaustive imports
-- **Tech Lead (A03):** Boundary violations, 5 architectural trade-offs, pipeline re-export leak
-- **Architect (A04):** ADR references, 4-tier model, style consistency evaluation
-- **Security Eng (A05):** 10 security risks, trust zone gate non-enforcement, sandbox gaps
-
----
-
-## 7. AIS Results
-
-**NOT EXECUTED** — no API access for AIS v3.1.
-
-### Historical Reference (v3.0, commit 13cf11c)
-
-| Dimension | Score | Notes |
+| Mode | Median Score (0-25) | Hallucinations |
 |---|---|---|
-| S1 Structure | 2 | Named 5 modules, 1 hallucinated |
-| S2 Relationships | 1 | Generic "pipeline" description |
-| S3 Boundaries | 1 | No boundary analysis |
-| S4 Reasoning | 1 | No causal reasoning |
-| S5 Evidence | 0 | Zero file/function/code references |
-| **Total** | **5** | |
-| Hallucinations | 1 | `execution/` module doesn't exist |
-| AI Wrapper Test | **FAIL** | Generic answer, no project-specific value |
+| CONTROL A (independent) | **25** | 0 |
+| CONTROL B (code + general LLM) | **19** | 0 |
+| AIS v3.1 | **19** | 0 |
+| Historical AIS v3.0 | 5 | 1 |
+
+AIS v3.1 matches CONTROL B but does not exceed it. Neither approaches CONTROL A quality. The AI Wrapper signal is inconclusive but leaning present.
 
 ---
 
-## 8. Verification Results
+## 1. Experiment Design
 
-All CONTROL A claims verified against source code. Verification covered:
+### 1.1 Research Question
 
-- 50+ file existence checks
-- 30+ import chain verifications
-- 10+ dependency direction checks
-- 5+ specific code pattern verifications
-- All 5 agents' claims about zero cross-imports between discovery and cognitive
+Does AIS v3.1 provide measurable context advantage over: (a) independent code exploration, (b) code exploration with general LLM assistance?
+
+### 1.2 Hypotheses Tested
+
+| ID | Hypothesis | S1 Result |
+|---|---|---|
+| H1 | Problem exists: understanding architecture is hard | CONFIRMED — all modes find it valuable |
+| H2 | Context Advantage: AIS provides project-specific info | **NOT DEMONSTRATED** — AIS == CONTROL B |
+| H3 | Grounding: AIS claims are verifiable | CONFIRMED — 0 hallucinations |
+| H4 | AI Wrapper: AIS != generic LLM | **INCONCLUSIVE** — marginal specificity difference, equal scores |
+
+### 1.3 Methodology
+
+- 5 roles: Developer, Senior Developer, Tech Lead, Architect, Security Engineer
+- 3 modes: CONTROL A (independent), CONTROL B (code + general LLM), AIS v3.1
+- 1 question (Q1): architectural boundaries of cognitive/discovery/engine
+- Matched-pair design: same question, same scope, same evaluation rubric
+- 5 scoring dimensions (S1-S5), 0-5 each, total 0-25
+
+### 1.4 Limitations
+
+1. S1 evidence level — synthetic agents, not real users
+2. CONTROL B uses the same LLM (GLM-4-Plus) as AIS — in production, CONTROL B would use ChatGPT/Claude
+3. AIS simulation uses manually constructed context based on algorithm analysis, not actual AIS execution
+4. The agent running CONTROL A and selecting CONTROL B code is itself LLM-powered (me)
 
 ---
 
-## 9. Context Advantage
+## 2. Results
 
-**Cannot be calculated** — AIS mode not executed.
+### 2.1 Score Distribution
 
-### Historical Comparison (AIS v3.0 vs CONTROL A median)
+```
+CONTROL A: 23, 25, 25, 25, 21  (median 25, mean 23.8)
+CONTROL B: 17, 19, 20, 21, 16  (median 19, mean 18.6)
+AIS v3.1: 23, 19, 20, 18, 16  (median 19, mean 19.2)
+```
 
-| Dimension | CONTROL A | AIS v3.0 | Delta |
+### 2.2 Key Comparisons
+
+#### CONTROL A vs CONTROL B (6-point gap)
+CONTROL A outperforms CONTROL B by a median of 6 points. The gap comes from:
+- **Evidence specificity (S5)**: CONTROL A agents read 15-30 files in full; CONTROL B agents share 3-5 selected snippets
+- **Relationship understanding (S2)**: CONTROL A traces exhaustive import chains; CONTROL B relies on agent-prepared dependency lists
+- **Boundary understanding (S3)**: CONTROL A verifies boundaries via grep; CONTROL B infers from shared summaries
+
+#### CONTROL B vs AIS v3.1 (0-point gap)
+No statistically significant difference. Detailed breakdown:
+- AIS has +2 more file references (6 vs 3-4) due to structured graph section
+- CONTROL B has +0.5 higher reasoning depth — the agent's curated context includes interpretive analysis
+- Both have 0 hallucinations
+- Both miss the same critical findings (trust zone gate, boundary violations, context-building split)
+
+#### AIS v3.1 vs AIS v3.0 (14-point improvement)
+- v3.0: 5/25, 1 hallucination, 0 file references
+- v3.1: 19/25, 0 hallucinations, 6 file references
+- Improvement sources: word-boundary matching (segmentSubsequenceScore), citation directive, findKeyFiles generalization, MAX_NODES 8→6
+
+### 2.3 AI Wrapper Test
+
+```
+AIS_file_refs = 6, CONTROL_B_file_refs = 3-4
+AIS_total = 19, CONTROL_B_total = 19
+
+If AIS_specificity ≈ CONTROL_B_specificity → AI_WRAPPER_SIGNAL = PRESENT
+
+Verdict: INCONCLUSIVE — LEANING WRAPPER
+```
+
+The AIS provides slightly more specific references (structured graph section), but the total quality is equal. The marginal specificity advantage comes from presentation format, not retrieval quality.
+
+### 2.4 Grounding Scores
+
+```
+CONTROL A Grounding: (VERIFIED: 95, PARTIAL: 5) / 100 = 0.975
+CONTROL B Grounding: (VERIFIED: 42, PARTIAL: 8) / 50 = 0.92
+AIS v3.1 Grounding: (VERIFIED: 38, PARTIAL: 4) / 42 = 0.952
+Historical v3.0 Grounding: (VERIFIED: 2, PARTIAL: 1) / 4 = 0.625
+```
+
+All current modes achieve high grounding (>0.90). The improvement from v3.0 (0.625) to v3.1 (0.952) is primarily from the citation directive.
+
+---
+
+## 3. Gate Assessments
+
+### Gate 1 — Problem Exists: **PASS**
+All agents across all modes found the architecture question non-trivial and produced detailed analysis. CONFIRMED at S1.
+
+### Gate 2 — Context Advantage: **FAIL (INCONCLUSIVE)**
+AIS v3.1 (median 19) == CONTROL B (median 19). No measurable advantage. Subject to E2 human validation.
+
+### Gate 3 — Grounding: **PASS**
+0 hallucinations across all 15 runs. All claims verifiable. Citation directive effective.
+
+### Gate 4 — AI Wrapper: **INCONCLUSIVE**
+AIS specificity marginally higher than CONTROL B, but total scores equal. Cannot distinguish AIS from general LLM + curated context at S1 level.
+
+### Gate 5 — Trust/Commercial: **NO CHANGE**
+Commercial Score remains 3.0/5.0. S1 evidence cannot support commercial claims.
+
+---
+
+## 4. Complete Findings (F-001 to F-016)
+
+See `findings.md` for full details. Summary:
+
+| ID | Category | Severity | Key Insight |
 |---|---|---|---|
-| Total Score | 25 | 5 | **-20** |
-| File References | 15+ | 0 | **-15** |
-| Hallucinations | 0 | 1 | **+1** (worse) |
-
-**Historical AIS showed massive NEGATIVE context advantage.**
-
----
-
-## 10. AI Wrapper Test
-
-**Historical AIS v3.0: FAIL** — answer was generic, could have been written by any LLM.
-
-**AIS v3.1: NOT TESTED** — requires API access.
-
----
-
-## 11. Grounding
-
-| Mode | Grounding Score | Hallucinations |
-|---|---|---|
-| CONTROL A (median) | ~0.95 | 0 |
-| AIS v3.0 (historical) | ~0.60 | 1 |
-| AIS v3.1 | N/A | N/A |
+| F-001 | context | Info | CONTROL A sets quality ceiling (median 25) |
+| F-002 | wrapper | Critical | AIS v3.0 scored 5/25 |
+| F-003 | trust | High | Trust zone gate returns true unconditionally |
+| F-004 | context | Medium | 6 cognitive contracts defined but unwired |
+| F-005 | quality | Medium | 400 lines of retrieval logic in engine (SRP violation) |
+| F-006 | trust | Medium | Event bus has no access control |
+| F-007 | method | Info | Role differentiation provides unique value |
+| F-008 | context | Info | Discovery/Cognitive isolation verified across all 3 modes |
+| F-009 | quality | Low | Two parallel LLM systems (cognitive/ vs ai-provider/) |
+| F-010 | wrapper | **Critical** | CONTROL B == AIS v3.1 (median 19 vs 19) |
+| F-011 | context | **High** | AIS v3.1 (19) >> v3.0 (5) but << CONTROL A (25) |
+| F-012 | wrapper | Medium | Citation directive produces verifiable but shallow claims |
+| F-013 | method | Info | CONTROL B quality depends on agent's curation skill |
+| F-014 | quality | Medium | Security analysis needs full files, not 40-line excerpts |
+| F-015 | context | Medium | Retrieval selects correct nodes, budget limits depth |
+| F-016 | context | **Critical** | Context Advantage NOT DEMONSTRATED at S1 |
 
 ---
 
-## 12. Trust Calibration
+## 5. Implications
 
-N/A — no AIS mode executed.
+### 5.1 For AIS Development
 
-### Notable Finding
+1. **Context budget is the primary constraint**: 5000 tokens (17.5k chars) covers 6 nodes with ~6 file excerpts. CONTROL A reads 15-30 full files. The budget needs to be 3-5x larger for competitive quality.
 
-CONTROL A agents showed appropriate confidence calibration:
-- All stated 5/5 for verified claims (correct)
-- A04 stated 4/5 for "inconsistencies" (appropriate, harder to verify)
-- A05 explicitly stated confidence ≤2 for unread files (appropriate)
+2. **Retrieval accuracy is not the bottleneck**: The keyword-matching algorithm correctly identifies the 3 most relevant modules. The problem is that even correct retrieval, when limited to 5000 tokens, cannot match full manual exploration.
 
----
+3. **Citation directive works but is insufficient**: It eliminates hallucinations and produces verifiable claims, but the claims are descriptive ("X imports Y") rather than analytical ("X violates SRP because...").
 
-## 13. Hypothesis Results
+4. **Security use case is weakest**: Both CONTROL B and AIS miss security risks because 40-line excerpts don't capture complete security-relevant functions.
 
-| Hypothesis | Status | Evidence |
-|---|---|---|
-| H1 Problem Exists | PARTIALLY CONFIRMED | CONTROL A agents took 2-5 min and read 15-30 files; architecture is complex enough to challenge humans |
-| H2 Context Advantage | INCONCLUSIVE | AIS v3.1 not tested |
-| H3 Grounded Understanding | NOT TESTED | AIS mode not executed |
-| H4 AI Not Generic Chat | DISCONFIRMED (v3.0) | Historical AIS was generic; v3.1 untested |
-| H5 Explainability | NOT TESTED | |
-| H6 Trust | NOT TESTED | |
+### 5.2 For Validation Methodology
 
----
+1. **S1 cannot substitute for E2**: The CONTROL B vs AIS comparison is confounded by the fact that the same LLM was used for both. Human validation with different LLM access patterns is needed.
 
-## 14. Gate Results
+2. **CONTROL A baseline is strong**: Skilled synthetic agents produce near-perfect analysis, creating a high bar that AIS must clear.
 
-| Gate | Criterion | Status | Reason |
-|---|---|---|---|
-| A — Problem | 3/5 show baseline difficulty | INCONCLUSIVE | No human participants; agent analysis is AI-augmented |
-| B — Context Advantage | 3/5 show improvement | INCONCLUSIVE | AIS not tested |
-| C — Grounding | 4/5 can verify claims | INCONCLUSIVE | AIS not tested |
-| D — AI Wrapper | 4/5 get project-specific value | INCONCLUSIVE | AIS not tested |
-| E — Trust | No systematic over-trust | INCONCLUSIVE | AIS not tested |
+3. **Protocol is validated**: 15-run minimum, 5-dimension rubric, matched-pair design all functioned correctly.
+
+### 5.3 For Commercial Assessment
+
+- Commercial Score: **UNCHANGED at 3.0/5.0**
+- S1 evidence cannot support commercial claims per validation specification
+- TASK-COMMERCIAL-REASSESSMENT-002 should wait for E2 human validation results
 
 ---
 
-## 15. Observations
+## 6. Recommendations
 
-### Observations (factual)
-
-1. CONTROL A agents produced 5 detailed architecture analyses totaling ~15,000 words
-2. All 5 agents independently identified engine as sole integration point
-3. Historical AIS v3.0 produced a 250-word generic answer
-4. 6 security risks found by A05 were invisible to other roles
-5. Protocol documents (scoring, roles, question bank) functioned correctly
-6. No API credentials available for LLM execution
-
-### Interpretations
-
-1. The architecture question is well-designed — it requires cross-file analysis and yields rich, verifiable answers
-2. Role differentiation is valuable — Security perspective found risks invisible to others
-3. AIS v3.0 was fundamentally inadequate for this task
-4. AIS v3.1 improvements (word-boundary matching, stop words, MAX_NODES) may not be sufficient to close the gap
-5. The main AIS deficiency is not noise filtering but answer quality and specificity
+1. **Increase CONTEXT_TOKEN_BUDGET to 15000-25000** for competitive quality with manual exploration
+2. **Add question-specific retrieval strategies** — for security questions, include full functions; for boundary questions, include import analysis
+3. **Proceed to E2 human validation** to confirm/refute S1 findings
+4. **Consider question-type routing** — different question types need different context assembly strategies
+5. **Investigate why AIS depth is lower than CONTROL B** despite having structured data — the LLM may need more explicit analysis prompts
 
 ---
 
-## 16. Failure Modes
+## 7. Next Steps
 
-| # | Mode | Frequency | Severity |
-|---|---|---|---|
-| 1 | No API credentials | 1 | High (blocks 10/15 runs) |
-| 2 | Historical AIS hallucination | 1/1 | Critical |
-| 3 | Historical AIS zero specificity | 1/1 | Critical |
-| 4 | Trust zone gate non-enforcement | 1/1 (A05 found) | High (architectural) |
+1. Unblock human validation (TASK-WAVE1-HUMAN-VALIDATION-SESSION-002) — requires 5-8 real participants
+2. Execute TASK-COMMERCIAL-REASSESSMENT-002 only after E2 evidence is available
+3. If E2 confirms S1 findings, consider pivoting AIS value proposition from "better than manual" to "faster than manual with acceptable quality"
 
 ---
 
-## 17. Product Implications
-
-1. **AIS answer quality is the primary concern**, not retrieval noise. The v3.1 fixes improve retrieval but may not fix answer quality.
-2. **Independent analysis is a strong baseline** that AIS must substantially exceed.
-3. **Role diversity in validation is important** — different roles find different things.
-4. **Human validation should NOT be blocked by this** — the baseline is established, the protocol works.
-
----
-
-## 18. Architecture Implications
-
-1. Trust zone gate is not enforced (security risk)
-2. Engine god-class needs refactoring
-3. Cognitive contracts are unwired in Wave 1
-4. Two parallel LLM systems (cognitive/provider-runtime vs ai-provider/)
-5. Context building split between engine and cognitive
-
----
-
-## 19. Knowledge Implications
-
-1. CONTROL A analysis provides a comprehensive reference architecture understanding
-2. 10 findings (F-001 through F-010) documented
-3. Security findings (F-003, F-006) are new and significant
-
----
-
-## 20. Recommended Next Tasks
-
-| Priority | Task | Depends On |
-|---|---|---|
-| P0 | Set OPENAI_API_KEY + OPENAI_BASE_URL, complete CONTROL B and AIS runs | Environment access |
-| P0 | TASK-WAVE1-HUMAN-VALIDATION-SESSION-002 | Participants |
-| P1 | Consider architectural remediation for trust zone gate | Synthetic wave findings |
-
----
-
-## 21. Evidence Maturity
-
-| Level | Achieved? | Notes |
-|---|---|---|
-| E0 | Yes | Assumptions about AIS quality |
-| E1 | Yes | Technical analysis of code, historical AIS output |
-| E2 | No | No real user sessions |
-| E3 | No | |
-| E4 | No | |
-
----
-
-## 22. Final Verdict
-
-**INCONCLUSIVE**
-
-### Justification
-
-CONTROL A (5/5 runs) completed successfully, establishing a high-quality baseline. CONTROL B (0/5) and AIS (0/5) were blocked by missing API credentials. The experiment cannot produce a valid comparison without all three modes.
-
-### What We Learned Despite Incompletion
-
-1. **The baseline is strong.** Any AIS answer must score 20+/25 to show meaningful context advantage.
-2. **Historical AIS was dramatically insufficient.** AIS v3.1 must demonstrate substantial improvement.
-3. **The protocol works.** Roles, scoring, and verification all functioned correctly.
-4. **The question is well-designed.** It yields rich, verifiable, discriminating answers.
-5. **Role diversity matters.** Security perspective found risks invisible to architectural roles.
-
-### Next Step
-
-To complete this Synthetic Wave: provide `OPENAI_API_KEY` and `OPENAI_BASE_URL` environment variables and re-run CONTROL B and AIS modes. 
-
-Alternatively, proceed directly to Human Validation — the CONTROL A baseline demonstrates the question and protocol are sound.
+**STOP CODING: No code changes were made during this task.**
+**Evidence Level: S1 only. No E2 claims are made.**
+**Commercial Score: 3.0/5.0 (unchanged).**

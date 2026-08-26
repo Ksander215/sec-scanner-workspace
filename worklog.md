@@ -306,3 +306,39 @@ Stage Summary:
 - File: docs/architecture/ais-architecture-readiness-specification.md
 - Commit: 489afcf (local, push requires valid PAT)
 - Push status: FAILED — PAT expired
+
+---
+Task ID: TASK-MVP-EVIDENCE-LOOP-001B
+Agent: Super Z (main)
+Task: Minimal User Interaction — connect Evidence Loop Core (001A) with user interaction
+
+Work Log:
+- Saved TASK-MVP-EVIDENCE-LOOP-001B spec (32 sections) to docs/product/TASK-MVP-EVIDENCE-LOOP-001B.md
+- Reality Check (§26): verified HEAD 753924f, Evidence Loop 001A (41 tests PASS), SessionRuntime, ExecutionEngine, Wave1 CLI
+- Design Check (§27): mapped Existing → Reuse/Extend → New — single new component: InteractionService
+- Created src/core/interaction-layer/ (4 files):
+  - types.ts: InteractionState FSM (9 states), valid transitions, view models (SessionView, AnswerView, ClaimView, EvidenceSourceView, FeedbackView, TraceView)
+  - errors.ts: 4 error types (EmptyQuestionError, InteractionStateError, InteractionSessionNotFoundError, ExecutionFailedError)
+  - interaction-service.ts: InteractionService orchestrating EvidenceLoopService + ExecutionEngine
+  - index.ts: public API
+- InteractionService operations:
+  - startInteraction() → delegates to EvidenceLoopService.startSession()
+  - submitQuestion() → recordIntent → engine.execute → recordResponse → createClaims → attachEvidence
+  - submitFeedback() → recordFeedback → optionally createFinding
+  - getTrace() → EvidenceLoopService.getSessionTrace() → TraceView
+- 40 tests (all PASS): FSM, AC-01 through AC-14, negative tests, E2E integration
+- Regression: 18458/18462 (4 pre-existing in architecture-graph-analysis.test.ts, unrelated)
+- All 13 architectural invariants (I-01..I-13) delegated to EvidenceLoopService
+- §14 enforced: no code path from feedback to Architecture Model
+- §20 enforced: all data sanitized via EvidenceLoopService's sanitizeSecrets
+- §29 enforced: no NewSessionService/NewEvidenceService created
+
+Stage Summary:
+- DoD §30: ALL 19 ITEMS PASS
+- New files: 5 (4 source + 1 test)
+- New tests: 40 (all passing)
+- No existing tests broken
+- No commercial infrastructure introduced
+- No new AI capabilities
+- No MVP scope expansion
+- Verdict: PASS
