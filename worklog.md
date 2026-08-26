@@ -371,3 +371,32 @@ Stage Summary:
 - No new code changes required
 - No blockers found
 - Verdict: PASS
+
+---
+Task ID: TASK-MVP-FREE-UX-CONTRACT-001
+Agent: Super Z (main)
+Task: Define minimal UX contract for free MVP AIS
+
+Work Log:
+- Reality Check (§33): verified HEAD aff2c20, all runtime components, Interaction Layer API, Evidence Loop, provider config, project path mechanism
+- Key finding: NO HTTP/API boundary exists — project is pure TypeScript library (deps: only @types/node, typescript, vitest)
+- Key finding: No demo project exists — recommended AIS self-analysis (37 modules, 854 files, 214k LoC)
+- Key finding: No 'demo' provenance type — demo sessions use 'human' provenance, distinguished by projectScope
+- Design Check (§34): 11 components REUSE, 2 MINIMAL (HTTP adapter, web UI), 3 FORBIDDEN (domain logic, AI capability, commercial)
+- Architecture Boundary (§28): UI → HTTP Adapter → InteractionService → EvidenceLoopService → ExecutionEngine — no bypass
+- Evidence Boundary (§29): UI only calls InteractionService, never creates domain entities directly
+- STOP CONDITIONS (§38): ALL 8 CHECKED — NONE TRIGGERED
+- AC Assessment: 8/14 ALREADY SUPPORTED, 6 require UI implementation (TASK-MVP-FREE-UI-001)
+- UX flow mapping: all 4 screens mapped to existing API calls with exact signatures
+- Metrics mapping: TTFU, 6 operational metrics, 7 research questions mapped to data sources
+- Tests: 81/81 pass, no regression
+- No code changes required — pure analysis and specification task
+
+Stage Summary:
+- UX Contract: APPROVED
+- 3 documents created: task spec, findings report, design check
+- 4 gaps identified (HTTP boundary, demo project, provenance, single-question limitation)
+- 2 observations documented (sync getTrace, desktop UI not suitable)
+- Demo project recommendation: AIS self-analysis
+- Next step: TASK-MVP-FREE-UI-001 (minimal web UI implementation)
+- Verdict: PASS
