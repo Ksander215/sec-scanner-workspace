@@ -10,8 +10,10 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:mvp-ui": "vitest run src/__tests__/mvp-ui/",
     "lint": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "mvp-ui": "node dist/mvp-ui/index.js"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
