@@ -400,3 +400,32 @@ Stage Summary:
 - Demo project recommendation: AIS self-analysis
 - Next step: TASK-MVP-FREE-UI-001 (minimal web UI implementation)
 - Verdict: PASS
+
+---
+Task ID: TASK-MVP-FREE-UI-001
+Agent: Super Z (main)
+Task: Minimal Web UI for Free MVP AIS — fix DEMO≠FAKE, honest verdict
+
+Work Log:
+- Investigated current state: 4 server files (index.ts, http-adapter.ts, path-security.ts, demo-config.ts) + 1 SPA (index.html)
+- Found ROOT CAUSE: ExecutionEngine.execute() returns {} when AIS_EXECUTION_REAL!=true → empty answer, 0 claims, 0 evidence
+- Confirmed OPENAI_API_KEY not available in environment → real inference impossible
+- Applied fix: index.ts validates env vars at startup, logs diagnostics
+- Applied fix: http-adapter.ts accepts realInferenceAvailable flag, returns 503 for questions when false
+- Applied fix: SPA handles 503, shows clear error message
+- Added "My Project" → "Coming in a later version" placeholder to SPA
+- Added 2 new tests for 503 behavior (14→16 http-adapter tests)
+- Security audit: no secrets in diff, no stack traces, S-01/S-02/S-03 enforced, ais/dist boundary clean
+- Regression: 88/88 core tests pass (41+40+7), 33/33 MVP-UI tests pass
+- Updated findings report to CONDITION status
+- Committed 018ad6d, pushed to origin/main
+- Created final report with 16 AC table: 8 PASS, 3 CONDITION, 5 BLOCKED
+- Committed f47e2da, pushed to origin/main
+
+Stage Summary:
+- Verdict: CONDITION — BLOCKED on OPENAI_API_KEY
+- All BLOCKED/CONDITION ACs share single root cause (no API key)
+- Architecture is correct, will unblock when API key provided
+- Expected verdict after unblock: PASS (all 16 AC)
+- 121/121 tests pass, 0 regressions
+- 2 commits pushed: 018ad6d (fix), f47e2da (report)
