@@ -29,6 +29,32 @@ import { getDemoConfig } from './demo-config.js';
 // BOOTSTRAP
 // ═══════════════════════════════════════════════════════════════════
 
+/**
+ * Validate that required environment variables are set for real inference.
+ * Returns true if real inference is available, false otherwise.
+ * Logs a clear diagnostic message either way.
+ */
+function validateEnvVars(): { realInferenceAvailable: boolean; diagnostics: string[] } {
+  const diagnostics: string[] = [];
+  const execReal = process.env.AIS_EXECUTION_REAL === 'true';
+  const realLlm = process.env.AIS_REAL_LLM === 'true';
+  const hasKey = !!process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-');
+
+  if (execReal && realLlm && hasKey) {
+    diagnostics.push('Real inference: ENABLED (AIS_EXECUTION_REAL=true, AIS_REAL_LLM=true, OPENAI_API_KEY set)');
+    return { realInferenceAvailable: true, diagnostics };
+  }
+
+  diagnostics.push('Real inference: NOT AVAILABLE');
+  if (!execReal) diagnostics.push('  - AIS_EXECUTION_REAL is not set to "true"');
+  if (!realLlm) diagnostics.push('  - AIS_REAL_LLM is not set to "true"');
+  if (!hasKey) diagnostics.push('  - OPENAI_API_KEY is not set or invalid');
+  diagnostics.push('To enable real inference, run with:');
+  diagnostics.push('  AIS_EXECUTION_REAL=true AIS_REAL_LLM=true OPENAI_API_KEY=sk-... npx tsx src/mvp-ui/index.ts');
+
+  return { realInferenceAvailable: false, diagnostics };
+}
+
 async function main(): Promise<void> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
@@ -37,6 +63,12 @@ async function main(): Promise<void> {
   const port = parseInt(process.env.MVP_UI_PORT ?? '3456', 10);
 
   console.log('[MVP-UI] Initializing AIS components...');
+
+  // 0. Validate environment for real inference
+  const envCheck = validateEnvVars();
+  for (const line of envCheck.diagnostics) {
+    console.log(`[MVP-UI] ${line}`);
+  }
 
   // 1. Session Runtime (in-memory, no persistence for MVP)
   const sessionRuntime = new SessionRuntime({
@@ -69,14 +101,13 @@ async function main(): Promise<void> {
     interactionService,
     pathSecurity,
     port,
+    realInferenceAvailable: envCheck.realInferenceAvailable,
   });
 
   await adapter.start();
 
   console.log(`[MVP-UI] Server running at http://localhost:${adapter.actualPort}`);
   console.log(`[MVP-UI] Demo project: ${demoConfig.name}`);
-  console.log(`[MVP-UI] AIS_EXECUTION_REAL=${process.env.AIS_EXECUTION_REAL ?? 'false'}`);
-  console.log(`[MVP-UI] AIS_REAL_LLM=${process.env.AIS_REAL_LLM ?? 'false'}`);
 
   // Graceful shutdown
   const shutdown = async () => {

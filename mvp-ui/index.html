@@ -128,6 +128,12 @@ textarea { resize: vertical; min-height: 80px; }
       </div>
       <button id="btn-demo" onclick="startDemo()" style="margin-top: 8px;">Start Demo Session</button>
 
+      <h3 class="mt-16">My Project</h3>
+      <div class="card" style="background: var(--bg); border-style: dashed; opacity: 0.7;">
+        <p style="color: var(--text2);">Upload your own project for analysis.</p>
+        <p style="color: var(--text2); font-size: 0.8rem; margin-top: 4px;">Coming in a later version.</p>
+      </div>
+
       <h3 class="mt-16">Or Provide a Path</h3>
       <input type="text" id="project-path" placeholder="/path/to/your/project" />
       <button class="secondary mt-8" onclick="startCustom()" style="width: 100%;">Start with Custom Path</button>
@@ -374,7 +380,19 @@ async function submitQuestion() {
   animateProgress();
 
   try {
-    const data = await apiPost('/api/session/' + currentSessionId + '/question', { question });
+    const res = await fetch(API + '/api/session/' + currentSessionId + '/question', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    });
+    const data = await res.json();
+    if (res.status === 503) {
+      showScreen('question');
+      document.getElementById('btn-ask').disabled = false;
+      showError('Real inference is not available. The server requires AIS_EXECUTION_REAL=true, AIS_REAL_LLM=true, and OPENAI_API_KEY to be set.');
+      return;
+    }
+    if (!res.ok) throw new Error(data.error || 'Request failed');
     renderResponse(data);
     showScreen('response');
   } catch (e) {

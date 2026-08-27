@@ -1,9 +1,13 @@
 /**
- * HTTP Adapter — Integration Tests
+ * HTTP Adapter — Tests
  * TASK-MVP-FREE-UI-001 §36
  *
- * Tests HTTP → InteractionService → EvidenceLoop integration.
- * Uses a mock InteractionService to test routing, validation, and error mapping.
+ * Unit tests: HTTP routing, input validation, error mapping, CORS.
+ * Uses a stub InteractionService to isolate HTTP layer behavior.
+ * The stub is NOT a mock of AIS inference — it tests HTTP plumbing only.
+ *
+ * Integration tests (real AIS pipeline) require OPENAI_API_KEY and are
+ * documented as BLOCKED — see TASK-MVP-FREE-UI-001 final report.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -87,7 +91,7 @@ async function httpRequest(
   }
 }
 
-async function createTestAdapter(service: any) {
+async function createTestAdapter(service: any, options?: { realInferenceAvailable?: boolean }) {
   const pathSecurity = new PathSecurityService({
     allowedRoots: [TMP_DIR],
     demoAllowlist: [TMP_DIR],
@@ -106,6 +110,7 @@ async function createTestAdapter(service: any) {
     pathSecurity,
     port: 0, // let OS pick
     spaPath,
+    realInferenceAvailable: options?.realInferenceAvailable ?? true,
   });
   await adapter.start();
   return adapter;
@@ -215,9 +220,9 @@ describe('HttpAdapter — POST /api/session', () => {
 });
 
 describe('HttpAdapter — POST /api/session/:id/question', () => {
-  it('submits question and returns answer', async () => {
+  it('submits question and returns answer (realInferenceAvailable=true)', async () => {
     const svc = createMockInteractionService();
-    const adapter = await createTestAdapter(svc);
+    const adapter = await createTestAdapter(svc, { realInferenceAvailable: true });
     try {
       const res = await httpRequest(adapter, 'POST', '/api/session/test-123/question', {
         question: 'What is the architecture?',
@@ -233,12 +238,42 @@ describe('HttpAdapter — POST /api/session/:id/question', () => {
 
   it('rejects empty question', async () => {
     const svc = createMockInteractionService();
-    const adapter = await createTestAdapter(svc);
+    const adapter = await createTestAdapter(svc, { realInferenceAvailable: true });
     try {
       const res = await httpRequest(adapter, 'POST', '/api/session/test-123/question', {
         question: '   ',
       });
       expect(res.status).toBe(400);
+    } finally {
+      await adapter.stop();
+    }
+  });
+
+  it('returns 503 when realInferenceAvailable=false (§8, §13 DEMO!=FAKE)', async () => {
+    const svc = createMockInteractionService();
+    const adapter = await createTestAdapter(svc, { realInferenceAvailable: false });
+    try {
+      const res = await httpRequest(adapter, 'POST', '/api/session/test-123/question', {
+        question: 'What is the architecture?',
+      });
+      expect(res.status).toBe(503);
+      expect(res.data.error).toContain('Real inference is not available');
+      expect(res.data.error).toContain('AIS_EXECUTION_REAL');
+      expect(res.data.error).toContain('OPENAI_API_KEY');
+    } finally {
+      await adapter.stop();
+    }
+  });
+
+  it('503 is returned before input validation (no leak of internal behavior)', async () => {
+    const svc = createMockInteractionService();
+    const adapter = await createTestAdapter(svc, { realInferenceAvailable: false });
+    try {
+      // Empty question + no inference → 503, NOT 400
+      const res = await httpRequest(adapter, 'POST', '/api/session/test-123/question', {
+        question: '',
+      });
+      expect(res.status).toBe(503);
     } finally {
       await adapter.stop();
     }

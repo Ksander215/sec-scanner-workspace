@@ -43,6 +43,12 @@ export interface HttpAdapterConfig {
   readonly port?: number;
   readonly corsOrigin?: string;
   readonly spaPath?: string;
+  /**
+   * Whether real AIS inference is available (AIS_EXECUTION_REAL=true + AIS_REAL_LLM=true + OPENAI_API_KEY).
+   * When false, question submission returns 503 instead of silently returning empty results.
+   * TASK-MVP-FREE-UI-001 §8, §13 — DEMO != FAKE.
+   */
+  readonly realInferenceAvailable?: boolean;
 }
 
 interface RouteMatch {
@@ -71,6 +77,7 @@ export class HttpAdapter {
   private readonly port: number;
   private readonly corsOrigin: string;
   private readonly spaHtml: string;
+  private readonly realInferenceAvailable: boolean;
   private server: Server | null = null;
 
   constructor(config: HttpAdapterConfig) {
@@ -78,6 +85,7 @@ export class HttpAdapter {
     this.pathSecurity = config.pathSecurity;
     this.port = config.port ?? 3456;
     this.corsOrigin = config.corsOrigin ?? '*';
+    this.realInferenceAvailable = config.realInferenceAvailable ?? false;
 
     // Load SPA HTML at startup
     const spaPath = config.spaPath ?? getDefaultSpaPath();
@@ -264,6 +272,15 @@ export class HttpAdapter {
 
   /** POST /api/session/:id/question — Submit a question. */
   private async handleSubmitQuestion(sessionId: string, body: unknown, res: ServerResponse): Promise<void> {
+    // §8, §13: DEMO != FAKE — refuse to return empty/mock results
+    if (!this.realInferenceAvailable) {
+      this.sendError(res, 503,
+        'Real inference is not available. ' +
+        'Set AIS_EXECUTION_REAL=true, AIS_REAL_LLM=true, and OPENAI_API_KEY environment variables.',
+      );
+      return;
+    }
+
     const parsed = this.parseObject(body);
     const question = this.requireString(parsed, 'question');
 

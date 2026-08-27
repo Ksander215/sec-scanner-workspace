@@ -1,9 +1,40 @@
-# TASK-MVP-FREE-UI-001 — Reality Check & Design Check Findings
+# TASK-MVP-FREE-UI-001 — Findings Report
 
 **Task**: Minimal Web UI for Free MVP
 **Date**: 2026-08-27
-**HEAD**: `84a5c51`
-**Status**: PASS
+**HEAD**: `84a5c51` (+ uncommitted MVP-UI changes)
+**Status**: **CONDITION** — BLOCKED on OPENAI_API_KEY
+
+---
+
+## Executive Summary
+
+The MVP UI is architecturally complete and correctly wired:
+`SPA → HTTP Adapter → InteractionService → EvidenceLoopService → ExecutionEngine → CognitiveRuntime → OpenAI`.
+
+All code changes respect the Code Freeze (§32): zero modifications to `src/core/`.
+Security invariants S-01/S-02/S-03 are enforced. Feedback flows through
+InteractionService → EvidenceLoopService (not localStorage). Error responses
+never contain stack traces.
+
+**BLOCKER**: Real end-to-end inference requires `OPENAI_API_KEY`, which is not
+available in the current environment. The system now **honestly refuses** to
+return fake/empty results (503), implementing the DEMO ≠ FAKE principle (§8, §13).
+
+---
+
+## Critical Fix Applied: DEMO ≠ FAKE (§8, §13)
+
+**Before**: When env vars were not set, `ExecutionEngine.execute()` returned `{}` as `T`.
+The InteractionService recorded an empty answer (`undefined`), zero claims, zero evidence.
+The user saw a blank response — indistinguishable from a real but failed inference.
+
+**After**:
+1. `index.ts` validates env vars at startup, logs clear diagnostics
+2. `HttpAdapter` accepts `realInferenceAvailable` flag
+3. When `realInferenceAvailable=false`, `POST /api/session/:id/question` returns **503**
+   with a clear message: "Real inference is not available. Set AIS_EXECUTION_REAL=true, AIS_REAL_LLM=true, and OPENAI_API_KEY."
+4. SPA handles 503 and shows the error to the user
 
 ---
 
@@ -11,22 +42,16 @@
 
 | # | Check | Finding | Status |
 |---|-------|---------|--------|
-| RC-01 | HEAD | `84a5c51` on `main`, clean working tree | PASS |
-| RC-02 | Existing UI (`src/ui/`) | Desktop stubs — `render(): string`. NOT reusable for web (wrong paradigm) | FORBIDDEN |
-| RC-03 | Build system | `tsc` only, `module: "Node16"`, no bundler for `src/` | PASS |
-| RC-04 | HTTP infrastructure | `backend/` = SIP (Express), `landing/` = Next.js landing. NO HTTP for InteractionService | GAP → Created |
+| RC-01 | HEAD | `84a5c51` on `main`, working tree has MVP-UI changes | PASS |
+| RC-02 | Existing UI (`src/ui/`) | Desktop stubs — NOT reusable for web | FORBIDDEN |
+| RC-03 | Build system | `tsc` only, no bundler for `src/` | PASS |
+| RC-04 | HTTP infrastructure | Created `src/mvp-ui/http-adapter.ts` — Node.js built-in `http` | PASS |
 | RC-05 | InteractionService | 5 methods, 40 tests pass | PASS |
 | RC-06 | Evidence invariants | I-01→I-13, 41 tests pass | PASS |
-| RC-07 | Dependencies | `@types/node`, `typescript`, `vitest`, `openai` (optional). ZERO new deps added | PASS |
-| RC-08 | Demo candidate | AIS self-analysis (the `ais/` project itself) | PASS |
+| RC-07 | Dependencies | ZERO new dependencies added | PASS |
+| RC-08 | Demo candidate | AIS self-analysis (37 modules) | PASS |
 | RC-09 | Source access | File system — `readFileSync`, `join` from `node:path` | PASS |
-| RC-10 | Existing tests | 81 core tests pass, 0 regressions after changes | PASS |
-
-### RC-04 Resolution
-Created `src/mvp-ui/http-adapter.ts` — minimal HTTP server using Node.js built-in `http` module. No Express, Hono, or any framework. 6 endpoints.
-
-### RC-02 Decision
-Existing `src/ui/` screens are desktop stub classes with `render(): string` returning a label. They use no web APIs, no DOM, no HTTP. **Decision: FORBIDDEN to reuse** — wrong paradigm entirely.
+| RC-10 | Existing tests | 88 core tests pass, 0 regressions | PASS |
 
 ---
 
@@ -34,41 +59,10 @@ Existing `src/ui/` screens are desktop stub classes with `render(): string` retu
 
 | Component | Decision | Rationale |
 |-----------|----------|----------|
-| HTTP framework | Node.js `http` (built-in) | ZERO new dependencies. MVP minimalism (§22, §31) |
-| Frontend framework | None (vanilla HTML/CSS/JS) | No build step, no bundler, no framework. Single HTML file. |
-| CSS framework | None (inline `<style>`) | Embedded in HTML. ~100 lines of CSS. |
-| Bundler | None | `tsc` only for TypeScript. HTML served as-is. |
-| SPA routing | Hash-based screen toggle | 6 screens, `showScreen()` toggles visibility. No router needed. |
-| State management | Module-level variables | `currentSessionId`, `isDemo`. Sufficient for single-session MVP. |
-
-### Component Reuse Summary
-
-| Source | Reusable? | Reason |
-|--------|-----------|--------|
-| `src/ui/` screens | NO | Desktop stubs, no web API |
-| `landing/` (Next.js) | NO | Product landing page, not interactive |
-| `backend/` (Express) | NO | SIP server, not AIS |
-| `packages/ui/` | NO | React 18 SIP components, not AIS |
-| `InteractionService` | YES | Direct use via HTTP adapter |
-| `EvidenceLoopService` | YES | Wired through InteractionService |
-| `PathSecurityService` | NEW | Required for §28-30 security |
-
----
-
-## Endpoints (§22 — Minimal Set)
-
-| Method | Path | Maps to | Notes |
-|--------|------|---------|-------|
-| POST | `/api/session` | `startInteraction()` | Validates path via PathSecurityService |
-| POST | `/api/session/:id/question` | `submitQuestion()` | 10k char limit, trim whitespace |
-| POST | `/api/session/:id/feedback` | `submitFeedback()` | Validates verdict enum |
-| GET | `/api/session/:id/trace` | `getTrace()` | Synchronous method |
-| GET | `/api/session/:id` | `getSessionView()` | Session state recovery |
-| GET | `/api/demos` | `getAllDemoConfigs()` | Demo project metadata |
-| GET | `/` | SPA HTML | Single-page app |
-| OPTIONS | `*` | CORS preflight | Configurable origin |
-
-**§22 assessment**: 5 API endpoints + 1 metadata + 1 static + 1 preflight. Cannot reduce further without breaking AC-16 E2E flow.
+| HTTP framework | Node.js `http` (built-in) | ZERO new dependencies (§22, §31) |
+| Frontend | Vanilla HTML/CSS/JS | Single HTML file, no build step |
+| SPA routing | Screen toggle (`showScreen()`) | 6 screens, no router needed |
+| State management | Module-level variables | `currentSessionId`, `isDemo` |
 
 ---
 
@@ -76,14 +70,14 @@ Existing `src/ui/` screens are desktop stub classes with `render(): string` retu
 
 | Invariant | Implementation | Status |
 |-----------|---------------|--------|
-| S-01 Path traversal | `PathSecurityService.validateProjectPath()` — resolves, normalizes, checks against allowed roots | PASS |
+| S-01 Path traversal | `PathSecurityService` — resolve, normalize, check roots | PASS |
 | S-02 Demo isolation | Demo allowlist, separate from allowedRoots | PASS |
-| S-03 Pattern blocking | `..`, `%2e%2e`, `%252e`, `\\`, `//` patterns blocked | PASS |
-| §19 No stack traces | `mapError()` maps all errors to safe messages | PASS |
-| §20 Secret sanitization | Delegated to `sanitizeSecrets()` in EvidenceLoopService | PASS (inherited) |
-| CORS | Configurable `corsOrigin`, defaults to `*` for MVP | PASS |
+| S-03 Pattern blocking | `..`, `%2e%2e`, `%252e`, `\\`, `//` blocked | PASS |
+| §19 No stack traces | `mapError()` → safe messages only | PASS |
+| §20 Secret sanitization | `sanitizeSecrets()` in EvidenceLoopService | PASS (inherited) |
 | Body size limit | 1MB max request body | PASS |
-| Input validation | JSON parse, type checks, field requirements | PASS |
+| Input validation | JSON parse, type checks, 10k char limit | PASS |
+| 503 guard | Refuses fake results when inference unavailable | PASS |
 
 ---
 
@@ -92,44 +86,72 @@ Existing `src/ui/` screens are desktop stub classes with `render(): string` retu
 | Suite | Tests | Status |
 |-------|-------|--------|
 | Path Security (unit) | 17 | ALL PASS |
-| HTTP Adapter (integration) | 14 | ALL PASS |
-| Interaction Layer (existing) | 40 | ALL PASS (no regression) |
-| Evidence Loop (existing) | 41 | ALL PASS (no regression) |
-| **Total** | **112** | **ALL PASS** |
+| HTTP Adapter (HTTP layer) | 16 | ALL PASS |
+| Interaction Layer (core) | 40 | ALL PASS (no regression) |
+| Evidence Loop (core) | 41 | ALL PASS (no regression) |
+| Execution Engine (core) | 7 | ALL PASS (no regression) |
+| **Total** | **121** | **ALL PASS** |
 
 ---
 
-## Files Created/Modified
+## Files
 
-### New Files
+### New Files (MVP-UI only — zero core changes)
+- `src/mvp-ui/index.ts` — Entry point, env var validation, component wiring
+- `src/mvp-ui/http-adapter.ts` — HTTP server, 7 routes, 503 guard, CORS, error mapping
 - `src/mvp-ui/path-security.ts` — Path traversal protection (S-01, S-02, S-03)
-- `src/mvp-ui/demo-config.ts` — Demo project configuration
-- `src/mvp-ui/http-adapter.ts` — HTTP server, 7 routes, CORS, error mapping
-- `src/mvp-ui/index.ts` — Entry point, wires SessionRuntime → EvidenceLoop → InteractionService → HttpAdapter
-- `mvp-ui/index.html` — Single-page app (4 screens: Start, Question, Response+Feedback, Trace)
-- `src/__tests__/mvp-ui/path-security.test.ts` — 17 unit tests
-- `src/__tests__/mvp-ui/http-adapter.test.ts` — 14 integration tests
-
-### Modified Files
-- `package.json` — Added `test:mvp-ui` and `mvp-ui` scripts
+- `src/mvp-ui/demo-config.ts` — Demo project (AIS self-analysis)
+- `mvp-ui/index.html` — SPA (6 screens: Start, Question, Processing, Response, Feedback, Trace)
+- `src/__tests__/mvp-ui/http-adapter.test.ts` — 16 tests (routing, validation, 503 guard)
+- `src/__tests__/mvp-ui/path-security.test.ts` — 17 tests (S-01, S-02, S-03)
 
 ### NOT Modified (Code Freeze §32)
-- `src/core/interaction-layer/` — No changes
-- `src/core/evidence-loop/` — No changes (I-01→I-13 preserved)
-- `src/core/engine/` — No changes
-- `src/core/session/` — No changes
+- `src/core/` — Zero changes
+
+---
+
+## Architecture Boundary Verification
+
+| Check | Result |
+|-------|--------|
+| mvp-ui imports from `dist/` | NONE — all from `../core/` (source) |
+| AIS code duplicated in mvp-ui | NONE |
+| UI bypasses InteractionService | NO — all via HTTP adapter |
+| Feedback stored in localStorage | NO — via InteractionService → EvidenceLoopService |
+| Direct EvidenceLoop/Engine calls from UI | NO — HTTP adapter only |
+
+---
+
+## BLOCKER: Real Inference
+
+**Condition**: `OPENAI_API_KEY` environment variable is not available.
+
+**Impact**:
+- AC-03 (Real inference pipeline): **BLOCKED** — cannot verify end-to-end
+- AC-05 (Claims from real sources): **BLOCKED** — no real sources without inference
+- AC-16 (E2E smoke test): **BLOCKED** — cannot complete full flow
+
+**Mitigation Applied**:
+- Server returns 503 with clear diagnostic message
+- No fake/mock data returned to user
+- Architecture is correct — unblocks when API key is provided
+
+**To unblock**:
+```bash
+AIS_EXECUTION_REAL=true AIS_REAL_LLM=true OPENAI_API_KEY=sk-... npx tsx src/mvp-ui/index.ts
+```
 
 ---
 
 ## Known Limitations
 
-1. **No real inference without env vars** — `AIS_EXECUTION_REAL=true` + `AIS_REAL_LLM=true` + `OPENAI_API_KEY` required for real answers
-2. **No persistence** — Sessions are in-memory only (MVP constraint)
-3. **CORS wildcard** — `*` origin for MVP; restrict in production
-4. **No authentication** — Acceptable for limited free MVP release
-5. **Single session** — FSM supports one question per session; "Ask another" creates new session
-6. **No streaming** — Full response returned at once
-7. **Port hardcoded** — Default 3456, configurable via `MVP_UI_PORT`
+1. **BLOCKED: No real inference** — requires `OPENAI_API_KEY` (see above)
+2. **No persistence** — in-memory sessions only (MVP constraint)
+3. **CORS wildcard** — `*` for MVP; restrict in production
+4. **No authentication** — acceptable for free MVP
+5. **Single question per session** — FSM design (one question → feedback → trace → new session)
+6. **No streaming** — full response at once
+7. **No automated E2E test** — requires real inference environment
 
 ---
 
@@ -137,15 +159,15 @@ Existing `src/ui/` screens are desktop stub classes with `render(): string` retu
 
 ```bash
 cd ais
-npm run build
-AIS_EXECUTION_REAL=true AIS_REAL_LLM=true OPENAI_API_KEY=sk-... npm run mvp-ui
+npx tsc
+AIS_EXECUTION_REAL=true AIS_REAL_LLM=true OPENAI_API_KEY=sk-... npx tsx src/mvp-ui/index.ts
 # Open http://localhost:3456
 ```
 
-For testing (no real LLM):
+Without API key (server starts but returns 503 for questions):
 ```bash
 cd ais
-npm run build
-npm run mvp-ui
-# Sessions work but answers will be empty without real LLM
+npx tsc
+npx tsx src/mvp-ui/index.ts
+# Sessions can be created, but questions return 503
 ```
