@@ -100,6 +100,16 @@ export const DefaultDiscoveryConfig: DiscoveryConfig = {
     '.cache',
     'frames',
     '__tests__',
+    // TASK-MVP-FREE-QUALITY-GATE-001: Exclude non-core project directories
+    // that pollute the ArchitectureGraph and cause false keyword matches
+    // in findRelevantNodes() (e.g., "evidence" matching landing.app.evidence).
+    'landing',
+    'backend',
+    'docs',
+    'scripts',
+    'plugins',
+    'packages',
+    'skills',
   ],
   maxDepth: 10,
   maxFiles: 10000,
