@@ -1,0 +1,106 @@
+# Usage Evidence Ledger
+# TASK-MVP-FREE-USAGE-EVIDENCE-001
+#
+# Single source of truth for all user sessions.
+# Add entries here after each session is completed.
+# NEVER mix HUMAN, DEMO, and SYNTHETIC provenance.
+
+meta:
+  task: TASK-MVP-FREE-USAGE-EVIDENCE-001
+  created: "2026-08-28"
+  last_updated: null
+  operator: null
+  mvp_head: e971597
+  quality_gate: CONDITION
+
+# =================================================================
+# SESSIONS
+# =================================================================
+
+sessions: []
+# Each entry:
+# - id: sess-YYYYMMDD-NNN
+#   date: "YYYY-MM-DDTHH:MM:00Z"
+#   provenance: HUMAN | DEMO | SYNTHETIC
+#   project_type: USER_PROJECT | DEMO_PROJECT
+#   outcome: COMPLETED | COMPLETED_NO_FEEDBACK | ABANDONED | ERROR | BLOCKED
+#   questions_count: 1
+#   feedback_provided: true | false
+#   total_latency_ms: 19500
+#   quality_rating: YES | PARTIALLY | NO
+#   task_solved: YES | PARTIALLY | NO
+#   user_returned: true | false | null
+#   linked_session: sess-YYYYMMDD-NNN (if user returned)
+#   findings:
+#     - F-001
+#     - F-002
+#   notes: ""
+
+# =================================================================
+# FINDINGS
+# =================================================================
+
+findings: []
+# Each entry:
+# - id: F-NNN
+#   category: INTENT_ERROR | CONTEXT_ERROR | HALLUCINATION | GROUNDING_ERROR | INCOMPLETE | UX_ERROR | VALUE_FAILURE | SUCCESS
+#   severity: P0 | P1 | P2 | P3
+#   frequency: 1
+#   session_ids:
+#     - sess-YYYYMMDD-NNN
+#   description: ""
+#   user_claim: "" (verbatim)
+#   ais_claim: "" (verbatim)
+#   evidence_source: ""
+#   verification: ""
+#   verdict: HALLUCINATION | GROUNDING_ERROR | CONTEXT_ERROR | INTENT_ERROR
+#   user_impact: LOW | MEDIUM | HIGH | CRITICAL
+#   reproducible: true | false | unknown
+#   recommendation: ""
+
+# =================================================================
+# AGGREGATE METRICS
+# =================================================================
+
+# After each batch, compute and update:
+
+aggregate:
+  batch_001:
+    period: null
+    users_total: 0
+    sessions_total: 0
+    questions_total: 0
+    sessions_completed: 0
+    sessions_abandoned: 0
+    users_returned: 0
+
+    # Quality
+    quality_correct: 0
+    quality_partially_correct: 0
+    quality_incorrect: 0
+    quality_incomplete: 0
+
+    # Grounding
+    claims_supported: 0
+    claims_unsupported: 0
+    claims_hallucination: 0
+
+    # Value
+    tasks_solved: 0
+    tasks_partially_solved: 0
+    tasks_failed: 0
+    users_acted_on_answer: 0
+    users_returned: 0
+
+    # Task categories (populated from actual data)
+    task_categories: {}
+    # Example:
+    # task_categories:
+    #   dependency_analysis: 5
+    #   architecture_explanation: 3
+    #   risk_assessment: 2
+
+    # Retention
+    first_session_users: 0
+    returning_users: 0
+    retention_rate: null
