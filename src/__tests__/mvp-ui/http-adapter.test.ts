@@ -360,3 +360,35 @@ describe('HttpAdapter — Error Mapping', () => {
     }
   });
 });
+
+// ═══════════════════════════════════════════════════════════════
+// RESOLVE REPO TESTS (TASK-MVP-FREE-REPOSITORY-UX-001)
+// ═══════════════════════════════════════════════════════════════
+
+describe('HttpAdapter — POST /api/resolve-repo', () => {
+  it('returns 503 when githubResolver is not configured', async () => {
+    const svc = createMockInteractionService();
+    const adapter = await createTestAdapter(svc);
+    try {
+      const res = await httpRequest(adapter, 'POST', '/api/resolve-repo', {
+        url: 'https://github.com/owner/repo',
+      });
+      expect(res.status).toBe(503);
+      expect(res.data.error).toContain('not available');
+    } finally {
+      await adapter.stop();
+    }
+  });
+
+  it('rejects missing url field', async () => {
+    const svc = createMockInteractionService();
+    const adapter = await createTestAdapter(svc);
+    try {
+      const res = await httpRequest(adapter, 'POST', '/api/resolve-repo', {});
+      // 503 because githubResolver is not configured (checked before validation)
+      expect(res.status).toBe(503);
+    } finally {
+      await adapter.stop();
+    }
+  });
+});

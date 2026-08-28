@@ -23,6 +23,7 @@ import { EvidenceLoopService } from '../core/evidence-loop/evidence-loop-service
 import { InteractionService } from '../core/interaction-layer/interaction-service.js';
 import { HttpAdapter } from './http-adapter.js';
 import { PathSecurityService } from './path-security.js';
+import { GitHubResolver } from './github-resolver.js';
 import { getDemoConfig } from './demo-config.js';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -38,7 +39,7 @@ function validateEnvVars(): { realInferenceAvailable: boolean; diagnostics: stri
   const diagnostics: string[] = [];
   const execReal = process.env.AIS_EXECUTION_REAL === 'true';
   const realLlm = process.env.AIS_REAL_LLM === 'true';
-  const hasKey = !!process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-');
+  const hasKey = !!process.env.OPENAI_API_KEY;
 
   if (execReal && realLlm && hasKey) {
     diagnostics.push('Real inference: ENABLED (AIS_EXECUTION_REAL=true, AIS_REAL_LLM=true, OPENAI_API_KEY set)');
@@ -89,29 +90,36 @@ async function main(): Promise<void> {
     engine,
   });
 
-  // 5. Path Security
+  // 5. GitHub Repository Resolver (TASK-MVP-FREE-REPOSITORY-UX-001)
+  const githubResolver = new GitHubResolver();
+
+  // 6. Path Security — includes clone root for GitHub repos
   const demoConfig = getDemoConfig();
   const pathSecurity = new PathSecurityService({
-    allowedRoots: [projectRoot],
+    allowedRoots: [projectRoot, githubResolver.getCloneRoot()],
     demoAllowlist: [demoConfig.projectPath],
   });
 
-  // 6. HTTP Adapter
+  // 7. HTTP Adapter
   const adapter = new HttpAdapter({
     interactionService,
     pathSecurity,
     port,
     realInferenceAvailable: envCheck.realInferenceAvailable,
+    githubResolver,
   });
 
   await adapter.start();
 
   console.log(`[MVP-UI] Server running at http://localhost:${adapter.actualPort}`);
   console.log(`[MVP-UI] Demo project: ${demoConfig.name}`);
+  console.log(`[MVP-UI] GitHub clone root: ${githubResolver.getCloneRoot()}`);
 
   // Graceful shutdown
   const shutdown = async () => {
     console.log('[MVP-UI] Shutting down...');
+    // Clean up all cloned repositories (TASK-MVP-FREE-REPOSITORY-UX-001)
+    githubResolver.cleanupAll();
     await adapter.stop();
     await engine.stop();
     await engine.shutdown();

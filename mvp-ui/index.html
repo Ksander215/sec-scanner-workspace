@@ -3,170 +3,398 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AIS — Architecture Intelligence System</title>
+<title>AIS — Understand Any Codebase</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #0a0a0f; --surface: #13131a; --surface2: #1a1a24; --border: #2a2a3a;
-  --text: #e4e4ef; --text2: #8888a0; --accent: #6366f1; --accent-hover: #818cf8;
-  --green: #22c55e; --red: #ef4444; --yellow: #eab308;
-  --radius: 8px; --max-w: 800px;
+  --bg: #09090b; --surface: #131316; --surface2: #1c1c21; --surface3: #25252b;
+  --border: #2a2a32; --border-light: #3a3a44;
+  --text: #ececf1; --text2: #8e8ea0; --text3: #5c5c6e;
+  --accent: #6366f1; --accent-hover: #818cf8; --accent-dim: rgba(99,102,241,0.12);
+  --green: #22c55e; --green-dim: rgba(34,197,94,0.12);
+  --red: #ef4444; --red-dim: rgba(239,68,68,0.12);
+  --yellow: #eab308; --yellow-dim: rgba(234,179,8,0.12);
+  --orange: #f97316; --orange-dim: rgba(249,115,22,0.12);
+  --radius: 10px; --radius-sm: 6px; --radius-lg: 14px;
+  --max-w: 720px; --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'Inter', sans-serif;
+  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
 }
+html { font-size: 16px; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  background: var(--bg); color: var(--text); line-height: 1.6;
-  min-height: 100vh; display: flex; flex-direction: column; align-items: center;
-  padding: 24px 16px;
+  font-family: var(--font); background: var(--bg); color: var(--text);
+  line-height: 1.6; min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 16px;
 }
-h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 4px; }
-h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 12px; }
-h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
-p, li { color: var(--text2); font-size: 0.9rem; }
-.container { width: 100%; max-width: var(--max-w); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); }
+
+/* ═══ Layout ═══ */
+.container { width: 100%; max-width: var(--max-w); padding: 24px 0; }
 .card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px; margin-bottom: 16px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 24px; margin-bottom: 16px;
+  box-shadow: var(--shadow);
 }
+.card-compact { padding: 16px 20px; }
+
+/* ═══ Typography ═══ */
+h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+h3 {
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text3); margin-bottom: 10px;
+}
+p, li { color: var(--text2); font-size: 0.9rem; }
+.text-sm { font-size: 0.8rem; color: var(--text3); }
+.text-accent { color: var(--accent); }
+
+/* ═══ Buttons ═══ */
 button {
-  background: var(--accent); color: #fff; border: none; border-radius: var(--radius);
-  padding: 10px 20px; font-size: 0.9rem; cursor: pointer; transition: background 0.2s;
+  font-family: var(--font); font-size: 0.88rem; font-weight: 500;
+  border: none; border-radius: var(--radius); padding: 10px 20px;
+  cursor: pointer; transition: all 0.15s ease; display: inline-flex;
+  align-items: center; justify-content: center; gap: 8px;
 }
-button:hover { background: var(--accent-hover); }
-button:disabled { opacity: 0.4; cursor: not-allowed; }
-button.secondary { background: var(--surface2); border: 1px solid var(--border); }
-button.secondary:hover { background: var(--border); }
-button.danger { background: var(--red); }
-button.danger:hover { background: #dc2626; }
-button.success { background: var(--green); }
-button.success:hover { background: #16a34a; }
-button.warn { background: var(--yellow); color: #000; }
-button.warn:hover { background: #ca8a04; }
+button:active { transform: scale(0.98); }
+button:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-secondary {
+  background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--surface3); border-color: var(--border-light); }
+.btn-ghost { background: transparent; color: var(--text2); padding: 6px 12px; }
+.btn-ghost:hover:not(:disabled) { color: var(--text); background: var(--surface2); }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover:not(:disabled) { background: #16a34a; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover:not(:disabled) { background: #dc2626; }
+.btn-warn { background: var(--yellow); color: #000; }
+.btn-warn:hover:not(:disabled) { background: #ca8a04; }
+.btn-block { width: 100%; }
+
+/* ═══ Inputs ═══ */
 input, textarea {
-  width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 10px 12px; color: var(--text); font-size: 0.9rem; font-family: inherit;
-  outline: none; transition: border-color 0.2s;
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 11px 14px; color: var(--text);
+  font-size: 0.9rem; font-family: inherit; outline: none;
+  transition: border-color 0.15s;
 }
-input:focus, textarea:focus { border-color: var(--accent); }
+input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+input::placeholder, textarea::placeholder { color: var(--text3); }
 textarea { resize: vertical; min-height: 80px; }
+
+/* ═══ Badges ═══ */
 .badge {
-  display: inline-block; background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 2px 10px; font-size: 0.75rem; color: var(--text2);
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 2px 10px; font-size: 0.72rem;
+  color: var(--text2); font-weight: 500;
 }
-.badge.green { border-color: var(--green); color: var(--green); }
-.badge.red { border-color: var(--red); color: var(--red); }
-.badge.yellow { border-color: var(--yellow); color: var(--yellow); }
+.badge-green { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.badge-red { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+.badge-yellow { border-color: var(--yellow); color: var(--yellow); background: var(--yellow-dim); }
+.badge-accent { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* ═══ Error ═══ */
 .error-box {
-  background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red);
-  border-radius: var(--radius); padding: 12px 16px; color: var(--red); font-size: 0.85rem;
-  margin-bottom: 16px;
+  background: var(--red-dim); border: 1px solid rgba(239,68,68,0.3);
+  border-radius: var(--radius); padding: 12px 16px; color: var(--red);
+  font-size: 0.85rem; margin-bottom: 16px;
+  display: flex; align-items: flex-start; gap: 8px;
 }
-.loading { display: flex; align-items: center; gap: 8px; color: var(--text2); font-size: 0.9rem; }
-.loading::before {
-  content: ''; width: 16px; height: 16px; border: 2px solid var(--border);
+.error-box::before { content: '!'; font-weight: 700; flex-shrink: 0; }
+
+/* ═══ Loading ═══ */
+.loading { display: flex; align-items: center; gap: 10px; color: var(--text2); font-size: 0.9rem; }
+.spinner {
+  width: 18px; height: 18px; border: 2px solid var(--border);
   border-top-color: var(--accent); border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite; flex-shrink: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.25s ease; }
+
+/* ═══ Progress bar ═══ */
+.progress-bar {
+  background: var(--surface2); border-radius: 6px; height: 5px;
+  overflow: hidden; margin: 16px 0;
+}
+.progress-bar .fill {
+  height: 100%; background: var(--accent); border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+/* ═══ Evidence ═══ */
 .evidence-item {
-  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
-  padding: 12px; margin-bottom: 8px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
 }
 .evidence-item code {
-  display: block; font-size: 0.8rem; color: var(--accent); margin-bottom: 6px;
-  word-break: break-all;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 0.78rem; color: var(--accent);
+  margin-bottom: 6px; word-break: break-all;
 }
+.evidence-item code::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); flex-shrink: 0; }
 .evidence-item pre {
-  background: var(--surface2); border-radius: 4px; padding: 8px;
-  font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap; color: var(--text2);
-  max-height: 120px; overflow-y: auto;
+  background: var(--surface2); border-radius: var(--radius-sm); padding: 10px;
+  font-family: var(--mono); font-size: 0.78rem; line-height: 1.5;
+  overflow-x: auto; white-space: pre-wrap; color: var(--text2);
+  max-height: 140px; overflow-y: auto; margin-top: 6px;
 }
-.trace-section { margin-bottom: 16px; }
 .claim-item {
-  display: flex; align-items: flex-start; gap: 8px; padding: 8px 0;
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;
   border-bottom: 1px solid var(--border); font-size: 0.85rem;
 }
 .claim-item:last-child { border-bottom: none; }
-.feedback-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+/* ═══ Feedback ═══ */
+.feedback-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.feedback-btn {
+  flex: 1; min-width: 90px; padding: 14px 12px; border-radius: var(--radius);
+  font-size: 0.9rem; font-weight: 500; text-align: center;
+  cursor: pointer; transition: all 0.15s; border: 2px solid transparent;
+}
+.feedback-btn:active { transform: scale(0.96); }
+.fb-correct { background: var(--green-dim); color: var(--green); border-color: rgba(34,197,94,0.2); }
+.fb-correct:hover { background: rgba(34,197,94,0.2); border-color: var(--green); }
+.fb-incomplete { background: var(--yellow-dim); color: var(--yellow); border-color: rgba(234,179,8,0.2); }
+.fb-incomplete:hover { background: rgba(234,179,8,0.2); border-color: var(--yellow); }
+.fb-incorrect { background: var(--red-dim); color: var(--red); border-color: rgba(239,68,68,0.2); }
+.fb-incorrect:hover { background: rgba(239,68,68,0.2); border-color: var(--red); }
+
+/* ═══ Suggestions ═══ */
 .suggestions { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
-.suggestions button { text-align: left; font-size: 0.85rem; padding: 8px 12px; }
+.suggestions button { text-align: left; font-size: 0.84rem; padding: 10px 14px; }
+
+/* ═══ Tabs ═══ */
+.tabs {
+  display: flex; gap: 2px; background: var(--surface2); border-radius: var(--radius);
+  padding: 3px; margin-bottom: 16px;
+}
+.tab {
+  flex: 1; padding: 8px 12px; border-radius: 7px; font-size: 0.82rem;
+  font-weight: 500; text-align: center; cursor: pointer;
+  transition: all 0.15s; background: transparent; color: var(--text3);
+  border: none;
+}
+.tab:hover { color: var(--text2); background: var(--surface3); }
+.tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+/* ═══ Utility ═══ */
 .hidden { display: none !important; }
 .flex-row { display: flex; gap: 8px; align-items: center; }
 .mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
 .mt-16 { margin-top: 16px; }
-.text-sm { font-size: 0.8rem; color: var(--text2); }
-.answer-content { white-space: pre-wrap; font-size: 0.95rem; line-height: 1.7; }
-.progress-bar {
-  background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; margin: 12px 0;
+.mb-8 { margin-bottom: 8px; }
+.gap-12 { gap: 12px; }
+.answer-content { white-space: pre-wrap; font-size: 0.93rem; line-height: 1.75; }
+.trace-section { margin-bottom: 16px; }
+.w-full { width: 100%; }
+
+/* ═══ Landing hero ═══ */
+.hero { text-align: center; padding: 48px 0 32px; }
+.hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 8px; }
+.hero h1 span { color: var(--accent); }
+.hero p { font-size: 1rem; color: var(--text2); max-width: 480px; margin: 0 auto; }
+
+/* ═══ Repo input group ═══ */
+.input-group {
+  display: flex; gap: 0; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; transition: border-color 0.15s;
 }
-.progress-bar .fill {
-  height: 100%; background: var(--accent); transition: width 0.3s;
+.input-group:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.input-group input {
+  border: none; border-radius: 0; flex: 1; background: transparent;
+}
+.input-group input:focus { box-shadow: none; }
+.input-group button {
+  border-radius: 0; padding: 10px 18px; white-space: nowrap; }
+
+/* ═══ Repo info bar ═══ */
+.repo-info-bar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 14px; background: var(--surface2); border-radius: var(--radius-sm);
+  font-size: 0.8rem; color: var(--text2); margin-bottom: 16px;
+}
+.repo-info-bar .owner-repo { color: var(--text); font-weight: 600; }
+.repo-info-bar code { font-family: var(--mono); font-size: 0.75rem; color: var(--text3); }
+
+/* ═══ Steps indicator ═══ */
+.steps {
+  display: flex; flex-direction: column; gap: 0; margin: 20px 0;
+}
+.step {
+  display: flex; align-items: flex-start; gap: 14px; padding: 12px 0;
+  position: relative;
+}
+.step:not(:last-child)::after {
+  content: ''; position: absolute; left: 13px; top: 38px;
+  width: 2px; height: calc(100% - 26px); background: var(--border);
+}
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 600;
+  background: var(--surface2); border: 2px solid var(--border); color: var(--text3);
+  transition: all 0.3s;
+}
+.step.active .step-dot { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.step.done .step-dot { border-color: var(--green); color: #fff; background: var(--green); }
+.step-text { padding-top: 3px; }
+.step-text .step-title { font-size: 0.88rem; font-weight: 500; color: var(--text); }
+.step-text .step-desc { font-size: 0.8rem; color: var(--text3); margin-top: 2px; }
+
+/* ═══ Responsive ═══ */
+@media (max-width: 600px) {
+  body { padding: 0 12px; }
+  .hero { padding: 32px 0 24px; }
+  .hero h1 { font-size: 1.5rem; }
+  .card { padding: 18px 16px; }
+  .input-group { flex-direction: column; }
+  .input-group button { border-radius: 0 0 var(--radius) var(--radius); }
+  .feedback-row { flex-direction: column; }
+  .feedback-btn { min-width: auto; }
+  .tabs { flex-direction: column; }
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Header -->
-  <div style="margin-bottom: 24px; text-align: center;">
-    <h1>AIS</h1>
-    <p style="font-size: 0.85rem;">Architecture Intelligence System — MVP</p>
-  </div>
-
   <!-- Error display -->
   <div id="error-box" class="error-box hidden"></div>
 
-  <!-- ═══ SCREEN 1: START ═══ -->
-  <div id="screen-start">
+  <!-- ═══ SCREEN 0: LANDING ═══ -->
+  <div id="screen-landing" class="fade-in">
+    <div class="hero">
+      <h1>Understand any <span>codebase</span></h1>
+      <p>Paste a GitHub repository URL. AIS will analyze its architecture and answer your questions with evidence.</p>
+    </div>
+
     <div class="card">
-      <h2>Start a Session</h2>
-      <p>Choose a demo project or provide your own project path.</p>
-
-      <h3 class="mt-16">Demo Project</h3>
-      <div id="demo-info" class="card" style="background: var(--bg); border-style: dashed;">
-        <p style="font-weight: 500; color: var(--text);">AIS Self-Analysis</p>
-        <p style="font-size: 0.8rem; margin-top: 4px;" id="demo-desc">Loading...</p>
-      </div>
-      <button id="btn-demo" onclick="startDemo()" style="margin-top: 8px;">Start Demo Session</button>
-
-      <h3 class="mt-16">My Project</h3>
-      <div class="card" style="background: var(--bg); border-style: dashed; opacity: 0.7;">
-        <p style="color: var(--text2);">Upload your own project for analysis.</p>
-        <p style="color: var(--text2); font-size: 0.8rem; margin-top: 4px;">Coming in a later version.</p>
+      <!-- Mode tabs -->
+      <div class="tabs" id="mode-tabs">
+        <button class="tab active" data-mode="github" onclick="switchMode('github')">
+          GitHub Repository
+        </button>
+        <button class="tab" data-mode="local" onclick="switchMode('local')">
+          Local Project
+        </button>
+        <button class="tab" data-mode="demo" onclick="switchMode('demo')">
+          Demo
+        </button>
       </div>
 
-      <h3 class="mt-16">Or Provide a Path</h3>
-      <input type="text" id="project-path" placeholder="/path/to/your/project" />
-      <button class="secondary mt-8" onclick="startCustom()" style="width: 100%;">Start with Custom Path</button>
+      <!-- GitHub mode -->
+      <div id="mode-github">
+        <p class="mb-8">Paste a public GitHub repository URL to analyze.</p>
+        <div class="input-group">
+          <input type="text" id="github-url" placeholder="https://github.com/owner/repo"
+                 onkeydown="if(event.key==='Enter')resolveRepo()" />
+          <button class="btn-primary" onclick="resolveRepo()" id="btn-resolve">Analyze</button>
+        </div>
+        <p class="text-sm mt-8">Only public repositories. Shallow clone, read-only analysis. No code execution.</p>
+      </div>
+
+      <!-- Local mode -->
+      <div id="mode-local" class="hidden">
+        <p class="mb-8">Provide a local project path (must be under an allowed root directory).</p>
+        <input type="text" id="local-path" placeholder="/path/to/your/project" />
+        <button class="btn-primary btn-block mt-8" onclick="startLocal()">Start Analysis</button>
+      </div>
+
+      <!-- Demo mode -->
+      <div id="mode-demo" class="hidden">
+        <div class="card card-compact" style="background: var(--bg); border-style: dashed;">
+          <p style="font-weight: 600; color: var(--text); margin-bottom: 4px;">AIS Self-Analysis</p>
+          <p class="text-sm" id="demo-desc">Loading...</p>
+        </div>
+        <button class="btn-primary btn-block mt-8" onclick="startDemo()">Try Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 1: CLONING PROGRESS ═══ -->
+  <div id="screen-cloning" class="hidden fade-in">
+    <div class="card" style="text-align: center; padding: 40px 24px;">
+      <div class="loading" style="justify-content: center; font-size: 0.95rem;">
+        <div class="spinner"></div>
+        <span id="cloning-status">Connecting to GitHub...</span>
+      </div>
+
+      <div class="steps mt-16" id="clone-steps">
+        <div class="step active" id="step-validate">
+          <div class="step-dot">1</div>
+          <div class="step-text">
+            <div class="step-title">Validating URL</div>
+            <div class="step-desc">Checking repository format</div>
+          </div>
+        </div>
+        <div class="step" id="step-clone">
+          <div class="step-dot">2</div>
+          <div class="step-text">
+            <div class="step-title">Cloning Repository</div>
+            <div class="step-desc">Shallow clone (latest commit only)</div>
+          </div>
+        </div>
+        <div class="step" id="step-prepare">
+          <div class="step-dot">3</div>
+          <div class="step-text">
+            <div class="step-title">Preparing Analysis</div>
+            <div class="step-desc">Scanning structure and building index</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-ghost mt-16" onclick="cancelClone()">Cancel</button>
     </div>
   </div>
 
   <!-- ═══ SCREEN 2: QUESTION ═══ -->
-  <div id="screen-question" class="hidden">
+  <div id="screen-question" class="hidden fade-in">
+    <!-- Repo info bar -->
+    <div class="repo-info-bar" id="repo-info-bar">
+      <span class="owner-repo" id="repo-owner-name">owner/repo</span>
+      <span class="badge badge-accent" id="repo-mode-badge">GitHub</span>
+      <code id="repo-commit">abc1234</code>
+    </div>
+
     <div class="card">
-      <h2>Ask a Question</h2>
-      <p>What would you like to know about this project's architecture?</p>
+      <h2>What would you like to know?</h2>
+      <p>Ask about architecture, patterns, dependencies, or any aspect of this codebase.</p>
 
       <div id="suggestions-container" class="suggestions"></div>
 
-      <textarea id="question-input" placeholder="e.g., What is the overall architecture?" rows="3"></textarea>
-      <button class="mt-8" onclick="submitQuestion()" style="width: 100%;" id="btn-ask">Submit Question</button>
-    </div>
-    <div class="text-sm" style="text-align: center; margin-top: 8px;">
-      Session: <span id="session-id-label"></span>
+      <textarea id="question-input" placeholder="e.g., What is the overall architecture of this project?"
+                rows="3" onkeydown="if(event.key==='Enter'&&event.ctrlKey)submitQuestion()"></textarea>
+      <div class="flex-row mt-8">
+        <button class="btn-primary" style="flex:1" onclick="submitQuestion()" id="btn-ask">
+          Ask
+        </button>
+        <span class="text-sm" style="white-space:nowrap">Ctrl+Enter</span>
+      </div>
     </div>
   </div>
 
   <!-- ═══ SCREEN 3: PROCESSING ═══ -->
-  <div id="screen-processing" class="hidden">
-    <div class="card" style="text-align: center; padding: 40px 20px;">
-      <div class="loading" style="justify-content: center; font-size: 1rem;">Processing your question...</div>
-      <div class="progress-bar mt-16"><div class="fill" id="progress-fill" style="width: 0%"></div></div>
-      <p class="text-sm mt-8" id="processing-step">Discovering project structure...</p>
+  <div id="screen-processing" class="hidden fade-in">
+    <div class="card" style="text-align: center; padding: 40px 24px;">
+      <div class="loading" style="justify-content: center; font-size: 0.95rem;">
+        <div class="spinner"></div>
+        <span id="processing-step">Discovering project structure...</span>
+      </div>
+      <div class="progress-bar mt-16"><div class="fill" id="progress-fill" style="width: 5%"></div></div>
+      <p class="text-sm mt-8">This may take a moment for larger codebases.</p>
     </div>
   </div>
 
   <!-- ═══ SCREEN 4: RESPONSE ═══ -->
-  <div id="screen-response" class="hidden">
+  <div id="screen-response" class="hidden fade-in">
     <div class="card">
       <h2>Answer</h2>
       <div class="answer-content" id="answer-content"></div>
@@ -184,31 +412,37 @@ textarea { resize: vertical; min-height: 80px; }
   </div>
 
   <!-- ═══ SCREEN 5: FEEDBACK ═══ -->
-  <div id="screen-feedback" class="hidden">
-    <div class="card">
-      <h2>Was this answer helpful?</h2>
-      <p>Your feedback improves AIS accuracy. It never modifies the underlying model (Feedback != Truth).</p>
+  <div id="screen-feedback" class="hidden fade-in">
+    <div class="card" style="text-align: center;">
+      <h2 style="text-align:left">Was this answer helpful?</h2>
+      <p style="text-align:left">Your feedback improves AIS. It never modifies the underlying model.</p>
 
-      <div class="feedback-buttons">
-        <button class="success" onclick="submitFeedback('correct')">Correct</button>
-        <button class="warn" onclick="submitFeedback('incomplete')">Incomplete</button>
-        <button class="danger" onclick="submitFeedback('incorrect')">Incorrect</button>
+      <div class="feedback-row">
+        <button class="feedback-btn fb-correct" onclick="submitFeedback('correct')">
+          Correct
+        </button>
+        <button class="feedback-btn fb-incomplete" onclick="submitFeedback('incomplete')">
+          Partial
+        </button>
+        <button class="feedback-btn fb-incorrect" onclick="submitFeedback('incorrect')">
+          Incorrect
+        </button>
       </div>
 
-      <textarea id="feedback-comment" placeholder="Optional: explain what was wrong or missing..." class="mt-16" rows="2"></textarea>
+      <textarea id="feedback-comment" placeholder="Optional: what was missing or wrong?" class="mt-16" rows="2"></textarea>
     </div>
   </div>
 
   <!-- ═══ SCREEN 6: TRACE ═══ -->
-  <div id="screen-trace" class="hidden">
+  <div id="screen-trace" class="hidden fade-in">
     <div class="card">
       <h2>Session Trace</h2>
-      <p class="text-sm">Complete evidence chain for this session.</p>
+      <p class="text-sm mb-8">Complete evidence chain for this session.</p>
 
       <div class="trace-section">
         <h3>Session</h3>
-        <p>ID: <code id="trace-session-id"></code></p>
-        <p>Provenance: <span class="badge" id="trace-provenance"></span></p>
+        <p class="text-sm">ID: <code id="trace-session-id"></code></p>
+        <p class="text-sm">Provenance: <span class="badge" id="trace-provenance"></span></p>
       </div>
 
       <div class="trace-section" id="trace-question-section">
@@ -242,7 +476,7 @@ textarea { resize: vertical; min-height: 80px; }
       </div>
     </div>
 
-    <button class="secondary mt-16" onclick="resetToStart()" style="width: 100%;">Start New Session</button>
+    <button class="btn-secondary btn-block mt-12" onclick="resetToStart()">Analyze Another Repository</button>
   </div>
 </div>
 
@@ -252,6 +486,9 @@ textarea { resize: vertical; min-height: 80px; }
 // ═══════════════════════════════════════════════════════════════
 
 let currentSessionId = null;
+let currentCloneId = null;
+let currentRepoInfo = null;
+let currentMode = 'github'; // 'github' | 'local' | 'demo'
 let demoProjectPath = null;
 let isDemo = false;
 
@@ -261,19 +498,22 @@ const API = '';
 // SCREEN MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 
+const SCREENS = ['landing', 'cloning', 'question', 'processing', 'response', 'feedback', 'trace'];
+
 function showScreen(name) {
-  const screens = ['start', 'question', 'processing', 'response', 'feedback', 'trace'];
-  for (const s of screens) {
+  for (const s of SCREENS) {
     const el = document.getElementById('screen-' + s);
     if (el) el.classList.toggle('hidden', s !== name);
   }
   hideError();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showError(msg) {
   const el = document.getElementById('error-box');
   el.textContent = msg;
   el.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function hideError() {
@@ -281,7 +521,22 @@ function hideError() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// API CALLS
+// MODE SWITCHING
+// ═══════════════════════════════════════════════════════════════
+
+function switchMode(mode) {
+  currentMode = mode;
+  for (const tab of document.querySelectorAll('#mode-tabs .tab')) {
+    tab.classList.toggle('active', tab.dataset.mode === mode);
+  }
+  document.getElementById('mode-github').classList.toggle('hidden', mode !== 'github');
+  document.getElementById('mode-local').classList.toggle('hidden', mode !== 'local');
+  document.getElementById('mode-demo').classList.toggle('hidden', mode !== 'demo');
+  hideError();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// API
 // ═══════════════════════════════════════════════════════════════
 
 async function apiPost(path, body) {
@@ -303,7 +558,85 @@ async function apiGet(path) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// START SCREEN
+// LANDING: GITHUB MODE
+// ═══════════════════════════════════════════════════════════════
+
+function setStepState(stepId, state) {
+  const el = document.getElementById(stepId);
+  if (!el) return;
+  el.classList.remove('active', 'done');
+  if (state) el.classList.add(state);
+}
+
+async function resolveRepo() {
+  const url = document.getElementById('github-url').value.trim();
+  if (!url) { showError('Please enter a GitHub repository URL.'); return; }
+
+  document.getElementById('btn-resolve').disabled = true;
+  showScreen('cloning');
+
+  // Step 1: Validating
+  setStepState('step-validate', 'active');
+  setStepState('step-clone', '');
+  setStepState('step-prepare', '');
+  document.getElementById('cloning-status').textContent = 'Validating URL...';
+
+  // Small delay to show the animation
+  await sleep(400);
+
+  try {
+    const data = await apiPost('/api/resolve-repo', { url });
+
+    // Step 1 done, Step 2 active
+    setStepState('step-validate', 'done');
+    setStepState('step-clone', 'active');
+    document.getElementById('cloning-status').textContent = 'Cloning repository...';
+
+    await sleep(600);
+
+    // Step 2 done, Step 3 active
+    setStepState('step-clone', 'done');
+    setStepState('step-prepare', 'active');
+    document.getElementById('cloning-status').textContent = 'Preparing analysis...';
+
+    await sleep(400);
+
+    // Step 3 done
+    setStepState('step-prepare', 'done');
+    document.getElementById('cloning-status').textContent = 'Ready!';
+
+    await sleep(300);
+
+    // Store clone info
+    currentCloneId = data.cloneId;
+    currentRepoInfo = data.repoInfo;
+
+    // Create session with cloned path
+    await createSession(data.projectPath, false, data.repoInfo);
+  } catch (e) {
+    showScreen('landing');
+    document.getElementById('btn-resolve').disabled = false;
+    showError(e.message);
+  }
+}
+
+function cancelClone() {
+  showScreen('landing');
+  document.getElementById('btn-resolve').disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LANDING: LOCAL MODE
+// ═══════════════════════════════════════════════════════════════
+
+async function startLocal() {
+  const path = document.getElementById('local-path').value.trim();
+  if (!path) { showError('Please enter a project path.'); return; }
+  await createSession(path, false);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LANDING: DEMO MODE
 // ═══════════════════════════════════════════════════════════════
 
 async function loadDemos() {
@@ -314,9 +647,9 @@ async function loadDemos() {
       demoProjectPath = demo.projectPath;
       document.getElementById('demo-desc').textContent = demo.description || '';
     }
-  } catch (e) {
+  } catch {
     document.getElementById('demo-desc').textContent =
-      'AIS codebase self-analysis — 37 modules, evidence loop, interaction layer, cognitive runtime.';
+      'AIS codebase self-analysis — TypeScript library with 37 modules, evidence loop, and cognitive runtime.';
   }
 }
 
@@ -328,25 +661,59 @@ async function startDemo() {
   await createSession(demoProjectPath, true);
 }
 
-async function startCustom() {
-  const path = document.getElementById('project-path').value.trim();
-  if (!path) { showError('Please enter a project path.'); return; }
-  await createSession(path, false);
-}
+// ═══════════════════════════════════════════════════════════════
+// SESSION CREATION
+// ═══════════════════════════════════════════════════════════════
 
-async function createSession(projectPath, isDemoMode) {
+async function createSession(projectPath, isDemoMode, repoInfo) {
   try {
     isDemo = isDemoMode;
+    currentRepoInfo = repoInfo || null;
     const data = await apiPost('/api/session', { projectPath, isDemo: isDemoMode });
     currentSessionId = data.sessionId;
-    document.getElementById('session-id-label').textContent =
-      currentSessionId.substring(0, 8) + '...';
+
+    // Update repo info bar
+    updateRepoInfoBar();
+
     showScreen('question');
     if (isDemoMode) loadSuggestions();
   } catch (e) {
+    if (currentMode === 'github') {
+      showScreen('landing');
+      document.getElementById('btn-resolve').disabled = false;
+    }
     showError(e.message);
   }
 }
+
+function updateRepoInfoBar() {
+  const bar = document.getElementById('repo-info-bar');
+  const nameEl = document.getElementById('repo-owner-name');
+  const modeEl = document.getElementById('repo-mode-badge');
+  const commitEl = document.getElementById('repo-commit');
+
+  if (currentRepoInfo) {
+    nameEl.textContent = currentRepoInfo.owner + '/' + currentRepoInfo.name;
+    modeEl.textContent = 'GitHub';
+    modeEl.className = 'badge badge-accent';
+    commitEl.textContent = currentRepoInfo.commit;
+    commitEl.style.display = '';
+  } else if (isDemo) {
+    nameEl.textContent = 'AIS Self-Analysis';
+    modeEl.textContent = 'Demo';
+    modeEl.className = 'badge badge-green';
+    commitEl.style.display = 'none';
+  } else {
+    nameEl.textContent = 'Local Project';
+    modeEl.textContent = 'Local';
+    modeEl.className = 'badge badge-yellow';
+    commitEl.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUGGESTIONS
+// ═══════════════════════════════════════════════════════════════
 
 async function loadSuggestions() {
   try {
@@ -356,19 +723,17 @@ async function loadSuggestions() {
     if (data.demos && data.demos[0] && data.demos[0].suggestedQuestions) {
       for (const q of data.demos[0].suggestedQuestions) {
         const btn = document.createElement('button');
-        btn.className = 'secondary';
+        btn.className = 'btn-secondary';
         btn.textContent = q;
-        btn.onclick = () => {
-          document.getElementById('question-input').value = q;
-        };
+        btn.onclick = () => { document.getElementById('question-input').value = q; };
         container.appendChild(btn);
       }
     }
-  } catch (e) { /* suggestions are optional */ }
+  } catch { /* suggestions are optional */ }
 }
 
 // ═══════════════════════════════════════════════════════════════
-// QUESTION SCREEN
+// QUESTION
 // ═══════════════════════════════════════════════════════════════
 
 async function submitQuestion() {
@@ -389,7 +754,7 @@ async function submitQuestion() {
     if (res.status === 503) {
       showScreen('question');
       document.getElementById('btn-ask').disabled = false;
-      showError('Real inference is not available. The server requires AIS_EXECUTION_REAL=true, AIS_REAL_LLM=true, and OPENAI_API_KEY to be set.');
+      showError('Real inference is not available. The server requires AIS_EXECUTION_REAL=true, AIS_REAL_LLM=true, and OPENAI_API_KEY.');
       return;
     }
     if (!res.ok) throw new Error(data.error || 'Request failed');
@@ -408,10 +773,10 @@ function animateProgress() {
   const step = document.getElementById('processing-step');
   const steps = [
     { w: '20%', t: 'Discovering project structure...' },
-    { w: '40%', t: 'Building architecture model...' },
-    { w: '60%', t: 'Assembling context...' },
-    { w: '80%', t: 'Generating answer...' },
-    { w: '95%', t: 'Extracting evidence...' },
+    { w: '45%', t: 'Building architecture graph...' },
+    { w: '70%', t: 'Assembling context for your question...' },
+    { w: '90%', t: 'Generating answer...' },
+    { w: '97%', t: 'Extracting evidence...' },
   ];
   let i = 0;
   fill.style.width = '5%';
@@ -421,15 +786,12 @@ function animateProgress() {
       step.textContent = steps[i].t;
       i++;
     }
-  }, 1500);
-  window._clearProgress = () => {
-    clearInterval(progressInterval);
-    fill.style.width = '100%';
-  };
+  }, 2000);
+  window._clearProgress = () => { clearInterval(progressInterval); fill.style.width = '100%'; };
 }
 
 // ═══════════════════════════════════════════════════════════════
-// RESPONSE SCREEN
+// RESPONSE
 // ═══════════════════════════════════════════════════════════════
 
 function renderResponse(data) {
@@ -446,11 +808,11 @@ function renderResponse(data) {
     const div = document.createElement('div');
     div.className = 'claim-item';
     const badge = claim.isVerified
-      ? '<span class="badge green">verified</span>'
-      : '<span class="badge yellow">unverified</span>';
+      ? '<span class="badge badge-green">verified</span>'
+      : '<span class="badge badge-yellow">unverified</span>';
     div.innerHTML = badge +
       '<span>' + escHtml(claim.statement) + '</span>' +
-      '<span class="text-sm" style="margin-left: auto;">' + claim.evidenceCount + ' evidence</span>';
+      '<span class="text-sm" style="margin-left:auto">' + claim.evidenceCount + ' evidence</span>';
     claimsList.appendChild(div);
   }
 
@@ -469,18 +831,20 @@ function renderResponse(data) {
     evidenceList.appendChild(div);
   }
 
-  // After viewing response, go to feedback
-  setTimeout(() => showScreen('feedback'), 500);
+  // Auto-advance to feedback after a brief view
+  setTimeout(() => showScreen('feedback'), 600);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FEEDBACK SCREEN
+// FEEDBACK
 // ═══════════════════════════════════════════════════════════════
 
 async function submitFeedback(verdict) {
   const comment = document.getElementById('feedback-comment').value.trim();
   try {
-    await apiPost('/api/session/' + currentSessionId + '/feedback', { verdict, comment: comment || undefined });
+    await apiPost('/api/session/' + currentSessionId + '/feedback', {
+      verdict, comment: comment || undefined,
+    });
     await loadTrace();
   } catch (e) {
     showError(e.message);
@@ -488,7 +852,7 @@ async function submitFeedback(verdict) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TRACE SCREEN
+// TRACE
 // ═══════════════════════════════════════════════════════════════
 
 async function loadTrace() {
@@ -507,7 +871,6 @@ function renderTrace(trace) {
   document.getElementById('trace-question').textContent = trace.question || '(no question)';
   document.getElementById('trace-answer').textContent = trace.answer || '(no answer)';
 
-  // Claims
   const tc = document.getElementById('trace-claims-count');
   tc.textContent = (trace.claims || []).length;
   const tcl = document.getElementById('trace-claims-list');
@@ -519,7 +882,6 @@ function renderTrace(trace) {
     tcl.appendChild(div);
   }
 
-  // Sources
   const ts = document.getElementById('trace-sources-count');
   ts.textContent = (trace.sources || []).length;
   const tsl = document.getElementById('trace-sources-list');
@@ -533,18 +895,16 @@ function renderTrace(trace) {
     tsl.appendChild(div);
   }
 
-  // Feedback
   const tfl = document.getElementById('trace-feedback-list');
   tfl.innerHTML = '';
   for (const f of (trace.feedback || [])) {
     const div = document.createElement('div');
     div.className = 'claim-item';
-    div.innerHTML = '<span class="badge green">' + escHtml(f.type) + '</span>' +
+    div.innerHTML = '<span class="badge badge-green">' + escHtml(f.type) + '</span>' +
       '<span>' + escHtml(f.content || '(no comment)') + '</span>';
     tfl.appendChild(div);
   }
 
-  // Findings
   const tfrl = document.getElementById('trace-findings-list');
   tfrl.innerHTML = '';
   if ((trace.findings || []).length === 0) {
@@ -553,7 +913,7 @@ function renderTrace(trace) {
     for (const f of (trace.findings || [])) {
       const div = document.createElement('div');
       div.className = 'claim-item';
-      const sevClass = f.severity === 'medium' ? 'yellow' : 'red';
+      const sevClass = f.severity === 'medium' ? 'badge-yellow' : 'badge-red';
       div.innerHTML = '<span class="badge ' + sevClass + '">' + escHtml(f.severity) + '</span>' +
         '<span>' + escHtml(f.description) + '</span>';
       tfrl.appendChild(div);
@@ -567,10 +927,14 @@ function renderTrace(trace) {
 
 function resetToStart() {
   currentSessionId = null;
+  currentCloneId = null;
+  currentRepoInfo = null;
   document.getElementById('question-input').value = '';
   document.getElementById('feedback-comment').value = '';
   document.getElementById('btn-ask').disabled = false;
-  showScreen('start');
+  document.getElementById('btn-resolve').disabled = false;
+  document.getElementById('github-url').value = '';
+  showScreen('landing');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -578,10 +942,12 @@ function resetToStart() {
 // ═══════════════════════════════════════════════════════════════
 
 function escHtml(str) {
- if (!str) return '';
- return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-   .replace(/"/g, '&quot;');
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ═══════════════════════════════════════════════════════════════
 // INIT

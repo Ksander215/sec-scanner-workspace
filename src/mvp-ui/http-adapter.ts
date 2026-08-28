@@ -8,6 +8,7 @@
  * Architecture: UI → HTTP Adapter → InteractionService → EvidenceLoopService → ExecutionEngine
  *
  * Endpoints:
+ *   POST   /api/resolve-repo       → resolve GitHub URL, clone repo
  *   POST   /api/session              → startInteraction
  *   POST   /api/session/:id/question  → submitQuestion
  *   POST   /api/session/:id/feedback  → submitFeedback
@@ -31,6 +32,7 @@ import { fileURLToPath } from 'node:url';
 import type { InteractionService } from '../core/interaction-layer/interaction-service.js';
 import { InteractionError, EmptyQuestionError, InteractionStateError, InteractionSessionNotFoundError, ExecutionFailedError } from '../core/interaction-layer/errors.js';
 import { PathSecurityService } from './path-security.js';
+import { GitHubResolver, GitHubResolverError } from './github-resolver.js';
 import { getAllDemoConfigs } from './demo-config.js';
 
 // ═══════════════════════════════════════════════════════════════════
@@ -49,6 +51,11 @@ export interface HttpAdapterConfig {
    * TASK-MVP-FREE-UI-001 §8, §13 — DEMO != FAKE.
    */
   readonly realInferenceAvailable?: boolean;
+  /**
+   * GitHub repository resolver for cloning public repos.
+   * TASK-MVP-FREE-REPOSITORY-UX-001
+   */
+  readonly githubResolver?: GitHubResolver;
 }
 
 interface RouteMatch {
@@ -74,6 +81,7 @@ function getDefaultSpaPath(): string {
 export class HttpAdapter {
   private readonly service: InteractionService;
   private readonly pathSecurity: PathSecurityService;
+  private readonly githubResolver: GitHubResolver | undefined;
   private readonly port: number;
   private readonly corsOrigin: string;
   private readonly spaHtml: string;
@@ -86,6 +94,7 @@ export class HttpAdapter {
     this.port = config.port ?? 3456;
     this.corsOrigin = config.corsOrigin ?? '*';
     this.realInferenceAvailable = config.realInferenceAvailable ?? false;
+    this.githubResolver = config.githubResolver;
 
     // Load SPA HTML at startup
     const spaPath = config.spaPath ?? getDefaultSpaPath();
@@ -180,6 +189,13 @@ export class HttpAdapter {
     res: ServerResponse,
   ): Promise<void> {
     try {
+      // POST /api/resolve-repo — TASK-MVP-FREE-REPOSITORY-UX-001
+      if (method === 'POST' && path === '/api/resolve-repo') {
+        const body = await this.readBody(req);
+        await this.handleResolveRepo(body, res);
+        return;
+      }
+
       // POST /api/session
       if (method === 'POST' && path === '/api/session') {
         const body = await this.readBody(req);
@@ -240,6 +256,8 @@ export class HttpAdapter {
         return;
       }
       const mapped = this.mapError(err);
+      // TASK-MVP-FREE-REAL-E2E-001: temporary diagnostic logging for real inference debugging
+      console.error('[MVP-UI] Request error:', mapped.status, err instanceof Error ? err.message : String(err), err instanceof Error ? err.stack?.substring(0, 500) : '');
       this.sendError(res, mapped.status, mapped.message);
     }
   }
@@ -247,6 +265,41 @@ export class HttpAdapter {
   // ─────────────────────────────────────────────────────────────
   // HANDLERS
   // ─────────────────────────────────────────────────────────────
+
+  /** POST /api/resolve-repo — Clone a GitHub repository for analysis. */
+  private async handleResolveRepo(body: unknown, res: ServerResponse): Promise<void> {
+    if (!this.githubResolver) {
+      this.sendError(res, 503, 'GitHub repository resolution is not available on this server.');
+      return;
+    }
+
+    const parsed = this.parseObject(body);
+    const url = this.requireString(parsed, 'url');
+
+    try {
+      const result = await this.githubResolver.resolve(url);
+      this.sendJson(res, 200, {
+        cloneId: result.cloneId,
+        projectPath: result.projectPath,
+        repoInfo: result.repoInfo,
+      });
+    } catch (err) {
+      if (err instanceof GitHubResolverError) {
+        const statusMap: Record<string, number> = {
+          INVALID_URL: 400,
+          REPO_NOT_FOUND: 404,
+          REPO_PRIVATE: 403,
+          REPO_TOO_LARGE: 413,
+          CLONE_TIMEOUT: 504,
+          CLONE_FAILED: 502,
+        };
+        const status = statusMap[err.code] ?? 400;
+        this.sendError(res, status, err.message);
+        return;
+      }
+      throw err;
+    }
+  }
 
   /** POST /api/session — Start a new interaction session. */
   private async handleStartSession(body: unknown, res: ServerResponse): Promise<void> {
