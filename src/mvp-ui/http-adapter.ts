@@ -15,6 +15,14 @@
  *   GET    /api/session/:id/trace     → getTrace
  *   GET    /api/session/:id           → getSessionView
  *   GET    /api/demos                 → list demo projects
+ *   GET    /api/project/:id/history   → session history
+ *   GET    /api/project/:id/insights  → list insights
+ *   POST   /api/project/:id/insights  → create insight
+ *   POST   /api/project/:id/insights/:iid/evaluate → evaluate insight
+ *   POST   /api/project/:id/insights/:iid/decide    → user decision
+ *   GET    /api/project/:id/insights/revisitable → revisitable insights
+ *   GET    /api/project/:id/insights/counts       → insight counts
+ *   GET    /api/recent                 → recent sessions + insight summary
  *   GET    /                         → serve SPA
  *
  * Security:
@@ -34,6 +42,9 @@ import { InteractionError, EmptyQuestionError, InteractionStateError, Interactio
 import { PathSecurityService } from './path-security.js';
 import { GitHubResolver, GitHubResolverError } from './github-resolver.js';
 import { getAllDemoConfigs } from './demo-config.js';
+import type { ProjectService } from './project-service.js';
+import type { InsightService } from './insight-service.js';
+import { GoalAlignment } from './project-types.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // TYPES
@@ -45,17 +56,10 @@ export interface HttpAdapterConfig {
   readonly port?: number;
   readonly corsOrigin?: string;
   readonly spaPath?: string;
-  /**
-   * Whether real AIS inference is available (AIS_EXECUTION_REAL=true + AIS_REAL_LLM=true + OPENAI_API_KEY).
-   * When false, question submission returns 503 instead of silently returning empty results.
-   * TASK-MVP-FREE-UI-001 §8, §13 — DEMO != FAKE.
-   */
   readonly realInferenceAvailable?: boolean;
-  /**
-   * GitHub repository resolver for cloning public repos.
-   * TASK-MVP-FREE-REPOSITORY-UX-001
-   */
   readonly githubResolver?: GitHubResolver;
+  readonly projectService?: ProjectService;
+  readonly insightService?: InsightService;
 }
 
 interface RouteMatch {
@@ -82,6 +86,8 @@ export class HttpAdapter {
   private readonly service: InteractionService;
   private readonly pathSecurity: PathSecurityService;
   private readonly githubResolver: GitHubResolver | undefined;
+  private readonly projectService: ProjectService | undefined;
+  private readonly insightService: InsightService | undefined;
   private readonly port: number;
   private readonly corsOrigin: string;
   private readonly spaHtml: string;
@@ -95,6 +101,8 @@ export class HttpAdapter {
     this.corsOrigin = config.corsOrigin ?? '*';
     this.realInferenceAvailable = config.realInferenceAvailable ?? false;
     this.githubResolver = config.githubResolver;
+    this.projectService = config.projectService;
+    this.insightService = config.insightService;
 
     // Load SPA HTML at startup
     const spaPath = config.spaPath ?? getDefaultSpaPath();
@@ -211,37 +219,89 @@ export class HttpAdapter {
 
       // Match /api/session/:id/*
       const sessionMatch = this.matchSessionRoute(path);
-      if (!sessionMatch) {
-        this.sendError(res, 404, 'Not found');
-        return;
+      if (sessionMatch) {
+        const sessionId = sessionMatch.params.id;
+        const subPath = sessionMatch.params.sub ?? '';
+
+        if (method === 'GET' && !subPath) {
+          this.handleGetSession(sessionId, res);
+          return;
+        }
+        if (method === 'GET' && subPath === 'trace') {
+          this.handleGetTrace(sessionId, res);
+          return;
+        }
+        if (method === 'POST' && subPath === 'question') {
+          const body = await this.readBody(req);
+          await this.handleSubmitQuestion(sessionId, body, res);
+          return;
+        }
+        if (method === 'POST' && subPath === 'feedback') {
+          const body = await this.readBody(req);
+          await this.handleSubmitFeedback(sessionId, body, res);
+          return;
+        }
       }
 
-      const sessionId = sessionMatch.params.id;
-      const subPath = sessionMatch.params.sub ?? '';
+      // ── Project + Insight routes ──────────────────────────────
+      const projectMatch = this.matchProjectRoute(path);
+      if (projectMatch && this.projectService && this.insightService) {
+        const { id: projectId, sub: projectSub } = projectMatch.params;
 
-      // GET /api/session/:id
-      if (method === 'GET' && !subPath) {
-        this.handleGetSession(sessionId, res);
-        return;
+        // GET /api/project/:id/history
+        if (method === 'GET' && projectSub === 'history') {
+          this.handleGetProjectHistory(projectId, res);
+          return;
+        }
+
+        // GET /api/project/:id/insights/counts
+        if (method === 'GET' && projectSub === 'insights/counts') {
+          this.handleGetInsightCounts(projectId, res);
+          return;
+        }
+
+        // GET /api/project/:id/insights/revisitable
+        if (method === 'GET' && projectSub === 'insights/revisitable') {
+          this.handleGetRevisitableInsights(projectId, res);
+          return;
+        }
+
+        // POST /api/project/:id/insights (create)
+        if (method === 'POST' && projectSub === 'insights') {
+          const body = await this.readBody(req);
+          await this.handleCreateInsight(projectId, body, res);
+          return;
+        }
+
+        // GET /api/project/:id/insights (list)
+        if (method === 'GET' && projectSub === 'insights') {
+          this.handleListInsights(projectId, res);
+          return;
+        }
+
+        // Match /api/project/:id/insights/:iid/*
+        const insightMatch = this.matchInsightRoute(path);
+        if (insightMatch) {
+          const { iid: insightId, sub: insightSub } = insightMatch.params;
+
+          // POST /api/project/:id/insights/:iid/evaluate
+          if (method === 'POST' && insightSub === 'evaluate') {
+            const body = await this.readBody(req);
+            this.handleEvaluateInsight(projectId, insightId, body, res);
+            return;
+          }
+          // POST /api/project/:id/insights/:iid/decide
+          if (method === 'POST' && insightSub === 'decide') {
+            const body = await this.readBody(req);
+            this.handleDecideInsight(projectId, insightId, body, res);
+            return;
+          }
+        }
       }
 
-      // GET /api/session/:id/trace
-      if (method === 'GET' && subPath === 'trace') {
-        this.handleGetTrace(sessionId, res);
-        return;
-      }
-
-      // POST /api/session/:id/question
-      if (method === 'POST' && subPath === 'question') {
-        const body = await this.readBody(req);
-        await this.handleSubmitQuestion(sessionId, body, res);
-        return;
-      }
-
-      // POST /api/session/:id/feedback
-      if (method === 'POST' && subPath === 'feedback') {
-        const body = await this.readBody(req);
-        await this.handleSubmitFeedback(sessionId, body, res);
+      // GET /api/recent — recent sessions + insight summary
+      if (method === 'GET' && path === '/api/recent') {
+        this.handleGetRecent(res);
         return;
       }
 
@@ -411,6 +471,132 @@ export class HttpAdapter {
     this.sendJson(res, 200, { demos });
   }
 
+  // ─── PROJECT + INSIGHT HANDLERS ──────────────────────────────
+
+  /** GET /api/project/:id/history */
+  private handleGetProjectHistory(projectId: string, res: ServerResponse): void {
+    if (!this.projectService) { this.sendError(res, 503, 'Project service not available'); return; }
+    const sessions = this.projectService.getSessionHistory(projectId, 20);
+    this.sendJson(res, 200, { projectId, sessions });
+  }
+
+  /** POST /api/project/:id/insights — Create insight. */
+  private async handleCreateInsight(projectId: string, body: unknown, res: ServerResponse): Promise<void> {
+    if (!this.insightService) { this.sendError(res, 503, 'Insight service not available'); return; }
+    const parsed = this.parseObject(body);
+    const text = this.requireString(parsed, 'text');
+    if (text.trim().length === 0) { this.sendError(res, 400, 'Insight text must not be empty'); return; }
+    if (text.length > 5000) { this.sendError(res, 400, 'Insight text too long (max 5000 chars)'); return; }
+    const sessionId = typeof parsed.sessionId === 'string' ? parsed.sessionId : undefined;
+    try {
+      const insight = this.insightService.createInsight({ projectId, text, sessionId });
+      this.sendJson(res, 201, insight);
+    } catch (err) {
+      this.sendError(res, 400, err instanceof Error ? err.message : 'Bad request');
+    }
+  }
+
+  /** GET /api/project/:id/insights — List insights. */
+  private handleListInsights(projectId: string, res: ServerResponse): void {
+    if (!this.insightService) { this.sendError(res, 503, 'Insight service not available'); return; }
+    const insights = this.insightService.listInsights(projectId);
+    this.sendJson(res, 200, { projectId, insights });
+  }
+
+  /** POST /api/project/:id/insights/:iid/evaluate */
+  private handleEvaluateInsight(projectId: string, insightId: string, body: unknown, res: ServerResponse): void {
+    if (!this.insightService) { this.sendError(res, 503, 'Insight service not available'); return; }
+    const parsed = this.parseObject(body);
+    const relevance = this.requireNumber(parsed, 'relevance', 0, 1);
+    const feasibility = this.requireNumber(parsed, 'feasibility', 0, 1);
+    const alignmentStr = this.requireString(parsed, 'goalAlignment');
+    const rationale = this.requireString(parsed, 'rationale');
+    const validAlignments = Object.values(GoalAlignment) as string[];
+    if (!validAlignments.includes(alignmentStr)) {
+      this.sendError(res, 400, `goalAlignment must be one of: ${validAlignments.join(', ')}`);
+      return;
+    }
+    try {
+      const insight = this.insightService.evaluateInsight({
+        projectId, insightId,
+        relevance, feasibility,
+        goalAlignment: alignmentStr as GoalAlignment,
+        rationale,
+      });
+      this.sendJson(res, 200, insight);
+    } catch (err) {
+      this.sendError(res, 400, err instanceof Error ? err.message : 'Bad request');
+    }
+  }
+
+  /** POST /api/project/:id/insights/:iid/decide */
+  private handleDecideInsight(projectId: string, insightId: string, body: unknown, res: ServerResponse): void {
+    if (!this.insightService) { this.sendError(res, 503, 'Insight service not available'); return; }
+    const parsed = this.parseObject(body);
+    const decision = this.requireString(parsed, 'decision');
+    if (!['IMPLEMENT_NOW', 'DEFER', 'REJECT'].includes(decision)) {
+      this.sendError(res, 400, 'decision must be IMPLEMENT_NOW, DEFER, or REJECT');
+      return;
+    }
+    const revisitCondition = typeof parsed.revisitCondition === 'string' ? parsed.revisitCondition : undefined;
+    try {
+      const insight = this.insightService.decideInsight({
+        projectId, insightId,
+        decision: decision as 'IMPLEMENT_NOW' | 'DEFER' | 'REJECT',
+        revisitCondition,
+      });
+      this.sendJson(res, 200, insight);
+    } catch (err) {
+      this.sendError(res, 400, err instanceof Error ? err.message : 'Bad request');
+    }
+  }
+
+  /** GET /api/project/:id/insights/revisitable */
+  private handleGetRevisitableInsights(projectId: string, res: ServerResponse): void {
+    if (!this.insightService) { this.sendError(res, 503, 'Insight service not available'); return; }
+    const revisitable = this.insightService.checkRevisitability(projectId);
+    this.sendJson(res, 200, { projectId, revisitable });
+  }
+
+  /** GET /api/project/:id/insights/counts */
+  private handleGetInsightCounts(projectId: string, res: ServerResponse): void {
+    if (!this.insightService) { this.sendError(res, 503, 'Insight service not available'); return; }
+    const counts = this.insightService.getInsightCounts(projectId);
+    this.sendJson(res, 200, { projectId, counts });
+  }
+
+  /** GET /api/recent — recent sessions + insight summary. */
+  private handleGetRecent(res: ServerResponse): void {
+    if (!this.projectService || !this.insightService) {
+      this.sendError(res, 503, 'Persistence not available');
+      return;
+    }
+    const recentSessions = this.projectService.getRecentSessions(10);
+    const projects = this.projectService.getAllProjects();
+    const insightSummary = projects.map(p => ({
+      projectId: p.id,
+      projectName: p.name,
+      insightCount: p.insights.length,
+    }));
+    this.sendJson(res, 200, { recentSessions, insightSummary });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // ROUTE MATCHERS
+  // ─────────────────────────────────────────────────────────────
+
+  private matchProjectRoute(path: string): RouteMatch | null {
+    const match = path.match(/^\/api\/project\/([^/]+)(?:\/(.+))?$/);
+    if (!match) return null;
+    return { params: { id: match[1], sub: match[2] ?? '' } };
+  }
+
+  private matchInsightRoute(path: string): RouteMatch | null {
+    const match = path.match(/^\/api\/project\/([^/]+)\/insights\/([^/]+)(?:\/([^/]+))?$/);
+    if (!match) return null;
+    return { params: { id: match[1], iid: match[2], sub: match[3] ?? '' } };
+  }
+
   // ─────────────────────────────────────────────────────────────
   // HELPERS
   // ─────────────────────────────────────────────────────────────
@@ -509,6 +695,17 @@ export class HttpAdapter {
     const val = obj[key];
     if (typeof val !== 'string') {
       throw new Error(`Missing or invalid field: ${key}`);
+    }
+    return val;
+  }
+
+  private requireNumber(obj: Record<string, unknown>, key: string, min: number, max: number): number {
+    const val = obj[key];
+    if (typeof val !== 'number' || isNaN(val)) {
+      throw new Error(`Missing or invalid field: ${key}`);
+    }
+    if (val < min || val > max) {
+      throw new Error(`Field ${key} must be between ${min} and ${max}`);
     }
     return val;
   }

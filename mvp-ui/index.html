@@ -249,6 +249,54 @@ textarea { resize: vertical; min-height: 80px; }
 .step-text .step-title { font-size: 0.88rem; font-weight: 500; color: var(--text); }
 .step-text .step-desc { font-size: 0.8rem; color: var(--text3); margin-top: 2px; }
 
+/* ═══ Insight Styles ═══ */
+.insight-counts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.insight-count-chip {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px; font-size: 0.78rem;
+  color: var(--text2); font-weight: 500; display: flex; align-items: center; gap: 6px;
+}
+.insight-count-chip .count { color: var(--text); font-weight: 700; }
+.insight-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;
+  border-bottom: 1px solid var(--border); font-size: 0.85rem; cursor: pointer;
+  transition: background 0.12s;
+}
+.insight-item:last-child { border-bottom: none; }
+.insight-item:hover { background: var(--surface2); margin: 0 -12px; padding: 10px 12px; border-radius: var(--radius-sm); }
+.insight-item .insight-text { flex: 1; color: var(--text); line-height: 1.5; }
+.insight-item .insight-time { color: var(--text3); font-size: 0.75rem; white-space: nowrap; margin-top: 2px; }
+.badge-new { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.badge-evaluating { border-color: var(--yellow); color: var(--yellow); background: var(--yellow-dim); }
+.badge-active { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.badge-deferred { border-color: var(--orange); color: var(--orange); background: var(--orange-dim); }
+.badge-rejected { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+.badge-revisitable { border-color: var(--yellow); color: var(--yellow); background: var(--yellow-dim); }
+.badge-implemented { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+.insight-nav-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+.insight-nav-row .project-select {
+  flex: 1; min-width: 160px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 9px 12px; color: var(--text);
+  font-size: 0.88rem; font-family: inherit; outline: none; appearance: none;
+  cursor: pointer;
+}
+.insight-nav-row .project-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.decide-buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.decide-buttons button { flex: 1; min-width: 120px; }
+.history-item { display: flex; gap: 8px; padding: 6px 0; font-size: 0.8rem; border-bottom: 1px solid var(--border); }
+.history-item:last-child { border-bottom: none; }
+.history-item .h-action { color: var(--accent); font-weight: 500; white-space: nowrap; }
+.history-item .h-detail { color: var(--text2); }
+.history-item .h-time { color: var(--text3); white-space: nowrap; margin-left: auto; }
+.evaluate-form { display: flex; flex-direction: column; gap: 12px; }
+.evaluate-form .slider-row { display: flex; align-items: center; gap: 12px; }
+.evaluate-form .slider-row label { font-size: 0.85rem; color: var(--text2); min-width: 100px; }
+.evaluate-form .slider-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+.evaluate-form .slider-row .slider-val { font-size: 0.8rem; color: var(--accent); min-width: 32px; text-align: right; }
+.revisit-section { background: var(--yellow-dim); border: 1px solid rgba(234,179,8,0.2); border-radius: var(--radius); padding: 14px; margin-bottom: 16px; }
+.revisit-section h3 { color: var(--yellow); margin-bottom: 8px; }
+.empty-state { text-align: center; padding: 32px 16px; color: var(--text3); font-size: 0.9rem; }
+
 /* ═══ Responsive ═══ */
 @media (max-width: 600px) {
   body { padding: 0 12px; }
@@ -315,6 +363,7 @@ textarea { resize: vertical; min-height: 80px; }
           <p class="text-sm" id="demo-desc">Loading...</p>
         </div>
         <button class="btn-primary btn-block mt-8" onclick="startDemo()">Try Demo</button>
+        <button class="btn-secondary btn-block mt-8" onclick="openInsightDashboard()">Мои идеи</button>
       </div>
     </div>
   </div>
@@ -433,6 +482,111 @@ textarea { resize: vertical; min-height: 80px; }
     </div>
   </div>
 
+  <!-- ═══ SCREEN 7: INSIGHTS DASHBOARD ═══ -->
+  <div id="screen-insights" class="hidden fade-in">
+    <div class="card">
+      <h2>Мои идеи</h2>
+      <p class="text-sm mb-8">Управление идеями и гипотезами по проекту.</p>
+
+      <!-- Project selector -->
+      <div class="insight-nav-row">
+        <select class="project-select" id="insight-project-select" onchange="loadInsightsForProject()">
+          <option value="">Выберите проект...</option>
+        </select>
+        <button class="btn-primary" onclick="showInsightCreateForm()">Создать идею</button>
+      </div>
+
+      <!-- Insight counts -->
+      <div id="insight-counts" class="insight-counts"></div>
+
+      <!-- Revisitable section -->
+      <div id="insight-revisitable-section" class="revisit-section hidden">
+        <h3>Возможно стоит пересмотреть</h3>
+        <div id="insight-revisitable-list"></div>
+      </div>
+
+      <!-- Insight list -->
+      <div id="insight-list-container"></div>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 8: INSIGHT CREATE ═══ -->
+  <div id="screen-insight-create" class="hidden fade-in">
+    <div class="card">
+      <h2>Создать идею</h2>
+      <p class="text-sm mb-8">Опишите вашу идею, мысль или гипотезу.</p>
+      <textarea id="insight-text-input" placeholder="Ваша идея..." rows="4"
+                onkeydown="if(event.key==='Enter'&&event.ctrlKey)submitCreateInsight()"></textarea>
+      <div class="flex-row mt-8">
+        <button class="btn-primary" style="flex:1" onclick="submitCreateInsight()" id="btn-create-insight">
+          Создать
+        </button>
+        <button class="btn-secondary" onclick="showInsightDashboard()">Назад</button>
+        <span class="text-sm" style="white-space:nowrap">Ctrl+Enter</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SCREEN 9: INSIGHT DETAIL ═══ -->
+  <div id="screen-insight-detail" class="hidden fade-in">
+    <div class="card">
+      <div class="flex-row mb-8">
+        <button class="btn-ghost" onclick="showInsightDashboard()">← Назад</button>
+        <span class="badge" id="insight-detail-status"></span>
+      </div>
+      <div id="insight-detail-text" class="answer-content" style="margin-bottom:16px"></div>
+
+      <!-- Evaluation form (shown for NEW status) -->
+      <div id="insight-evaluate-section" class="hidden">
+        <h3>Оценка идеи</h3>
+        <div class="evaluate-form">
+          <div class="slider-row">
+            <label>Актуальность</label>
+            <input type="range" id="eval-relevance" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('eval-relevance-val').textContent=this.value">
+            <span class="slider-val" id="eval-relevance-val">0.5</span>
+          </div>
+          <div class="slider-row">
+            <label>Осуществимость</label>
+            <input type="range" id="eval-feasibility" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('eval-feasibility-val').textContent=this.value">
+            <span class="slider-val" id="eval-feasibility-val">0.5</span>
+          </div>
+          <div class="slider-row">
+            <label>Целевое совпадение</label>
+            <select id="eval-alignment" style="flex:1">
+              <option value="HIGH">Высокое</option>
+              <option value="MEDIUM" selected>Среднее</option>
+              <option value="LOW">Низкое</option>
+              <option value="NOT_APPLICABLE">Неприменимо</option>
+            </select>
+          </div>
+          <textarea id="eval-rationale" placeholder="Обоснование оценки..." rows="2"></textarea>
+          <button class="btn-primary" onclick="submitEvaluateInsight()">Оценить</button>
+        </div>
+      </div>
+
+      <!-- Decide buttons (shown for EVALUATING status) -->
+      <div id="insight-decide-section" class="hidden">
+        <h3>Решение</h3>
+        <p class="text-sm mb-8">Что делать с этой идеей?</p>
+        <div class="decide-buttons">
+          <button class="btn-success" onclick="submitDecideInsight('IMPLEMENT_NOW')">Реализовать сейчас</button>
+          <button class="btn-warn" onclick="submitDecideInsight('DEFER')">Отложить</button>
+          <button class="btn-danger" onclick="submitDecideInsight('REJECT')">Отклонить</button>
+        </div>
+        <div id="defer-condition-row" class="hidden mt-12">
+          <label class="text-sm">Условие пересмотра:</label>
+          <input type="text" id="defer-revisit-condition" placeholder="Например: после выхода v2.0" class="mt-8" />
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="mt-16">
+        <h3>История <span class="badge" id="insight-history-count">0</span></h3>
+        <div id="insight-history-list"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ SCREEN 6: TRACE ═══ -->
   <div id="screen-trace" class="hidden fade-in">
     <div class="card">
@@ -498,7 +652,7 @@ const API = '';
 // SCREEN MANAGEMENT
 // ═══════════════════════════════════════════════════════════════
 
-const SCREENS = ['landing', 'cloning', 'question', 'processing', 'response', 'feedback', 'trace'];
+const SCREENS = ['landing', 'cloning', 'question', 'processing', 'response', 'feedback', 'trace', 'insights', 'insight-create', 'insight-detail'];
 
 function showScreen(name) {
   for (const s of SCREENS) {
@@ -920,6 +1074,240 @@ function renderTrace(trace) {
     }
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// INSIGHTS
+// ═══════════════════════════════════════════════════════════════
+
+let insightCurrentProjectId = null;
+let insightCurrentInsightId = null;
+let insightProjects = [];
+
+const STATUS_LABELS = {
+  NEW: 'Новая', EVALUATING: 'Оценка', ACTIVE: 'Активная',
+  DEFERRED: 'Отложена', REJECTED: 'Отклонена', TESTING: 'Тестирование',
+  VALIDATED: 'Проверена', IMPLEMENTED: 'Реализована',
+  INVALIDATED: 'Недействительна', REVISITABLE: 'К пересмотру',
+};
+
+const STATUS_BADGE_CLASS = {
+  NEW: 'badge-new', EVALUATING: 'badge-evaluating', ACTIVE: 'badge-active',
+  DEFERRED: 'badge-deferred', REJECTED: 'badge-rejected', TESTING: 'badge-evaluating',
+  VALIDATED: 'badge-active', IMPLEMENTED: 'badge-implemented',
+  INVALIDATED: 'badge-rejected', REVISITABLE: 'badge-revisitable',
+};
+
+function insightBadge(status) {
+  const label = STATUS_LABELS[status] || status;
+  const cls = STATUS_BADGE_CLASS[status] || '';
+  return '<span class="badge ' + cls + '">' + escHtml(label) + '</span>';
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' ' +
+      d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  } catch { return iso; }
+}
+
+async function openInsightDashboard() {
+  showScreen('insights');
+  await loadRecentForInsights();
+}
+
+async function loadRecentForInsights() {
+  try {
+    const data = await apiGet('/api/recent');
+    insightProjects = data.insightSummary || [];
+    const select = document.getElementById('insight-project-select');
+    select.innerHTML = '<option value="">Выберите проект...</option>';
+    for (const p of insightProjects) {
+      const opt = document.createElement('option');
+      opt.value = p.projectId;
+      opt.textContent = p.projectName + ' (' + p.insightCount + ')';
+      select.appendChild(opt);
+    }
+    if (insightProjects.length > 0) {
+      select.value = insightProjects[0].projectId;
+      insightCurrentProjectId = insightProjects[0].projectId;
+      await loadInsightsForProject();
+    } else {
+      document.getElementById('insight-counts').innerHTML = '';
+      document.getElementById('insight-revisitable-section').classList.add('hidden');
+      document.getElementById('insight-list-container').innerHTML = '<div class="empty-state">Нет проектов. Сначала проанализируйте репозиторий.</div>';
+    }
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+async function loadInsightsForProject() {
+  const select = document.getElementById('insight-project-select');
+  insightCurrentProjectId = select.value;
+  if (!insightCurrentProjectId) return;
+
+  try {
+    const [countsRes, listRes, revisitableRes] = await Promise.all([
+      apiGet('/api/project/' + insightCurrentProjectId + '/insights/counts'),
+      apiGet('/api/project/' + insightCurrentProjectId + '/insights'),
+      apiGet('/api/project/' + insightCurrentProjectId + '/insights/revisitable'),
+    ]);
+
+    // Counts
+    const counts = countsRes.counts || {};
+    const countsEl = document.getElementById('insight-counts');
+    countsEl.innerHTML = '';
+    for (const [status, count] of Object.entries(counts)) {
+      if (count === 0) continue;
+      const chip = document.createElement('span');
+      chip.className = 'insight-count-chip';
+      chip.innerHTML = insightBadge(status) + ' <span class="count">' + count + '</span>';
+      countsEl.appendChild(chip);
+    }
+
+    // Revisitable
+    const revisitable = revisitableRes.revisitable || [];
+    const revSection = document.getElementById('insight-revisitable-section');
+    const revList = document.getElementById('insight-revisitable-list');
+    if (revisitable.length > 0) {
+      revSection.classList.remove('hidden');
+      revList.innerHTML = '';
+      for (const r of revisitable) {
+        const div = document.createElement('div');
+        div.className = 'insight-item';
+        div.onclick = () => openInsightDetail(r.id);
+        div.innerHTML = '<span class="insight-text">' + escHtml(r.text) + '</span>' +
+          '<span class="insight-time">' + formatTime(r.createdAt) + '</span>';
+        revList.appendChild(div);
+      }
+    } else {
+      revSection.classList.add('hidden');
+    }
+
+    // List
+    const insights = listRes.insights || [];
+    const container = document.getElementById('insight-list-container');
+    if (insights.length === 0) {
+      container.innerHTML = '<div class="empty-state">Нет идей. Нажмите «Создать идею» чтобы добавить.</div>';
+    } else {
+      container.innerHTML = '';
+      for (const i of insights) {
+        const div = document.createElement('div');
+        div.className = 'insight-item';
+        div.onclick = () => openInsightDetail(i.id);
+        div.innerHTML = insightBadge(i.status) +
+          '<span class="insight-text">' + escHtml(i.text) + '</span>' +
+          '<span class="insight-time">' + formatTime(i.createdAt) + '</span>';
+        container.appendChild(div);
+      }
+    }
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function showInsightCreateForm() {
+  if (!insightCurrentProjectId) { showError('Выберите проект.'); return; }
+  document.getElementById('insight-text-input').value = '';
+  showScreen('insight-create');
+}
+
+async function submitCreateInsight() {
+  const text = document.getElementById('insight-text-input').value.trim();
+  if (!text) { showError('Текст идеи не может быть пустым.'); return; }
+  document.getElementById('btn-create-insight').disabled = true;
+  try {
+    const insight = await apiPost('/api/project/' + insightCurrentProjectId + '/insights', { text });
+    document.getElementById('btn-create-insight').disabled = false;
+    openInsightDetail(insight.id);
+  } catch (e) {
+    document.getElementById('btn-create-insight').disabled = false;
+    showError(e.message);
+  }
+}
+
+function showInsightDashboard() {
+  showScreen('insights');
+  if (insightCurrentProjectId) loadInsightsForProject();
+}
+
+async function openInsightDetail(insightId) {
+  insightCurrentInsightId = insightId;
+  try {
+    const res = await apiGet('/api/project/' + insightCurrentProjectId + '/insights');
+    const insight = (res.insights || []).find(i => i.id === insightId);
+    // The list endpoint returns summaries; for full detail we need the full object
+    // Fetch from the recent data or just display what we have
+    const data = insight;
+    if (!data) { showError('Идея не найдена.'); return; }
+    renderInsightDetail(data);
+    showScreen('insight-detail');
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+function renderInsightDetail(insight) {
+  // Status badge
+  const statusContainer = document.getElementById('insight-detail-status').parentNode;
+  const oldBadge = document.getElementById('insight-detail-status');
+  const wrapper = document.createElement('span');
+  wrapper.id = 'insight-detail-status';
+  wrapper.innerHTML = insightBadge(insight.status);
+  statusContainer.replaceChild(wrapper, oldBadge);
+
+  // Text
+  document.getElementById('insight-detail-text').textContent = insight.text;
+
+  // Evaluate section: show only for NEW status
+  document.getElementById('insight-evaluate-section').classList.toggle('hidden', insight.status !== 'NEW');
+
+  // Decide section: show only for EVALUATING status
+  document.getElementById('insight-decide-section').classList.toggle('hidden', insight.status !== 'EVALUATING');
+}
+
+async function submitEvaluateInsight() {
+  if (!insightCurrentProjectId || !insightCurrentInsightId) return;
+  const relevance = parseFloat(document.getElementById('eval-relevance').value);
+  const feasibility = parseFloat(document.getElementById('eval-feasibility').value);
+  const goalAlignment = document.getElementById('eval-alignment').value;
+  const rationale = document.getElementById('eval-rationale').value.trim();
+  if (!rationale) { showError('Добавьте обоснование.'); return; }
+  try {
+    const insight = await apiPost(
+      '/api/project/' + insightCurrentProjectId + '/insights/' + insightCurrentInsightId + '/evaluate',
+      { relevance, feasibility, goalAlignment, rationale }
+    );
+    renderInsightDetail(insight);
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+async function submitDecideInsight(decision) {
+  if (!insightCurrentProjectId || !insightCurrentInsightId) return;
+  const revisitCondition = decision === 'DEFER'
+    ? document.getElementById('defer-revisit-condition').value.trim()
+    : undefined;
+  try {
+    const insight = await apiPost(
+      '/api/project/' + insightCurrentProjectId + '/insights/' + insightCurrentInsightId + '/decide',
+      { decision, revisitCondition }
+    );
+    renderInsightDetail(insight);
+  } catch (e) {
+    showError(e.message);
+  }
+}
+
+// Show/hide defer condition on decide button hover
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.textContent && e.target.textContent.includes('Отложить')) {
+    document.getElementById('defer-condition-row').classList.remove('hidden');
+  }
+});
 
 // ═══════════════════════════════════════════════════════════════
 // RESET

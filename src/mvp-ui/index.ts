@@ -25,6 +25,9 @@ import { HttpAdapter } from './http-adapter.js';
 import { PathSecurityService } from './path-security.js';
 import { GitHubResolver } from './github-resolver.js';
 import { getDemoConfig } from './demo-config.js';
+import { ProjectStore } from './project-store.js';
+import { ProjectService } from './project-service.js';
+import { InsightService } from './insight-service.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // BOOTSTRAP
@@ -67,6 +70,13 @@ async function main(): Promise<void> {
 
   // 0. Validate environment for real inference
   const envCheck = validateEnvVars();
+
+  // 0.5. Project Store + Insight Service (persistence)
+  const projectStore = new ProjectStore();
+  projectStore.loadAll();
+  const projectService = new ProjectService(projectStore);
+  const insightService = new InsightService(projectStore);
+  console.log(`[MVP-UI] Loaded ${projectStore.getAll().length} projects`);
   for (const line of envCheck.diagnostics) {
     console.log(`[MVP-UI] ${line}`);
   }
@@ -107,6 +117,8 @@ async function main(): Promise<void> {
     port,
     realInferenceAvailable: envCheck.realInferenceAvailable,
     githubResolver,
+    projectService,
+    insightService,
   });
 
   await adapter.start();
