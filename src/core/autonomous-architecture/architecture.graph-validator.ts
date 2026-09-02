@@ -7,7 +7,6 @@
 
 import {
   ArchitectureGraph,
-  ArchitectureNodeId,
 } from './architecture.graph.js';
 
 export interface ArchitectureGraphValidationResult {

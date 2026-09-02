@@ -18,49 +18,52 @@ import type {
 } from './architecture.model.js';
 
 export class ArchitectureGraph {
-  private readonly model: ArchitectureGraphModel;
+  // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): renamed private backing field to
+  // `_model` to resolve TS2300 duplicate identifier with the `model` getter.
+  // Public API (`graph.model`) unchanged.
+  private readonly _model: ArchitectureGraphModel;
 
   constructor(model: ArchitectureGraphModel) {
-    this.model = model;
+    this._model = model;
   }
 
   get model(): ArchitectureGraphModel {
-    return this.model;
+    return this._model;
   }
 
   get layers(): readonly ArchitectureLayer[] {
-    return this.model.layers;
+    return this._model.layers;
   }
 
   get nodes(): readonly ArchitectureNode[] {
-    return this.model.nodes;
+    return this._model.nodes;
   }
 
   get edges(): readonly ArchitectureEdge[] {
-    return this.model.edges;
+    return this._model.edges;
   }
 
   withNode(node: ArchitectureNode): ArchitectureGraph {
     return new ArchitectureGraph({
-      layers: this.model.layers,
-      nodes: [...this.model.nodes, node],
-      edges: this.model.edges,
+      layers: this._model.layers,
+      nodes: [...this._model.nodes, node],
+      edges: this._model.edges,
     });
   }
 
   withEdge(edge: ArchitectureEdge): ArchitectureGraph {
     return new ArchitectureGraph({
-      layers: this.model.layers,
-      nodes: this.model.nodes,
-      edges: [...this.model.edges, edge],
+      layers: this._model.layers,
+      nodes: this._model.nodes,
+      edges: [...this._model.edges, edge],
     });
   }
 
   withoutNode(nodeId: ArchitectureNodeId): ArchitectureGraph {
     return new ArchitectureGraph({
-      layers: this.model.layers,
-      nodes: this.model.nodes.filter((n) => n.id !== nodeId),
-      edges: this.model.edges.filter(
+      layers: this._model.layers,
+      nodes: this._model.nodes.filter((n) => n.id !== nodeId),
+      edges: this._model.edges.filter(
         (e) => e.from !== nodeId && e.to !== nodeId
       ),
     });
@@ -68,45 +71,45 @@ export class ArchitectureGraph {
 
   withoutEdge(edgeId: ArchitectureEdgeId): ArchitectureGraph {
     return new ArchitectureGraph({
-      layers: this.model.layers,
-      nodes: this.model.nodes,
-      edges: this.model.edges.filter((e) => e.id !== edgeId),
+      layers: this._model.layers,
+      nodes: this._model.nodes,
+      edges: this._model.edges.filter((e) => e.id !== edgeId),
     });
   }
 
   findNode(id: ArchitectureNodeId): ArchitectureNode | undefined {
-    return this.model.nodes.find((n) => n.id === id);
+    return this._model.nodes.find((n) => n.id === id);
   }
 
   findEdge(id: ArchitectureEdgeId): ArchitectureEdge | undefined {
-    return this.model.edges.find((e) => e.id === id);
+    return this._model.edges.find((e) => e.id === id);
   }
 
   getNodesByKind(kind: ArchitectureNodeKind): readonly ArchitectureNode[] {
-    return this.model.nodes.filter((n) => n.kind === kind);
+    return this._model.nodes.filter((n) => n.kind === kind);
   }
 
   getEdgesByKind(kind: ArchitectureEdgeKind): readonly ArchitectureEdge[] {
-    return this.model.edges.filter((e) => e.kind === kind);
+    return this._model.edges.filter((e) => e.kind === kind);
   }
 
   getOutgoingEdges(nodeId: ArchitectureNodeId): readonly ArchitectureEdge[] {
-    return this.model.edges.filter((e) => e.from === nodeId);
+    return this._model.edges.filter((e) => e.from === nodeId);
   }
 
   getIncomingEdges(nodeId: ArchitectureNodeId): readonly ArchitectureEdge[] {
-    return this.model.edges.filter((e) => e.to === nodeId);
+    return this._model.edges.filter((e) => e.to === nodeId);
   }
 
   getOutgoingNeighbors(nodeId: ArchitectureNodeId): readonly ArchitectureNode[] {
-    return this.model.edges
+    return this._model.edges
       .filter((e) => e.from === nodeId)
       .map((e) => this.findNode(e.to))
       .filter((n): n is ArchitectureNode => n !== undefined);
   }
 
   getIncomingNeighbors(nodeId: ArchitectureNodeId): readonly ArchitectureNode[] {
-    return this.model.edges
+    return this._model.edges
       .filter((e) => e.to === nodeId)
       .map((e) => this.findNode(e.from))
       .filter((n): n is ArchitectureNode => n !== undefined);

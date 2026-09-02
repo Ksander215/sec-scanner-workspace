@@ -267,7 +267,9 @@ export class InteractionService {
    * This is the primary technical result of 001B.
    */
   getTrace(sessionId: string): TraceView {
-    const interaction = this.getInteractionOrThrow(sessionId);
+    // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): bare validation call — preserves
+    // InteractionSessionNotFoundError (404) semantics without an unused binding (TS6133).
+    this.getInteractionOrThrow(sessionId);
 
     const trace: SessionTrace = this.evidenceLoop.getSessionTrace(sessionId);
 
@@ -316,6 +318,22 @@ export class InteractionService {
     const session = this.evidenceLoop['sessionRuntime'].getSession(sessionId);
     if (!session) throw new InteractionSessionNotFoundError(sessionId);
     return this.toSessionView(session, interaction.state);
+  }
+
+  /**
+   * TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-2/S-3 support):
+   * Read-only exposure of the interaction facts required for durable project
+   * capture — the validated projectPath (§7 preferred source) and the exact
+   * responseId that feedback targets. Introduces NO new state: it reads the
+   * existing InteractionSession record.
+   */
+  getCaptureContext(sessionId: string): { projectPath: string; lastResponseId: string | null } | undefined {
+    const interaction = this.interactions.get(sessionId);
+    if (!interaction) return undefined;
+    return {
+      projectPath: interaction.projectPath,
+      lastResponseId: interaction.lastResponseId,
+    };
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -397,7 +415,7 @@ export class InteractionService {
   private transitionOrThrow(
     interaction: InteractionSession,
     target: InteractionState,
-    message: string,
+    _message: string, // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): unused param (TS6133)
   ): void {
     if (!isValidTransition(interaction.state, target)) {
       throw new InteractionStateError(interaction.state, target, interaction.sessionId);
@@ -443,7 +461,7 @@ export class InteractionService {
     };
   }
 
-  private toClaimView(claim: any, sessionId: string): ClaimView {
+  private toClaimView(claim: any, _sessionId: string): ClaimView {
     const evidence = this.evidenceLoop.getEvidenceForClaim(claim.claimId as string);
     return {
       claimId: claim.claimId as string,

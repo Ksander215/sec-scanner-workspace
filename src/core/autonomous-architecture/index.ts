@@ -7,6 +7,11 @@ export * from './architecture.constants.js';
 export * from './architecture.types.js';
 export * from './architecture.errors.js';
 export * from './architecture.events.js';
+// TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): resolve TS2308 — `ArchitectureEvent`
+// is star-exported by both ./architecture.events.js and
+// ./services/architecture.event-bus.js. The event-bus contract is the live one
+// used by the runtime services; an explicit re-export resolves the ambiguity.
+export type { ArchitectureEvent } from './services/architecture.event-bus.js';
 export * from './architecture.model.js';
 
 export * from './architecture.graph.js';

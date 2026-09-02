@@ -21,9 +21,9 @@
  *   I-11/12/13: Evidence Loop ≠ Architecture/KB model, not an agent
  */
 
-import type { SessionId, Session } from '../session/types.js';
+// TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): dropped unused SessionId/Timestamp imports.
+import type { Session } from '../session/types.js';
 import type { SessionRuntime } from '../session/session-runtime.js';
-import type { Timestamp } from '../types/common.js';
 
 import {
   type Intent, type EvidenceLoopResponse, type Claim, type ClaimEvidence,
@@ -31,12 +31,16 @@ import {
   type StartSessionParams, type RecordIntentParams, type RecordResponseParams,
   type CreateClaimParams, type AttachEvidenceParams, type RecordFeedbackParams,
   type CreateFindingParams, type UpdateClaimVerificationParams, type UpdateFindingStatusParams,
+  // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): session-level index types + FindingStatus
+  // (fixes TS2552/TS2304 on lines 69-73 and TS2322 at the finding factory).
+  type IntentId, type ResponseId, type ClaimId, type EvidenceFeedbackId, type FindingId,
   brandIntentId, brandResponseId, brandClaimId, brandClaimEvidenceId,
   brandEvidenceFeedbackId, brandFindingId,
-  SourceType, VerificationStatus,
+  SourceType, VerificationStatus, FindingStatus,
 } from './types.js';
+// TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): dropped unused IntentNotFoundError/ResponseNotFoundError.
 import {
-  SessionNotFoundError, IntentNotFoundError, ResponseNotFoundError,
+  SessionNotFoundError,
   ClaimNotFoundError, FindingNotFoundError, LinkageError,
 } from './errors.js';
 import { sanitizeSecrets } from './secret-sanitizer.js';
@@ -112,13 +116,8 @@ export class EvidenceLoopService {
     return session;
   }
 
-  /** Validate session exists and return its sourceType. */
-  private getSessionSourceOrThrow(sessionId: string): SourceType {
-    this.getSessionOrThrow(sessionId);
-    const st = this.sessionSourceTypes.get(sessionId);
-    if (!st) throw new SessionNotFoundError(sessionId);
-    return st;
-  }
+  // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): removed unused private helper
+  // getSessionSourceOrThrow (TS6133, zero callers).
 
   // ─────────────────────────────────────────────────────────────
   // INTENT (I-02: every intent belongs to a session)
@@ -372,7 +371,7 @@ export class EvidenceLoopService {
       severity: params.severity,
       description: sanitizeSecrets(params.description),
       evidenceIds: Object.freeze([...(params.evidenceIds ?? [])]),
-      status: 'observed' as const,
+      status: FindingStatus.Observed,
       createdAt: new Date().toISOString(),
     });
 

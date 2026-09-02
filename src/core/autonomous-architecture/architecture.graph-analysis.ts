@@ -5,10 +5,16 @@
  * Lightweight structural metrics. No recommendations. No scoring. No algorithms.
  */
 
+// TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-0): NodeKind/EdgeKind enums are declared in
+// architecture.model.ts, not re-exported by architecture.graph.ts — import at the
+// source (fixes TS2459 and the runtime `Object.values(undefined)` crashes in
+// architecture-graph-analysis tests).
 import {
-  ArchitectureGraph,
   ArchitectureNodeKind,
   ArchitectureEdgeKind,
+} from './architecture.model.js';
+import {
+  ArchitectureGraph,
 } from './architecture.graph.js';
 
 export class ArchitectureGraphAnalysis {

@@ -12,7 +12,6 @@
  */
 
 import type { SessionId } from '../session/types.js';
-import type { EvidenceFeedbackType } from '../evidence-loop/types.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // INTERACTION STATE MACHINE (§6)
