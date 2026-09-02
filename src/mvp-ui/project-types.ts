@@ -160,3 +160,111 @@ export interface Project {
   readonly sessions: readonly PersistedSession[];
   readonly insights: readonly PersistedInsight[];
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// PROJECT CONTINUITY VIEW (TASK-AIS-CONTINUITY-RECONSTRUCTION-001, S-4)
+// ═══════════════════════════════════════════════════════════════════
+//
+// Read-only reconstruction contract: a DETERMINISTIC projection of the
+// existing durable Project aggregate. This is a view model only — it adds
+// no storage, no lifecycle, and no new domain semantics. Every field is
+// derived from a really persisted record; absent data is rendered as
+// null / [] / undefined (refusal-to-fabricate, baseline Goal Integrity).
+
+/** Persisted project identity, taken verbatim from the Project aggregate. */
+export interface ContinuityProjectIdentity {
+  readonly id: string;
+  readonly name: string;
+  readonly path: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+/**
+ * Most recent REAL persisted record (§8). Candidates are session/insight
+ * records only — the current HTTP request and Project.updatedAt alone never
+ * create activity. null when no activity records exist.
+ */
+export interface ContinuityLastActivity {
+  readonly timestamp: string;
+  readonly type: 'qa' | 'insight';
+  readonly summary: string;
+}
+
+/** One persisted Q&A record, keyed by responseId (S-4.4/S-4.5/S-4.6). */
+export interface ContinuitySessionView {
+  /** PersistedSession.sessionId === evidence-loop responseId (keying invariant). */
+  readonly responseId: string;
+  readonly interactionSessionId?: string;
+  readonly question: string;
+  readonly answer: string;
+  readonly claims: readonly PersistedClaim[];
+  readonly sources: readonly PersistedEvidence[];
+  readonly feedback?: PersistedFeedback;
+  readonly findings: readonly PersistedFinding[];
+  readonly timestamp: string;
+}
+
+/** One persisted insight (S-4.7). Fields absent from the model are omitted. */
+export interface ContinuityInsightView {
+  readonly id: string;
+  readonly text: string;
+  readonly status: InsightStatus;
+  readonly createdAt: string;
+  readonly userDecision?: InsightUserDecision;
+  readonly decisionAt?: string;
+  readonly revisitCondition?: string;
+  readonly history: readonly InsightHistoryEvent[];
+}
+
+/** One explicit user decision (S-4.8). Never inferred, never heuristic. */
+export interface ContinuityDecisionView {
+  readonly insightId: string;
+  readonly decision: InsightUserDecision;
+  readonly timestamp: string;
+}
+
+/** Persisted insight states that still await closure (S-4.10). */
+export interface ContinuityUnresolvedView {
+  readonly insightId: string;
+  readonly status: InsightStatus;
+  readonly text: string;
+  readonly revisitCondition?: string;
+}
+
+/** A revisitable insight as a continuation point (S-4.11.A). */
+export interface ContinuityRevisitableView {
+  readonly insightId: string;
+  readonly text: string;
+  readonly revisitCondition?: string;
+}
+
+/** Natural continuation points derived ONLY from existing data (S-4.11). */
+export interface ContinuityContinuationView {
+  readonly revisitableInsights: readonly ContinuityRevisitableView[];
+  /** Reuse of the existing demo suggested-questions mechanism; [] otherwise. */
+  readonly suggestedQuestions: readonly string[];
+  readonly lastActivity: ContinuityLastActivity | null;
+}
+
+/**
+ * GET /api/project/:id/continuity response (S-4.1..S-4.12).
+ *
+ * Determinism (§20): for identical durable state the response is identical —
+ * no Date.now(), no Math.random(), no LLM, no discovery; ordering is
+ * newest-first (existing history convention) with lexicographic tie-breaks.
+ *
+ * Goal (S-4.9): no goal runtime exists in this slice. The field is always
+ * explicitly null — a goal is shown only if it was explicitly captured,
+ * which is impossible today.
+ */
+export interface ProjectContinuityView {
+  readonly project: ContinuityProjectIdentity;
+  readonly goal: null;
+  readonly lastActivity: ContinuityLastActivity | null;
+  readonly sessions: readonly ContinuitySessionView[];
+  readonly insights: readonly ContinuityInsightView[];
+  readonly decisions: readonly ContinuityDecisionView[];
+  readonly unresolved: readonly ContinuityUnresolvedView[];
+  readonly continuation: ContinuityContinuationView;
+}

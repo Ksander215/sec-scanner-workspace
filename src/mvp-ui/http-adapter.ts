@@ -16,6 +16,7 @@
  *   GET    /api/session/:id           → getSessionView
  *   GET    /api/demos                 → list demo projects
  *   GET    /api/project/:id/history   → session history
+ *   GET    /api/project/:id/continuity → read-only continuity reconstruction
  *   GET    /api/project/:id/insights  → list insights
  *   POST   /api/project/:id/insights  → create insight
  *   POST   /api/project/:id/insights/:iid/evaluate → evaluate insight
@@ -251,6 +252,15 @@ export class HttpAdapter {
         // GET /api/project/:id/history
         if (method === 'GET' && projectSub === 'history') {
           this.handleGetProjectHistory(projectId, res);
+          return;
+        }
+
+        // GET /api/project/:id/continuity — TASK-AIS-CONTINUITY-RECONSTRUCTION-001
+        // Read-only: resolves the project through the existing ProjectService /
+        // ProjectStore and projects its durable state. No ensureProject, no
+        // lifecycle writes, no LLM (§18). Unknown project → deterministic 404.
+        if (method === 'GET' && projectSub === 'continuity') {
+          this.handleGetProjectContinuity(projectId, res);
           return;
         }
 
@@ -539,6 +549,25 @@ export class HttpAdapter {
     if (!this.projectService) { this.sendError(res, 503, 'Project service not available'); return; }
     const sessions = this.projectService.getSessionHistory(projectId, 20);
     this.sendJson(res, 200, { projectId, sessions });
+  }
+
+  /**
+   * GET /api/project/:id/continuity — read-only continuity reconstruction
+   * (TASK-AIS-CONTINUITY-RECONSTRUCTION-001, S-4.1..S-4.12).
+   *
+   * READ-ONLY verified: the handler only calls ProjectService.getProjectContinuity,
+   * which only calls ProjectStore.findById (a Map read). No ensureProject, no
+   * insight lifecycle mutation, no capture*, no persist, no LLM. Missing
+   * project → 404 with the deterministic error body convention (§19).
+   */
+  private handleGetProjectContinuity(projectId: string, res: ServerResponse): void {
+    if (!this.projectService) { this.sendError(res, 503, 'Project service not available'); return; }
+    const view = this.projectService.getProjectContinuity(projectId);
+    if (!view) {
+      this.sendError(res, 404, 'Project not found');
+      return;
+    }
+    this.sendJson(res, 200, view);
   }
 
   /** POST /api/project/:id/insights — Create insight. */
