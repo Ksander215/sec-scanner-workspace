@@ -52,7 +52,14 @@ export interface PersistedFinding {
 
 /** A persisted interaction session record, nested in Project. */
 export interface PersistedSession {
+  /**
+   * TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (§5 keying invariant):
+   * sessionId === the evidence-loop responseId. One record per answered
+   * question, so updateSessionFeedback can only ever address that record.
+   */
   readonly sessionId: string;
+  /** Optional back-reference to the interaction session that produced this record. */
+  readonly interactionSessionId?: string;
   readonly projectPath: string;
   readonly createdAt: string;
   readonly question: string;

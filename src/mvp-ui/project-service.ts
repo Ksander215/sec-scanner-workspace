@@ -37,10 +37,18 @@ export class ProjectService {
     return this.store.findById(id);
   }
 
-  /** Capture session answer for persistence. */
+  /** Capture session answer for persistence.
+   *
+   * TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-2): the caller MUST pass the
+   * evidence-loop responseId as `sessionId` (keying invariant §5:
+   * PersistedSession.sessionId === responseId). `interactionSessionId` is an
+   * optional back-reference. Sanitization and length caps are applied here —
+   * callers must not duplicate them.
+   */
   captureSessionAnswer(params: {
     projectPath: string;
     sessionId: string;
+    interactionSessionId?: string;
     question: string;
     answer: string;
     claims: readonly { claimId: string; statement: string; isVerified: boolean; evidenceCount: number }[];
@@ -67,6 +75,7 @@ export class ProjectService {
 
     const session: PersistedSession = {
       sessionId: params.sessionId,
+      interactionSessionId: params.interactionSessionId,
       projectPath: params.projectPath,
       createdAt: new Date().toISOString(),
       question: sanitizedQuestion,

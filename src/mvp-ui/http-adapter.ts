@@ -371,6 +371,17 @@ export class HttpAdapter {
     // Validate project path (S-01, S-02, S-03)
     const projectPath = this.pathSecurity.validateProjectPath(rawPath, { isDemo });
 
+    // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-1): durable project identity.
+    // The first POST /api/session for a project creates the Project aggregate
+    // and persists .ais-data/projects/<projectId>.json synchronously
+    // (write-through). Idempotent: subsequent calls return the same project.
+    // This also resolves baseline finding D-1: project creation is now
+    // user-reachable. Path comes from PathSecurityService — never from
+    // unvalidated client input.
+    if (this.projectService) {
+      this.projectService.ensureProject(projectPath);
+    }
+
     const sessionView = await this.service.startInteraction({
       projectPath,
       provenance,
@@ -412,6 +423,33 @@ export class HttpAdapter {
       question: question.trim(),
     });
 
+    // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-2): durable Q&A capture (write-through),
+    // completed BEFORE the HTTP response is sent (§9 persistence invariant).
+    // Keying invariant (§5): PersistedSession.sessionId === answerView.responseId,
+    // so feedback can never corrupt sibling records. projectPath comes from the
+    // existing InteractionSession via getCaptureContext (§7 preferred source),
+    // never from client input. Sanitization + length caps live in ProjectService —
+    // NOT duplicated here. Capture failure must not discard the computed answer:
+    // log and continue.
+    if (this.projectService) {
+      try {
+        const captureCtx = this.service.getCaptureContext(sessionId);
+        if (captureCtx) {
+          this.projectService.captureSessionAnswer({
+            projectPath: captureCtx.projectPath,
+            sessionId: answerView.responseId,
+            interactionSessionId: sessionId,
+            question: question.trim(),
+            answer: answerView.content,
+            claims: answerView.claims,
+            sources: answerView.sources,
+          });
+        }
+      } catch (captureErr) {
+        console.error('[MVP-UI] Session answer capture failed:', captureErr instanceof Error ? captureErr.message : String(captureErr));
+      }
+    }
+
     this.sendJson(res, 200, {
       responseId: answerView.responseId,
       content: answerView.content,
@@ -436,6 +474,29 @@ export class HttpAdapter {
       verdict: verdict as 'correct' | 'incorrect' | 'incomplete',
       comment,
     });
+
+    // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-3): durable feedback capture
+    // (write-through), completed BEFORE the HTTP response is sent. Feedback is
+    // addressed by the responseId the evidence loop actually targeted
+    // (interaction.lastResponseId) — never by the interaction session id —
+    // satisfying §6: feedback(B) must mutate only record B. Sanitization lives
+    // in ProjectService — NOT duplicated here. Capture failure is logged, not
+    // propagated: the feedback was already recorded by the evidence loop.
+    if (this.projectService) {
+      try {
+        const captureCtx = this.service.getCaptureContext(sessionId);
+        if (captureCtx?.lastResponseId) {
+          this.projectService.captureSessionFeedback({
+            projectPath: captureCtx.projectPath,
+            sessionId: captureCtx.lastResponseId,
+            verdict,
+            comment,
+          });
+        }
+      } catch (captureErr) {
+        console.error('[MVP-UI] Session feedback capture failed:', captureErr instanceof Error ? captureErr.message : String(captureErr));
+      }
+    }
 
     this.sendJson(res, 200, {
       feedbackId: feedbackView.feedbackId,
