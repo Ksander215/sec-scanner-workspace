@@ -297,6 +297,17 @@ textarea { resize: vertical; min-height: 80px; }
 .revisit-section h3 { color: var(--yellow); margin-bottom: 8px; }
 .empty-state { text-align: center; padding: 32px 16px; color: var(--text3); font-size: 0.9rem; }
 
+/* ═══ Welcome Back (TASK-AIS-WELCOME-BACK-001, S-5) ═══ */
+.wb-summary { color: var(--text2); font-size: 0.85rem; margin-top: 6px; }
+.wb-qa-item {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px;
+}
+.wb-qa-question { font-weight: 600; color: var(--text); font-size: 0.9rem; margin-bottom: 6px; }
+.wb-qa-answer { color: var(--text2); font-size: 0.85rem; white-space: pre-wrap; line-height: 1.6; }
+.wb-qa-sources { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.wb-qa-sources code { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); word-break: break-all; }
+
 /* ═══ Responsive ═══ */
 @media (max-width: 600px) {
   body { padding: 0 12px; }
@@ -411,6 +422,73 @@ textarea { resize: vertical; min-height: 80px; }
       <span class="owner-repo" id="repo-owner-name">owner/repo</span>
       <span class="badge badge-accent" id="repo-mode-badge">GitHub</span>
       <code id="repo-commit">abc1234</code>
+    </div>
+
+    <!-- ═══ WELCOME BACK PANEL (TASK-AIS-WELCOME-BACK-001, S-5) ═══
+         Renders the read-only ProjectContinuityView served by
+         GET /api/project/:id/continuity (TASK-AIS-CONTINUITY-RECONSTRUCTION-001).
+         Render > Recompute: this UI never reconstructs state itself. -->
+    <div id="welcome-back-panel" class="card hidden">
+      <div class="flex-row">
+        <h2 style="margin-bottom:0">Welcome back</h2>
+        <span class="badge badge-accent hidden" id="wb-new-activity">New activity since your last visit</span>
+      </div>
+
+      <div id="wb-loading" class="loading mt-12">
+        <div class="spinner"></div>
+        <span>Loading your project context…</span>
+      </div>
+
+      <div id="wb-error" class="empty-state hidden">
+        We couldn't restore your previous context.<br>
+        Your project is still available — you can keep asking questions.
+      </div>
+
+      <div id="wb-empty" class="empty-state hidden">
+        Welcome. This project doesn't have previous activity yet.
+      </div>
+
+      <div id="wb-content" class="hidden">
+        <h3 class="mt-12">Project</h3>
+        <div id="wb-project-name" style="font-weight:600; color:var(--text)"></div>
+        <div class="text-sm"><code id="wb-project-path"></code></div>
+        <div class="text-sm" id="wb-project-meta"></div>
+
+        <div id="wb-activity-section" class="hidden">
+          <h3 class="mt-12">Last activity</h3>
+          <div id="wb-last-activity"></div>
+        </div>
+
+        <div id="wb-previous-work-section" class="hidden">
+          <h3 class="mt-12">What you worked on</h3>
+          <div id="wb-previous-work"></div>
+        </div>
+
+        <div id="wb-insights-section" class="hidden">
+          <h3 class="mt-12">Insights</h3>
+          <div id="wb-insights"></div>
+        </div>
+
+        <div id="wb-decisions-section" class="hidden">
+          <h3 class="mt-12">Decisions</h3>
+          <div id="wb-decisions"></div>
+        </div>
+
+        <div id="wb-unresolved-section">
+          <h3 class="mt-12">Needs attention</h3>
+          <div id="wb-unresolved"></div>
+        </div>
+
+        <div>
+          <h3 class="mt-12">Goal</h3>
+          <div id="wb-goal" class="text-sm"></div>
+        </div>
+
+        <div id="wb-continue-section" class="hidden">
+          <h3 class="mt-12">Continue</h3>
+          <div id="wb-continue" class="suggestions"></div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -831,6 +909,11 @@ async function createSession(projectPath, isDemoMode, repoInfo) {
 
     showScreen('question');
     if (isDemoMode) loadSuggestions();
+
+    // TASK-AIS-WELCOME-BACK-001 (S-5): successful project open → Welcome Back.
+    // Loads independently of the question flow (§20 non-blocking); renders
+    // ONLY from GET /api/project/:id/continuity (Render > Recompute, §3).
+    if (data.projectId) loadWelcomeBack(data.projectId);
   } catch (e) {
     if (currentMode === 'github') {
       showScreen('landing');
@@ -884,6 +967,379 @@ async function loadSuggestions() {
       }
     }
   } catch { /* suggestions are optional */ }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WELCOME BACK (TASK-AIS-WELCOME-BACK-001, S-5)
+// ═══════════════════════════════════════════════════════════════
+// Renders the read-only ProjectContinuityView served by
+// GET /api/project/:id/continuity (TASK-AIS-CONTINUITY-RECONSTRUCTION-001).
+//
+// Baseline §3 Render > Recompute: this UI NEVER reconstructs state itself —
+// no session/insight re-reads, no local heuristics, no Date.now() activity,
+// no insight lifecycle changes, no new continuation API. Continuation
+// actions reuse the EXISTING question input flow (§16/§17). Persisted text
+// is always rendered through escHtml()/textContent (§25 T5.8). Internal IDs
+// are used only as UI state keys — never displayed (§23).
+
+let currentProjectId = null;
+let wbCurrentView = null;
+const wbExpandedAnswers = new Set();
+
+const WB_DECISION_LABELS = {
+  IMPLEMENT_NOW: '✓ Implement now',
+  DEFER: '↺ Deferred',
+  REJECT: '✕ Rejected',
+};
+const WB_ANSWER_PREVIEW_LENGTH = 280;
+const WB_VISIT_KEY_PREFIX = 'ais.lastVisitAt.';
+
+function wbEl(id) { return document.getElementById(id); }
+
+function wbSetVisible(id, visible) {
+  wbEl(id).classList.toggle('hidden', !visible);
+}
+
+function wbShowLoading() {
+  wbSetVisible('welcome-back-panel', true);
+  wbSetVisible('wb-loading', true);
+  wbSetVisible('wb-error', false);
+  wbSetVisible('wb-empty', false);
+  wbSetVisible('wb-content', false);
+}
+
+function wbShowSoftError() {
+  // §21: endpoint unavailable → graceful degradation. The project itself is
+  // still usable. NO fallback reconstruction from any other source.
+  wbSetVisible('welcome-back-panel', true);
+  wbSetVisible('wb-loading', false);
+  wbSetVisible('wb-error', true);
+  wbSetVisible('wb-empty', false);
+  wbSetVisible('wb-content', false);
+}
+
+function wbHidePanel() {
+  wbSetVisible('welcome-back-panel', false);
+  wbSetVisible('wb-loading', false);
+  wbSetVisible('wb-error', false);
+  wbSetVisible('wb-empty', false);
+  wbSetVisible('wb-content', false);
+}
+
+async function loadWelcomeBack(projectId) {
+  currentProjectId = projectId;
+  wbCurrentView = null;
+  wbExpandedAnswers.clear();
+  wbShowLoading();
+  try {
+    const res = await fetch(API + '/api/project/' + projectId + '/continuity');
+    if (res.status === 404) {
+      // §21: use the existing project-not-found handling — never fabricate
+      // a context the backend does not have.
+      wbHidePanel();
+      showError('Project not found');
+      return;
+    }
+    if (!res.ok) { wbShowSoftError(); return; }
+    const view = await res.json();
+    renderWelcomeBack(view);
+  } catch {
+    wbShowSoftError();
+  }
+}
+
+function renderWelcomeBack(view) {
+  wbCurrentView = view;
+  wbSetVisible('welcome-back-panel', true);
+  wbSetVisible('wb-loading', false);
+  wbSetVisible('wb-error', false);
+
+  const hasHistory = (view.sessions && view.sessions.length > 0)
+    || (view.insights && view.insights.length > 0)
+    || (view.decisions && view.decisions.length > 0)
+    || (view.unresolved && view.unresolved.length > 0);
+
+  // §22: a fresh project gets a one-line welcome — never a wall of
+  // empty sections, never fabricated activity.
+  if (!hasHistory) {
+    wbSetVisible('wb-content', false);
+    wbSetVisible('wb-empty', true);
+    wbRenderVisitBadge(view);
+    wbMarkVisited(view.project && view.project.id);
+    return;
+  }
+
+  wbSetVisible('wb-empty', false);
+  wbSetVisible('wb-content', true);
+  wbRenderIdentity(view);       // §8
+  wbRenderActivity(view);       // §9
+  wbRenderPreviousWork(view);   // §10 + §11
+  wbRenderInsights(view);       // §12
+  wbRenderDecisions(view);      // §13
+  wbRenderUnresolved(view);     // §14
+  wbRenderGoal(view);           // §18
+  wbRenderContinue(view);       // §15 + §16 + §17
+  wbRenderVisitBadge(view);     // §19
+  wbMarkVisited(view.project && view.project.id);
+}
+
+/** §8: persisted identity verbatim from the continuity view. No fs lookups. */
+function wbRenderIdentity(view) {
+  const p = view.project || {};
+  wbEl('wb-project-name').textContent = p.name || 'Project';
+  wbEl('wb-project-path').textContent = p.path || '';
+  const meta = [];
+  if (p.createdAt) meta.push('Created ' + formatTime(p.createdAt));
+  if (p.updatedAt) meta.push('Updated ' + formatTime(p.updatedAt));
+  wbEl('wb-project-meta').textContent = meta.join(' · ');
+}
+
+/** §9: lastActivity exactly as reconstructed by the backend. Never re-computed. */
+function wbRenderActivity(view) {
+  const a = view.lastActivity;
+  const section = wbEl('wb-activity-section');
+  if (!a) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+  const label = a.type === 'insight' ? 'Insight' : 'Question';
+  wbEl('wb-last-activity').innerHTML =
+    '<span class="badge badge-accent">' + escHtml(label) + '</span> ' +
+    '<span class="text-sm">' + escHtml(formatTime(a.timestamp)) + '</span>' +
+    '<div class="wb-summary">' + escHtml(a.summary) + '</div>';
+}
+
+/** §10 + §11: last Q&A with answer preview, sources and expand — minimal load. */
+function wbRenderPreviousWork(view) {
+  const sessions = view.sessions || [];
+  const section = wbEl('wb-previous-work-section');
+  if (sessions.length === 0) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+
+  const container = wbEl('wb-previous-work');
+  container.innerHTML = '';
+  const shown = sessions.slice(0, 3); // backend already ordered newest-first
+  for (const s of shown) container.appendChild(wbBuildQaItem(s));
+  if (sessions.length > shown.length) {
+    const more = document.createElement('p');
+    more.className = 'text-sm mt-8';
+    more.textContent = '+' + (sessions.length - shown.length) + ' earlier question(s).';
+    container.appendChild(more);
+  }
+}
+
+function wbBuildQaItem(s) {
+  const div = document.createElement('div');
+  div.className = 'wb-qa-item';
+
+  const q = document.createElement('div');
+  q.className = 'wb-qa-question';
+  q.textContent = s.question || '';
+  div.appendChild(q);
+
+  const answer = s.answer || '';
+  const expanded = wbExpandedAnswers.has(s.responseId);
+  const a = document.createElement('div');
+  a.className = 'wb-qa-answer';
+  a.textContent = expanded ? answer : wbPreview(answer, WB_ANSWER_PREVIEW_LENGTH);
+  div.appendChild(a);
+
+  if (answer.length > WB_ANSWER_PREVIEW_LENGTH) {
+    const toggle = document.createElement('button');
+    toggle.className = 'btn-ghost';
+    toggle.textContent = expanded ? 'Show less' : 'Show full answer';
+    // Pure presentation toggle — no fetch, no recompute, no state mutation.
+    toggle.onclick = () => wbToggleAnswer(s.responseId);
+    div.appendChild(toggle);
+  }
+
+  const sources = s.sources || [];
+  if (sources.length > 0) {
+    const label = document.createElement('div');
+    label.className = 'text-sm mt-8';
+    label.textContent = 'Based on ' + sources.length + ' source' + (sources.length === 1 ? '' : 's') + ':';
+    div.appendChild(label);
+
+    const list = document.createElement('div');
+    list.className = 'wb-qa-sources';
+    for (const src of sources.slice(0, 3)) {
+      const code = document.createElement('code');
+      code.textContent = src.filePath;
+      list.appendChild(code);
+    }
+    if (sources.length > 3) {
+      const more = document.createElement('span');
+      more.className = 'text-sm';
+      more.textContent = '+' + (sources.length - 3) + ' more';
+      list.appendChild(more);
+    }
+    div.appendChild(list);
+  }
+
+  if (s.feedback) {
+    const fb = document.createElement('div');
+    fb.className = 'mt-8';
+    const cls = s.feedback.verdict === 'correct' ? 'badge-green'
+      : s.feedback.verdict === 'incorrect' ? 'badge-red' : 'badge-yellow';
+    fb.innerHTML = '<span class="badge ' + cls + '">' + escHtml(s.feedback.verdict) + '</span>';
+    div.appendChild(fb);
+  }
+
+  return div;
+}
+
+function wbToggleAnswer(responseId) {
+  if (wbExpandedAnswers.has(responseId)) wbExpandedAnswers.delete(responseId);
+  else wbExpandedAnswers.add(responseId);
+  if (wbCurrentView) wbRenderPreviousWork(wbCurrentView);
+}
+
+function wbPreview(text, max) {
+  if (!text) return '';
+  if (text.length <= max) return text;
+  return text.substring(0, max) + '…';
+}
+
+/** §12: existing insights verbatim (text + status). NOT clickable → the
+ *  insight lifecycle can never change from rendering (§17). */
+function wbRenderInsights(view) {
+  const insights = view.insights || [];
+  const section = wbEl('wb-insights-section');
+  if (insights.length === 0) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+
+  const list = wbEl('wb-insights');
+  list.innerHTML = '';
+  for (const i of insights.slice(0, 5)) {
+    const div = document.createElement('div');
+    div.className = 'insight-item';
+    div.innerHTML = insightBadge(i.status) +
+      '<span class="insight-text">' + escHtml(i.text) + '</span>' +
+      (i.revisitCondition
+        ? '<span class="insight-time">' + escHtml(i.revisitCondition) + '</span>'
+        : '');
+    list.appendChild(div);
+  }
+  if (insights.length > 5) {
+    const more = document.createElement('p');
+    more.className = 'text-sm';
+    more.textContent = '+' + (insights.length - 5) + ' more insight(s).';
+    list.appendChild(more);
+  }
+}
+
+/** §13: ONLY explicit persisted decisions, mapped to the insight text from
+ *  the same view. Decisions are never inferred or generated here. */
+function wbRenderDecisions(view) {
+  const decisions = view.decisions || [];
+  const section = wbEl('wb-decisions-section');
+  if (decisions.length === 0) { section.classList.add('hidden'); return; }
+  section.classList.remove('hidden');
+
+  const textById = new Map();
+  for (const i of (view.insights || [])) textById.set(i.id, i.text);
+
+  const list = wbEl('wb-decisions');
+  list.innerHTML = '';
+  for (const d of decisions.slice(0, 5)) {
+    const div = document.createElement('div');
+    div.className = 'claim-item';
+    const cls = d.decision === 'IMPLEMENT_NOW' ? 'badge-green'
+      : d.decision === 'REJECT' ? 'badge-red' : 'badge-deferred';
+    div.innerHTML = '<span class="badge ' + cls + '">' +
+      escHtml(WB_DECISION_LABELS[d.decision] || d.decision) + '</span>' +
+      '<span>' + escHtml(textById.get(d.insightId) || '') + '</span>' +
+      '<span class="text-sm" style="margin-left:auto">' + escHtml(formatTime(d.timestamp)) + '</span>';
+    list.appendChild(div);
+  }
+}
+
+/** §14: canonical source is continuity.unresolved — the UI never decides
+ *  on its own what "looks unfinished". */
+function wbRenderUnresolved(view) {
+  const unresolved = view.unresolved || [];
+  const list = wbEl('wb-unresolved');
+  list.innerHTML = '';
+  if (unresolved.length === 0) {
+    list.innerHTML = '<p class="text-sm">Nothing currently marked as unresolved.</p>';
+    return;
+  }
+  for (const u of unresolved.slice(0, 5)) {
+    const div = document.createElement('div');
+    div.className = 'insight-item';
+    div.innerHTML = insightBadge(u.status) +
+      '<span class="insight-text">' + escHtml(u.text) + '</span>' +
+      (u.revisitCondition
+        ? '<span class="insight-time">' + escHtml(u.revisitCondition) + '</span>'
+        : '');
+    list.appendChild(div);
+  }
+}
+
+/** §18: goal is always null in this slice — explicit absence, never a
+ *  fabricated "Your goal is ...". */
+function wbRenderGoal(view) {
+  const goalEl = wbEl('wb-goal');
+  if (view.goal === null || view.goal === undefined) {
+    goalEl.textContent = 'Not defined yet.';
+    return;
+  }
+  goalEl.textContent = String(view.goal);
+}
+
+/** §15 + §16 + §17: continuation buttons fill the EXISTING question input.
+ *  No POST /api/continuity/continue, no new backend abstraction, and clicking
+ *  NEVER mutates insight status — read-only reconstruction stays read-only. */
+function wbRenderContinue(view) {
+  const cont = view.continuation || {};
+  const revisitable = cont.revisitableInsights || [];
+  const suggested = cont.suggestedQuestions || [];
+  const section = wbEl('wb-continue-section');
+  if (revisitable.length === 0 && suggested.length === 0) {
+    section.classList.add('hidden');
+    return;
+  }
+  section.classList.remove('hidden');
+
+  const container = wbEl('wb-continue');
+  container.innerHTML = '';
+  for (const r of revisitable) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-secondary';
+    btn.textContent = 'Revisit: ' + r.text;
+    btn.onclick = () => {
+      document.getElementById('question-input').value = r.text;
+      document.getElementById('question-input').focus();
+    };
+    container.appendChild(btn);
+  }
+  for (const q of suggested) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-secondary';
+    btn.textContent = 'Ask: ' + q;
+    btn.onclick = () => {
+      document.getElementById('question-input').value = q;
+      document.getElementById('question-input').focus();
+    };
+    container.appendChild(btn);
+  }
+}
+
+/** §19: changes-since-last-visit uses ONLY localStorage.lastVisitAt on the
+ *  client. No server-side visit tracking, no persistence model change. */
+function wbRenderVisitBadge(view) {
+  const projectId = view.project && view.project.id;
+  const prev = wbGetLastVisit(projectId);
+  const hasNew = !!(prev && view.lastActivity && view.lastActivity.timestamp > prev);
+  wbEl('wb-new-activity').classList.toggle('hidden', !hasNew);
+}
+
+function wbGetLastVisit(projectId) {
+  if (!projectId) return null;
+  try { return localStorage.getItem(WB_VISIT_KEY_PREFIX + projectId); } catch { return null; }
+}
+
+function wbMarkVisited(projectId) {
+  if (!projectId) return;
+  try { localStorage.setItem(WB_VISIT_KEY_PREFIX + projectId, new Date().toISOString()); } catch { /* private mode */ }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1317,6 +1773,10 @@ function resetToStart() {
   currentSessionId = null;
   currentCloneId = null;
   currentRepoInfo = null;
+  currentProjectId = null;
+  wbCurrentView = null;
+  wbExpandedAnswers.clear();
+  wbHidePanel();
   document.getElementById('question-input').value = '';
   document.getElementById('feedback-comment').value = '';
   document.getElementById('btn-ask').disabled = false;

@@ -388,8 +388,17 @@ export class HttpAdapter {
     // This also resolves baseline finding D-1: project creation is now
     // user-reachable. Path comes from PathSecurityService — never from
     // unvalidated client input.
+    //
+    // TASK-AIS-WELCOME-BACK-001 (S-5): the already-executed ensureProject call
+    // now has its return value surfaced as an ADDITIVE response field, so the
+    // UI can load GET /api/project/:id/continuity right after a successful
+    // open (task §4: projectId known → fetch continuity → renderWelcomeBack).
+    // No new endpoint, no session-creation semantic change, no S-4 contract
+    // change — when projectService is absent the field is simply omitted.
+    let projectId: string | undefined;
     if (this.projectService) {
-      this.projectService.ensureProject(projectPath);
+      const project = this.projectService.ensureProject(projectPath);
+      projectId = project.id;
     }
 
     const sessionView = await this.service.startInteraction({
@@ -401,6 +410,9 @@ export class HttpAdapter {
       sessionId: sessionView.sessionId,
       state: sessionView.state,
       createdAt: sessionView.createdAt,
+      // S-5 (additive): durable project identity for the Welcome Back panel.
+      // Dropped by JSON.stringify when projectService is not configured.
+      projectId,
     });
   }
 
