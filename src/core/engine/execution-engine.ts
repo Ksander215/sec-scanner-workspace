@@ -40,6 +40,15 @@ export interface ArchitectureQuestionRequest {
   projectPath: string;
   question: string;
   taskId?: string;
+  /**
+   * TASK-AIS-TASK-RESOLUTION-SLICE-001 (§5.4/§12): ADDITIVE, optional — a
+   * compact, sanitized digest of REALLY persisted project facts produced by
+   * the Task Resolution Execution Plan for history-grounded tasks. Appended
+   * after the question-driven project context. Absent/undefined → execution
+   * is byte-identical to the pre-slice pipeline. This is the ONLY seam
+   * between Task Resolution and execution — no second pipeline exists.
+   */
+  additionalContext?: string;
 }
 
 /**
@@ -247,7 +256,14 @@ export class ExecutionEngine {
     );
 
     // Step 3: Process through CognitiveRuntime (real LLM when AIS_REAL_LLM=true)
-    const fullQuestion = `${request.question}\n\n---\nProject Context:\n${projectContext}`;
+    // Task Resolution slice-001: the plan's persisted-context digest (when the
+    // resolved task is history-grounded) is appended after the question-driven
+    // project context — same single prompt, same single pipeline.
+    const contextWithPersisted = request.additionalContext
+      ? `${projectContext}\n\n---\n${request.additionalContext}`
+      : projectContext;
+
+    const fullQuestion = `${request.question}\n\n---\nProject Context:\n${contextWithPersisted}`;
 
     const result = await this._cognitiveRuntime.process(fullQuestion);
 

@@ -12,6 +12,7 @@
  */
 
 import type { SessionId } from '../session/types.js';
+import type { ExplanationMode, PreparationView } from '../task-resolution/index.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // INTERACTION STATE MACHINE (§6)
@@ -68,6 +69,13 @@ export interface StartInteractionParams {
 export interface SubmitQuestionParams {
   readonly sessionId: SessionId;
   readonly question: string;
+  /**
+   * TASK-AIS-TASK-RESOLUTION-SLICE-001 (§9 priority 1): explicit explanation
+   * preference. Absent → the Task Resolution engine's adaptive policy decides.
+   * OPTIONAL — the cognitive-load contract (task §11/§20) means the normal UI
+   * path never sends it and never sends any execution configuration.
+   */
+  readonly explanationPreference?: ExplanationMode;
 }
 
 /** Input for recording user feedback. */
@@ -94,6 +102,12 @@ export interface AnswerView {
   readonly content: string;
   readonly sources: readonly EvidenceSourceView[];
   readonly claims: readonly ClaimView[];
+  /**
+   * TASK-AIS-TASK-RESOLUTION-SLICE-001: ADDITIVE — present only when a
+   * TaskResolutionService is wired. Carries the sanitized, human-facing
+   * preparation explanation (§9/§10). Never persisted.
+   */
+  readonly preparation?: PreparationView;
 }
 
 /** A single evidence source shown to the user (§12). */

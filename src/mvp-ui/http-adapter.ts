@@ -440,9 +440,23 @@ export class HttpAdapter {
       return;
     }
 
+    // TASK-AIS-TASK-RESOLUTION-SLICE-001 (§9 priority 1): OPTIONAL explicit
+    // explanation preference. The normal UI path never sends it (task §11:
+    // the user is never REQUIRED to configure anything); when present it
+    // must be within the policy vocabulary. Nothing else about the request
+    // changes — no model/context/tool/MCP/skill/rule fields exist to send.
+    const rawExplanation = typeof parsed.explanation === 'string' ? parsed.explanation : undefined;
+    if (rawExplanation !== undefined && !['none', 'short', 'detailed'].includes(rawExplanation)) {
+      this.sendError(res, 400, 'explanation must be one of: none, short, detailed');
+      return;
+    }
+
     const answerView = await this.service.submitQuestion({
       sessionId: sessionId as any,
       question: question.trim(),
+      ...(rawExplanation !== undefined
+        ? { explanationPreference: rawExplanation as 'none' | 'short' | 'detailed' }
+        : {}),
     });
 
     // TASK-AIS-MEMORY-CAPTURE-BRIDGE-001 (S-2): durable Q&A capture (write-through),
@@ -477,6 +491,9 @@ export class HttpAdapter {
       content: answerView.content,
       sources: answerView.sources,
       claims: answerView.claims,
+      // Task Resolution slice-001 (ADDITIVE): sanitized human-facing
+      // preparation view. Dropped by JSON.stringify when no resolver is wired.
+      preparation: answerView.preparation,
     });
   }
 

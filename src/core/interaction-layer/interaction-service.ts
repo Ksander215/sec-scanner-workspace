@@ -21,6 +21,7 @@ import type { SessionId, Session } from '../session/types.js';
 import type { EvidenceLoopService } from '../evidence-loop/evidence-loop-service.js';
 import type { ExecutionEngine } from '../engine/execution-engine.js';
 import type { ArchitectureAnswerResponse } from '../engine/execution-engine.js';
+import type { SubmissionResolution, ResolveSubmissionInput } from '../task-resolution/index.js';
 
 import { SourceType, ClaimType, EvidenceFeedbackType,
   FindingCategory, FindingSeverity, EvidenceSourceType,
@@ -46,6 +47,16 @@ import {
 export interface InteractionServiceConfig {
   readonly evidenceLoop: EvidenceLoopService;
   readonly engine: ExecutionEngine;
+  /**
+   * TASK-AIS-TASK-RESOLUTION-SLICE-001 (§12): optional Task Resolution.
+   * Wired in the real runtime (mvp-ui/index.ts); OPTIONAL so existing
+   * constructions keep their exact behavior (additive, CONNECT > CREATE).
+   * The engine decides WHAT preparation the task needs and HOW it binds to
+   * EXISTING mechanisms — the user never configures it (task §3/§11).
+   */
+  readonly taskResolver?: {
+    resolveForSubmission(input: ResolveSubmissionInput): SubmissionResolution;
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -55,6 +66,7 @@ export interface InteractionServiceConfig {
 export class InteractionService {
   private readonly evidenceLoop: EvidenceLoopService;
   private readonly engine: ExecutionEngine;
+  private readonly taskResolver: InteractionServiceConfig['taskResolver'];
 
   /** Interaction-level session tracking. */
   private readonly interactions = new Map<string, InteractionSession>();
@@ -62,6 +74,7 @@ export class InteractionService {
   constructor(config: InteractionServiceConfig) {
     this.evidenceLoop = config.evidenceLoop;
     this.engine = config.engine;
+    this.taskResolver = config.taskResolver;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -138,12 +151,39 @@ export class InteractionService {
       });
       current = this.interactions.get(interaction.sessionId)!;
 
+      // Step 1.5: TASK-AIS-TASK-RESOLUTION-SLICE-001 (§12) — Task Resolution
+      // sits between intent recording and execution. The engine decides WHAT
+      // preparation is needed and produces the Execution Plan binding it to
+      // EXISTING mechanisms (§5.4). No second pipeline: the only execution
+      // input is the plan's optional persisted-context digest, consumed by
+      // the existing ExecutionEngine through one additive seam. The resolver
+      // never throws into the question path (§18 safe degradation inside).
+      let resolved: SubmissionResolution | undefined;
+      if (this.taskResolver) {
+        try {
+          resolved = this.taskResolver.resolveForSubmission({
+            sessionId: interaction.sessionId,
+            projectPath: interaction.projectPath,
+            question: params.question.trim(),
+            preference: params.explanationPreference,
+          });
+        } catch {
+          resolved = undefined; // resolver bug must not fail the question
+        }
+      }
+
       // Step 2: Execute via existing ExecutionEngine (§9 — no second runtime)
       const engineResponse = await this.engine.execute<ArchitectureAnswerResponse>({
         projectId: interaction.projectId,
         projectPath: interaction.projectPath,
         question: params.question,
         taskId: `INTERACTION-${interaction.sessionId}`,
+        // Task Resolution output (slice-001): the plan's persisted-context
+        // digest for history-grounded tasks; undefined otherwise → execution
+        // byte-identical to the pre-slice pipeline.
+        ...(resolved?.plan.additionalContext
+          ? { additionalContext: resolved.plan.additionalContext }
+          : {}),
       });
 
       // Step 3: Record response via EvidenceLoopService (I-01)
@@ -186,6 +226,8 @@ export class InteractionService {
         content: response.content,
         sources: evidenceViews,
         claims: claims.map(c => this.toClaimView(c, params.sessionId as string)),
+        // Task Resolution (slice-001): ADDITIVE human-facing preparation view.
+        ...(resolved ? { preparation: resolved.preparation } : {}),
       };
     } catch (err) {
       // §19: On failure, mark as FAILED — do NOT create false evidence

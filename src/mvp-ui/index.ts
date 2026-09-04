@@ -28,6 +28,7 @@ import { getDemoConfig } from './demo-config.js';
 import { ProjectStore } from './project-store.js';
 import { ProjectService } from './project-service.js';
 import { InsightService } from './insight-service.js';
+import { TaskResolutionEngine } from '../core/task-resolution/index.js';
 
 // ═══════════════════════════════════════════════════════════════════
 // BOOTSTRAP
@@ -94,23 +95,37 @@ async function main(): Promise<void> {
   await engine.initialize();
   await engine.start();
 
-  // 4. Interaction Service (thin orchestrator)
+  // 4. Task Resolution Engine (TASK-AIS-TASK-RESOLUTION-SLICE-001)
+  //    Deterministic, provider-agnostic (§14/§15/§17). Reads ONLY the
+  //    existing ProjectService read path — ProjectStore stays the source of
+  //    record (§5.1), no new persistence (§13). The user provides intent;
+  //    AIS determines the preparation itself (§3) — nothing to configure.
+  const taskResolver = new TaskResolutionEngine({
+    projectFacts: (projectPath) => {
+      const project = projectService.findByPath(projectPath);
+      if (!project) return null;
+      return { sessions: project.sessions, insights: project.insights };
+    },
+  });
+
+  // 5. Interaction Service (thin orchestrator)
   const interactionService = new InteractionService({
     evidenceLoop,
     engine,
+    taskResolver,
   });
 
-  // 5. GitHub Repository Resolver (TASK-MVP-FREE-REPOSITORY-UX-001)
+  // 6. GitHub Repository Resolver (TASK-MVP-FREE-REPOSITORY-UX-001)
   const githubResolver = new GitHubResolver();
 
-  // 6. Path Security — includes clone root for GitHub repos
+  // 7. Path Security — includes clone root for GitHub repos
   const demoConfig = getDemoConfig();
   const pathSecurity = new PathSecurityService({
     allowedRoots: [projectRoot, githubResolver.getCloneRoot()],
     demoAllowlist: [demoConfig.projectPath],
   });
 
-  // 7. HTTP Adapter
+  // 8. HTTP Adapter
   const adapter = new HttpAdapter({
     interactionService,
     pathSecurity,

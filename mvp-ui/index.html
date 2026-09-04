@@ -193,6 +193,7 @@ textarea { resize: vertical; min-height: 80px; }
 .mb-8 { margin-bottom: 8px; }
 .gap-12 { gap: 12px; }
 .answer-content { white-space: pre-wrap; font-size: 0.93rem; line-height: 1.75; }
+.preparation-note { color: var(--text2); font-size: 0.88rem; line-height: 1.6; margin-bottom: 10px; }
 .trace-section { margin-bottom: 16px; }
 .w-full { width: 100%; }
 
@@ -524,6 +525,7 @@ textarea { resize: vertical; min-height: 80px; }
   <div id="screen-response" class="hidden fade-in">
     <div class="card">
       <h2>Answer</h2>
+      <div id="preparation-note" class="hidden preparation-note"></div>
       <div class="answer-content" id="answer-content"></div>
     </div>
 
@@ -1408,6 +1410,19 @@ function renderResponse(data) {
   if (window._clearProgress) window._clearProgress();
 
   document.getElementById('answer-content').textContent = data.content || '(no answer generated)';
+
+  // TASK-AIS-TASK-RESOLUTION-SLICE-001: render the AIS preparation line
+  // (adaptive explanation, §9/§10) — shown ONLY when AIS decided a message
+  // is useful. Render-only via textContent (§25 T5.8); zero configuration
+  // was required from the user to produce it.
+  const prep = document.getElementById('preparation-note');
+  if (data.preparation && data.preparation.message) {
+    prep.textContent = data.preparation.message;
+    prep.classList.remove('hidden');
+  } else {
+    prep.textContent = '';
+    prep.classList.add('hidden');
+  }
 
   // Claims
   const claimsList = document.getElementById('claims-list');
